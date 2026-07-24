@@ -51,7 +51,13 @@ A minimalist local web UI drives the same logic:
 npm run gui   # http://127.0.0.1:4700  (GUI_PORT overrides)
 ```
 
-Offline authoring is always available. Live control (spawn, message, units, raw Lua) is blocked until you flip the in-app **Online mode** toggle — it starts OFF. The server binds to `127.0.0.1` only.
+![Mission builder overview](docs/gui-overview.png)
+
+### The Online-mode toggle
+
+![Online mode toggle](docs/gui-online-toggle.png)
+
+Offline authoring is **always** available. Everything that touches a *running* DCS — bridge status, listing units, spawning, sending messages, and raw Lua — is blocked until you flip **Online mode** on. It starts **OFF**, and the gate is enforced server-side (live endpoints return `403` while off), not just hidden in the UI. Per design, turning it **ON unlocks live actions and raw Lua together**; raw Lua additionally needs `ALLOW_EXEC = true` in the hook and a de-sanitized DCS. The server binds to `127.0.0.1` only. Toggle it back OFF to return to offline-only.
 
 ## Live bridge setup
 
