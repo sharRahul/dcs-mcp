@@ -6,18 +6,22 @@
  * for inspection are decompressed into memory.
  */
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { readFile, writeFile } from "node:fs/promises";
 import AdmZip from "adm-zip";
 import { KNOWN_MIZ_ENTRIES } from "../constants.js";
 import {
   ArchivePolicyError,
   assertArchiveWithinLimits,
+  assertSafeEntryName,
   type EntryHeader,
 } from "../security/archive-policy.js";
 
 export interface MizArchive {
   /** SHA-256 of the raw archive bytes. */
   digest: string;
+  /** Raw archive bytes (kept so copy-on-write save preserves unknown entries). */
+  bytes: Buffer;
   /** Decompressed text of known entries, keyed by entry name. */
   entries: Map<string, string>;
   /** Header info for every entry (names/sizes only, no data). */
@@ -60,5 +64,39 @@ export async function readMizArchive(filePath: string): Promise<MizArchive> {
     entries.set(entry.entryName, entry.getData().toString("utf8"));
   }
 
-  return { digest, entries, manifest };
+  return { digest, bytes, entries, manifest };
+}
+
+/**
+ * Copy-on-write save: start from `sourceBytes`, replace the given entries, and write
+ * a NEW `.miz` at `outPath`. Every other entry is preserved byte-for-byte. Refuses to
+ * overwrite the source file. Returns the SHA-256 digest of the new archive.
+ */
+export async function packMiz(
+  sourceBytes: Buffer,
+  replacements: Map<string, string>,
+  outPath: string,
+  sourcePath?: string
+): Promise<{ digest: string; outPath: string }> {
+  if (!outPath.toLowerCase().endsWith(".miz")) {
+    throw new ArchivePolicyError(`Output path must end in .miz: ${outPath}`);
+  }
+  if (sourcePath && path.resolve(outPath) === path.resolve(sourcePath)) {
+    throw new ArchivePolicyError(
+      "Refusing to overwrite the source mission. Choose a different output path (copy-on-write)."
+    );
+  }
+
+  const zip = new AdmZip(sourceBytes);
+  for (const [name, content] of replacements) {
+    assertSafeEntryName(name);
+    const buf = Buffer.from(content, "utf8");
+    if (zip.getEntry(name)) zip.updateFile(name, buf);
+    else zip.addFile(name, buf);
+  }
+
+  const outBytes = zip.toBuffer();
+  await writeFile(outPath, outBytes);
+  const digest = createHash("sha256").update(outBytes).digest("hex");
+  return { digest, outPath };
 }

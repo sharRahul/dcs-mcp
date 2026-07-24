@@ -117,16 +117,12 @@ function parseZones(mission: LuaTable, resolve: (v: LuaValue | undefined) => str
   }));
 }
 
-/** Build the canonical MissionDocument from a validated archive. */
-export function parseMission(archive: MizArchive): MissionDocument {
-  const missionSrc = archive.entries.get("mission");
-  if (!missionSrc) {
-    throw new Error("Archive does not contain a 'mission' entry; not a DCS mission file");
-  }
-  const mission = parseLuaAssignment(missionSrc, "mission");
-
-  const dictSrc = archive.entries.get("l10n/DEFAULT/dictionary");
-  const dictionary = dictSrc ? parseLuaAssignment(dictSrc, "dictionary") : undefined;
+/** Build the canonical MissionDocument from already-parsed mission/dictionary tables. */
+export function buildMissionDocument(
+  mission: LuaTable,
+  dictionary: LuaTable | undefined,
+  sourceDigest: string
+): MissionDocument {
   const resolve = makeResolver(dictionary);
 
   const theatre = str(mission["theatre"]) ?? "unknown";
@@ -164,6 +160,27 @@ export function parseMission(archive: MizArchive): MissionDocument {
     zones,
     weather,
     briefing: { title: briefingTitle, description: briefingDescription },
-    sourceDigest: archive.digest,
+    sourceDigest,
   };
+}
+
+/** Parse the mission + dictionary entries of an archive into tables. */
+export function parseMissionTables(archive: MizArchive): {
+  mission: LuaTable;
+  dictionary?: LuaTable;
+} {
+  const missionSrc = archive.entries.get("mission");
+  if (!missionSrc) {
+    throw new Error("Archive does not contain a 'mission' entry; not a DCS mission file");
+  }
+  const mission = parseLuaAssignment(missionSrc, "mission");
+  const dictSrc = archive.entries.get("l10n/DEFAULT/dictionary");
+  const dictionary = dictSrc ? parseLuaAssignment(dictSrc, "dictionary") : undefined;
+  return { mission, dictionary };
+}
+
+/** Build the canonical MissionDocument from a validated archive. */
+export function parseMission(archive: MizArchive): MissionDocument {
+  const { mission, dictionary } = parseMissionTables(archive);
+  return buildMissionDocument(mission, dictionary, archive.digest);
 }

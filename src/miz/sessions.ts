@@ -1,50 +1,120 @@
 /**
  * In-memory mission sessions.
  *
- * `dcs_miz_open` parses a source `.miz` into a canonical document held under a
- * session id. Other tools reference that document read-only. The source archive
- * on disk is never modified. Sessions live only for the server process lifetime.
+ * A session holds the raw parsed `mission` table (mutated in place by authoring
+ * tools, preserving unsupported fields), the original archive bytes (so save is
+ * copy-on-write and lossless), and a derived canonical document for reads.
+ * The source `.miz` on disk is never modified. Sessions live for the process only.
  */
-import { randomUUID } from "node:crypto";
-import { readMizArchive } from "./archive.js";
-import { parseMission } from "./parser.js";
+import { createHash, randomUUID } from "node:crypto";
+import AdmZip from "adm-zip";
+import { packMiz, readMizArchive } from "./archive.js";
+import { buildMissionDocument, parseMissionTables } from "./parser.js";
+import { serializeLuaAssignment } from "./serializer.js";
+import { newMissionTable } from "./authoring.js";
+import type { LuaTable } from "./lua.js";
 import type { MissionDocument } from "../types.js";
 
 export interface MissionSession {
   id: string;
-  sourcePath: string;
+  sourcePath?: string;
   openedAt: string;
+  mission: LuaTable;
+  dictionary?: LuaTable;
+  sourceBytes: Buffer;
   document: MissionDocument;
+  /** Snapshot of the document when the session was opened/created, for diffing. */
+  baseline: MissionDocument;
+  dirty: boolean;
 }
 
 const sessions = new Map<string, MissionSession>();
 
-/** Open a `.miz` file as a read-only session and return it. */
+function newId(): string {
+  return `miz-${randomUUID().slice(0, 8)}`;
+}
+
+function digestOf(mission: LuaTable): string {
+  return createHash("sha256").update(serializeLuaAssignment("mission", mission)).digest("hex");
+}
+
+/** Recompute the derived document after a mutation. */
+export function refresh(session: MissionSession): void {
+  session.document = buildMissionDocument(session.mission, session.dictionary, digestOf(session.mission));
+}
+
+/** Open an existing `.miz` file as a session. */
 export async function openSession(sourcePath: string): Promise<MissionSession> {
   const archive = await readMizArchive(sourcePath);
-  const document = parseMission(archive);
+  const { mission, dictionary } = parseMissionTables(archive);
   const session: MissionSession = {
-    id: `miz-${randomUUID().slice(0, 8)}`,
+    id: newId(),
     sourcePath,
     openedAt: new Date().toISOString(),
-    document,
+    mission,
+    dictionary,
+    sourceBytes: archive.bytes,
+    document: buildMissionDocument(mission, dictionary, archive.digest),
+    baseline: buildMissionDocument(mission, dictionary, archive.digest),
+    dirty: false,
   };
   sessions.set(session.id, session);
   return session;
 }
 
-/** Look up an open session, or throw an actionable error. */
+/** Create a new, empty mission session from the built-in template. */
+export function newSession(theatre: string, startTime: number): MissionSession {
+  const mission = newMissionTable(theatre, startTime);
+  const zip = new AdmZip();
+  zip.addFile("mission", Buffer.from(serializeLuaAssignment("mission", mission), "utf8"));
+  zip.addFile("theatre", Buffer.from(theatre, "utf8"));
+  zip.addFile("options", Buffer.from(serializeLuaAssignment("options", {}), "utf8"));
+  zip.addFile("warehouses", Buffer.from(serializeLuaAssignment("warehouses", {}), "utf8"));
+  zip.addFile(
+    "l10n/DEFAULT/dictionary",
+    Buffer.from(serializeLuaAssignment("dictionary", {}), "utf8")
+  );
+  zip.addFile("l10n/DEFAULT/mapResource", Buffer.from(serializeLuaAssignment("mapResource", {}), "utf8"));
+
+  const session: MissionSession = {
+    id: newId(),
+    openedAt: new Date().toISOString(),
+    mission,
+    dictionary: {},
+    sourceBytes: zip.toBuffer(),
+    document: buildMissionDocument(mission, {}, digestOf(mission)),
+    baseline: buildMissionDocument(mission, {}, digestOf(mission)),
+    dirty: true,
+  };
+  sessions.set(session.id, session);
+  return session;
+}
+
+/** Save the (possibly modified) session to a NEW `.miz` file (copy-on-write). */
+export async function saveSessionAs(
+  session: MissionSession,
+  outPath: string
+): Promise<{ digest: string; outPath: string }> {
+  const replacements = new Map<string, string>();
+  replacements.set("mission", serializeLuaAssignment("mission", session.mission));
+  if (session.dictionary) {
+    replacements.set("l10n/DEFAULT/dictionary", serializeLuaAssignment("dictionary", session.dictionary));
+  }
+  const result = await packMiz(session.sourceBytes, replacements, outPath, session.sourcePath);
+  session.dirty = false;
+  return result;
+}
+
 export function requireSession(id: string): MissionSession {
   const session = sessions.get(id);
   if (!session) {
     throw new Error(
-      `No open mission session '${id}'. Call dcs_miz_open first, then reuse the returned sessionId.`
+      `No open mission session '${id}'. Call dcs_miz_open or dcs_miz_new first, then reuse the returned sessionId.`
     );
   }
   return session;
 }
 
-/** Close a session and free its document. Returns true if a session was removed. */
 export function closeSession(id: string): boolean {
   return sessions.delete(id);
 }

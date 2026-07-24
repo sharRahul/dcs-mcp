@@ -1,0 +1,246 @@
+/**
+ * Mission authoring mutations.
+ *
+ * These operate directly on the raw parsed `mission` Lua table so that every
+ * unsupported field is preserved for a lossless round-trip. Only the serializer
+ * writes data out. Positions are given in DCS internal x/y metres offline; use the
+ * live dcs_convert_coords tool to turn lat/long into x/y when DCS is running.
+ */
+import { asTable, luaArray, type LuaTable, type LuaValue } from "./lua.js";
+
+export type Side = "red" | "blue" | "neutrals";
+export type AirCategory = "plane" | "helicopter";
+export type GroundCategory = "vehicle" | "ship";
+
+/** Common DCS country ids, enough to author for the major factions. */
+const COUNTRY_IDS: Record<string, number> = {
+  russia: 0,
+  ukraine: 1,
+  usa: 2,
+  turkey: 3,
+  uk: 4,
+  france: 5,
+  germany: 6,
+  georgia: 9,
+  israel: 15,
+  iran: 17,
+  china: 34,
+};
+
+export function countryId(name: string, override?: number): number {
+  if (override !== undefined) return override;
+  return COUNTRY_IDS[name.toLowerCase()] ?? 2;
+}
+
+function nextIndex(table: LuaTable | undefined): number {
+  return luaArray(table).length + 1;
+}
+
+/** Ensure coalition[side].country array exists and return the country subtable. */
+function ensureCountry(mission: LuaTable, side: Side, country: string, id: number): LuaTable {
+  const coalitions = (mission["coalition"] ??= {}) as LuaTable;
+  const sideTable = (coalitions[side] ??= { name: side, country: {} }) as LuaTable;
+  const countries = (sideTable["country"] ??= {}) as LuaTable;
+
+  for (const entry of luaArray(countries)) {
+    if (entry["name"] === country) return entry;
+  }
+  const created: LuaTable = { id, name: country };
+  countries[nextIndex(countries)] = created;
+  return created;
+}
+
+interface UnitSpec {
+  type: string;
+  x: number;
+  y: number;
+  altitudeMetres?: number;
+  heading?: number;
+  skill?: string;
+}
+
+function buildUnits(groupName: string, count: number, spec: UnitSpec): LuaTable {
+  const units: LuaTable = {};
+  for (let i = 1; i <= count; i++) {
+    const unit: LuaTable = {
+      name: `${groupName}-${i}`,
+      type: spec.type,
+      x: spec.x + (i - 1) * 30,
+      y: spec.y + (i - 1) * 30,
+      heading: spec.heading ?? 0,
+      skill: spec.skill ?? "High",
+    };
+    if (spec.altitudeMetres !== undefined) {
+      unit["alt"] = spec.altitudeMetres;
+      unit["alt_type"] = "BARO";
+    }
+    units[i] = unit;
+  }
+  return units;
+}
+
+export interface AddGroupArgs {
+  side: Side;
+  country: string;
+  countryId?: number;
+  name: string;
+  type: string;
+  count: number;
+  x: number;
+  y: number;
+  altitudeMetres?: number;
+  heading?: number;
+  skill?: string;
+  task?: string;
+}
+
+/** Add a fixed-wing or helicopter group. Returns the created group table. */
+export function addAircraftGroup(mission: LuaTable, category: AirCategory, args: AddGroupArgs): LuaTable {
+  const country = ensureCountry(mission, args.side, args.country, countryId(args.country, args.countryId));
+  const catTable = (country[category] ??= { group: {} }) as LuaTable;
+  const groups = (catTable["group"] ??= {}) as LuaTable;
+
+  const group: LuaTable = {
+    name: args.name,
+    task: args.task ?? "CAP",
+    task_started: false,
+    units: buildUnits(args.name, args.count, {
+      type: args.type,
+      x: args.x,
+      y: args.y,
+      altitudeMetres: args.altitudeMetres ?? 6096,
+      heading: args.heading,
+      skill: args.skill,
+    }),
+    route: { points: {} },
+    x: args.x,
+    y: args.y,
+  };
+  groups[nextIndex(groups)] = group;
+  return group;
+}
+
+/** Add a ground-vehicle or ship group. Returns the created group table. */
+export function addGroundGroup(mission: LuaTable, category: GroundCategory, args: AddGroupArgs): LuaTable {
+  const country = ensureCountry(mission, args.side, args.country, countryId(args.country, args.countryId));
+  const catTable = (country[category] ??= { group: {} }) as LuaTable;
+  const groups = (catTable["group"] ??= {}) as LuaTable;
+
+  const group: LuaTable = {
+    name: args.name,
+    task: args.task ?? "Ground Nothing",
+    units: buildUnits(args.name, args.count, {
+      type: args.type,
+      x: args.x,
+      y: args.y,
+      heading: args.heading,
+      skill: args.skill ?? "Average",
+    }),
+    route: { points: {} },
+    x: args.x,
+    y: args.y,
+  };
+  groups[nextIndex(groups)] = group;
+  return group;
+}
+
+export interface AddZoneArgs {
+  name: string;
+  x: number;
+  y: number;
+  radius: number;
+}
+
+/** Add a circular trigger zone. */
+export function addTriggerZone(mission: LuaTable, args: AddZoneArgs): LuaTable {
+  const triggers = (mission["triggers"] ??= { zones: {} }) as LuaTable;
+  const zones = (triggers["zones"] ??= {}) as LuaTable;
+  const zone: LuaTable = {
+    name: args.name,
+    x: args.x,
+    y: args.y,
+    radius: args.radius,
+    hidden: false,
+    type: 0,
+    color: { 1: 1, 2: 1, 3: 1, 4: 0.15 },
+  };
+  zones[nextIndex(zones)] = zone;
+  return zone;
+}
+
+export interface WeatherArgs {
+  temperatureCelsius?: number;
+  qnhMmHg?: number;
+  cloudBaseMetres?: number;
+  windGroundSpeed?: number;
+  windGroundDir?: number;
+}
+
+/** Update supported weather fields, creating tables as needed. */
+export function setWeather(mission: LuaTable, args: WeatherArgs): void {
+  const weather = (mission["weather"] ??= {}) as LuaTable;
+  if (args.temperatureCelsius !== undefined) {
+    const season = (weather["season"] ??= {}) as LuaTable;
+    season["temperature"] = args.temperatureCelsius;
+  }
+  if (args.qnhMmHg !== undefined) weather["qnh"] = args.qnhMmHg;
+  if (args.cloudBaseMetres !== undefined) {
+    const clouds = (weather["clouds"] ??= {}) as LuaTable;
+    clouds["base"] = args.cloudBaseMetres;
+  }
+  if (args.windGroundSpeed !== undefined || args.windGroundDir !== undefined) {
+    const wind = (weather["wind"] ??= {}) as LuaTable;
+    const atGround = (wind["atGround"] ??= {}) as LuaTable;
+    if (args.windGroundSpeed !== undefined) atGround["speed"] = args.windGroundSpeed;
+    if (args.windGroundDir !== undefined) atGround["dir"] = args.windGroundDir;
+  }
+}
+
+/** Set briefing title/description as literal text (no dictionary indirection). */
+export function setBriefing(mission: LuaTable, title?: string, description?: string): void {
+  if (title !== undefined) mission["sortie"] = title;
+  if (description !== undefined) mission["descriptionText"] = description;
+}
+
+/** A minimal, best-effort new-mission table. Finalize in the DCS Mission Editor. */
+export function newMissionTable(theatre: string, startTime: number): LuaTable {
+  const emptySide = (name: string): LuaTable => ({ name, country: {}, nav_points: {}, bullseye: { x: 0, y: 0 } });
+  return {
+    version: 19,
+    theatre,
+    start_time: startTime,
+    date: { Year: 2016, Month: 6, Day: 1 },
+    weather: {
+      season: { temperature: 20 },
+      qnh: 760,
+      clouds: { base: 1200, density: 0, thickness: 200, iprecptns: 0 },
+      wind: { atGround: { speed: 0, dir: 0 }, at2000: { speed: 0, dir: 0 }, at8000: { speed: 0, dir: 0 } },
+      groundTurbulence: 0,
+      enable_fog: false,
+      type_weather: 0,
+    },
+    coalition: { blue: emptySide("blue"), red: emptySide("red"), neutrals: emptySide("neutrals") },
+    coalitions: { blue: {}, red: {}, neutrals: {} },
+    triggers: { zones: {} },
+    trig: { actions: {}, conditions: {}, custom: {}, events: {}, flag: {}, func: {}, funcStartup: {} },
+    trigrules: {},
+    result: { blue: { conditions: {}, actions: {}, func: {} }, red: { conditions: {}, actions: {}, func: {} } },
+    groundControl: { roles: {}, passwords: {} },
+    forcedOptions: {},
+    failures: {},
+    goals: {},
+    map: { zoom: 1000000, centerX: 0, centerY: 0 },
+    descriptionText: "",
+    descriptionBlueTask: "",
+    descriptionRedTask: "",
+    sortie: "",
+    maxDictId: 0,
+    requiredModules: {},
+    currentKey: 0,
+  } as unknown as LuaTable;
+}
+
+/** Read a top-level table for null-safety in tools. */
+export function missionSection(mission: LuaTable, key: string): LuaValue | undefined {
+  return asTable(mission[key]);
+}

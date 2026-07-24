@@ -1,67 +1,61 @@
 # DCS-MCP
 
-A [Model Context Protocol](https://modelcontextprotocol.io) server for **Digital Combat Simulator (DCS World)**. It works with any MCP client — Claude, Codex, OpenCode, etc. — over stdio.
+A [Model Context Protocol](https://modelcontextprotocol.io) server for **Digital Combat Simulator (DCS World)**. Works with any MCP client — Claude, Codex, OpenCode, etc. — over stdio.
 
-Two capability groups:
+Three things it does:
 
-- **Offline `.miz` inspection** — open a mission archive, read its summary, groups, weather, and briefing, and validate it. No running DCS required.
-- **Live telemetry bridge** — read ownship and mission data from a running DCS via a bundled `Export.lua` hook.
+- **Build missions offline** — create/modify `.miz` files (groups, zones, weather, briefing) and save copy-on-write. No running DCS needed.
+- **Inspect missions** — open a `.miz` and read its summary, groups, weather, and briefing, and validate it.
+- **Live control** — query units, spawn groups, send messages, and convert coordinates in a *running* mission via a bundled DCS hook.
 
-It never executes Lua from a mission and never writes to your mission files.
+It never executes mission Lua (missions are parsed as data), never overwrites a source `.miz`, and keeps raw-Lua execution behind an explicit opt-in.
 
 ## Install
 
 ```bash
-npm install
-npm run build   # outputs dist/index.js
-npm test        # optional
+npm install && npm run build   # outputs dist/index.js
+npm test                       # optional
 ```
 
 ## Client configuration
 
-Point your MCP client at the built server (stdio). Optional env vars: `DCS_BRIDGE_HOST` (default `127.0.0.1`), `DCS_BRIDGE_PORT` (default `8899`).
+Point your MCP client at the built server (stdio). Optional env: `DCS_BRIDGE_HOST` (default `127.0.0.1`), `DCS_BRIDGE_PORT` (default `8899`), `DCS_ALLOW_RAW_LUA=1` (exposes `dcs_execute_lua`).
 
 ```json
 {
   "mcpServers": {
-    "dcs": {
-      "command": "node",
-      "args": ["/absolute/path/to/dcs-mcp/dist/index.js"]
-    }
+    "dcs": { "command": "node", "args": ["/absolute/path/to/dcs-mcp/dist/index.js"] }
   }
 }
 ```
 
-- **Claude / Claude Code**: add the block above to your MCP config (`claude mcp add` or `~/.claude.json`).
-- **Codex**: add an equivalent `command`/`args` entry to `~/.codex/config.toml`.
+- **Claude / Claude Code**: `claude mcp add` or add the block to `~/.claude.json`.
+- **Codex**: add an equivalent `command`/`args` entry in `~/.codex/config.toml`.
 - **OpenCode**: add it under `mcp` in `opencode.json`.
 
 ## Tools
 
-| Tool | Description |
-|------|-------------|
-| `dcs_miz_open` | Open a `.miz` as a read-only session (safety-checked). |
-| `dcs_miz_get_summary` | Theatre, coalitions/countries, counts, weather, briefing. |
-| `dcs_miz_list_groups` | List groups, filterable by coalition/category. |
-| `dcs_miz_get_weather` | Temperature, QNH, clouds, wind. |
-| `dcs_miz_get_briefing` | Briefing title/description (dictionary-resolved). |
-| `dcs_miz_validate` | Structural validation (errors vs. warnings). |
-| `dcs_miz_close` | Close a session. |
-| `dcs_bridge_status` | Ping the live DCS export bridge. |
-| `dcs_get_self_data` | Live ownship telemetry. |
-| `dcs_get_mission_info` | Live mission metadata. |
+**Author (offline):** `dcs_miz_new`, `dcs_miz_add_aircraft_group`, `dcs_miz_add_ground_group`, `dcs_miz_add_trigger_zone`, `dcs_miz_set_weather`, `dcs_miz_set_briefing`, `dcs_miz_diff`, `dcs_miz_save_as`
+
+**Inspect (offline):** `dcs_miz_open`, `dcs_miz_get_summary`, `dcs_miz_list_groups`, `dcs_miz_get_weather`, `dcs_miz_get_briefing`, `dcs_miz_validate`, `dcs_miz_close`
+
+**Live (DCS running):** `dcs_bridge_status`, `dcs_get_self_data`, `dcs_get_mission_info`, `dcs_get_all_units`, `dcs_get_aircraft_list`, `dcs_send_message`, `dcs_spawn_unit`, `dcs_convert_coords`, and (gated) `dcs_execute_lua`
+
+Offline positions are DCS x/y metres; use `dcs_convert_coords` (live) to turn lat/long into x/y.
 
 ## Live bridge setup
 
-Copy [`scripts/Export.lua`](scripts/Export.lua) into `Saved Games/DCS/Scripts/Export.lua` (it chains any existing hooks) and start a mission. The hook opens a local, read-only TCP listener on `127.0.0.1:8899` that answers only the whitelisted `ping`/`self`/`mission` commands. Based on the [DCS Lua Export API](https://www.digitalcombatsimulator.com/en/dev_journal/lua-export/) and the socket-bridge pattern from [sprhawk/dcs_scripts](https://github.com/sprhawk/dcs_scripts).
+For full live control, copy [`scripts/Hooks/dcs-mcp-hook.lua`](scripts/Hooks/dcs-mcp-hook.lua) into `Saved Games/DCS/Scripts/Hooks/` and start a mission. It opens a local read-only TCP server on `127.0.0.1:8899` and answers structured commands (`units`, `spawn`, `message`, coordinate conversion, …). For **telemetry only** without a Hooks script, use [`scripts/Export.lua`](scripts/Export.lua) instead (port `8898`).
+
+Structured commands build vetted Lua internally — the model never supplies Lua. Raw `dcs_execute_lua` is doubly gated: `DCS_ALLOW_RAW_LUA=1` here **and** `ALLOW_EXEC = true` in the hook. Enabling it runs arbitrary Lua in DCS and requires a de-sanitized `MissionScripting.lua`; leave it off unless you understand the risk.
 
 ## Safety
 
-Every `.miz` is treated as untrusted: archives are checked for path traversal and zip-bomb limits (entry count, expanded size, compression ratio) **before** decompression, only known data entries are read, and mission Lua is parsed as data — never run. See `src/security/` and `src/miz/lua.ts`.
+Every `.miz` is treated as untrusted: archives are checked for path traversal and zip-bomb limits (entry count, expanded/per-entry size, compression ratio) **before** decompression; only known data entries are read; mission Lua is parsed as data, never run. Saves are copy-on-write and refuse to overwrite the source; a SHA-256 digest is returned for every generated file. See `src/security/`, `src/miz/lua.ts`, and `src/miz/archive.ts`.
 
-## Status & roadmap
+## Notes & status
 
-Implemented: read/inspect/validate (offline) + live telemetry bridge. Planned: copy-on-write `.miz` authoring (add groups, routes, tasks, triggers, weather, briefing), structured diffs, and change manifests. See the plan in the PR description.
+Brand-new missions from `dcs_miz_new` are a best-effort skeleton — open once in the DCS Mission Editor to finalize. Round-trip editing of existing missions (open → edit → save → reopen) is covered by tests. The live tools are written to the DCS scripting API and require verification against a real DCS install.
 
 ## License
 

@@ -1,107 +1,78 @@
 --[[
-  dcs-mcp-server live telemetry bridge.
+  dcs-mcp-server TELEMETRY-ONLY bridge (lightweight, no de-sanitizing required).
 
   Install into:  Saved Games/DCS/Scripts/Export.lua   (chains any existing hooks)
-  Then enable the export by allowing LuaSocket in DCS (default in recent versions).
 
-  Opens a local, non-blocking TCP listener. On each connection it reads one command
-  line and replies with a single line of JSON. Read-only: only the whitelisted
-  commands below are answered; no arbitrary Lua is ever accepted or run.
+  Use this if you only want read-only ownship telemetry and do NOT want to install
+  the Hooks server. It answers the read-only commands available in the Export
+  environment: ping, self, mission. For live control (units, spawn, message,
+  coordinate conversion, exec) install scripts/Hooks/dcs-mcp-hook.lua instead.
 
-  Protocol (newline-terminated):
-    -> ping      <- {"pong":true,"time":<modelTime>}
-    -> self      <- {"name":..,"altBar":..,"altRad":..,"pitch":..,"bank":..,"yaw":..,"ias":..,"tas":..,"mach":..,"position":{...}}
-    -> mission   <- {"modelTime":..,"startTime":..,"selfName":..}
+  Same wire protocol as the hook (newline-terminated JSON, one round trip):
+    -> {"cmd":"self"}      <- {"ok":true,"data":{...}}
 
-  Reference: DCS Lua export -- https://www.digitalcombatsimulator.com/en/dev_journal/lua-export/
+  Reference: DCS Lua Export -- https://www.digitalcombatsimulator.com/en/dev_journal/lua-export/
              sprhawk/dcs_scripts (socket bridge pattern)
 --]]
 
-local DCS_MCP_HOST = "127.0.0.1"
-local DCS_MCP_PORT = 8899
+local HOST = "127.0.0.1"
+local PORT = 8898   -- distinct from the Hooks server (8899) so both can coexist
 
--- Preserve any hooks defined by other export scripts so we chain, not clobber.
-local _prevStart  = LuaExportStart
-local _prevAfter  = LuaExportAfterNextFrame
-local _prevStop   = LuaExportStop
+local _prevStart = LuaExportStart
+local _prevAfter = LuaExportAfterNextFrame
+local _prevStop  = LuaExportStop
 
 local socket = require("socket")
 local server = nil
 
--- Minimal JSON encoder for numbers, strings, booleans, nil, arrays and maps.
-local function jsonEncode(value)
-  local t = type(value)
+local function enc(v)
+  local t = type(v)
+  if t == "nil" then return "null" end
   if t == "number" then
-    if value ~= value or value == math.huge or value == -math.huge then return "null" end
-    return string.format("%.6g", value)
-  elseif t == "boolean" then
-    return value and "true" or "false"
-  elseif t == "string" then
-    return '"' .. value:gsub('[%z\1-\31\\"]', function(c)
-      local map = { ['"'] = '\\"', ['\\'] = '\\\\', ['\n'] = '\\n', ['\r'] = '\\r', ['\t'] = '\\t' }
-      return map[c] or string.format("\\u%04x", string.byte(c))
+    if v ~= v or v == math.huge or v == -math.huge then return "null" end
+    return string.format("%.9g", v)
+  end
+  if t == "boolean" then return v and "true" or "false" end
+  if t == "string" then
+    return '"' .. v:gsub('[%z\1-\31\\"]', function(c)
+      local m = {['"']='\\"',['\\']='\\\\',['\n']='\\n',['\r']='\\r',['\t']='\\t'}
+      return m[c] or string.format("\\u%04x", string.byte(c))
     end) .. '"'
-  elseif t == "table" then
-    -- Array if keys are 1..n contiguous.
-    local n, isArray = 0, true
-    for k in pairs(value) do
-      n = n + 1
-      if type(k) ~= "number" then isArray = false end
-    end
+  end
+  if t == "table" then
     local parts = {}
-    if isArray and n > 0 then
-      for i = 1, n do parts[#parts + 1] = jsonEncode(value[i]) end
-      return "[" .. table.concat(parts, ",") .. "]"
-    end
-    for k, v in pairs(value) do
-      parts[#parts + 1] = '"' .. tostring(k) .. '":' .. jsonEncode(v)
-    end
+    for k, val in pairs(v) do parts[#parts+1] = '"' .. tostring(k) .. '":' .. enc(val) end
     return "{" .. table.concat(parts, ",") .. "}"
   end
   return "null"
 end
 
-local function safe(fn, ...)
-  local ok, res = pcall(fn, ...)
-  if ok then return res end
-  return nil
-end
+local function safe(fn) local ok, r = pcall(fn); if ok then return r end end
 
-local function buildSelf()
-  local pby = safe(LoGetADIPitchBankYaw) or {}
-  local self = safe(LoGetSelfData) or {}
-  return {
-    name    = self.Name,
-    altBar  = safe(LoGetAltitudeAboveSeaLevel),
-    altRad  = safe(LoGetAltitudeAboveGroundLevel),
-    pitch   = pby[1],
-    bank    = pby[2],
-    yaw     = pby[3],
-    ias     = safe(LoGetIndicatedAirSpeed),
-    tas     = safe(LoGetTrueAirSpeed),
-    mach    = safe(LoGetMachNumber),
-    position = self.LatLongAlt,
-  }
-end
-
-local function buildMission()
-  local self = safe(LoGetSelfData) or {}
-  return {
-    modelTime = safe(LoGetModelTime),
-    startTime = safe(LoGetMissionStartTime),
-    selfName  = self.Name,
-  }
-end
-
-local function handle(command)
-  if command == "ping" then
+local function handle(cmd)
+  if cmd == "ping" then
     return { pong = true, time = safe(LoGetModelTime) }
-  elseif command == "self" then
-    return buildSelf()
-  elseif command == "mission" then
-    return buildMission()
+  elseif cmd == "self" then
+    local d = safe(LoGetSelfData) or {}
+    local pby = safe(LoGetADIPitchBankYaw) or {}
+    return {
+      name = d.Name, position = d.LatLongAlt,
+      altBar = safe(LoGetAltitudeAboveSeaLevel), altRad = safe(LoGetAltitudeAboveGroundLevel),
+      pitch = pby[1], bank = pby[2], yaw = pby[3],
+      ias = safe(LoGetIndicatedAirSpeed), tas = safe(LoGetTrueAirSpeed), mach = safe(LoGetMachNumber),
+    }
+  elseif cmd == "mission" then
+    local d = safe(LoGetSelfData) or {}
+    return { modelTime = safe(LoGetModelTime), startTime = safe(LoGetMissionStartTime), selfName = d.Name }
   end
-  return { error = "unknown command", command = command }
+  return nil, "unknown or unsupported command in export env: " .. tostring(cmd)
+end
+
+local function respond(line)
+  local cmd = line:match('"cmd"%s*:%s*"([%w_]+)"') or line:gsub("%s+$", "")
+  local data, err = handle(cmd)
+  if data ~= nil then return '{"ok":true,"data":' .. enc(data) .. '}' end
+  return '{"ok":false,"error":' .. enc(err or "error") .. '}'
 end
 
 function LuaExportStart()
@@ -109,9 +80,9 @@ function LuaExportStart()
   server = socket.tcp()
   if server then
     server:setoption("reuseaddr", true)
-    server:bind(DCS_MCP_HOST, DCS_MCP_PORT)
+    server:bind(HOST, PORT)
     server:listen(4)
-    server:settimeout(0) -- non-blocking accept
+    server:settimeout(0)
   end
 end
 
@@ -122,10 +93,7 @@ function LuaExportAfterNextFrame()
   if client then
     client:settimeout(0.05)
     local line = client:receive("*l")
-    if line then
-      local response = handle((line:gsub("%s+$", "")))
-      client:send(jsonEncode(response) .. "\n")
-    end
+    if line then client:send(respond(line) .. "\n") end
     client:close()
   end
 end

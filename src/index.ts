@@ -12,6 +12,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { registerMizTools } from "./tools/miz.js";
+import { registerMizAuthoringTools } from "./tools/miz-authoring.js";
 import { registerBridgeTools } from "./tools/bridge.js";
 
 const server = new McpServer({
@@ -20,6 +21,7 @@ const server = new McpServer({
 });
 
 registerMizTools(server);
+registerMizAuthoringTools(server);
 registerBridgeTools(server);
 
 async function main(): Promise<void> {
