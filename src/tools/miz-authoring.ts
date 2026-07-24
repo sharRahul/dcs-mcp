@@ -10,9 +10,15 @@ import {
 import {
   addAircraftGroup,
   addGroundGroup,
+  addTrigger,
   addTriggerZone,
+  addWaypoint,
   setBriefing,
+  setGroupTask,
+  setPayload,
   setWeather,
+  type ActionSpec,
+  type ConditionSpec,
 } from "../miz/authoring.js";
 import { validateMission } from "../miz/validator.js";
 import { buildResult, errorResult } from "./format.js";
@@ -220,6 +226,197 @@ export function registerMizAuthoringTools(server: McpServer): void {
           added: a.name,
           zoneCount: s.document.summary.zoneCount,
         });
+      } catch (err) {
+        return errorResult(err);
+      }
+    }
+  );
+
+  server.registerTool(
+    "dcs_miz_add_waypoint",
+    {
+      title: "Add waypoint",
+      description:
+        "Append a route waypoint to an existing group (by name). Positions are DCS x/y metres.\n\n" +
+        "Args:\n  - sessionId, group (group name)\n  - x, y, altitudeMetres?, speedMps?\n" +
+        "  - type? (e.g. 'Turning Point', 'TakeOff', 'Land'), action?, name?\n\n" +
+        "Returns JSON: { group, waypointIndex, waypointCount }.",
+      inputSchema: z
+        .object({
+          sessionId: sessionIdField,
+          group: z.string().min(1).describe("Name of the group to add the waypoint to"),
+          ...positionFields,
+          altitudeMetres: z.number().min(0).max(20000).optional(),
+          speedMps: z.number().min(0).max(1000).optional().describe("Speed in metres/second"),
+          type: z.string().optional(),
+          action: z.string().optional(),
+          name: z.string().max(64).optional(),
+        })
+        .strict(),
+      annotations: authoringAnnotations,
+    },
+    async (a) => {
+      try {
+        const s = requireSession(a.sessionId);
+        const index = addWaypoint(s.mission, a.group, {
+          x: a.x,
+          y: a.y,
+          altitudeMetres: a.altitudeMetres,
+          speedMps: a.speedMps,
+          type: a.type,
+          action: a.action,
+          name: a.name,
+        });
+        s.dirty = true;
+        refresh(s);
+        const grp = s.document.groups.find((g) => g.name === a.group);
+        return buildResult(`Added waypoint #${index} to '${a.group}'.`, {
+          group: a.group,
+          waypointIndex: index,
+          waypointCount: grp?.waypointCount ?? index,
+        });
+      } catch (err) {
+        return errorResult(err);
+      }
+    }
+  );
+
+  server.registerTool(
+    "dcs_miz_set_payload",
+    {
+      title: "Set unit payload",
+      description:
+        "Set a unit's loadout: fuel, countermeasures, gun, and pylon stores. CLSIDs are DCS store " +
+        "ids (not validated offline).\n\n" +
+        "Args:\n  - sessionId, unit (unit name)\n  - fuel?, flare?, chaff?, gun?\n" +
+        "  - pylons?: [{ pylon: number, CLSID: string }]\n\nReturns JSON: { unit }.",
+      inputSchema: z
+        .object({
+          sessionId: sessionIdField,
+          unit: z.string().min(1).describe("Unit name (e.g. 'Colt 1-1')"),
+          fuel: z.number().min(0).optional().describe("Internal fuel in kg"),
+          flare: z.number().int().min(0).optional(),
+          chaff: z.number().int().min(0).optional(),
+          gun: z.number().int().min(0).max(100).optional().describe("Gun ammo percent"),
+          pylons: z
+            .array(z.object({ pylon: z.number().int().min(1), CLSID: z.string().min(1) }).strict())
+            .optional()
+            .describe("Pylon stores by station number"),
+        })
+        .strict(),
+      annotations: authoringAnnotations,
+    },
+    async ({ sessionId, unit, ...args }) => {
+      try {
+        const s = requireSession(sessionId);
+        setPayload(s.mission, unit, args);
+        s.dirty = true;
+        refresh(s);
+        return buildResult(`Updated payload for '${unit}'.`, { unit });
+      } catch (err) {
+        return errorResult(err);
+      }
+    }
+  );
+
+  server.registerTool(
+    "dcs_miz_set_group_task",
+    {
+      title: "Set group task",
+      description:
+        "Set a group's primary task (the label the Mission Editor shows).\n\n" +
+        "Args:\n  - sessionId, group\n  - task (e.g. 'CAP', 'CAS', 'SEAD', 'Escort', 'AWACS', " +
+        "'Refueling', 'Ground Nothing', 'Nothing')",
+      inputSchema: z
+        .object({
+          sessionId: sessionIdField,
+          group: z.string().min(1),
+          task: z.string().min(1).describe("Task name"),
+        })
+        .strict(),
+      annotations: authoringAnnotations,
+    },
+    async ({ sessionId, group, task }) => {
+      try {
+        const s = requireSession(sessionId);
+        setGroupTask(s.mission, group, task);
+        s.dirty = true;
+        refresh(s);
+        return buildResult(`Set task of '${group}' to '${task}'.`, { group, task });
+      } catch (err) {
+        return errorResult(err);
+      }
+    }
+  );
+
+  server.registerTool(
+    "dcs_miz_add_trigger",
+    {
+      title: "Add trigger",
+      description:
+        "Add a mission trigger (condition -> action) in the DCS Mission Editor's structured form. " +
+        "IMPORTANT: DCS compiles the runtime triggers when the mission is opened and saved in the " +
+        "Mission Editor, so open the saved .miz in the ME once to finalize triggers.\n\n" +
+        "Supported conditions: time_after{seconds}, flag_is_true{flag}, flag_equals{flag,value}.\n" +
+        "Supported actions: message{text,seconds?}, set_flag{flag,value?}, activate_group{group}, " +
+        "end_mission{winner}.\n\n" +
+        "Args:\n  - sessionId\n  - type ('start'|'once'|'continuous')\n  - comment?\n" +
+        "  - conditions: [ ... ]\n  - actions: [ ... ]\n\nReturns JSON: { triggerIndex, triggerCount }.",
+      inputSchema: z
+        .object({
+          sessionId: sessionIdField,
+          type: z.enum(["start", "once", "continuous"]).default("once"),
+          comment: z.string().max(200).optional(),
+          conditions: z
+            .array(
+              z.union([
+                z.object({ kind: z.literal("time_after"), seconds: z.number().int().min(0) }).strict(),
+                z.object({ kind: z.literal("flag_is_true"), flag: z.number().int() }).strict(),
+                z
+                  .object({ kind: z.literal("flag_equals"), flag: z.number().int(), value: z.number().int() })
+                  .strict(),
+              ])
+            )
+            .min(1)
+            .describe("Trigger conditions (ANDed)"),
+          actions: z
+            .array(
+              z.union([
+                z
+                  .object({
+                    kind: z.literal("message"),
+                    text: z.string().min(1),
+                    seconds: z.number().int().min(1).optional(),
+                  })
+                  .strict(),
+                z
+                  .object({ kind: z.literal("set_flag"), flag: z.number().int(), value: z.number().int().optional() })
+                  .strict(),
+                z.object({ kind: z.literal("activate_group"), group: z.string().min(1) }).strict(),
+                z.object({ kind: z.literal("end_mission"), winner: z.enum(["red", "blue", "neutrals"]) }).strict(),
+              ])
+            )
+            .min(1)
+            .describe("Trigger actions"),
+        })
+        .strict(),
+      annotations: authoringAnnotations,
+    },
+    async ({ sessionId, type, comment, conditions, actions }) => {
+      try {
+        const s = requireSession(sessionId);
+        const index = addTrigger(s.mission, {
+          type,
+          comment,
+          conditions: conditions as ConditionSpec[],
+          actions: actions as ActionSpec[],
+        });
+        s.dirty = true;
+        refresh(s);
+        return buildResult(
+          `Added ${type} trigger #${index}. Open the saved .miz in the DCS Mission Editor to finalize it.`,
+          { triggerIndex: index, triggerCount: s.document.summary.triggerCount }
+        );
       } catch (err) {
         return errorResult(err);
       }

@@ -35,13 +35,23 @@ Point your MCP client at the built server (stdio). Optional env: `DCS_BRIDGE_HOS
 
 ## Tools
 
-**Author (offline):** `dcs_miz_new`, `dcs_miz_add_aircraft_group`, `dcs_miz_add_ground_group`, `dcs_miz_add_trigger_zone`, `dcs_miz_set_weather`, `dcs_miz_set_briefing`, `dcs_miz_diff`, `dcs_miz_save_as`
+**Author (offline):** `dcs_miz_new`, `dcs_miz_add_aircraft_group`, `dcs_miz_add_ground_group`, `dcs_miz_add_waypoint`, `dcs_miz_set_payload`, `dcs_miz_set_group_task`, `dcs_miz_add_trigger_zone`, `dcs_miz_add_trigger`, `dcs_miz_set_weather`, `dcs_miz_set_briefing`, `dcs_miz_diff`, `dcs_miz_save_as`
 
 **Inspect (offline):** `dcs_miz_open`, `dcs_miz_get_summary`, `dcs_miz_list_groups`, `dcs_miz_get_weather`, `dcs_miz_get_briefing`, `dcs_miz_validate`, `dcs_miz_close`
 
 **Live (DCS running):** `dcs_bridge_status`, `dcs_get_self_data`, `dcs_get_mission_info`, `dcs_get_all_units`, `dcs_get_aircraft_list`, `dcs_send_message`, `dcs_spawn_unit`, `dcs_convert_coords`, and (gated) `dcs_execute_lua`
 
 Offline positions are DCS x/y metres; use `dcs_convert_coords` (live) to turn lat/long into x/y.
+
+## GUI
+
+A minimalist local web UI drives the same logic:
+
+```bash
+npm run gui   # http://127.0.0.1:4700  (GUI_PORT overrides)
+```
+
+Offline authoring is always available. Live control (spawn, message, units, raw Lua) is blocked until you flip the in-app **Online mode** toggle — it starts OFF. The server binds to `127.0.0.1` only.
 
 ## Live bridge setup
 
@@ -55,7 +65,7 @@ Every `.miz` is treated as untrusted: archives are checked for path traversal an
 
 ## Notes & status
 
-Brand-new missions from `dcs_miz_new` are a best-effort skeleton — open once in the DCS Mission Editor to finalize. Round-trip editing of existing missions (open → edit → save → reopen) is covered by tests. The live tools are written to the DCS scripting API and require verification against a real DCS install.
+Round-trip editing of existing missions (open → edit → save → reopen) is covered by tests. Some things need a final pass in the DCS Mission Editor: **triggers** are written in the ME's structured form and are compiled to runtime form when you open+save in the ME; brand-new missions from `dcs_miz_new` are a best-effort skeleton. Live tools are written to the DCS scripting API and need verification against a real DCS install.
 
 ## License
 

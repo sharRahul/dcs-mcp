@@ -202,6 +202,195 @@ export function setBriefing(mission: LuaTable, title?: string, description?: str
   if (description !== undefined) mission["descriptionText"] = description;
 }
 
+const AIR_CATEGORIES = ["plane", "helicopter"];
+const ALL_CATEGORIES = ["plane", "helicopter", "vehicle", "ship", "static"];
+
+export interface FoundGroup {
+  group: LuaTable;
+  category: string;
+  side: Side;
+  country: LuaTable;
+}
+
+/** Locate a group by name across every coalition/country/category. */
+export function findGroup(mission: LuaTable, name: string): FoundGroup | undefined {
+  const coalitions = asTable(mission["coalition"]);
+  for (const side of ["red", "blue", "neutrals"] as Side[]) {
+    const sideTable = asTable(coalitions?.[side]);
+    for (const country of luaArray(sideTable?.["country"])) {
+      for (const category of ALL_CATEGORIES) {
+        const catTable = asTable(country[category]);
+        for (const group of luaArray(catTable?.["group"])) {
+          if (group["name"] === name) return { group, category, side, country };
+        }
+      }
+    }
+  }
+  return undefined;
+}
+
+/** Locate a unit by name across every group. */
+export function findUnit(mission: LuaTable, name: string): LuaTable | undefined {
+  const coalitions = asTable(mission["coalition"]);
+  for (const side of ["red", "blue", "neutrals"] as Side[]) {
+    const sideTable = asTable(coalitions?.[side]);
+    for (const country of luaArray(sideTable?.["country"])) {
+      for (const category of ALL_CATEGORIES) {
+        const catTable = asTable(country[category]);
+        for (const group of luaArray(catTable?.["group"])) {
+          for (const unit of luaArray(group["units"])) {
+            if (unit["name"] === name) return unit;
+          }
+        }
+      }
+    }
+  }
+  return undefined;
+}
+
+export interface WaypointArgs {
+  x: number;
+  y: number;
+  altitudeMetres?: number;
+  speedMps?: number;
+  type?: string;
+  action?: string;
+  name?: string;
+}
+
+/** Append a route waypoint to a group. Throws if the group is not found. */
+export function addWaypoint(mission: LuaTable, groupName: string, wp: WaypointArgs): number {
+  const found = findGroup(mission, groupName);
+  if (!found) throw new Error(`No group named '${groupName}' in this mission`);
+  const isAir = AIR_CATEGORIES.includes(found.category);
+  const route = (found.group["route"] ??= { points: {} }) as LuaTable;
+  const points = (route["points"] ??= {}) as LuaTable;
+  const point: LuaTable = {
+    x: wp.x,
+    y: wp.y,
+    alt: wp.altitudeMetres ?? (isAir ? 6096 : 0),
+    alt_type: "BARO",
+    type: wp.type ?? (isAir ? "Turning Point" : "Turning Point"),
+    action: wp.action ?? (isAir ? "Turning Point" : "Off Road"),
+    speed: wp.speedMps ?? (isAir ? 220 : 20),
+    speed_locked: true,
+    ETA: 0,
+    ETA_locked: false,
+    name: wp.name ?? "",
+    formation_template: "",
+    task: { id: "ComboTask", params: { tasks: {} } },
+  };
+  const index = nextIndex(points);
+  points[index] = point;
+  return index;
+}
+
+export interface PayloadArgs {
+  fuel?: number;
+  flare?: number;
+  chaff?: number;
+  gun?: number;
+  pylons?: { pylon: number; CLSID: string }[];
+}
+
+/** Set a unit's payload/loadout. Throws if the unit is not found. */
+export function setPayload(mission: LuaTable, unitName: string, args: PayloadArgs): void {
+  const unit = findUnit(mission, unitName);
+  if (!unit) throw new Error(`No unit named '${unitName}' in this mission`);
+  const payload = (unit["payload"] ??= { pylons: {}, fuel: "0", flare: 0, chaff: 0, gun: 100 }) as LuaTable;
+  if (args.fuel !== undefined) payload["fuel"] = String(args.fuel); // DCS stores fuel as a string
+  if (args.flare !== undefined) payload["flare"] = args.flare;
+  if (args.chaff !== undefined) payload["chaff"] = args.chaff;
+  if (args.gun !== undefined) payload["gun"] = args.gun;
+  if (args.pylons) {
+    const pylons: LuaTable = {};
+    for (const p of args.pylons) pylons[p.pylon] = { CLSID: p.CLSID };
+    payload["pylons"] = pylons;
+  }
+}
+
+/** Set a group's primary task string (e.g. 'CAP', 'CAS', 'SEAD'). */
+export function setGroupTask(mission: LuaTable, groupName: string, task: string): void {
+  const found = findGroup(mission, groupName);
+  if (!found) throw new Error(`No group named '${groupName}' in this mission`);
+  found.group["task"] = task;
+}
+
+export type TriggerType = "start" | "once" | "continuous";
+export type ConditionSpec =
+  | { kind: "time_after"; seconds: number }
+  | { kind: "flag_is_true"; flag: number }
+  | { kind: "flag_equals"; flag: number; value: number };
+export type ActionSpec =
+  | { kind: "message"; text: string; seconds?: number }
+  | { kind: "set_flag"; flag: number; value?: number }
+  | { kind: "activate_group"; group: string }
+  | { kind: "end_mission"; winner: Side };
+
+const TRIGGER_PREDICATE: Record<TriggerType, string> = {
+  start: "triggerStart",
+  once: "triggerOnce",
+  continuous: "triggerContinious", // DCS spells it this way in the file format
+};
+
+function conditionRule(c: ConditionSpec): LuaTable {
+  switch (c.kind) {
+    case "time_after":
+      return { predicate: "c_time_after", seconds: c.seconds, comment: "" };
+    case "flag_is_true":
+      return { predicate: "c_flag_is_true", flag: c.flag, comment: "" };
+    case "flag_equals":
+      return { predicate: "c_flag_equals", flag: c.flag, value: c.value, comment: "" };
+  }
+}
+
+function actionRule(a: ActionSpec): LuaTable {
+  switch (a.kind) {
+    case "message":
+      return { predicate: "a_out_text", text: a.text, seconds: a.seconds ?? 10, clearview: false };
+    case "set_flag":
+      return { predicate: "a_set_flag_value", flag: a.flag, value: a.value ?? 1 };
+    case "activate_group":
+      return { predicate: "a_activate_group", group: a.group };
+    case "end_mission":
+      return { predicate: "a_end_mission", winner: a.winner, comment: "" };
+  }
+}
+
+export interface TriggerArgs {
+  type: TriggerType;
+  comment?: string;
+  conditions: ConditionSpec[];
+  actions: ActionSpec[];
+}
+
+/**
+ * Add a mission trigger in the Mission Editor's STRUCTURED form (`trigrules`).
+ * DCS regenerates the compiled runtime triggers (`trig`) when the mission is
+ * opened and saved in the Mission Editor, so finalize triggers there.
+ */
+export function addTrigger(mission: LuaTable, args: TriggerArgs): number {
+  const trigrules = (mission["trigrules"] ??= {}) as LuaTable;
+  const rules: LuaTable = {};
+  args.conditions.forEach((c, i) => {
+    rules[i + 1] = conditionRule(c);
+  });
+  const actions: LuaTable = {};
+  args.actions.forEach((a, i) => {
+    actions[i + 1] = actionRule(a);
+  });
+  const index = nextIndex(trigrules);
+  trigrules[index] = {
+    predicate: TRIGGER_PREDICATE[args.type],
+    comment: args.comment ?? "",
+    colorItem: "0x00ff00ff",
+    eventlist: "",
+    rules,
+    actions,
+  };
+  return index;
+}
+
 /** A minimal, best-effort new-mission table. Finalize in the DCS Mission Editor. */
 export function newMissionTable(theatre: string, startTime: number): LuaTable {
   const emptySide = (name: string): LuaTable => ({ name, country: {}, nav_points: {}, bullseye: { x: 0, y: 0 } });
