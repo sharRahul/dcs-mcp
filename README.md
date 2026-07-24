@@ -43,21 +43,27 @@ Point your MCP client at the built server (stdio). Optional env: `DCS_BRIDGE_HOS
 
 Offline positions are DCS x/y metres; use `dcs_convert_coords` (live) to turn lat/long into x/y.
 
-## GUI
+## Using it from Claude / Codex / OpenCode
 
-A minimalist local web UI drives the same logic:
+Once configured, just ask your AI client in natural language — it calls the tools for you. All tools are available at once; the model uses `dcs_bridge_status` to decide whether to work live or offline.
 
-```bash
-npm run gui   # http://127.0.0.1:4700  (GUI_PORT overrides)
-```
+**Build a mission offline (no DCS needed):**
 
-![Mission builder overview](docs/gui-overview.png)
+> "Create a Caucasus mission, add a 2-ship F/A-18C CAP flight for the USA with two waypoints, set clear weather and a briefing, then save it to ~/Missions/op.miz"
 
-### The Online-mode toggle
+→ `dcs_miz_new` → `dcs_miz_add_aircraft_group` → `dcs_miz_add_waypoint` → `dcs_miz_set_group_task` → `dcs_miz_set_weather` → `dcs_miz_set_briefing` → `dcs_miz_save_as`
 
-![Online mode toggle](docs/gui-online-toggle.png)
+**Act in a running mission (DCS online):**
 
-Offline authoring is **always** available. Everything that touches a *running* DCS — bridge status, listing units, spawning, sending messages, and raw Lua — is blocked until you flip **Online mode** on. It starts **OFF**, and the gate is enforced server-side (live endpoints return `403` while off), not just hidden in the UI. Per design, turning it **ON unlocks live actions and raw Lua together**; raw Lua additionally needs `ALLOW_EXEC = true` in the hook and a de-sanitized DCS. The server binds to `127.0.0.1` only. Toggle it back OFF to return to offline-only.
+> "Is DCS connected? If so, spawn an Abrams platoon near 42.1N 42.3E and message all players 'Armor inbound'."
+
+→ `dcs_bridge_status` → `dcs_spawn_unit` → `dcs_send_message`
+
+**Inspect an existing file:**
+
+> "Open ~/Missions/op.miz and list all the blue groups and the weather."
+
+→ `dcs_miz_open` → `dcs_miz_list_groups` → `dcs_miz_get_weather`
 
 ## Live bridge setup
 

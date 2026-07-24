@@ -1,7 +1,8 @@
 # DCS-MCP — contributor guide for AI sessions
 
-MCP server for DCS World: offline `.miz` authoring/inspection, a live-control bridge,
-and a minimalist local web GUI. TypeScript, stdio transport, `npm run build` / `npm test`.
+MCP server for DCS World: offline `.miz` authoring/inspection and a live-control bridge.
+Driven by any MCP client (Claude, Codex, OpenCode). TypeScript, stdio transport,
+`npm run build` / `npm test`.
 
 ## Layout
 - `src/miz/` — `.miz` handling: `archive.ts` (safe zip read + copy-on-write pack),
@@ -9,7 +10,6 @@ and a minimalist local web GUI. TypeScript, stdio transport, `npm run build` / `
   `parser.ts` (canonical model), `authoring.ts` (mutations), `sessions.ts`, `validator.ts`.
 - `src/tools/` — MCP tool registrations (`miz.ts`, `miz-authoring.ts`, `bridge.ts`).
 - `src/bridge/client.ts` — TCP JSON client for the live hook.
-- `src/gui/` — Express server (`server.ts`) + inline page (`page.ts`).
 - `scripts/Hooks/dcs-mcp-hook.lua` — live control hook. `scripts/Export.lua` — telemetry only.
 
 ## Ground rules
