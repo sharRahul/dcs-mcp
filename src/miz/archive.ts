@@ -7,7 +7,7 @@
  */
 import { createHash } from "node:crypto";
 import path from "node:path";
-import { readFile, writeFile } from "node:fs/promises";
+import { access, readFile, writeFile } from "node:fs/promises";
 import AdmZip from "adm-zip";
 import { KNOWN_MIZ_ENTRIES } from "../constants.js";
 import {
@@ -67,6 +67,15 @@ export async function readMizArchive(filePath: string): Promise<MizArchive> {
   return { digest, bytes, entries, manifest };
 }
 
+async function pathExists(target: string): Promise<boolean> {
+  try {
+    await access(target);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Copy-on-write save: start from `sourceBytes`, replace the given entries, and write
  * a NEW `.miz` at `outPath`. Every other entry is preserved byte-for-byte. Refuses to
@@ -76,7 +85,8 @@ export async function packMiz(
   sourceBytes: Buffer,
   replacements: Map<string, string>,
   outPath: string,
-  sourcePath?: string
+  sourcePath?: string,
+  overwrite = false
 ): Promise<{ digest: string; outPath: string }> {
   if (!outPath.toLowerCase().endsWith(".miz")) {
     throw new ArchivePolicyError(`Output path must end in .miz: ${outPath}`);
@@ -84,6 +94,13 @@ export async function packMiz(
   if (sourcePath && path.resolve(outPath) === path.resolve(sourcePath)) {
     throw new ArchivePolicyError(
       "Refusing to overwrite the source mission. Choose a different output path (copy-on-write)."
+    );
+  }
+  // Never clobber an unrelated existing mission without being told to.
+  if (!overwrite && (await pathExists(outPath))) {
+    throw new ArchivePolicyError(
+      `Refusing to overwrite the existing file '${outPath}'. ` +
+        `Choose a different outPath, or pass overwrite=true if you intend to replace it.`
     );
   }
 

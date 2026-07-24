@@ -1,14 +1,16 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import AdmZip from "adm-zip";
 import { serializeLuaAssignment } from "../src/miz/serializer.js";
 import { parseLuaAssignment } from "../src/miz/lua.js";
-import { openSession, newSession, saveSessionAs, closeSession } from "../src/miz/sessions.js";
+import { openSession, newSession, saveSessionAs, closeSession, refresh } from "../src/miz/sessions.js";
+import { validateMission } from "../src/miz/validator.js";
 import {
   addAircraftGroup,
+  addGroundGroup,
   addWaypoint,
   setPayload,
   setGroupTask,
@@ -149,4 +151,110 @@ test("new mission session is serializable and reopenable", async () => {
   assert.equal(reopened.document.theatre, "PersianGulf");
   closeSession(s.id);
   closeSession(reopened.id);
+});
+
+test("save refuses to clobber an existing unrelated file unless overwrite=true", async () => {
+  const s = newSession("Caucasus", 43200);
+  const dir = mkdtempSync(join(tmpdir(), "dcs-ovw-"));
+  const outPath = join(dir, "target.miz");
+
+  await saveSessionAs(s, outPath);
+  await assert.rejects(() => saveSessionAs(s, outPath), /Refusing to overwrite the existing file/);
+
+  // The original file must still be intact after the refusal.
+  const before = readFileSync(outPath);
+  await assert.rejects(() => saveSessionAs(s, outPath), /overwrite=true/);
+  assert.deepEqual(readFileSync(outPath), before);
+
+  // Explicit opt-in succeeds.
+  const { digest } = await saveSessionAs(s, outPath, true);
+  assert.match(digest, /^[0-9a-f]{64}$/);
+  closeSession(s.id);
+});
+
+test("authored groups and units get unique DCS ids that continue existing numbering", async () => {
+  const s = await openSession(fixtureMiz());
+
+  addAircraftGroup(s.mission, "plane", {
+    side: "blue", country: "USA", name: "Alpha", type: "F-16C_50", count: 2, x: 0, y: 0,
+  });
+  addGroundGroup(s.mission, "vehicle", {
+    side: "red", country: "Russia", name: "Bravo", type: "T-90", count: 3, x: 10, y: 10,
+  });
+
+  const reparsed = parse(serialize("mission", s.mission), "mission");
+  const alpha = findGroup(reparsed, "Alpha")!.group as any;
+  const bravo = findGroup(reparsed, "Bravo")!.group as any;
+
+  assert.equal(typeof alpha.groupId, "number");
+  assert.equal(typeof bravo.groupId, "number");
+  assert.notEqual(alpha.groupId, bravo.groupId);
+
+  const ids = [
+    ...Object.values(alpha.units as Record<string, any>).map((u) => u.unitId),
+    ...Object.values(bravo.units as Record<string, any>).map((u) => u.unitId),
+  ];
+  assert.equal(ids.length, 5);
+  assert.ok(ids.every((id) => typeof id === "number"), `unitIds not all numbers: ${ids}`);
+  assert.equal(new Set(ids).size, 5, `unitIds not unique: ${ids}`);
+
+  closeSession(s.id);
+});
+
+test("ids keep incrementing past ids already present in the source mission", async () => {
+  const s = await openSession(fixtureMiz());
+  // Give the pre-existing group high ids, then confirm new content goes above them.
+  const existing = findGroup(s.mission, "Existing 1")!.group as any;
+  existing.groupId = 500;
+  existing.units[1].unitId = 900;
+
+  addAircraftGroup(s.mission, "plane", {
+    side: "blue", country: "USA", name: "Charlie", type: "F-16C_50", count: 1, x: 0, y: 0,
+  });
+
+  const charlie = findGroup(s.mission, "Charlie")!.group as any;
+  assert.equal(charlie.groupId, 501);
+  assert.equal(charlie.units[1].unitId, 901);
+  closeSession(s.id);
+});
+
+test("validation rejects a trigger pointing at a group that does not exist", async () => {
+  const s = await openSession(fixtureMiz());
+
+  addTrigger(s.mission, {
+    type: "once",
+    comment: "spawn reserves",
+    conditions: [{ kind: "time_after", seconds: 10 }],
+    actions: [{ kind: "activate_group", group: "Does Not Exist" }],
+  });
+  refresh(s);
+
+  const bad = validateMission(s.document);
+  assert.equal(bad.ok, false);
+  const issue = bad.errors.find((e) => e.code === "TRIGGER_GROUP_MISSING");
+  assert.ok(issue, `expected TRIGGER_GROUP_MISSING, got ${JSON.stringify(bad.errors)}`);
+  assert.match(issue!.message, /Does Not Exist/);
+  assert.match(issue!.message, /spawn reserves/);
+
+  // Adding the referenced group clears the error.
+  addAircraftGroup(s.mission, "plane", {
+    side: "blue", country: "USA", name: "Does Not Exist", type: "F-16C_50", count: 1, x: 0, y: 0,
+  });
+  refresh(s);
+  assert.equal(validateMission(s.document).errors.some((e) => e.code === "TRIGGER_GROUP_MISSING"), false);
+
+  closeSession(s.id);
+});
+
+test("a trigger referencing an existing group validates cleanly", async () => {
+  const s = await openSession(fixtureMiz());
+  addTrigger(s.mission, {
+    type: "once",
+    conditions: [{ kind: "time_after", seconds: 10 }],
+    actions: [{ kind: "activate_group", group: "Existing 1" }],
+  });
+  refresh(s);
+  const report = validateMission(s.document);
+  assert.equal(report.errors.some((e) => e.code === "TRIGGER_GROUP_MISSING"), false);
+  closeSession(s.id);
 });

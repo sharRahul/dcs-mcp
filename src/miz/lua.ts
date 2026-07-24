@@ -24,7 +24,9 @@ export interface LuaTable {
 function evalNode(node: any): LuaValue {
   switch (node.type) {
     case "StringLiteral":
-      return typeof node.value === "string" ? node.value : unquote(node.raw);
+      // Always decode from `raw`: luaparse leaves `value` null in its default
+      // encoding mode, and where it is populated it is not escape-decoded.
+      return typeof node.raw === "string" ? unquote(node.raw) : String(node.value ?? "");
     case "NumericLiteral":
       return node.value;
     case "BooleanLiteral":
@@ -72,17 +74,83 @@ function evalTable(node: any): LuaTable {
   return table;
 }
 
+/** Single-character Lua escapes. `\<newline>` is a literal newline. */
+const SIMPLE_ESCAPES: Record<string, string> = {
+  a: "\x07",
+  b: "\b",
+  f: "\f",
+  n: "\n",
+  r: "\r",
+  t: "\t",
+  v: "\v",
+  "\\": "\\",
+  '"': '"',
+  "'": "'",
+  "\n": "\n",
+};
+
+/**
+ * Decode a Lua string literal's raw source (quotes included) into its value.
+ *
+ * Must be a single left-to-right scan: chained `String.replace` calls corrupt
+ * data because an earlier rule can rewrite a backslash that a later rule owns
+ * (e.g. `"path\\name"` would decode to a backslash + newline).
+ */
 function unquote(raw: string): string {
-  if (raw.length >= 2 && (raw[0] === '"' || raw[0] === "'")) {
-    const body = raw.slice(1, -1);
-    return body
-      .replace(/\\n/g, "\n")
-      .replace(/\\t/g, "\t")
-      .replace(/\\"/g, '"')
-      .replace(/\\'/g, "'")
-      .replace(/\\\\/g, "\\");
+  // Long-bracket strings ([[...]], [==[...]==]) are raw: no escape processing,
+  // and Lua drops a newline immediately following the opening bracket.
+  const long = /^\[(=*)\[([\s\S]*)\]\1\]$/.exec(raw);
+  if (long) return long[2].replace(/^\r\n|^\n/, "");
+
+  if (raw.length < 2 || (raw[0] !== '"' && raw[0] !== "'")) return raw;
+  const body = raw.slice(1, -1);
+
+  let out = "";
+  for (let i = 0; i < body.length; i++) {
+    const ch = body[i];
+    if (ch !== "\\") {
+      out += ch;
+      continue;
+    }
+    const next = body[++i];
+    if (next === undefined) {
+      out += "\\"; // trailing backslash: emit literally rather than lose it
+      break;
+    }
+    // \ddd -- up to three decimal digits.
+    if (next >= "0" && next <= "9") {
+      const digits = /^[0-9]{1,3}/.exec(body.slice(i))![0];
+      out += String.fromCharCode(Number(digits));
+      i += digits.length - 1;
+      continue;
+    }
+    // \xXX -- hexadecimal (Lua 5.2+, tolerated here).
+    if (next === "x" || next === "X") {
+      const hex = /^[0-9a-fA-F]{1,2}/.exec(body.slice(i + 1));
+      if (hex) {
+        out += String.fromCharCode(parseInt(hex[0], 16));
+        i += hex[0].length;
+        continue;
+      }
+      out += next;
+      continue;
+    }
+    // \z -- skip the following run of whitespace (Lua 5.2+).
+    if (next === "z") {
+      let j = i + 1;
+      while (j < body.length && /\s/.test(body[j])) j++;
+      i = j - 1;
+      continue;
+    }
+    // \<CR> and \<CRLF> are line continuations, normalized to a newline.
+    if (next === "\r") {
+      out += "\n";
+      if (body[i + 1] === "\n") i++;
+      continue;
+    }
+    out += SIMPLE_ESCAPES[next] ?? next;
   }
-  return raw;
+  return out;
 }
 
 /**

@@ -21,7 +21,7 @@ import {
   type ConditionSpec,
 } from "../miz/authoring.js";
 import { validateMission } from "../miz/validator.js";
-import { buildResult, errorResult } from "./format.js";
+import { buildResult, errorResult, validationReportSchema, weatherSchema } from "./format.js";
 import type { MissionDocument } from "../types.js";
 
 const sessionIdField = z.string().min(1).describe("Session id from dcs_miz_open or dcs_miz_new");
@@ -73,6 +73,7 @@ export function registerMizAuthoringTools(server: McpServer): void {
           startTime: z.number().int().min(0).max(86400).default(43200).describe("Start time (seconds after midnight)"),
         })
         .strict(),
+      outputSchema: z.object({ sessionId: z.string(), theatre: z.string() }),
       annotations: authoringAnnotations,
     },
     async ({ theatre, startTime }) => {
@@ -115,6 +116,7 @@ export function registerMizAuthoringTools(server: McpServer): void {
           task: z.string().optional().describe("Group task, e.g. 'CAP', 'CAS', 'SEAD'"),
         })
         .strict(),
+      outputSchema: z.object({ added: z.string(), groupCount: z.number() }),
       annotations: authoringAnnotations,
     },
     async (a) => {
@@ -170,6 +172,7 @@ export function registerMizAuthoringTools(server: McpServer): void {
           skill: z.enum(["Average", "Good", "High", "Excellent", "Random"]).default("Average"),
         })
         .strict(),
+      outputSchema: z.object({ added: z.string(), groupCount: z.number() }),
       annotations: authoringAnnotations,
     },
     async (a) => {
@@ -214,6 +217,7 @@ export function registerMizAuthoringTools(server: McpServer): void {
           radius: z.number().min(1).max(500000).describe("Zone radius in metres"),
         })
         .strict(),
+      outputSchema: z.object({ added: z.string(), zoneCount: z.number() }),
       annotations: authoringAnnotations,
     },
     async (a) => {
@@ -253,6 +257,11 @@ export function registerMizAuthoringTools(server: McpServer): void {
           name: z.string().max(64).optional(),
         })
         .strict(),
+      outputSchema: z.object({
+        group: z.string(),
+        waypointIndex: z.number(),
+        waypointCount: z.number(),
+      }),
       annotations: authoringAnnotations,
     },
     async (a) => {
@@ -304,6 +313,7 @@ export function registerMizAuthoringTools(server: McpServer): void {
             .describe("Pylon stores by station number"),
         })
         .strict(),
+      outputSchema: z.object({ unit: z.string() }),
       annotations: authoringAnnotations,
     },
     async ({ sessionId, unit, ...args }) => {
@@ -334,6 +344,7 @@ export function registerMizAuthoringTools(server: McpServer): void {
           task: z.string().min(1).describe("Task name"),
         })
         .strict(),
+      outputSchema: z.object({ group: z.string(), task: z.string() }),
       annotations: authoringAnnotations,
     },
     async ({ sessionId, group, task }) => {
@@ -400,6 +411,7 @@ export function registerMizAuthoringTools(server: McpServer): void {
             .describe("Trigger actions"),
         })
         .strict(),
+      outputSchema: z.object({ triggerIndex: z.number(), triggerCount: z.number() }),
       annotations: authoringAnnotations,
     },
     async ({ sessionId, type, comment, conditions, actions }) => {
@@ -440,6 +452,7 @@ export function registerMizAuthoringTools(server: McpServer): void {
           windGroundDir: z.number().min(0).max(359).optional(),
         })
         .strict(),
+      outputSchema: weatherSchema,
       annotations: authoringAnnotations,
     },
     async ({ sessionId, ...args }) => {
@@ -469,6 +482,10 @@ export function registerMizAuthoringTools(server: McpServer): void {
           description: z.string().max(10000).optional(),
         })
         .strict(),
+      outputSchema: z.object({
+        title: z.string().optional(),
+        description: z.string().optional(),
+      }),
       annotations: authoringAnnotations,
     },
     async ({ sessionId, title, description }) => {
@@ -493,6 +510,14 @@ export function registerMizAuthoringTools(server: McpServer): void {
         "added/removed, and whether weather or briefing changed.\n\nArgs:\n  - sessionId\n\n" +
         "Returns JSON: { groupsAdded, groupsRemoved, zonesAdded, zonesRemoved, weatherChanged, briefingChanged }.",
       inputSchema: z.object({ sessionId: sessionIdField }).strict(),
+      outputSchema: z.object({
+        groupsAdded: z.array(z.string()),
+        groupsRemoved: z.array(z.string()),
+        zonesAdded: z.array(z.string()),
+        zonesRemoved: z.array(z.string()),
+        weatherChanged: z.boolean(),
+        briefingChanged: z.boolean(),
+      }),
       annotations: { ...authoringAnnotations, readOnlyHint: true, idempotentHint: true },
     },
     async ({ sessionId }) => {
@@ -512,19 +537,32 @@ export function registerMizAuthoringTools(server: McpServer): void {
       title: "Save mission as",
       description:
         "Save the open session to a NEW .miz file (copy-on-write; never overwrites the source). Runs " +
-        "validation first and refuses to save on validation errors unless force=true.\n\n" +
-        "Args:\n  - sessionId\n  - outPath (string): destination .miz path\n  - force? (bool): save despite errors\n\n" +
-        "Returns JSON: { outPath, digest (sha256), validation }.",
+        "validation first and refuses to save on validation errors unless force=true, and refuses to " +
+        "replace an existing file unless overwrite=true.\n\n" +
+        "Args:\n  - sessionId\n  - outPath (string): destination .miz path\n  - force? (bool): save despite errors\n" +
+        "  - overwrite? (bool): replace outPath if it already exists\n\n" +
+        "Returns JSON: { saved, outPath, digest (sha256), validation }.",
       inputSchema: z
         .object({
           sessionId: sessionIdField,
           outPath: z.string().min(1).describe("Destination path ending in .miz"),
           force: z.boolean().default(false).describe("Save even if validation reports errors"),
+          overwrite: z
+            .boolean()
+            .default(false)
+            .describe("Replace outPath if a file is already there (destructive)"),
         })
         .strict(),
-      annotations: authoringAnnotations,
+      outputSchema: z.object({
+        saved: z.boolean(),
+        outPath: z.string().optional(),
+        digest: z.string().optional(),
+        validation: validationReportSchema,
+      }),
+      // Writes to the filesystem, and can replace an existing file when overwrite=true.
+      annotations: { ...authoringAnnotations, destructiveHint: true },
     },
-    async ({ sessionId, outPath, force }) => {
+    async ({ sessionId, outPath, force, overwrite }) => {
       try {
         const s = requireSession(sessionId);
         const report = validateMission(s.document);
@@ -534,7 +572,7 @@ export function registerMizAuthoringTools(server: McpServer): void {
             { saved: false, validation: report }
           );
         }
-        const { digest } = await saveSessionAs(s, outPath);
+        const { digest } = await saveSessionAs(s, outPath, overwrite);
         return buildResult(`Saved mission to ${outPath}.`, {
           saved: true,
           outPath,

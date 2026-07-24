@@ -62,3 +62,55 @@ test("bridge errors clearly when nothing is listening", async () => {
     (err: unknown) => err instanceof BridgeError
   );
 });
+
+/** Server that accepts a connection and then behaves badly. */
+function rudeHook(behave: (socket: net.Socket) => void): Promise<{ port: number; close: () => void }> {
+  return new Promise((resolve) => {
+    const server = net.createServer(behave);
+    server.listen(0, "127.0.0.1", () => {
+      const port = (server.address() as net.AddressInfo).port;
+      resolve({ port, close: () => server.close() });
+    });
+  });
+}
+
+test("bridge rejects when the hook closes without replying (never hangs)", async () => {
+  const hook = await rudeHook((socket) => socket.end());
+  try {
+    await assert.rejects(
+      () => bridgeRequest({ cmd: "ping" }, { host: "127.0.0.1", port: hook.port, timeoutMs: 10_000 }),
+      (err: unknown) => err instanceof BridgeError && /closed it without replying/.test((err as Error).message)
+    );
+  } finally {
+    hook.close();
+  }
+});
+
+test("bridge rejects on a truncated response instead of waiting for a newline", async () => {
+  const hook = await rudeHook((socket) => {
+    socket.write('{"ok":true,"da');
+    socket.end();
+  });
+  try {
+    await assert.rejects(
+      () => bridgeRequest({ cmd: "ping" }, { host: "127.0.0.1", port: hook.port, timeoutMs: 10_000 }),
+      (err: unknown) => err instanceof BridgeError && /mid-response/.test((err as Error).message)
+    );
+  } finally {
+    hook.close();
+  }
+});
+
+test("bridge times out when the hook accepts but never answers or closes", async () => {
+  const sockets: net.Socket[] = [];
+  const hook = await rudeHook((socket) => sockets.push(socket)); // hold it open, say nothing
+  try {
+    await assert.rejects(
+      () => bridgeRequest({ cmd: "ping" }, { host: "127.0.0.1", port: hook.port, timeoutMs: 300 }),
+      (err: unknown) => err instanceof BridgeError && /Timed out after 300ms/.test((err as Error).message)
+    );
+  } finally {
+    for (const s of sockets) s.destroy();
+    hook.close();
+  }
+});
