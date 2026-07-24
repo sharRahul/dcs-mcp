@@ -5,9 +5,31 @@ import { bridgeRequest, type BridgeOptions, type BridgeRequest } from "../bridge
 import { BRIDGE_DEFAULT_HOST, BRIDGE_DEFAULT_PORT } from "../constants.js";
 import { buildResult, errorResult } from "./format.js";
 
+/**
+ * Default port from DCS_BRIDGE_PORT, falling back to the built-in default.
+ *
+ * A malformed env var must not become a NaN default: that would fail schema
+ * validation on every bridge call with an error pointing at the caller's
+ * arguments rather than at the real cause.
+ */
+function defaultPort(): number {
+  const raw = process.env.DCS_BRIDGE_PORT;
+  if (raw === undefined || raw.trim() === "") return BRIDGE_DEFAULT_PORT;
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) {
+    console.error(
+      `dcs-mcp-server: ignoring invalid DCS_BRIDGE_PORT='${raw}' (expected 1-65535); ` +
+        `using ${BRIDGE_DEFAULT_PORT}`
+    );
+    return BRIDGE_DEFAULT_PORT;
+  }
+  return parsed;
+}
+
 const hostField = z
   .string()
-  .default(process.env.DCS_BRIDGE_HOST ?? BRIDGE_DEFAULT_HOST)
+  .min(1)
+  .default(process.env.DCS_BRIDGE_HOST?.trim() || BRIDGE_DEFAULT_HOST)
   .describe("Host of the DCS hook server (default from DCS_BRIDGE_HOST or 127.0.0.1)");
 
 const portField = z.coerce
@@ -15,7 +37,7 @@ const portField = z.coerce
   .int()
   .min(1)
   .max(65535)
-  .default(Number(process.env.DCS_BRIDGE_PORT ?? BRIDGE_DEFAULT_PORT))
+  .default(defaultPort())
   .describe("Port of the DCS hook server (default from DCS_BRIDGE_PORT or 8899)");
 
 const coalitionField = z
@@ -58,6 +80,7 @@ export function registerBridgeTools(server: McpServer): void {
         "Ping the live DCS bridge to check connectivity. Use before other live tools to confirm DCS " +
         "is running with the hook installed.\n\nArgs: host?, port?\nReturns JSON: { connected, response }.",
       inputSchema: z.object({ host: hostField, port: portField }).strict(),
+      outputSchema: z.object({ connected: z.boolean(), response: z.unknown() }),
       annotations: liveRead,
     },
     async ({ host, port }) => {
@@ -81,6 +104,7 @@ export function registerBridgeTools(server: McpServer): void {
         "Return live ownship (player aircraft) telemetry: name, lat/long/alt, attitude, and speeds.\n\n" +
         "Args: host?, port?",
       inputSchema: z.object({ host: hostField, port: portField }).strict(),
+      outputSchema: z.object({ self: z.unknown() }),
       annotations: liveRead,
     },
     async ({ host, port }) => {
@@ -100,6 +124,7 @@ export function registerBridgeTools(server: McpServer): void {
         "Return metadata about the mission currently running in DCS: model time, theatre, and date.\n\n" +
         "Args: host?, port?",
       inputSchema: z.object({ host: hostField, port: portField }).strict(),
+      outputSchema: z.object({ mission: z.unknown() }),
       annotations: liveRead,
     },
     async ({ host, port }) => {
@@ -120,6 +145,7 @@ export function registerBridgeTools(server: McpServer): void {
         "includes name, type, group, coalition, DCS x/y, lat/long, altitude, and heading.\n\n" +
         "Args: coalition ('red'|'blue'|'neutral'|'all'), host?, port?",
       inputSchema: z.object({ coalition: coalitionField, host: hostField, port: portField }).strict(),
+      outputSchema: z.object({ units: z.unknown() }),
       annotations: liveRead,
     },
     async ({ coalition, host, port }) => {
@@ -139,6 +165,7 @@ export function registerBridgeTools(server: McpServer): void {
         "List airborne aircraft in the running mission, optionally filtered by coalition.\n\n" +
         "Args: coalition ('red'|'blue'|'neutral'|'all'), host?, port?",
       inputSchema: z.object({ coalition: coalitionField, host: hostField, port: portField }).strict(),
+      outputSchema: z.object({ aircraft: z.unknown() }),
       annotations: liveRead,
     },
     async ({ coalition, host, port }) => {
@@ -166,6 +193,7 @@ export function registerBridgeTools(server: McpServer): void {
           port: portField,
         })
         .strict(),
+      outputSchema: z.object({ message: z.unknown() }),
       annotations: liveWrite,
     },
     async ({ text, seconds, host, port }) => {
@@ -199,6 +227,7 @@ export function registerBridgeTools(server: McpServer): void {
           port: portField,
         })
         .strict(),
+      outputSchema: z.object({ spawn: z.unknown() }),
       annotations: liveWrite,
     },
     async ({ name, type, lat, lon, heading, country, host, port }) => {
@@ -226,15 +255,26 @@ export function registerBridgeTools(server: McpServer): void {
       inputSchema: z
         .object({
           direction: z.enum(["ll2xz", "xz2ll"]).describe("Conversion direction"),
-          lat: z.number().optional().describe("Latitude (ll2xz)"),
-          lon: z.number().optional().describe("Longitude (ll2xz)"),
-          x: z.number().optional().describe("DCS x / north (xz2ll)"),
-          y: z.number().optional().describe("DCS y / east (xz2ll)"),
+          lat: z.number().min(-90).max(90).optional().describe("Latitude (required for ll2xz)"),
+          lon: z.number().min(-180).max(180).optional().describe("Longitude (required for ll2xz)"),
+          x: z.number().optional().describe("DCS x / north (required for xz2ll)"),
+          y: z.number().optional().describe("DCS y / east (required for xz2ll)"),
           alt: z.number().default(0).describe("Altitude in metres"),
           host: hostField,
           port: portField,
         })
-        .strict(),
+        .strict()
+        // Reject the wrong pair up front instead of sending undefined coordinates
+        // to DCS and getting a confusing answer back.
+        .refine((a) => (a.direction === "ll2xz" ? a.lat !== undefined && a.lon !== undefined : true), {
+          message: "direction 'll2xz' requires both lat and lon",
+          path: ["lat"],
+        })
+        .refine((a) => (a.direction === "xz2ll" ? a.x !== undefined && a.y !== undefined : true), {
+          message: "direction 'xz2ll' requires both x and y",
+          path: ["x"],
+        }),
+      outputSchema: z.object({ coords: z.unknown() }),
       annotations: liveRead,
     },
     async ({ direction, lat, lon, x, y, alt, host, port }) => {
@@ -266,6 +306,7 @@ export function registerBridgeTools(server: McpServer): void {
             port: portField,
           })
           .strict(),
+        outputSchema: z.object({ exec: z.unknown() }),
         annotations: { ...liveWrite, destructiveHint: true },
       },
       async ({ code, env, host, port }) => {

@@ -93,14 +93,21 @@ export function newSession(theatre: string, startTime: number): MissionSession {
 /** Save the (possibly modified) session to a NEW `.miz` file (copy-on-write). */
 export async function saveSessionAs(
   session: MissionSession,
-  outPath: string
+  outPath: string,
+  overwrite = false
 ): Promise<{ digest: string; outPath: string }> {
   const replacements = new Map<string, string>();
   replacements.set("mission", serializeLuaAssignment("mission", session.mission));
   if (session.dictionary) {
     replacements.set("l10n/DEFAULT/dictionary", serializeLuaAssignment("dictionary", session.dictionary));
   }
-  const result = await packMiz(session.sourceBytes, replacements, outPath, session.sourcePath);
+  const result = await packMiz(
+    session.sourceBytes,
+    replacements,
+    outPath,
+    session.sourcePath,
+    overwrite
+  );
   session.dirty = false;
   return result;
 }

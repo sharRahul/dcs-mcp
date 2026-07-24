@@ -10,6 +10,7 @@ import type {
   MissionDocument,
   MissionGroup,
   MissionSummary,
+  MissionTrigger,
   MissionUnit,
   MissionWeather,
   TriggerZone,
@@ -117,6 +118,60 @@ function parseZones(mission: LuaTable, resolve: (v: LuaValue | undefined) => str
   }));
 }
 
+/** Action predicates whose `group` field points at another group in the mission. */
+const GROUP_REF_ACTIONS = new Set([
+  "a_activate_group",
+  "a_deactivate_group",
+  "a_group_activate",
+  "a_group_deactivate",
+  "a_group_stop",
+  "a_group_continue",
+]);
+
+/** Condition predicates whose `zone` field points at a trigger zone. */
+const ZONE_REF_CONDITIONS = new Set([
+  "c_unit_in_zone",
+  "c_part_of_coalition_in_zone",
+  "c_all_of_coalition_in_zone",
+  "c_unit_outside_zone",
+  "c_group_in_zone",
+]);
+
+/** Collect the cross-references each trigger makes, for reference validation. */
+function parseTriggers(mission: LuaTable): MissionTrigger[] {
+  return luaArray(mission["trigrules"]).map((rule, i) => {
+    const groupRefs: (string | number)[] = [];
+    const zoneRefs: (string | number)[] = [];
+
+    for (const action of luaArray(rule["actions"])) {
+      const predicate = str(action["predicate"]);
+      const ref = action["group"];
+      if (predicate && GROUP_REF_ACTIONS.has(predicate) && (typeof ref === "string" || typeof ref === "number")) {
+        groupRefs.push(ref);
+      }
+    }
+    for (const condition of luaArray(rule["rules"])) {
+      const predicate = str(condition["predicate"]);
+      const ref = condition["zone"];
+      if (
+        predicate &&
+        ZONE_REF_CONDITIONS.has(predicate) &&
+        (typeof ref === "string" || typeof ref === "number")
+      ) {
+        zoneRefs.push(ref);
+      }
+    }
+
+    return {
+      index: i + 1,
+      predicate: str(rule["predicate"]) ?? "unknown",
+      comment: str(rule["comment"]) || undefined,
+      groupRefs,
+      zoneRefs,
+    };
+  });
+}
+
 /** Build the canonical MissionDocument from already-parsed mission/dictionary tables. */
 export function buildMissionDocument(
   mission: LuaTable,
@@ -129,7 +184,8 @@ export function buildMissionDocument(
   const weather = parseWeather(asTable(mission["weather"]));
   const { groups, countriesByCoalition } = parseGroups(mission, resolve);
   const zones = parseZones(mission, resolve);
-  const triggerCount = luaArray(mission["trigrules"]).length;
+  const triggers = parseTriggers(mission);
+  const triggerCount = triggers.length;
 
   const briefingTitle = resolve(mission["sortie"]);
   const briefingDescription = resolve(mission["descriptionText"]);
@@ -158,6 +214,7 @@ export function buildMissionDocument(
     summary,
     groups,
     zones,
+    triggers,
     weather,
     briefing: { title: briefingTitle, description: briefingDescription },
     sourceDigest,

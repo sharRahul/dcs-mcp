@@ -78,6 +78,38 @@ export function validateMission(doc: MissionDocument): ValidationReport {
     }
   }
 
+  // Trigger cross-references. A trigger pointing at a group or zone that is not
+  // in the mission does nothing at all in DCS, and does so silently.
+  const groupIds = new Set<string | number>();
+  for (const group of doc.groups) groupIds.add(group.name);
+  for (const zone of doc.zones) zoneNames.add(zone.name);
+
+  for (const trigger of doc.triggers) {
+    const label = trigger.comment ? `trigger #${trigger.index} ('${trigger.comment}')` : `trigger #${trigger.index}`;
+    for (const ref of trigger.groupRefs) {
+      // Numeric refs are DCS groupIds, which the canonical model does not track;
+      // only name-based references can be resolved here.
+      if (typeof ref === "string" && !groupIds.has(ref)) {
+        errors.push({
+          severity: "error",
+          code: "TRIGGER_GROUP_MISSING",
+          message: `${label} references group '${ref}', which does not exist in this mission`,
+          location: `trigger:${trigger.index}`,
+        });
+      }
+    }
+    for (const ref of trigger.zoneRefs) {
+      if (typeof ref === "string" && !zoneNames.has(ref)) {
+        errors.push({
+          severity: "error",
+          code: "TRIGGER_ZONE_MISSING",
+          message: `${label} references trigger zone '${ref}', which does not exist in this mission`,
+          location: `trigger:${trigger.index}`,
+        });
+      }
+    }
+  }
+
   // QNH sanity check (mmHg).
   const qnh = doc.weather.qnhMmHg;
   if (qnh !== undefined && (qnh < 650 || qnh > 850)) {

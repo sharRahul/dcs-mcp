@@ -3,7 +3,15 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { closeSession, listSessions, openSession, requireSession } from "../miz/sessions.js";
 import { validateMission } from "../miz/validator.js";
-import { ResponseFormat, buildResult, errorResult, render, responseFormatField } from "./format.js";
+import {
+  ResponseFormat,
+  buildResult,
+  errorResult,
+  render,
+  responseFormatField,
+  validationReportSchema,
+  weatherSchema,
+} from "./format.js";
 
 const sessionIdField = z
   .string()
@@ -16,6 +24,20 @@ const readOnly = {
   idempotentHint: true,
   openWorldHint: false,
 } as const;
+
+const summarySchema = z.object({
+  theatre: z.string(),
+  start_time: z.number().optional(),
+  date: z.object({ Year: z.number(), Month: z.number(), Day: z.number() }).optional(),
+  coalitions: z.array(z.string()),
+  countriesByCoalition: z.record(z.string(), z.array(z.string())),
+  groupCount: z.number(),
+  unitCount: z.number(),
+  zoneCount: z.number(),
+  triggerCount: z.number(),
+  weather: weatherSchema,
+  briefingTitle: z.string().optional(),
+});
 
 export function registerMizTools(server: McpServer): void {
   server.registerTool(
@@ -30,6 +52,14 @@ export function registerMizTools(server: McpServer): void {
       inputSchema: z.object({
         path: z.string().min(1).describe("Absolute path to a .miz mission file"),
       }).strict(),
+      outputSchema: z.object({
+        sessionId: z.string(),
+        sourcePath: z.string(),
+        sourceDigest: z.string(),
+        theatre: z.string(),
+        groupCount: z.number(),
+        unitCount: z.number(),
+      }),
       annotations: readOnly,
     },
     async ({ path }) => {
@@ -63,6 +93,7 @@ export function registerMizTools(server: McpServer): void {
         "countries, group/unit/zone/trigger counts, weather, and briefing title.\n\n" +
         "Args:\n  - sessionId (string)\n  - response_format ('markdown' | 'json')",
       inputSchema: z.object({ sessionId: sessionIdField, response_format: responseFormatField }).strict(),
+      outputSchema: summarySchema,
       annotations: readOnly,
     },
     async ({ sessionId, response_format }) => {
@@ -115,6 +146,21 @@ export function registerMizTools(server: McpServer): void {
           .describe("Filter by group category"),
         response_format: responseFormatField,
       }).strict(),
+      outputSchema: z.object({
+        count: z.number(),
+        groups: z.array(
+          z.object({
+            name: z.string(),
+            coalition: z.string(),
+            country: z.string(),
+            category: z.string(),
+            task: z.string().optional(),
+            unitCount: z.number(),
+            unitTypes: z.array(z.string()),
+            waypointCount: z.number(),
+          })
+        ),
+      }),
       annotations: readOnly,
     },
     async ({ sessionId, coalition, category, response_format }) => {
@@ -168,6 +214,7 @@ export function registerMizTools(server: McpServer): void {
         "Return the weather configuration of an open mission: temperature, QNH, cloud base, and " +
         "ground wind.\n\nArgs:\n  - sessionId (string)\n  - response_format ('markdown' | 'json')",
       inputSchema: z.object({ sessionId: sessionIdField, response_format: responseFormatField }).strict(),
+      outputSchema: weatherSchema,
       annotations: readOnly,
     },
     async ({ sessionId, response_format }) => {
@@ -202,6 +249,10 @@ export function registerMizTools(server: McpServer): void {
         "Return the mission briefing (title and description text), resolved through the mission " +
         "localization dictionary.\n\nArgs:\n  - sessionId (string)\n  - response_format ('markdown' | 'json')",
       inputSchema: z.object({ sessionId: sessionIdField, response_format: responseFormatField }).strict(),
+      outputSchema: z.object({
+        title: z.string().optional(),
+        description: z.string().optional(),
+      }),
       annotations: readOnly,
     },
     async ({ sessionId, response_format }) => {
@@ -230,6 +281,7 @@ export function registerMizTools(server: McpServer): void {
         "warnings.\n\nArgs:\n  - sessionId (string)\n  - response_format ('markdown' | 'json')\n\n" +
         "Returns JSON: { ok, errors: [...], warnings: [...] }.",
       inputSchema: z.object({ sessionId: sessionIdField, response_format: responseFormatField }).strict(),
+      outputSchema: validationReportSchema,
       annotations: readOnly,
     },
     async ({ sessionId, response_format }) => {
@@ -261,13 +313,79 @@ export function registerMizTools(server: McpServer): void {
   );
 
   server.registerTool(
+    "dcs_miz_list_sessions",
+    {
+      title: "List open mission sessions",
+      description:
+        "List every mission session currently open in this server, with the source file (if any), " +
+        "when it was opened, whether it has unsaved changes, and its group/unit counts. Use this to " +
+        "recover a sessionId you no longer have.\n\nArgs:\n  - response_format ('markdown' | 'json')\n\n" +
+        "Returns JSON: { count, sessions: [{ sessionId, sourcePath, openedAt, dirty, theatre, groupCount, unitCount }] }.",
+      inputSchema: z.object({ response_format: responseFormatField }).strict(),
+      outputSchema: z.object({
+        count: z.number(),
+        sessions: z.array(
+          z.object({
+            sessionId: z.string(),
+            sourcePath: z.string().optional(),
+            openedAt: z.string(),
+            dirty: z.boolean(),
+            theatre: z.string(),
+            groupCount: z.number(),
+            unitCount: z.number(),
+          })
+        ),
+      }),
+      annotations: readOnly,
+    },
+    async ({ response_format }) => {
+      const sessions = listSessions().map((s) => ({
+        sessionId: s.id,
+        ...(s.sourcePath ? { sourcePath: s.sourcePath } : {}),
+        openedAt: s.openedAt,
+        dirty: s.dirty,
+        theatre: s.document.theatre,
+        groupCount: s.document.summary.groupCount,
+        unitCount: s.document.summary.unitCount,
+      }));
+      const structured = { count: sessions.length, sessions };
+      return render(
+        response_format,
+        () => {
+          if (!sessions.length) return "No open sessions. Use dcs_miz_open or dcs_miz_new to start one.";
+          const lines = [`# Open sessions (${sessions.length})`, ``];
+          for (const s of sessions) {
+            lines.push(
+              `- **${s.sessionId}** (${s.theatre}) - ${s.groupCount} groups, ${s.unitCount} units` +
+                `${s.dirty ? " — unsaved changes" : ""}`,
+              `  - Source: ${s.sourcePath ?? "(new mission, never saved)"}`,
+              `  - Opened: ${s.openedAt}`
+            );
+          }
+          return lines.join("\n");
+        },
+        structured
+      );
+    }
+  );
+
+  server.registerTool(
     "dcs_miz_close",
     {
       title: "Close mission session",
       description:
-        "Close an open mission session and free its parsed data.\n\nArgs:\n  - sessionId (string)",
+        "Close an open mission session and free its parsed data. Unsaved changes are discarded; save " +
+        "first with dcs_miz_save_as if you want to keep them.\n\nArgs:\n  - sessionId (string)\n\n" +
+        "Returns JSON: { closed, openSessions }.",
       inputSchema: z.object({ sessionId: sessionIdField }).strict(),
-      annotations: { ...readOnly, idempotentHint: true },
+      outputSchema: z.object({ closed: z.boolean(), openSessions: z.array(z.string()) }),
+      // Discards in-memory state, so not read-only; closing twice is harmless.
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     async ({ sessionId }) => {
       const removed = closeSession(sessionId);

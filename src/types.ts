@@ -62,11 +62,24 @@ export interface MissionSummary {
   briefingTitle?: string;
 }
 
+export interface MissionTrigger {
+  /** 1-based index into `mission.trigrules`. */
+  index: number;
+  /** Raw DCS predicate, e.g. 'triggerOnce', 'triggerStart', 'triggerContinious'. */
+  predicate: string;
+  comment?: string;
+  /** Group names or ids referenced by this trigger's actions. */
+  groupRefs: (string | number)[];
+  /** Trigger-zone names or ids referenced by this trigger's conditions. */
+  zoneRefs: (string | number)[];
+}
+
 export interface MissionDocument {
   theatre: string;
   summary: MissionSummary;
   groups: MissionGroup[];
   zones: TriggerZone[];
+  triggers: MissionTrigger[];
   weather: MissionWeather;
   /** Localized briefing text resolved through the dictionary, when present. */
   briefing: { title?: string; description?: string };

@@ -50,6 +50,36 @@ function ensureCountry(mission: LuaTable, side: Side, country: string, id: numbe
   return created;
 }
 
+/**
+ * Highest `groupId`/`unitId` already used anywhere in the mission.
+ *
+ * DCS identifies groups and units by these integers, not by name, and they must
+ * be unique mission-wide. New content continues the existing numbering so an
+ * authored mission stays consistent with one that came out of the Mission Editor.
+ */
+export function maxIds(mission: LuaTable): { groupId: number; unitId: number } {
+  let maxGroup = 0;
+  let maxUnit = 0;
+  const coalitions = asTable(mission["coalition"]);
+  for (const side of ["red", "blue", "neutrals"] as Side[]) {
+    const sideTable = asTable(coalitions?.[side]);
+    for (const country of luaArray(sideTable?.["country"])) {
+      for (const category of ALL_CATEGORIES) {
+        const catTable = asTable(country[category]);
+        for (const group of luaArray(catTable?.["group"])) {
+          const gid = group["groupId"];
+          if (typeof gid === "number" && gid > maxGroup) maxGroup = gid;
+          for (const unit of luaArray(group["units"])) {
+            const uid = unit["unitId"];
+            if (typeof uid === "number" && uid > maxUnit) maxUnit = uid;
+          }
+        }
+      }
+    }
+  }
+  return { groupId: maxGroup, unitId: maxUnit };
+}
+
 interface UnitSpec {
   type: string;
   x: number;
@@ -57,6 +87,8 @@ interface UnitSpec {
   altitudeMetres?: number;
   heading?: number;
   skill?: string;
+  /** First `unitId` to assign; subsequent units increment from here. */
+  firstUnitId: number;
 }
 
 function buildUnits(groupName: string, count: number, spec: UnitSpec): LuaTable {
@@ -64,6 +96,7 @@ function buildUnits(groupName: string, count: number, spec: UnitSpec): LuaTable 
   for (let i = 1; i <= count; i++) {
     const unit: LuaTable = {
       name: `${groupName}-${i}`,
+      unitId: spec.firstUnitId + i - 1,
       type: spec.type,
       x: spec.x + (i - 1) * 30,
       y: spec.y + (i - 1) * 30,
@@ -99,9 +132,11 @@ export function addAircraftGroup(mission: LuaTable, category: AirCategory, args:
   const country = ensureCountry(mission, args.side, args.country, countryId(args.country, args.countryId));
   const catTable = (country[category] ??= { group: {} }) as LuaTable;
   const groups = (catTable["group"] ??= {}) as LuaTable;
+  const ids = maxIds(mission);
 
   const group: LuaTable = {
     name: args.name,
+    groupId: ids.groupId + 1,
     task: args.task ?? "CAP",
     task_started: false,
     units: buildUnits(args.name, args.count, {
@@ -111,6 +146,7 @@ export function addAircraftGroup(mission: LuaTable, category: AirCategory, args:
       altitudeMetres: args.altitudeMetres ?? 6096,
       heading: args.heading,
       skill: args.skill,
+      firstUnitId: ids.unitId + 1,
     }),
     route: { points: {} },
     x: args.x,
@@ -125,9 +161,11 @@ export function addGroundGroup(mission: LuaTable, category: GroundCategory, args
   const country = ensureCountry(mission, args.side, args.country, countryId(args.country, args.countryId));
   const catTable = (country[category] ??= { group: {} }) as LuaTable;
   const groups = (catTable["group"] ??= {}) as LuaTable;
+  const ids = maxIds(mission);
 
   const group: LuaTable = {
     name: args.name,
+    groupId: ids.groupId + 1,
     task: args.task ?? "Ground Nothing",
     units: buildUnits(args.name, args.count, {
       type: args.type,
@@ -135,6 +173,7 @@ export function addGroundGroup(mission: LuaTable, category: GroundCategory, args
       y: args.y,
       heading: args.heading,
       skill: args.skill ?? "Average",
+      firstUnitId: ids.unitId + 1,
     }),
     route: { points: {} },
     x: args.x,

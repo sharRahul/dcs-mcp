@@ -18,6 +18,29 @@ export type ToolResult = {
   isError?: boolean;
 };
 
+/** Validation report shape, shared by dcs_miz_validate and dcs_miz_save_as. */
+export const validationIssueSchema = z.object({
+  severity: z.enum(["error", "warning"]),
+  code: z.string(),
+  message: z.string(),
+  location: z.string().optional(),
+});
+
+export const validationReportSchema = z.object({
+  ok: z.boolean(),
+  errors: z.array(validationIssueSchema),
+  warnings: z.array(validationIssueSchema),
+});
+
+export const weatherSchema = z.object({
+  temperatureCelsius: z.number().optional(),
+  qnhMmHg: z.number().optional(),
+  cloudsBase: z.number().optional(),
+  windGroundSpeed: z.number().optional(),
+  windGroundDir: z.number().optional(),
+  turbulence: z.number().optional(),
+});
+
 /** Build a tool result, truncating oversized text and attaching structured data. */
 export function buildResult(
   text: string,

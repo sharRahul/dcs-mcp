@@ -7,17 +7,36 @@
  */
 import type { LuaTable, LuaValue } from "./lua.js";
 
+const STRING_ESCAPES: Record<string, string> = {
+  "\\": "\\\\",
+  '"': '\\"',
+  "\n": "\\n",
+  "\r": "\\r",
+  "\t": "\\t",
+  "\x07": "\\a",
+  "\b": "\\b",
+  "\f": "\\f",
+  "\v": "\\v",
+};
+
+/** Backslash, double quote, C0 control characters, and DEL. */
+const NEEDS_ESCAPE = /[\\"\x00-\x1f\x7f]/g;
+
+/**
+ * Quote a string as a Lua literal.
+ *
+ * Done in a single pass so escaping can never re-process its own output: chained
+ * `String.replace` calls corrupt data because a later rule can rewrite a
+ * backslash an earlier rule just emitted. Control characters without a named
+ * escape become zero-padded `\ddd`, which stays unambiguous when the next
+ * character is itself a digit.
+ */
 function quote(s: string): string {
-  return (
-    '"' +
-    s
-      .replace(/\\/g, "\\\\")
-      .replace(/"/g, '\\"')
-      .replace(/\n/g, "\\n")
-      .replace(/\r/g, "\\r")
-      .replace(/\t/g, "\\t") +
-    '"'
+  const escaped = s.replace(
+    NEEDS_ESCAPE,
+    (c) => STRING_ESCAPES[c] ?? `\\${c.charCodeAt(0).toString().padStart(3, "0")}`
   );
+  return `"${escaped}"`;
 }
 
 function serializeNumber(n: number): string {

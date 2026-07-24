@@ -46,24 +46,47 @@ export function bridgeRequest(request: BridgeRequest, opts: BridgeOptions): Prom
     let buffer = "";
     let settled = false;
 
+    const timedOut = () =>
+      reject(
+        new BridgeError(
+          `Timed out after ${timeoutMs}ms contacting the DCS hook server at ${opts.host}:${opts.port}. ` +
+            `Is DCS running with scripts/Hooks/dcs-mcp-hook.lua installed and a mission loaded?`
+        )
+      );
+
+    // Hard deadline. `socket.setTimeout` is an *idle* timer that stops firing once
+    // the socket closes, so on its own it cannot rescue a connection the hook
+    // closed without answering. This timer always fires.
+    const deadline = setTimeout(() => finish(timedOut), timeoutMs);
+    deadline.unref?.();
+
     const finish = (fn: () => void) => {
       if (settled) return;
       settled = true;
+      clearTimeout(deadline);
       socket.destroy();
       fn();
     };
 
-    socket.setTimeout(timeoutMs);
-    socket.on("timeout", () =>
+    // The peer closing before a full line arrived must reject, not hang forever.
+    const onClosed = () =>
       finish(() =>
         reject(
           new BridgeError(
-            `Timed out after ${timeoutMs}ms contacting the DCS hook server at ${opts.host}:${opts.port}. ` +
-              `Is DCS running with scripts/Hooks/dcs-mcp-hook.lua installed and a mission loaded?`
+            buffer.length === 0
+              ? `The DCS hook server at ${opts.host}:${opts.port} accepted the connection but closed it ` +
+                `without replying. Check that a mission is running and that dcs-mcp-hook.lua loaded ` +
+                `(look for "DCS-MCP" lines in Saved Games/DCS/Logs/dcs.log).`
+              : `The DCS hook server at ${opts.host}:${opts.port} closed the connection mid-response ` +
+                `(incomplete reply: ${JSON.stringify(buffer.slice(0, 200))}).`
           )
         )
-      )
-    );
+      );
+    socket.on("close", onClosed);
+    socket.on("end", onClosed);
+
+    socket.setTimeout(timeoutMs);
+    socket.on("timeout", () => finish(timedOut));
     socket.on("error", (err) =>
       finish(() =>
         reject(
