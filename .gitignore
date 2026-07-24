@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.log
+*.miz
+!tests/**/*.miz
+.env
+.DS_Store

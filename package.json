@@ -1,0 +1,39 @@
+{
+  "name": "dcs-mcp-server",
+  "version": "0.1.0",
+  "description": "Model Context Protocol server for DCS World: live telemetry bridge and offline .miz mission inspection",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "dcs-mcp-server": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "scripts",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "clean": "rm -rf dist",
+    "test": "node --test --import tsx tests/*.test.ts"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.19.1",
+    "adm-zip": "^0.6.0",
+    "luaparse": "^0.3.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/luaparse": "^0.2.12",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
