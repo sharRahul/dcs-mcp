@@ -395,3 +395,46 @@ test("group units trail the heading instead of a fixed diagonal", async () => {
   }
   closeSession(s.id);
 });
+
+test("a mixed composition builds one group of several unit types", async () => {
+  const s = await openSession(fixtureMiz());
+
+  // A SAM site is not N copies of one vehicle. Skynet finds the site by group
+  // name and then looks inside it for a search/track radar and launchers; a group
+  // of launchers alone registers and never fires.
+  addGroundGroup(s.mission, "vehicle", {
+    side: "red", country: "Russia", name: "SAM-SA-6-Test", type: "unused", count: 99,
+    x: 5000, y: -1000, heading: 0, spacingMetres: 60,
+    composition: [
+      { type: "Kub 1S91 str", count: 1 },
+      { type: "Kub 2P25 ln", count: 3 },
+      { type: "Ural-375 PBU", count: 1 },
+    ],
+  });
+
+  const reparsed = parse(serialize("mission", s.mission), "mission");
+  const site = findGroup(reparsed, "SAM-SA-6-Test")!.group as any;
+  const units = Object.values(site.units as Record<string, any>);
+
+  assert.deepEqual(
+    units.map((u) => u.type),
+    ["Kub 1S91 str", "Kub 2P25 ln", "Kub 2P25 ln", "Kub 2P25 ln", "Ural-375 PBU"],
+    "composition order is the layout order"
+  );
+  assert.equal(new Set(units.map((u) => u.unitId)).size, 5, "unitIds must stay unique");
+
+  // The layout rule does not change: heading 0 trails south, at the override spacing.
+  assert.deepEqual(
+    units.map((u) => [Math.round(u.x), Math.round(u.y)]),
+    [[5000, -1000], [4940, -1000], [4880, -1000], [4820, -1000], [4760, -1000]]
+  );
+
+  // Without a composition, type/count still behave exactly as before.
+  addGroundGroup(s.mission, "vehicle", {
+    side: "red", country: "Russia", name: "Plain", type: "T-90", count: 2, x: 0, y: 0,
+  });
+  const plain = (findGroup(s.mission, "Plain")!.group as any).units;
+  assert.deepEqual([plain[1].type, plain[2].type], ["T-90", "T-90"]);
+
+  closeSession(s.id);
+});

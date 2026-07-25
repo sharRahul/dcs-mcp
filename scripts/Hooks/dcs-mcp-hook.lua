@@ -49,6 +49,13 @@ local pending = {}              -- in-flight clients: { sock, buffer, deadline }
 -- from "the bridge is down".
 local missionState = { phase = "menu", name = nil, loadError = nil }
 
+-- When the simulation last ticked. Mission-environment work only happens on the
+-- simulation thread, so this is both the gate for holding such requests and the
+-- honest answer to "is the mission environment reachable right now?" — a paused
+-- mission has a phase of "running" and no frames at all.
+local lastSimFrame = 0
+local SIM_STALL_S = 2
+
 -- Ring buffer of problems the hook itself saw. dcs.log is the fuller record;
 -- this is what the bridge can hand back directly.
 local errors = {}
@@ -136,11 +143,13 @@ end
   surfacing a confusing timeout.
 --]]
 function handlers.status()
-  local envReachable = false
-  if missionState.phase == "running" or missionState.phase == "loaded" then
-    local probe = net.dostring_in("mission", "return 'ok'")
-    envReachable = probe == "ok"
-  end
+  -- `missionEnv` is judged by simulation frames, NOT by a dostring probe. A
+  -- probe like `return 'ok'` succeeds even when it runs in the GUI state, where
+  -- none of the mission API exists, so it reported a reachable environment for
+  -- commands that then failed on a nil `coalition`. Frames are the real signal:
+  -- the mission scripting state is only serviceable while the sim is ticking.
+  local ticking = (os.clock() - lastSimFrame) <= SIM_STALL_S
+  local inMission = missionState.phase == "running" or missionState.phase == "loaded"
   local version = {}
   pcall(function()
     if DCS.getVersion then version.dcs = DCS.getVersion() end
@@ -149,7 +158,8 @@ function handlers.status()
     listening = server ~= nil,
     phase = missionState.phase,
     mission = missionState.name,
-    missionEnv = envReachable,
+    simTicking = ticking,
+    missionEnv = inMission and ticking,
     errorCount = #errors,
     version = version.dcs,
   })
@@ -292,6 +302,77 @@ function handlers.xz2ll(args)
   return runIn("mission", body)
 end
 
+--[[
+  Surface type under a batch of map points.
+
+  This is the only authoritative answer to "is this on land?" — it is DCS's own
+  terrain query against the loaded theatre. Ground groups placed on water do not
+  error at load; the vehicles simply sit there dead, which reads as broken AI.
+  Needs a mission running, because `land` lives in the mission environment.
+
+  Args: { points: [ { x = <north>, y = <east> }, ... ] }
+--]]
+function handlers.land(args)
+  args = args or {}
+  local points = args.points
+  if type(points) ~= "table" then return fail("land: expected args.points to be a list of {x,y}") end
+
+  -- Every value is forced through tonumber before it reaches the mission state:
+  -- these coordinates are interpolated into Lua source, so a string would be an
+  -- injection point.
+  local parts = {}
+  for i, p in ipairs(points) do
+    local x, y = tonumber(p.x), tonumber(p.y)
+    if not x or not y then return fail("land: point " .. i .. " has a non-numeric x or y") end
+    parts[#parts + 1] = string.format("{x=%.3f,y=%.3f}", x, y)
+    if #parts >= 500 then break end -- one request must not stall a frame
+  end
+  if #parts == 0 then return fail("land: no points given") end
+
+  local body = string.format([[
+    local names = { [1]="LAND", [2]="SHALLOW_WATER", [3]="WATER", [4]="ROAD", [5]="RUNWAY" }
+    local pts = { %s }
+    local out = {}
+    for i, p in ipairs(pts) do
+      local t = land.getSurfaceType(p)
+      out[i] = { x = p.x, y = p.y, surface = t, name = names[t] or ("UNKNOWN_" .. tostring(t)),
+                 height = land.getHeight(p),
+                 land = (t == 1 or t == 4 or t == 5) }
+    end
+    return '{"ok":true,"data":' .. enc({ count = #out, points = out }) .. '}'
+  ]], table.concat(parts, ","))
+  return runIn("mission", body)
+end
+
+--[[
+  Load a mission file, from the menu or over a running one.
+
+  `net.load_mission` is a GUI-environment call, so it works in exactly the state
+  where the mission scripting environment does not exist yet — which is the
+  whole point: it is how a client gets from "I just wrote a .miz" to "it is
+  running" without the user alt-tabbing.
+
+  The result is deliberately not reported as success-or-failure: DCS returns
+  before the mission has finished loading, and a mission that fails to open
+  reports it through onMissionLoadError / dcs.log, not through this return
+  value. Poll `status` afterwards.
+--]]
+function handlers.loadmission(args)
+  args = args or {}
+  local path = args.path
+  if type(path) ~= "string" or path == "" then return fail("loadmission: args.path is required") end
+  if not path:lower():match("%.miz$") then return fail("loadmission: path must end in .miz") end
+  if not net.load_mission then return fail("loadmission: net.load_mission is unavailable in this DCS build") end
+
+  missionState.loadError = nil
+  local okc, res = pcall(net.load_mission, path)
+  if not okc then
+    recordError("load_mission failed", res)
+    return fail("net.load_mission raised: " .. tostring(res))
+  end
+  return ok({ requested = path, result = res, note = "loading is asynchronous; poll 'status' for phase" })
+end
+
 function handlers.exec(args)
   if not ALLOW_EXEC then
     return fail("Raw exec is disabled. Set ALLOW_EXEC = true in dcs-mcp-hook.lua to enable it.")
@@ -305,16 +386,45 @@ end
 
 ----------------------------------------------------------------------
 -- Request dispatch
+--
+-- Commands that reach into the mission scripting environment must run on the
+-- SIMULATION thread.
+--
+-- DCS is multithreaded: the GUI updater and the simulation frame are different
+-- contexts, and `net.dostring_in('mission', ...)` called from the GUI side does
+-- not land in the mission's scripting state. It does not fail loudly either —
+-- the snippet runs somewhere that simply has no `coalition`, `timer`, `land` or
+-- `coord`, so every one of these commands came back with
+-- "attempt to index global 'coalition' (a nil value)" while the mission was
+-- demonstrably running. Requests for these commands are therefore held until an
+-- `onSimulationFrame` tick services them.
 ----------------------------------------------------------------------
-local function dispatch(line)
+local MISSION_ENV_COMMANDS = {
+  mission = true, units = true, aircraft = true, message = true,
+  spawn = true, ll2xz = true, xz2ll = true, land = true, exec = true,
+}
+
+local function parseRequest(line)
   local req
   if net and net.json2lua then
     local okd, parsed = pcall(net.json2lua, line)
     if okd then req = parsed end
   end
-  if type(req) ~= "table" or not req.cmd then
-    return fail("Malformed request; expected JSON {\"cmd\":...}")
+  if type(req) ~= "table" or not req.cmd then return nil end
+  return req
+end
+
+local function needsSimThread(req)
+  if not MISSION_ENV_COMMANDS[req.cmd] then return false end
+  -- `exec` picks its own state; only the mission one has the threading problem.
+  if req.cmd == "exec" then
+    local state = req.args and req.args.env or "mission"
+    return state == "mission"
   end
+  return true
+end
+
+local function dispatch(req)
   local handler = handlers[req.cmd]
   if not handler then return fail("Unknown command: " .. tostring(req.cmd)) end
   local okc, res = pcall(handler, req.args)
@@ -325,8 +435,8 @@ end
 ----------------------------------------------------------------------
 -- Non-blocking TCP server driven by the simulation frame callback
 ----------------------------------------------------------------------
-local function respond(entry, line)
-  local okr, res = pcall(dispatch, line)
+local function respond(entry, req)
+  local okr, res = pcall(dispatch, req)
   entry.sock:send((okr and res or fail(res)) .. "\n")
 end
 
@@ -338,25 +448,57 @@ end
   receive: a blocking read stalls the whole DCS frame, which shows up as a
   visible stutter whenever a client connects slowly or dies mid-request.
 --]]
-local function service()
+local function service(source)
   local now = os.clock()
   local keep = {}
   for _, entry in ipairs(pending) do
     local done = false
-    local line, err, partial = entry.sock:receive("*l")
-    if line then
-      entry.buffer = entry.buffer .. line
-      local okr, e = pcall(respond, entry, entry.buffer)
-      if not okr then recordError("response failed", e) end
-      done = true
-    elseif err == "timeout" then
-      entry.buffer = entry.buffer .. (partial or "")
-      if now >= entry.deadline then
-        pcall(function() entry.sock:send(fail("request timed out before a full line arrived") .. "\n") end)
+
+    if entry.req then
+      -- Already read, and held back for the simulation thread. DCS runs Lua 5.1
+      -- here, so there is no `goto`/`continue` to skip the read path with.
+      if source == "sim" then
+        local okr, e = pcall(respond, entry, entry.req)
+        if not okr then recordError("response failed", e) end
+        done = true
+      elseif now - lastSimFrame > SIM_STALL_S then
+        -- No simulation frames are arriving: paused, or the mission ended
+        -- between reading the request and answering it. Say so rather than
+        -- letting the client time out with nothing to go on.
+        pcall(function()
+          entry.sock:send(fail(
+            "'" .. tostring(entry.req.cmd) .. "' needs the mission scripting environment, which is only " ..
+            "reachable from the simulation thread, and the simulation is not ticking (paused, or no mission " ..
+            "running). Unpause DCS or start a mission and retry.") .. "\n")
+        end)
         done = true
       end
     else
-      done = true -- "closed" or a hard error: nothing more is coming
+      local line, err, partial = entry.sock:receive("*l")
+      if line then
+        entry.buffer = entry.buffer .. line
+        local req = parseRequest(entry.buffer)
+        if not req then
+          pcall(function() entry.sock:send(fail("Malformed request; expected JSON {\"cmd\":...}") .. "\n") end)
+          done = true
+        elseif needsSimThread(req) and source ~= "sim" then
+          -- Hold it for the simulation tick instead of answering from the GUI
+          -- thread, where the mission environment is not visible.
+          entry.req = req
+        else
+          local okr, e = pcall(respond, entry, req)
+          if not okr then recordError("response failed", e) end
+          done = true
+        end
+      elseif err == "timeout" then
+        entry.buffer = entry.buffer .. (partial or "")
+        if now >= entry.deadline then
+          pcall(function() entry.sock:send(fail("request timed out before a full line arrived") .. "\n") end)
+          done = true
+        end
+      else
+        done = true -- "closed" or a hard error: nothing more is coming
+      end
     end
 
     if done then
@@ -368,7 +510,7 @@ local function service()
   pending = keep
 end
 
-local function poll()
+local function poll(source)
   if not server then return end
   for _ = 1, MAX_ACCEPTS_PER_FRAME do
     local client = server:accept()
@@ -376,7 +518,7 @@ local function poll()
     client:settimeout(0) -- never block the simulation frame
     pending[#pending + 1] = { sock = client, buffer = "", deadline = os.clock() + REQUEST_TIMEOUT_S }
   end
-  service()
+  service(source)
 end
 
 ----------------------------------------------------------------------
@@ -436,7 +578,7 @@ end
 local guiFailures = 0
 
 local function guiTick()
-  local okp, err = pcall(poll)
+  local okp, err = pcall(poll, "gui")
   if okp then
     guiFailures = 0
     return false -- returning true would unregister us
@@ -473,7 +615,8 @@ function callbacks.onSimulationStart()
 end
 
 function callbacks.onSimulationFrame()
-  local okp, err = pcall(poll)
+  lastSimFrame = os.clock()
+  local okp, err = pcall(poll, "sim")
   if not okp then recordError("poll error", err) end
 end
 

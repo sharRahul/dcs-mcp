@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "dcs": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "env": {
+        "DCS_BRIDGE_HOST": "127.0.0.1",
+        "DCS_BRIDGE_PORT": "8899"
+      }
+    }
+  }
+}

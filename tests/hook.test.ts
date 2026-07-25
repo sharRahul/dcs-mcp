@@ -66,7 +66,7 @@ test(
     // bridge answers in the menu and the Mission Editor.
     assert.match(output, /hook server listening/, "the hook did not bind at load time");
 
-    assert.equal(replies.length, 5, `expected 5 replies, got:\n${output}`);
+    assert.equal(replies.length, 7, `expected 7 replies, got:\n${output}`);
     assert.match(replies[0], /^\{"ok":true,"data":\{"pong":true/, "ping did not answer");
     assert.match(replies[1], /^\{"ok":true,/, "mission query did not answer");
     assert.match(replies[2], /"ok":false.*Unknown command/, "unknown command not rejected");
@@ -76,6 +76,15 @@ test(
     // tell "no mission running" apart from "the bridge is down".
     assert.match(replies[4], /"listening":true/, "status did not report the listener");
     assert.match(replies[4], /"phase":"/, "status did not report the DCS phase");
+
+    // Mission-environment commands must be routed to the simulation thread.
+    // Answering them from the GUI updater runs the snippet somewhere that has no
+    // `coalition`/`timer`/`land`, so every such command fails on a nil global
+    // while the mission is demonstrably running.
+    assert.match(output, /GUI_HELD true/, `a mission-env command was answered from the GUI tick:\n${output}`);
+    assert.match(output, /SIM_ANSWERED true/, `the held command was not answered on the sim frame:\n${output}`);
+    // ...but the bridge must still answer non-mission commands in the menus.
+    assert.match(output, /GUI_PING_ANSWERED true/, `ping did not answer from the GUI tick:\n${output}`);
   }
 );
 

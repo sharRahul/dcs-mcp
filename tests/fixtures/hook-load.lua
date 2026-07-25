@@ -46,6 +46,12 @@ net = {
 local userCallbacks = nil
 DCS = { setUserCallbacks = function(cb) userCallbacks = cb end }
 
+-- The GUI updater the hook registers with so it can answer in the menus. It
+-- runs on a DIFFERENT thread from the simulation, which is why mission-
+-- environment commands must not be dispatched from it.
+local guiCallback = nil
+Gui = { AddUpdateCallback = function(fn) guiCallback = fn end }
+
 -- --- load the hook ---------------------------------------------------------
 
 local chunk, err = loadfile(hookPath)
@@ -78,6 +84,30 @@ queuedRequest = '{"cmd":"exec"}'
 userCallbacks.onSimulationFrame()
 queuedRequest = '{"cmd":"status"}'
 userCallbacks.onSimulationFrame()
+
+-- --- thread routing --------------------------------------------------------
+--
+-- A mission-environment command must NOT be answered from the GUI tick:
+-- net.dostring_in('mission', ...) called there does not reach the mission
+-- scripting state, and comes back with a nil `coalition`/`timer`/`land` instead
+-- of failing loudly. It has to be held until a simulation frame services it.
+
+assert(guiCallback, "hook did not register a GUI update callback")
+
+local before = #sent
+queuedRequest = '{"cmd":"units"}'
+guiCallback()
+print("GUI_HELD " .. tostring(#sent == before))
+
+userCallbacks.onSimulationFrame()
+print("SIM_ANSWERED " .. tostring(#sent == before + 1))
+
+-- Commands that never touch the mission environment must still answer straight
+-- from the GUI tick, or the bridge goes mute in the menus and the editor.
+before = #sent
+queuedRequest = '{"cmd":"ping"}'
+guiCallback()
+print("GUI_PING_ANSWERED " .. tostring(#sent == before + 1))
 
 userCallbacks.onSimulationStop()
 

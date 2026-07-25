@@ -18,7 +18,10 @@
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "clean": "rm -rf dist",
-    "test": "node --test --import tsx tests/*.test.ts"
+    "test": "node --test --import tsx tests/*.test.ts",
+    "build:e2e-mission": "node scripts/build-e2e-mission.mjs",
+    "verify:miz": "node scripts/verify-mission.mjs",
+    "monitor": "node scripts/monitor-flight.mjs"
   },
   "engines": {
     "node": ">=18"

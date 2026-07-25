@@ -287,6 +287,77 @@ export function registerBridgeTools(server: McpServer): void {
     }
   );
 
+  server.registerTool(
+    "dcs_check_terrain",
+    {
+      title: "Check terrain under points",
+      description:
+        "Ask the RUNNING mission what surface is under a list of map points: LAND, SHALLOW_WATER, " +
+        "WATER, ROAD or RUNWAY, plus terrain height.\n\n" +
+        "This is the authoritative land/water check — DCS's own terrain query against the loaded " +
+        "theatre. Ground groups placed on water do not error when the mission loads; the vehicles " +
+        "just sit there inert, which looks like broken AI rather than a bad placement. Verify ground " +
+        "positions with this before committing them.\n\n" +
+        "Requires a mission to be running (the terrain API lives in the mission environment). Up to " +
+        "500 points per call.\n\n" +
+        "Args:\n  - points: [{ x, y }] DCS map metres (x = north, y = east)\n  - host?, port?\n\n" +
+        "Returns JSON: { count, points: [{ x, y, surface, name, height, land }] }.",
+      inputSchema: z
+        .object({
+          points: z
+            .array(z.object({ x: z.number(), y: z.number() }).strict())
+            .min(1)
+            .max(500)
+            .describe("Map points to sample"),
+          host: hostField,
+          port: portField,
+        })
+        .strict(),
+      outputSchema: z.object({ terrain: z.unknown() }),
+      annotations: liveRead,
+    },
+    async ({ points, host, port }) => {
+      try {
+        return await call({ cmd: "land", args: { points } }, { host, port }, "terrain");
+      } catch (err) {
+        return errorResult(err);
+      }
+    }
+  );
+
+  server.registerTool(
+    "dcs_load_mission",
+    {
+      title: "Load a mission in DCS",
+      description:
+        "Tell the running DCS client to load a `.miz` file. Works from the main menu and over an " +
+        "already-running mission, so an authored mission can go straight from dcs_miz_save_as to " +
+        "flying without the user touching the UI.\n\n" +
+        "Loading is ASYNCHRONOUS: this returns as soon as DCS accepts the request, not when the " +
+        "mission is up. Poll dcs_bridge_status (phase: menu -> loading -> running) and check " +
+        "dcs_get_log_errors afterwards — a mission that fails to open reports it in dcs.log and " +
+        "nowhere else.\n\n" +
+        "This takes over the user's DCS client; confirm with them before calling it.\n\n" +
+        "Args:\n  - path (string): absolute path to a .miz\n  - host?, port?",
+      inputSchema: z
+        .object({
+          path: z.string().min(1).describe("Absolute path to the .miz to load"),
+          host: hostField,
+          port: portField,
+        })
+        .strict(),
+      outputSchema: z.object({ load: z.unknown() }),
+      annotations: { ...liveWrite, destructiveHint: true },
+    },
+    async ({ path, host, port }) => {
+      try {
+        return await call({ cmd: "loadmission", args: { path } }, { host, port }, "load");
+      } catch (err) {
+        return errorResult(err);
+      }
+    }
+  );
+
   // Raw Lua escape hatch: doubly gated (env var here + ALLOW_EXEC in the hook).
   if (process.env.DCS_ALLOW_RAW_LUA === "1") {
     server.registerTool(

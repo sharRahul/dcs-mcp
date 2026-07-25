@@ -218,8 +218,14 @@ export function registerMizAuthoringTools(server: McpServer): void {
       description:
         "Add a ground-vehicle or ship group to an open mission (DCS x/y metres).\n\n" +
         "Args:\n  - sessionId, side, country, name, type (e.g. 'M-1 Abrams')\n" +
-        "  - category ('vehicle'|'ship'), count, x, y, heading?, skill?\n\n" +
-        "Returns JSON: { added, groupCount }.",
+        "  - category ('vehicle'|'ship'), count, x, y, heading?, skill?\n" +
+        "  - composition?: [{ type, count }] mixed unit types in ONE group, in order. Use this for " +
+        "SAM sites: a site is not N copies of one vehicle — an SA-6 needs its '1S91 str' radar AND " +
+        "'Kub 2P25 ln' launchers in the same group or it registers with Skynet and never shoots. " +
+        "Overrides type/count when given.\n" +
+        "  - spacingMetres?: distance between units along the heading (default 20 for vehicles)\n\n" +
+        "Units trail the lead along the heading, so the group faces the way it is pointed.\n\n" +
+        "Returns JSON: { added, groupCount, unitCount }.",
       inputSchema: z
         .object({
           sessionId: sessionIdField,
@@ -233,15 +239,27 @@ export function registerMizAuthoringTools(server: McpServer): void {
           ...positionFields,
           heading: z.number().min(0).max(359).default(0),
           skill: z.enum(["Average", "Good", "High", "Excellent", "Random"]).default("Average"),
+          composition: z
+            .array(z.object({ type: z.string().min(1), count: z.number().int().min(1).max(50) }).strict())
+            .min(1)
+            .max(50)
+            .optional()
+            .describe("Mixed unit types in one group, in layout order. Overrides type/count."),
+          spacingMetres: z
+            .number()
+            .min(1)
+            .max(2000)
+            .optional()
+            .describe("Metres between units along the heading"),
         })
         .strict(),
-      outputSchema: z.object({ added: z.string(), groupCount: z.number() }),
+      outputSchema: z.object({ added: z.string(), groupCount: z.number(), unitCount: z.number() }),
       annotations: authoringAnnotations,
     },
     async (a) => {
       try {
         const s = requireSession(a.sessionId);
-        addGroundGroup(s.mission, a.category, {
+        const group = addGroundGroup(s.mission, a.category, {
           side: a.side,
           country: a.country,
           countryId: a.countryId,
@@ -252,12 +270,16 @@ export function registerMizAuthoringTools(server: McpServer): void {
           y: a.y,
           heading: a.heading,
           skill: a.skill,
+          composition: a.composition,
+          spacingMetres: a.spacingMetres,
         });
         s.dirty = true;
         refresh(s);
-        return buildResult(`Added ${a.category} group '${a.name}' (${a.count} unit(s)).`, {
+        const unitCount = Object.keys((group["units"] ?? {}) as Record<string, unknown>).length;
+        return buildResult(`Added ${a.category} group '${a.name}' (${unitCount} unit(s)).`, {
           added: a.name,
           groupCount: s.document.summary.groupCount,
+          unitCount,
         });
       } catch (err) {
         return errorResult(err);

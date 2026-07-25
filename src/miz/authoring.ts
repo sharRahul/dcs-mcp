@@ -172,7 +172,8 @@ const FORMATION_SPACING: Record<string, number> = {
 };
 
 interface UnitSpec {
-  type: string;
+  /** One entry per unit, in the order they trail the lead. */
+  types: string[];
   x: number;
   y: number;
   altitudeMetres?: number;
@@ -183,6 +184,8 @@ interface UnitSpec {
   category: string;
   /** First `unitId` to assign; subsequent units increment from here. */
   firstUnitId: number;
+  /** Override the per-category spacing (metres between units). */
+  spacingMetres?: number;
 }
 
 /**
@@ -196,19 +199,19 @@ interface UnitSpec {
  * DCS map axes: `x` is north, `y` is east, so the forward vector for a heading is
  * `(cos h, sin h)` and units are placed behind the lead by subtracting it.
  */
-function buildUnits(groupName: string, count: number, spec: UnitSpec): LuaTable {
+function buildUnits(groupName: string, spec: UnitSpec): LuaTable {
   const heading = headingRadians(spec.heading);
-  const spacing = FORMATION_SPACING[spec.category] ?? FORMATION_SPACING.vehicle;
+  const spacing = spec.spacingMetres ?? FORMATION_SPACING[spec.category] ?? FORMATION_SPACING.vehicle;
   const forwardX = Math.cos(heading);
   const forwardY = Math.sin(heading);
 
   const units: LuaTable = {};
-  for (let i = 1; i <= count; i++) {
+  for (let i = 1; i <= spec.types.length; i++) {
     const back = (i - 1) * spacing;
     const unit: LuaTable = {
       name: `${groupName}-${i}`,
       unitId: spec.firstUnitId + i - 1,
-      type: spec.type,
+      type: spec.types[i - 1],
       x: spec.x - back * forwardX,
       y: spec.y - back * forwardY,
       heading,
@@ -221,6 +224,12 @@ function buildUnits(groupName: string, count: number, spec: UnitSpec): LuaTable 
     units[i] = unit;
   }
   return units;
+}
+
+/** One block of same-type units inside a mixed group. */
+export interface UnitComposition {
+  type: string;
+  count: number;
 }
 
 export interface AddGroupArgs {
@@ -236,6 +245,30 @@ export interface AddGroupArgs {
   heading?: number;
   skill?: string;
   task?: string;
+  /**
+   * Mixed unit types in ONE group, laid out in the order given.
+   *
+   * A working SAM site is not N copies of one vehicle: an SA-6 needs its
+   * `1S91 str` search/track radar *and* `Kub 2P25 ln` launchers in the same
+   * group, or the site registers with Skynet and then never shoots. When this
+   * is given it replaces `type`/`count`.
+   */
+  composition?: UnitComposition[];
+  /** Override the per-category unit spacing (metres). SAM sites want more room. */
+  spacingMetres?: number;
+}
+
+/** Expand `composition` (or the plain type/count pair) into one type per unit. */
+function unitTypes(args: AddGroupArgs): string[] {
+  if (!args.composition || args.composition.length === 0) {
+    return Array.from({ length: args.count }, () => args.type);
+  }
+  const types: string[] = [];
+  for (const block of args.composition) {
+    for (let i = 0; i < block.count; i++) types.push(block.type);
+  }
+  if (types.length === 0) throw new Error(`Group '${args.name}' has a composition with no units.`);
+  return types;
 }
 
 /** Add a fixed-wing or helicopter group. Returns the created group table. */
@@ -250,8 +283,8 @@ export function addAircraftGroup(mission: LuaTable, category: AirCategory, args:
     groupId: ids.groupId + 1,
     task: args.task ?? "CAP",
     task_started: false,
-    units: buildUnits(args.name, args.count, {
-      type: args.type,
+    units: buildUnits(args.name, {
+      types: unitTypes(args),
       x: args.x,
       y: args.y,
       altitudeMetres: args.altitudeMetres ?? 6096,
@@ -259,6 +292,7 @@ export function addAircraftGroup(mission: LuaTable, category: AirCategory, args:
       skill: args.skill,
       category,
       firstUnitId: ids.unitId + 1,
+      spacingMetres: args.spacingMetres,
     }),
     route: initialRoute(category, args.x, args.y, args.altitudeMetres ?? 6096),
     x: args.x,
@@ -279,14 +313,15 @@ export function addGroundGroup(mission: LuaTable, category: GroundCategory, args
     name: args.name,
     groupId: ids.groupId + 1,
     task: args.task ?? "Ground Nothing",
-    units: buildUnits(args.name, args.count, {
-      type: args.type,
+    units: buildUnits(args.name, {
+      types: unitTypes(args),
       x: args.x,
       y: args.y,
       heading: args.heading,
       skill: args.skill ?? "Average",
       category,
       firstUnitId: ids.unitId + 1,
+      spacingMetres: args.spacingMetres,
     }),
     route: initialRoute(category, args.x, args.y),
     x: args.x,

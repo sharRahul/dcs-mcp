@@ -76,8 +76,16 @@ appears, then write the builder in `conditionRule`/`actionRule` and the compiler
   (`luae.exe`) with mocked predicates and asserts real firing behaviour. Skipped unless
   `DCS_LUA` points at `<DCS>/bin-mt/luae.exe`.
 
-### Still unverified
-Nothing here has been flown in DCS. That remains the one manual check.
+### Verified in DCS (2026-07-25, Persian Gulf, DCS multithreaded)
+An authored mission was loaded through the bridge and run. Confirmed live:
+`triggerStart` and `triggerOnce` triggers fired at the right model times (`T3` at t=0,
+`T2` at t=15) and their actions ran; the single `Load Scripts` start trigger loaded MIST,
+MOOSE and Skynet in order and all three initialised; all 18 authored ground units reported
+`LAND` from `land.getSurfaceType`.
+
+Still unverified: the condition-driven triggers (`group_dead`, `unit_in_zone`,
+`part_of_coalition_in_zone`, the radio-menu handler) and `end_mission` need a full sortie
+that actually destroys the objectives.
 
 ---
 
@@ -105,6 +113,22 @@ Auto-discovery must stay narrow: a loose `mist[_-].*\.lua` pattern matches MIST'
 versioned single-file build only, and `resolveFrameworkPath` refuses an auto-discovered
 file below `MIN_PLAUSIBLE_BYTES` (an explicit path is never second-guessed).
 
+### Skynet returns proxy tables — iterate them with `ipairs`, never `pairs`
+
+`SkynetIADS:getSAMSites()` and `getEarlyWarningRadars()` return a
+`SkynetIADSTableDelegator`: a proxy that forwards method calls to its elements and carries
+its own `__index` field. `pairs` therefore yields **one extra, non-site value**. Observed
+in a running mission: 4 SAM sites and 3 EW radars reported for a mission containing 3 and
+2, and the IADS sampler dying every 30 s with
+
+```
+attempt to call method 'isDestroyed' (a nil value)
+```
+
+`ipairs` and `#` walk the array part only and see exactly the real elements. This applies
+anywhere Skynet hands back a collection — telemetry, setup scripts, and inline
+`do_script` trigger actions alike.
+
 ### Trigger surface
 Conditions and actions are listed in `authoring.ts`. Note two traps, both ground-truth:
 - `c_start_wait_for_user` is named like a condition but DCS stores it in a trigrule's
@@ -129,6 +153,49 @@ to its own direction of travel. If you see `56.57` in a spacing analysis, that i
 Note DCS map axes: `x` is NORTH, `y` is EAST, so a heading's forward vector is
 `(cos h, sin h)`. Also: if a group has 2+ route points the editor overwrites each unit's
 heading from `atan2(p2 - p1)`, so an authored heading only sticks on a single-point group.
+
+**A SAM site is not N copies of one vehicle.** `addGroundGroup` takes an optional
+`composition: [{ type, count }]` that puts mixed unit types in ONE group, laid out in
+order along the heading (`spacingMetres` overrides the per-category default). Skynet finds
+a site by group name and then looks *inside* it for a search/track radar and launchers — a
+group of launchers alone registers with the IADS and never fires. Compositions are copied
+from ME-saved missions, not invented; `demo-missions/skynet-test-persian-gulf.miz` has a
+working one for every common site type.
+
+## Terrain: never trust a coordinate you did not check
+
+`dcs_check_terrain` (hook `land`) batches `land.getSurfaceType` in the mission environment
+and is the only authoritative land/water answer. A ground group on water does NOT error at
+load — the vehicles sit inert, which reads as broken AI, not as a bad placement. It needs a
+mission running. Two ways to get a trustworthy coordinate:
+- lift it from an ME-saved mission (the editor put a vehicle there, so it is land), or
+- spawn something on the map and query it.
+Do both when it matters: `scripts/dcs-mcp-telemetry.lua` re-checks every ground unit five
+seconds into the mission and logs `TERRAIN_WATER` as an ERROR for any that are wet.
+
+## Getting from a built .miz to a running mission
+
+`dcs_load_mission` (hook `loadmission`) calls `net.load_mission` in the GUI environment, so
+it works from the menu — exactly where the mission scripting environment does not exist.
+Loading is **asynchronous**: it returns before the mission is up, and a mission that fails
+to open reports it in dcs.log and nowhere else. Poll `dcs_bridge_status` for
+`phase: menu -> loading -> running`, then read the log.
+
+## Live telemetry
+
+`scripts/dcs-mcp-telemetry.lua` runs in the mission environment (load it last, after the
+frameworks) and writes `[DCSMCP] <KIND> key=value ...` lines to dcs.log: framework presence,
+the terrain audit, world events, player state, per-site IADS status, and `DCSMCP.trig(name)`
+for triggers to call from a `do_script` action. That last one matters — a trigger that never
+fired and a trigger that fired into a broken action are otherwise indistinguishable.
+
+The log is the transport on purpose: it is the one channel that still works while the
+mission is loading and after a script has blown up. `scripts/monitor-flight.mjs` tails it
+incrementally alongside a bridge poll and maintains a small `digest.json`.
+
+`scripts/build-e2e-mission.mjs` builds a full Persian Gulf test mission through these APIs;
+`scripts/verify-mission.mjs` runs the offline acceptance checks (validator, ED's own
+`fixUnitsPos`, compiled-trigger syntax, unit geometry) against any `.miz`.
 
 ## Two invariants the Mission Editor enforces
 
@@ -159,8 +226,32 @@ install). So the bridge answers in the menu and the Mission Editor. The GUI upda
 a documented hook API: keep it defensive — registered only if present, pcall'd, and
 dropped after repeated failures rather than risking the user's UI.
 
-`status` reports `phase` (menu/loading/loaded/running) and `missionEnv`. Commands that go
-through `net.dostring_in('mission', ...)` still need a mission actually running.
+### `net.dostring_in('mission', ...)` only works on the simulation thread
+
+**Verified on this install, DCS multithreaded.** Called from the GUI updater it does not
+reach the mission scripting state — and it does not fail loudly. The snippet runs somewhere
+that has no `coalition`, `timer`, `land` or `coord`, so with a mission demonstrably running
+every mission-env command came back:
+
+```
+attempt to index global 'coalition' (a nil value)
+```
+
+`MISSION_ENV_COMMANDS` in the hook lists the affected commands; `service(source)` holds
+such a request until an `onSimulationFrame` tick dispatches it. Do not "simplify" that
+away. Corroboration: DCS-gRPC never calls `net.dostring_in` at all — it enters the mission
+environment through its native DLL.
+
+A paused mission produces no frames, so a held request is answered with that reason after
+`SIM_STALL_S` rather than left to time out.
+
+`status` reports `phase` (menu/loading/loaded/running), `simTicking` and `missionEnv`.
+**`missionEnv` is derived from simulation frames, never from a dostring probe** — the old
+`net.dostring_in("mission", "return 'ok'")` probe returned `"ok"` from the wrong state and
+reported a reachable environment for commands that then failed on a nil global.
+
+`tests/fixtures/hook-load.lua` drives both tick sources under `luae.exe` and asserts
+`GUI_HELD` / `SIM_ANSWERED` / `GUI_PING_ANSWERED`, so the routing is a tested invariant.
 
 Install with a copy into `Saved Games/DCS/Scripts/Hooks/`; DCS must be restarted to pick it
 up. Confirm via `Saved Games/DCS/Logs/dcs.log` — look for `Loaded ...dcs-mcp-hook.lua` with
