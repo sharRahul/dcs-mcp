@@ -175,11 +175,25 @@ seconds into the mission and logs `TERRAIN_WATER` as an ERROR for any that are w
 
 ## Getting from a built .miz to a running mission
 
-`dcs_load_mission` (hook `loadmission`) calls `net.load_mission` in the GUI environment, so
-it works from the menu — exactly where the mission scripting environment does not exist.
+`dcs_load_mission` (hook `loadmission`) calls `net.load_mission`, which **swaps the mission
+on an already-running session** — it is the server mission-rotation call (DCS's own
+`common.lua` gates it behind `DCS.isServer()`). It does NOT start a mission from a cold
+menu: verified on this install (DCS multithreaded), from a cold menu `net.load_mission`
+returns nil and does nothing — no `onMissionLoadBegin`, no load — from BOTH the GUI render
+tick and an `onSimulationFrame` tick (`onSimulationFrame` does fire at this install's menu,
+so `simTicking` is true there; it still no-ops). There is no menu→mission API a Lua hook
+can drive; a true cold start would need `net.start_server(settings)`, which hosts an MP
+server and changes single-player semantics, so it is deliberately not used.
+
+The hook therefore **refuses `loadmission` unless `phase == "running"`**, with a clear "no
+mission is running" error, instead of reporting a phantom success. To go from a built `.miz`
+to flying: start any mission once (fly it), then `dcs_load_mission` swaps in the authored
+one. `net.load_mission` only takes effect on the simulation thread, so `loadmission` is held
+for an `onSimulationFrame` tick like the mission-env commands (`needsSimThread`).
+
 Loading is **asynchronous**: it returns before the mission is up, and a mission that fails
 to open reports it in dcs.log and nowhere else. Poll `dcs_bridge_status` for
-`phase: menu -> loading -> running`, then read the log.
+`phase: running -> loading -> running`, then read the log.
 
 ## Live telemetry
 

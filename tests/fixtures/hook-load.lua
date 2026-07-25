@@ -33,14 +33,17 @@ local serverSock = {
 }
 package.loaded["socket"] = { tcp = function() return serverSock end }
 
+local loadMissionCalls = {}
 net = {
   json2lua = function(s)
     -- Only the shapes the tests send; enough to exercise dispatch.
     local cmd = s:match('"cmd"%s*:%s*"([^"]+)"')
     if not cmd then return nil end
-    return { cmd = cmd, args = {} }
+    local path = s:match('"path"%s*:%s*"([^"]+)"')
+    return { cmd = cmd, args = { path = path } }
   end,
   dostring_in = function(state, code) return '{"ok":true,"data":{"state":"' .. state .. '"}}' end,
+  load_mission = function(p) loadMissionCalls[#loadMissionCalls + 1] = p; return nil end,
 }
 
 local userCallbacks = nil
@@ -102,6 +105,21 @@ print("GUI_HELD " .. tostring(#sent == before))
 userCallbacks.onSimulationFrame()
 print("SIM_ANSWERED " .. tostring(#sent == before + 1))
 
+-- `loadmission` does not touch the mission scripting environment, but
+-- net.load_mission is a silent no-op unless it runs on the simulation thread, so
+-- it must be held for a sim frame exactly like the mission-env commands. From a
+-- cold menu (no sim frames) this is what turns a silent no-op into a clear stall.
+-- (phase is "running" here, from onSimulationStart above)
+before = #sent
+queuedRequest = '{"cmd":"loadmission","path":"C:/m/swap.miz"}'
+guiCallback()
+print("GUI_LOADMISSION_HELD " .. tostring(#sent == before))
+
+userCallbacks.onSimulationFrame()
+print("SIM_LOADMISSION_ANSWERED " .. tostring(#sent == before + 1))
+-- Over a running mission the swap actually reaches net.load_mission.
+print("LOADMISSION_SWAPPED " .. tostring(loadMissionCalls[#loadMissionCalls] == "C:/m/swap.miz"))
+
 -- Commands that never touch the mission environment must still answer straight
 -- from the GUI tick, or the bridge goes mute in the menus and the editor.
 before = #sent
@@ -109,7 +127,19 @@ queuedRequest = '{"cmd":"ping"}'
 guiCallback()
 print("GUI_PING_ANSWERED " .. tostring(#sent == before + 1))
 
-userCallbacks.onSimulationStop()
+userCallbacks.onSimulationStop() -- back to the menu: phase = "menu"
+
+-- From the menu net.load_mission is a silent no-op, so loadmission must refuse
+-- with a clear error instead of reporting a phantom success. Held for the sim
+-- thread, then answered there against the menu phase.
+local callsBefore = #loadMissionCalls
+before = #sent
+queuedRequest = '{"cmd":"loadmission","path":"C:/m/cold.miz"}'
+guiCallback()
+userCallbacks.onSimulationFrame()
+local coldReply = sent[#sent] or ""
+print("COLD_MENU_REFUSED " .. tostring(coldReply:find('"ok":false', 1, true) ~= nil and coldReply:find("no mission is running", 1, true) ~= nil))
+print("COLD_MENU_NO_LOAD " .. tostring(#loadMissionCalls == callsBefore))
 
 for i, s in ipairs(sent) do print("REPLY " .. i .. " " .. s:gsub("%s+$", "")) end
 print("DONE")

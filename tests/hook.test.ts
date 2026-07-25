@@ -66,7 +66,7 @@ test(
     // bridge answers in the menu and the Mission Editor.
     assert.match(output, /hook server listening/, "the hook did not bind at load time");
 
-    assert.equal(replies.length, 7, `expected 7 replies, got:\n${output}`);
+    assert.equal(replies.length, 9, `expected 9 replies, got:\n${output}`);
     assert.match(replies[0], /^\{"ok":true,"data":\{"pong":true/, "ping did not answer");
     assert.match(replies[1], /^\{"ok":true,/, "mission query did not answer");
     assert.match(replies[2], /"ok":false.*Unknown command/, "unknown command not rejected");
@@ -83,6 +83,16 @@ test(
     // while the mission is demonstrably running.
     assert.match(output, /GUI_HELD true/, `a mission-env command was answered from the GUI tick:\n${output}`);
     assert.match(output, /SIM_ANSWERED true/, `the held command was not answered on the sim frame:\n${output}`);
+    // `net.load_mission` is a no-op unless it runs on the simulation thread, so
+    // `loadmission` must be held for a sim frame like the mission-env commands.
+    assert.match(output, /GUI_LOADMISSION_HELD true/, `loadmission was answered from the GUI tick:\n${output}`);
+    assert.match(output, /SIM_LOADMISSION_ANSWERED true/, `loadmission was not held for the sim frame:\n${output}`);
+    // Over a running mission the swap reaches net.load_mission on the sim thread.
+    assert.match(output, /LOADMISSION_SWAPPED true/, `loadmission did not call net.load_mission when running:\n${output}`);
+    // From the menu net.load_mission silently no-ops, so loadmission must refuse
+    // with a clear error and must NOT call net.load_mission.
+    assert.match(output, /COLD_MENU_REFUSED true/, `cold-menu loadmission did not refuse clearly:\n${output}`);
+    assert.match(output, /COLD_MENU_NO_LOAD true/, `cold-menu loadmission still called net.load_mission:\n${output}`);
     // ...but the bridge must still answer non-mission commands in the menus.
     assert.match(output, /GUI_PING_ANSWERED true/, `ping did not answer from the GUI tick:\n${output}`);
   }

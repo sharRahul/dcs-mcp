@@ -364,7 +364,24 @@ function handlers.loadmission(args)
   if not path:lower():match("%.miz$") then return fail("loadmission: path must end in .miz") end
   if not net.load_mission then return fail("loadmission: net.load_mission is unavailable in this DCS build") end
 
+  -- `net.load_mission` SWAPS the mission on an already-running session; it is the
+  -- server mission-rotation call (see DCS's own common.lua, gated behind
+  -- DCS.isServer()). From a cold menu there is no running session to load into,
+  -- so it silently returns nil and does nothing — no onMissionLoadBegin, no load,
+  -- verified on this install from both the GUI render tick and an onSimulationFrame
+  -- tick. Refuse rather than report a phantom success. There is no menu->mission
+  -- API a Lua hook can drive; a true cold start would need net.start_server, which
+  -- hosts an MP server and changes single-player semantics.
+  if missionState.phase ~= "running" then
+    return fail("loadmission: no mission is running (phase '" .. tostring(missionState.phase) .. "'). " ..
+      "net.load_mission only swaps the mission on an already-running session; from the menu it does nothing. " ..
+      "Start any mission and fly it, then retry to swap in '" .. path .. "'.")
+  end
+
   missionState.loadError = nil
+
+  -- Reached only with a mission running, and (via `needsSimThread`) on the
+  -- simulation thread — the only context where net.load_mission takes effect.
   local okc, res = pcall(net.load_mission, path)
   if not okc then
     recordError("load_mission failed", res)
@@ -415,6 +432,10 @@ local function parseRequest(line)
 end
 
 local function needsSimThread(req)
+  -- `loadmission` does not touch the mission scripting environment, but
+  -- `net.load_mission` is still a no-op unless it runs on the simulation thread,
+  -- so it is held for `onSimulationFrame` just like the mission-env commands.
+  if req.cmd == "loadmission" then return true end
   if not MISSION_ENV_COMMANDS[req.cmd] then return false end
   -- `exec` picks its own state; only the mission one has the threading problem.
   if req.cmd == "exec" then
@@ -467,9 +488,9 @@ local function service(source)
         -- letting the client time out with nothing to go on.
         pcall(function()
           entry.sock:send(fail(
-            "'" .. tostring(entry.req.cmd) .. "' needs the mission scripting environment, which is only " ..
-            "reachable from the simulation thread, and the simulation is not ticking (paused, or no mission " ..
-            "running). Unpause DCS or start a mission and retry.") .. "\n")
+            "'" .. tostring(entry.req.cmd) .. "' must run on the simulation thread, and the simulation is not " ..
+            "ticking (paused, or no mission running). net.load_mission and the mission-scripting commands are " ..
+            "no-ops from the menu's GUI render thread, so start or unpause a mission and retry.") .. "\n")
         end)
         done = true
       end
