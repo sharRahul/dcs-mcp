@@ -84,6 +84,21 @@ const BENIGN_MESSAGES = [
   /^Error: Unit \[[^\]]+\]: Effect presets records are defined but empty/i,
   /^Error: Unit \[[^\]]+\]: Asymmetrical wing configuration/i,
   /Unexpected fires_pos index/i,
+  // Map load chatter: missing prop/light models, destroyed-model fallbacks, and
+  // navaid/ATC definition gaps in the terrain — none of it mission-authored.
+  /^Can't open model /i,
+  /^can't load destroyed model /i,
+  /^Invalid DME frequency/i,
+  /^INVALID ATC /i,
+  /^Unable to find beacon with ID:/i,
+  // Optional-module probing at startup: DCS tries many entry-point paths that a
+  // given install simply doesn't have.
+  /^loadfile: no file /i,
+  /^No suitable driver found to mount /i,
+  // DCS-gRPC's own hook fails to init when its native DLL isn't loaded, and it
+  // does so once per frame — a flood unrelated to anything here. Path-anchored so
+  // it never hides our own Hooks/dcs-mcp-hook.lua, which is a different file.
+  /\bDCS-gRPC[\/\\]grpc\.lua/i,
 ];
 
 export interface LogProblem extends LogEntry {

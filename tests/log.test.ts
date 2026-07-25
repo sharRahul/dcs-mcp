@@ -64,6 +64,39 @@ test("routine startup noise is filtered but real failures are kept", () => {
   assert.match(lua!.message, /attempt to index field/);
 });
 
+test("map-load and startup-probe noise is filtered but a mission script error is kept", () => {
+  // Verbatim from a real run: 30-odd routine ERROR/ALERT lines the terrain and
+  // module loader emit at every start, plus the one line that mattered — a
+  // Skynet failure thrown from a MIST scheduled function inside the mission.
+  const sample = `=== Log opened UTC 2026-07-25 12:27:00
+2026-07-25 12:27:38.291 ERROR   GRAPHICSVISTA (Main): Can't open model light_source_small.
+2026-07-25 12:27:40.057 ERROR   woCar (Main): can't load destroyed model 'Ural-375_p_1' for '55G6 EWR'
+2026-07-25 12:27:38.304 ERROR   WRADIO (Main): Invalid DME frequency or missing channel to determine DME frequency. Can't load beacon "BH BuHasa"
+2026-07-25 12:27:39.993 ERROR   FLIGHT (Main): INVALID ATC Quasoura_airport
+2026-07-25 12:27:39.994 ERROR   FLIGHT (Main): Unable to find beacon with ID: airfield18_2
+2026-07-25 12:27:10.000 ALERT   Scripting (Main): loadfile: no file './DemoMods/aircraft/AJS37/entry.lua'
+2026-07-25 12:27:11.000 ERROR   EDCORE (Main): No suitable driver found to mount mods/terrains/persiangulf/
+2026-07-25 12:27:12.000 ERROR   LuaHooks (Main): [string "C:\\Users\\x\\Saved Games\\DCS\\Scripts\\DCS-gRPC\\grpc.lua"]:268: attempt to index global 'grpc' (a nil value)
+2026-07-25 12:29:36.658 ERROR   SCRIPTING (Main): MIST|doScheduledFunctions|1495: Error in scheduled function: [string "skynet-iads-compiled.lua"]:3179: Unit doesn't exist
+`;
+  const problems = findProblems(parseLog(sample));
+  const messages = problems.map((p) => p.message);
+
+  assert.ok(!messages.some((m) => /Can't open model/.test(m)), "prop-model noise survived");
+  assert.ok(!messages.some((m) => /can't load destroyed model/.test(m)), "destroyed-model noise survived");
+  assert.ok(!messages.some((m) => /Invalid DME/.test(m)), "DME-beacon noise survived");
+  assert.ok(!messages.some((m) => /INVALID ATC/.test(m)), "ATC noise survived");
+  assert.ok(!messages.some((m) => /Unable to find beacon/.test(m)), "beacon-lookup noise survived");
+  assert.ok(!messages.some((m) => /loadfile: no file/.test(m)), "module-probe noise survived");
+  assert.ok(!messages.some((m) => /No suitable driver/.test(m)), "terrain-mount noise survived");
+  assert.ok(!messages.some((m) => /DCS-gRPC/.test(m)), "third-party gRPC flood survived");
+
+  // The one real failure must not be buried by the noise filter.
+  assert.equal(problems.length, 1, "exactly the mission script error should remain");
+  assert.match(problems[0].message, /MIST\|doScheduledFunctions/);
+  assert.match(problems[0].message, /Unit doesn't exist/);
+});
+
 test("a Lua failure names the files its traceback blames", () => {
   const problems = findProblems(parseLog(SAMPLE));
   const lua = problems.find((p) => p.lua)!;
