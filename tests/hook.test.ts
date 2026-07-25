@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import luaparse from "luaparse";
 
 /**
@@ -23,6 +25,59 @@ for (const file of [HOOK, EXPORT]) {
     parseLua(readFileSync(file, "utf8"), file);
   });
 }
+
+/**
+ * Parsing is not enough. DCS runs Lua 5.1, and 5.2+ constructs that parse fine
+ * blow up only when the hook actually runs — at which point DCS logs one line to
+ * dcs.log and the bridge silently never listens. So load the hook for real under
+ * DCS's own interpreter with the DCS globals stubbed, and drive its callbacks.
+ *
+ * Skipped unless DCS_LUA points at `<DCS>/bin-mt/luae.exe`.
+ */
+const DEFAULT_LUA_PATHS = [
+  "C:/Program Files/Eagle Dynamics/DCS World/bin-mt/luae.exe",
+  "C:/Program Files/Eagle Dynamics/DCS World/bin/luae.exe",
+];
+const lua = (() => {
+  const configured = process.env.DCS_LUA;
+  if (configured) return existsSync(configured) ? configured : undefined;
+  return DEFAULT_LUA_PATHS.find((p) => existsSync(p));
+})();
+
+test(
+  "the hook loads and serves requests under the Lua 5.1 that DCS actually runs",
+  { skip: lua ? false : "no DCS Lua interpreter found; set DCS_LUA to <DCS>/bin-mt/luae.exe" },
+  () => {
+    const harness = fileURLToPath(new URL("./fixtures/hook-load.lua", import.meta.url));
+    const run = spawnSync(lua!, [harness, HOOK], { encoding: "utf8" });
+    const output = `${run.stdout ?? ""}${run.stderr ?? ""}`;
+    assert.equal(run.status, 0, `hook failed under DCS Lua:\n${output}`);
+
+    // It must get past module scope, register callbacks, and bind its listener.
+    assert.match(output, /HOOK_LOADED/, output);
+    assert.match(output, /LISTENING/, output);
+
+    const replies = output
+      .split(/\r?\n/)
+      .filter((l) => l.startsWith("REPLY "))
+      .map((l) => l.replace(/^REPLY \d+ /, ""));
+
+    // The listener must come up at LOAD time, not on mission start, so the
+    // bridge answers in the menu and the Mission Editor.
+    assert.match(output, /hook server listening/, "the hook did not bind at load time");
+
+    assert.equal(replies.length, 5, `expected 5 replies, got:\n${output}`);
+    assert.match(replies[0], /^\{"ok":true,"data":\{"pong":true/, "ping did not answer");
+    assert.match(replies[1], /^\{"ok":true,/, "mission query did not answer");
+    assert.match(replies[2], /"ok":false.*Unknown command/, "unknown command not rejected");
+    // Raw Lua execution stays gated even when it is asked for directly.
+    assert.match(replies[3], /"ok":false.*Raw exec is disabled/, "exec was not gated");
+    // `status` must report what the bridge can currently do, so a client can
+    // tell "no mission running" apart from "the bridge is down".
+    assert.match(replies[4], /"listening":true/, "status did not report the listener");
+    assert.match(replies[4], /"phase":"/, "status did not report the DCS phase");
+  }
+);
 
 /** Long strings in the hook, minus the `--[[ ... ]]` block comments. */
 function embeddedSnippets(source: string): string[] {

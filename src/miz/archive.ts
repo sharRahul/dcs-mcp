@@ -83,7 +83,9 @@ async function pathExists(target: string): Promise<boolean> {
  */
 export async function packMiz(
   sourceBytes: Buffer,
-  replacements: Map<string, string>,
+  // Buffers are accepted so binary resources (sounds, pictures) can be embedded
+  // alongside the text entries without a lossy round-trip through a string.
+  replacements: Map<string, string | Buffer>,
   outPath: string,
   sourcePath?: string,
   overwrite = false
@@ -107,7 +109,7 @@ export async function packMiz(
   const zip = new AdmZip(sourceBytes);
   for (const [name, content] of replacements) {
     assertSafeEntryName(name);
-    const buf = Buffer.from(content, "utf8");
+    const buf = Buffer.isBuffer(content) ? content : Buffer.from(content, "utf8");
     if (zip.getEntry(name)) zip.updateFile(name, buf);
     else zip.addFile(name, buf);
   }

@@ -29,3 +29,6 @@ export const KNOWN_MIZ_ENTRIES = [
   "l10n/DEFAULT/dictionary",
   "l10n/DEFAULT/mapResource",
 ] as const;
+
+/** Where DCS keeps a mission's localized resources (scripts, sounds, pictures). */
+export const L10N_PREFIX = "l10n/DEFAULT/";

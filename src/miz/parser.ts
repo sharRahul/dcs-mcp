@@ -55,6 +55,7 @@ function parseWeather(weather: LuaTable | undefined): MissionWeather {
 function parseUnit(unit: LuaTable, resolve: (v: LuaValue | undefined) => string | undefined): MissionUnit {
   return {
     name: resolve(unit["name"]) ?? "(unnamed)",
+    id: num(unit["unitId"]),
     type: str(unit["type"]) ?? "unknown",
     skill: str(unit["skill"]),
     x: num(unit["x"]) ?? 0,
@@ -75,6 +76,7 @@ function parseGroup(
   const points = luaArray(asTable(group["route"])?.["points"]);
   return {
     name: resolve(group["name"]) ?? "(unnamed group)",
+    id: num(group["groupId"]),
     category,
     coalition,
     country,
@@ -111,6 +113,7 @@ function parseZones(mission: LuaTable, resolve: (v: LuaValue | undefined) => str
   const zones = luaArray(asTable(mission["triggers"])?.["zones"]);
   return zones.map((z) => ({
     name: resolve(z["name"]) ?? "(unnamed zone)",
+    id: num(z["zoneId"]),
     x: num(z["x"]) ?? 0,
     y: num(z["y"]) ?? 0,
     radius: num(z["radius"]),
@@ -118,49 +121,95 @@ function parseZones(mission: LuaTable, resolve: (v: LuaValue | undefined) => str
   }));
 }
 
-/** Action predicates whose `group` field points at another group in the mission. */
-const GROUP_REF_ACTIONS = new Set([
+// Which predicates carry a real cross-reference in a given field. The Mission
+// Editor also writes vestigial `zone`/`unit`/`group` values on predicates that
+// ignore them, so reference checks must be driven by these lists rather than by
+// "this rule happens to have a zone field".
+
+/** Predicates whose `group` field points at a group in the mission. */
+const GROUP_REF_PREDICATES = new Set([
   "a_activate_group",
   "a_deactivate_group",
-  "a_group_activate",
-  "a_group_deactivate",
-  "a_group_stop",
-  "a_group_continue",
+  "a_group_on",
+  "a_group_off",
+  "a_group_resume",
+  "a_ai_task",
+  "a_set_ai_task",
+  "a_out_text_delay_g",
+  "a_out_sound_g",
+  "c_group_dead",
+  "c_group_life_less",
+  "c_part_of_group_in_zone",
+  "c_all_of_group_in_zone",
 ]);
 
-/** Condition predicates whose `zone` field points at a trigger zone. */
-const ZONE_REF_CONDITIONS = new Set([
+/** Predicates whose `zone` field points at a trigger zone. */
+const ZONE_REF_PREDICATES = new Set([
   "c_unit_in_zone",
+  "c_unit_out_zone",
   "c_part_of_coalition_in_zone",
-  "c_all_of_coalition_in_zone",
-  "c_unit_outside_zone",
-  "c_group_in_zone",
+  "c_part_of_group_in_zone",
+  "c_all_of_group_in_zone",
+  "c_missile_in_zone",
+  "c_bomb_in_zone",
+  "c_dead_zone",
+  "a_explosion",
+  "a_effect_smoke",
+  "a_signal_flare",
+  "a_radio_transmission",
+]);
+
+/** Predicates whose `unit` field points at a unit in the mission. */
+const UNIT_REF_PREDICATES = new Set([
+  "c_unit_in_zone",
+  "c_unit_out_zone",
+  "c_unit_dead",
+  "c_unit_alive",
+  "c_unit_damaged",
+  "c_unit_altitude_lower_AGL",
+  "c_unit_altitude_higher_AGL",
+]);
+
+/** Predicates whose `flag` field names a mission flag. */
+const FLAG_REF_PREDICATES = new Set([
+  "c_flag_is_true",
+  "c_flag_is_false",
+  "c_flag_equals",
+  "c_flag_more",
+  "c_time_since_flag",
+  "a_set_flag",
+  "a_set_flag_value",
+  "a_clear_flag",
+  "a_set_flag_random",
 ]);
 
 /** Collect the cross-references each trigger makes, for reference validation. */
 function parseTriggers(mission: LuaTable): MissionTrigger[] {
+  const compiledActions = asTable(asTable(mission["trig"])?.["actions"]);
+
   return luaArray(mission["trigrules"]).map((rule, i) => {
     const groupRefs: (string | number)[] = [];
     const zoneRefs: (string | number)[] = [];
+    const unitRefs: (string | number)[] = [];
+    const flagRefs: (string | number)[] = [];
 
-    for (const action of luaArray(rule["actions"])) {
-      const predicate = str(action["predicate"]);
-      const ref = action["group"];
-      if (predicate && GROUP_REF_ACTIONS.has(predicate) && (typeof ref === "string" || typeof ref === "number")) {
-        groupRefs.push(ref);
-      }
-    }
-    for (const condition of luaArray(rule["rules"])) {
-      const predicate = str(condition["predicate"]);
-      const ref = condition["zone"];
-      if (
-        predicate &&
-        ZONE_REF_CONDITIONS.has(predicate) &&
-        (typeof ref === "string" || typeof ref === "number")
-      ) {
-        zoneRefs.push(ref);
-      }
-    }
+    const collect = (entry: LuaTable) => {
+      const predicate = str(entry["predicate"]);
+      if (!predicate) return;
+      const push = (target: (string | number)[], field: string, allowed: Set<string>) => {
+        const ref = entry[field];
+        if (allowed.has(predicate) && (typeof ref === "string" || typeof ref === "number")) {
+          target.push(ref);
+        }
+      };
+      push(groupRefs, "group", GROUP_REF_PREDICATES);
+      push(zoneRefs, "zone", ZONE_REF_PREDICATES);
+      push(unitRefs, "unit", UNIT_REF_PREDICATES);
+      push(flagRefs, "flag", FLAG_REF_PREDICATES);
+    };
+
+    for (const action of luaArray(rule["actions"])) collect(action);
+    for (const condition of luaArray(rule["rules"])) collect(condition);
 
     return {
       index: i + 1,
@@ -168,6 +217,9 @@ function parseTriggers(mission: LuaTable): MissionTrigger[] {
       comment: str(rule["comment"]) || undefined,
       groupRefs,
       zoneRefs,
+      unitRefs,
+      flagRefs,
+      compiled: typeof compiledActions?.[i + 1] === "string",
     };
   });
 }
@@ -225,6 +277,7 @@ export function buildMissionDocument(
 export function parseMissionTables(archive: MizArchive): {
   mission: LuaTable;
   dictionary?: LuaTable;
+  mapResource?: LuaTable;
 } {
   const missionSrc = archive.entries.get("mission");
   if (!missionSrc) {
@@ -233,7 +286,9 @@ export function parseMissionTables(archive: MizArchive): {
   const mission = parseLuaAssignment(missionSrc, "mission");
   const dictSrc = archive.entries.get("l10n/DEFAULT/dictionary");
   const dictionary = dictSrc ? parseLuaAssignment(dictSrc, "dictionary") : undefined;
-  return { mission, dictionary };
+  const resSrc = archive.entries.get("l10n/DEFAULT/mapResource");
+  const mapResource = resSrc ? parseLuaAssignment(resSrc, "mapResource") : undefined;
+  return { mission, dictionary, mapResource };
 }
 
 /** Build the canonical MissionDocument from a validated archive. */

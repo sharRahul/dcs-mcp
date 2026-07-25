@@ -40,8 +40,24 @@ if not okSocket or not socket then
   return
 end
 
+local MAX_ERRORS = 50           -- most recent hook-side errors kept for the client
+
 local server = nil
 local pending = {}              -- in-flight clients: { sock, buffer, deadline }
+
+-- What DCS is doing right now, so a client can tell "no mission running" apart
+-- from "the bridge is down".
+local missionState = { phase = "menu", name = nil, loadError = nil }
+
+-- Ring buffer of problems the hook itself saw. dcs.log is the fuller record;
+-- this is what the bridge can hand back directly.
+local errors = {}
+
+local function recordError(what, detail)
+  errors[#errors + 1] = { time = os.date("%Y-%m-%d %H:%M:%S"), what = what, detail = tostring(detail) }
+  while #errors > MAX_ERRORS do table.remove(errors, 1) end
+  log.write("DCS-MCP", log.ERROR, tostring(what) .. ": " .. tostring(detail))
+end
 
 ----------------------------------------------------------------------
 -- JSON encoder (used hook-side and embedded into mission-env snippets)
@@ -78,7 +94,11 @@ local function enc(v)
 end
 ]]
 
-local enc = assert(load(JSON_ENC_SRC .. "\nreturn enc"))()
+-- DCS runs Lua 5.1, where `load` takes a READER FUNCTION and only `loadstring`
+-- compiles a string. Calling load(string) here aborts the whole hook, and DCS
+-- reports it only as one line in dcs.log while the bridge silently never starts.
+local compile = loadstring or load
+local enc = assert(compile(JSON_ENC_SRC .. "\nreturn enc"))()
 
 local function ok(data) return '{"ok":true,"data":' .. enc(data) .. '}' end
 local function fail(msg) return '{"ok":false,"error":' .. enc(tostring(msg)) .. '}' end
@@ -105,6 +125,42 @@ local handlers = {}
 
 function handlers.ping()
   return ok({ pong = true, time = os.clock() })
+end
+
+--[[
+  What the bridge can currently do.
+
+  `missionEnv` is the important field: the mission scripting state only exists
+  while a mission runs, so every unit/spawn/message command needs it. Reporting
+  it explicitly means a client can say "no mission is running" instead of
+  surfacing a confusing timeout.
+--]]
+function handlers.status()
+  local envReachable = false
+  if missionState.phase == "running" or missionState.phase == "loaded" then
+    local probe = net.dostring_in("mission", "return 'ok'")
+    envReachable = probe == "ok"
+  end
+  local version = {}
+  pcall(function()
+    if DCS.getVersion then version.dcs = DCS.getVersion() end
+  end)
+  return ok({
+    listening = server ~= nil,
+    phase = missionState.phase,
+    mission = missionState.name,
+    missionEnv = envReachable,
+    errorCount = #errors,
+    version = version.dcs,
+  })
+end
+
+--[[ Problems the hook recorded, newest last. Pass {"clear":true} to reset. --]]
+function handlers.errors(args)
+  local out = {}
+  for i, e in ipairs(errors) do out[i] = e end
+  if args and args.clear then errors = {} end
+  return ok({ count = #out, errors = out })
 end
 
 function handlers.self()
@@ -291,7 +347,7 @@ local function service()
     if line then
       entry.buffer = entry.buffer .. line
       local okr, e = pcall(respond, entry, entry.buffer)
-      if not okr then log.write("DCS-MCP", log.ERROR, "response failed: " .. tostring(e)) end
+      if not okr then recordError("response failed", e) end
       done = true
     elseif err == "timeout" then
       entry.buffer = entry.buffer .. (partial or "")
@@ -323,14 +379,20 @@ local function poll()
   service()
 end
 
-local callbacks = {}
-
-function callbacks.onSimulationStart()
-  if server then return end
+----------------------------------------------------------------------
+-- Listener lifetime
+--
+-- The socket is opened when the hook LOADS, not when a mission starts, so the
+-- bridge answers while DCS sits in the main menu or the Mission Editor. That is
+-- exactly when a client most needs to ask what went wrong with a mission that
+-- would not open.
+----------------------------------------------------------------------
+local function startServer()
+  if server then return true end
   local sock, err = socket.tcp()
   if not sock then
     log.write("DCS-MCP", log.ERROR, "socket.tcp() failed: " .. tostring(err))
-    return
+    return false
   end
   sock:setoption("reuseaddr", true)
 
@@ -342,28 +404,96 @@ function callbacks.onSimulationStart()
       "cannot bind " .. HOST .. ":" .. PORT .. " (" .. tostring(bindErr) .. "). " ..
       "Another process may already hold the port; the MCP bridge is disabled.")
     sock:close()
-    return
+    return false
   end
   local okListen, listenErr = sock:listen(8)
   if not okListen then
     log.write("DCS-MCP", log.ERROR, "listen failed: " .. tostring(listenErr))
     sock:close()
-    return
+    return false
   end
   sock:settimeout(0)
   server = sock
   log.write("DCS-MCP", log.INFO, "hook server listening on " .. HOST .. ":" .. PORT)
+  return true
+end
+
+local function stopServer()
+  for _, entry in ipairs(pending) do pcall(function() entry.sock:close() end) end
+  pending = {}
+  if server then pcall(function() server:close() end); server = nil end
+end
+
+--[[
+  Servicing outside a mission.
+
+  `onSimulationFrame` only fires while a mission runs. DCS's GUI state also has a
+  per-frame updater (`Gui.AddUpdateCallback`, the one UserHooks.lua drives the
+  Mission Editor with) which keeps ticking in the menus. It is not documented as
+  a hook API, so it is used defensively: registered only if present, wrapped in
+  pcall, and dropped after repeated failures rather than risking the user's UI.
+--]]
+local guiFailures = 0
+
+local function guiTick()
+  local okp, err = pcall(poll)
+  if okp then
+    guiFailures = 0
+    return false -- returning true would unregister us
+  end
+  guiFailures = guiFailures + 1
+  recordError("GUI poll error", err)
+  if guiFailures >= 10 then
+    log.write("DCS-MCP", log.ERROR, "disabling the GUI-side poll after repeated errors")
+    return true -- UpdateManager removes an updater that returns true
+  end
+  return false
+end
+
+local function registerGuiTick()
+  if type(Gui) ~= "table" or type(Gui.AddUpdateCallback) ~= "function" then
+    log.write("DCS-MCP", log.INFO,
+      "no GUI updater available; the bridge will only answer while a mission is running")
+    return false
+  end
+  local ok, err = pcall(Gui.AddUpdateCallback, guiTick)
+  if not ok then
+    log.write("DCS-MCP", log.ERROR, "could not register the GUI poll: " .. tostring(err))
+    return false
+  end
+  log.write("DCS-MCP", log.INFO, "GUI poll registered; the bridge answers in menus too")
+  return true
+end
+
+local callbacks = {}
+
+function callbacks.onSimulationStart()
+  missionState.phase = "running"
+  startServer() -- no-op when the load-time start already succeeded
 end
 
 function callbacks.onSimulationFrame()
   local okp, err = pcall(poll)
-  if not okp then log.write("DCS-MCP", log.ERROR, "poll error: " .. tostring(err)) end
+  if not okp then recordError("poll error", err) end
 end
 
 function callbacks.onSimulationStop()
-  for _, entry in ipairs(pending) do pcall(function() entry.sock:close() end) end
-  pending = {}
-  if server then server:close(); server = nil end
+  missionState.phase = "menu"
+  -- The listener deliberately outlives the mission so a client can still ask
+  -- what happened after a mission ends or fails to load.
+end
+
+function callbacks.onMissionLoadBegin()
+  missionState.phase = "loading"
+  missionState.name = (DCS.getMissionName and select(1, pcall(DCS.getMissionName))) and DCS.getMissionName() or nil
+  missionState.loadError = nil
+end
+
+function callbacks.onMissionLoadEnd()
+  missionState.phase = "loaded"
 end
 
 DCS.setUserCallbacks(callbacks)
+
+startServer()
+registerGuiTick()

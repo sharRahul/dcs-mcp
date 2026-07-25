@@ -14,6 +14,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { registerMizTools } from "./tools/miz.js";
 import { registerMizAuthoringTools } from "./tools/miz-authoring.js";
 import { registerBridgeTools } from "./tools/bridge.js";
+import { registerDiagnosticTools } from "./tools/diagnostics.js";
 
 const server = new McpServer({
   name: "dcs-mcp-server",
@@ -23,6 +24,7 @@ const server = new McpServer({
 registerMizTools(server);
 registerMizAuthoringTools(server);
 registerBridgeTools(server);
+registerDiagnosticTools(server);
 
 async function main(): Promise<void> {
   const transport = new StdioServerTransport();

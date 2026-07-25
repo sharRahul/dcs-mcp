@@ -21,12 +21,75 @@ import {
   type ConditionSpec,
 } from "../miz/authoring.js";
 import { validateMission } from "../miz/validator.js";
+import { addResource, listResources } from "../miz/resources.js";
+import {
+  FRAMEWORKS,
+  loadScripts,
+  resolveFrameworkPath,
+  resolveLoadOrder,
+  type FrameworkName,
+} from "../miz/frameworks.js";
 import { buildResult, errorResult, validationReportSchema, weatherSchema } from "./format.js";
+import type { MissionSession } from "../miz/sessions.js";
 import type { MissionDocument } from "../types.js";
+import { readFile } from "node:fs/promises";
+import { basename } from "node:path";
 
 const sessionIdField = z.string().min(1).describe("Session id from dcs_miz_open or dcs_miz_new");
 
 const sideField = z.enum(["red", "blue", "neutrals"]).describe("Coalition side");
+
+const unitTypeField = z
+  .enum(["ALL", "AIRPLANE", "HELICOPTER", "GROUND_UNIT", "SHIP"])
+  .describe("Unit category filter");
+
+/** Shared shape of the text-message actions. */
+const messageFields = {
+  text: z.string().min(1).describe("Message text (stored in the mission dictionary)"),
+  seconds: z.number().int().min(1).optional().describe("How long the message stays on screen"),
+  clearview: z.boolean().optional().describe("Clear other messages first"),
+  delaySeconds: z.number().int().min(0).optional().describe("Delay before the message appears"),
+};
+
+/** The per-group message is the one text action DCS gives no delay parameter. */
+const { delaySeconds: _groupMessageHasNoDelay, ...groupMessageFields } = messageFields;
+
+/** Actions that reference a file embedded in the .miz take a path on disk. */
+const RESOURCE_ACTION_KINDS = new Set([
+  "sound",
+  "sound_to_coalition",
+  "sound_to_group",
+  "radio_transmission",
+  "do_script_file",
+]);
+
+/**
+ * Turn `file` (a path on disk) into an embedded resource + key, in place.
+ *
+ * Done at the tool layer so the authoring core stays synchronous and free of
+ * filesystem access.
+ */
+async function materializeResources(
+  session: MissionSession,
+  actions: Record<string, unknown>[]
+): Promise<{ fileName: string; key: string; bytes: number; reused: boolean }[]> {
+  const embedded: { fileName: string; key: string; bytes: number; reused: boolean }[] = [];
+  for (const action of actions) {
+    if (!RESOURCE_ACTION_KINDS.has(String(action.kind))) continue;
+    const filePath = action.file;
+    if (typeof filePath !== "string") continue;
+    const content = await readFile(filePath);
+    const result = addResource(
+      { mission: session.mission, mapResource: session.mapResource, files: session.files },
+      basename(filePath),
+      content
+    );
+    action.resourceKey = result.key;
+    delete action.file;
+    embedded.push({ fileName: result.fileName, key: result.key, bytes: result.bytes, reused: result.reused });
+  }
+  return embedded;
+}
 
 const positionFields = {
   x: z.number().describe("DCS internal x coordinate (metres, north). Use dcs_convert_coords for lat/long."),
@@ -365,70 +428,416 @@ export function registerMizAuthoringTools(server: McpServer): void {
     {
       title: "Add trigger",
       description:
-        "Add a mission trigger (condition -> action) in the DCS Mission Editor's structured form. " +
-        "IMPORTANT: DCS compiles the runtime triggers when the mission is opened and saved in the " +
-        "Mission Editor, so open the saved .miz in the ME once to finalize triggers.\n\n" +
-        "Supported conditions: time_after{seconds}, flag_is_true{flag}, flag_equals{flag,value}.\n" +
-        "Supported actions: message{text,seconds?}, set_flag{flag,value?}, activate_group{group}, " +
-        "end_mission{winner}.\n\n" +
-        "Args:\n  - sessionId\n  - type ('start'|'once'|'continuous')\n  - comment?\n" +
-        "  - conditions: [ ... ]\n  - actions: [ ... ]\n\nReturns JSON: { triggerIndex, triggerCount }.",
+        "Add a mission trigger (conditions -> actions). Writes BOTH the Mission Editor's structured " +
+        "form and the compiled runtime form, so the trigger fires when the .miz is flown directly — " +
+        "no Mission Editor round-trip needed.\n\n" +
+        "Groups, units and zones are given by NAME and resolved to DCS ids; a name that does not " +
+        "exist in the mission is an error rather than a silently dead trigger. Flags are integers.\n\n" +
+        "Trigger types: 'once' (fires once), 'continuous' (every time the condition holds), " +
+        "'change' (each false->true transition), 'start' (mission start).\n\n" +
+        "Conditions (ANDed): time_after{seconds}, time_since_flag{flag,seconds}, flag_is_true{flag}, " +
+        "flag_is_false{flag}, flag_equals{flag,value}, flag_more{flag,value}, unit_in_zone{unit,zone}, " +
+        "unit_out_zone{unit,zone}, unit_dead{unit}, group_dead{group}, group_life_less{group,percent}, " +
+        "part_of_group_in_zone{group,zone}, part_of_coalition_in_zone{coalition,zone,unitType?}, " +
+        "random_less{percent}.\n\n" +
+        "Actions: message{text,seconds?,clearview?,delaySeconds?}, " +
+        "message_to_coalition{coalition,text,...}, set_flag{flag,value?}, clear_flag{flag}, " +
+        "activate_group{group}, deactivate_group{group}, group_on{group}, group_off{group}, " +
+        "explode{zone,power?,altitudeMetres?}, smoke{zone,preset?,density?}, " +
+        "signal_flare{zone,color?,altitudeMetres?,bearing?}, end_mission{winner,delaySeconds?}.\n\n" +
+        "Args:\n  - sessionId\n  - type ('once'|'continuous'|'change'|'start')\n  - comment?\n" +
+        "  - conditions: [ ... ] (empty means 'always')\n  - actions: [ ... ]\n\n" +
+        "Returns JSON: { triggerIndex, triggerCount, compiled }.",
       inputSchema: z
         .object({
           sessionId: sessionIdField,
-          type: z.enum(["start", "once", "continuous"]).default("once"),
+          type: z.enum(["once", "continuous", "change", "start"]).default("once"),
           comment: z.string().max(200).optional(),
           conditions: z
             .array(
               z.union([
                 z.object({ kind: z.literal("time_after"), seconds: z.number().int().min(0) }).strict(),
+                z
+                  .object({
+                    kind: z.literal("time_since_flag"),
+                    flag: z.number().int(),
+                    seconds: z.number().int().min(0),
+                  })
+                  .strict(),
                 z.object({ kind: z.literal("flag_is_true"), flag: z.number().int() }).strict(),
+                z.object({ kind: z.literal("flag_is_false"), flag: z.number().int() }).strict(),
                 z
                   .object({ kind: z.literal("flag_equals"), flag: z.number().int(), value: z.number().int() })
                   .strict(),
+                z
+                  .object({ kind: z.literal("flag_more"), flag: z.number().int(), value: z.number().int() })
+                  .strict(),
+                z
+                  .object({ kind: z.literal("unit_in_zone"), unit: z.string().min(1), zone: z.string().min(1) })
+                  .strict(),
+                z
+                  .object({ kind: z.literal("unit_out_zone"), unit: z.string().min(1), zone: z.string().min(1) })
+                  .strict(),
+                z.object({ kind: z.literal("unit_dead"), unit: z.string().min(1) }).strict(),
+                z.object({ kind: z.literal("group_dead"), group: z.string().min(1) }).strict(),
+                z
+                  .object({
+                    kind: z.literal("group_life_less"),
+                    group: z.string().min(1),
+                    percent: z.number().int().min(0).max(100),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    kind: z.literal("part_of_group_in_zone"),
+                    group: z.string().min(1),
+                    zone: z.string().min(1),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    kind: z.literal("part_of_coalition_in_zone"),
+                    coalition: sideField,
+                    zone: z.string().min(1),
+                    unitType: unitTypeField.optional(),
+                  })
+                  .strict(),
+                z.object({ kind: z.literal("random_less"), percent: z.number().int().min(0).max(100) }).strict(),
               ])
             )
-            .min(1)
-            .describe("Trigger conditions (ANDed)"),
+            .describe("Trigger conditions, ANDed together. An empty list means 'always'."),
           actions: z
             .array(
               z.union([
+                z.object({ kind: z.literal("message"), ...messageFields }).strict(),
                 z
-                  .object({
-                    kind: z.literal("message"),
-                    text: z.string().min(1),
-                    seconds: z.number().int().min(1).optional(),
-                  })
+                  .object({ kind: z.literal("message_to_coalition"), coalition: sideField, ...messageFields })
                   .strict(),
                 z
                   .object({ kind: z.literal("set_flag"), flag: z.number().int(), value: z.number().int().optional() })
                   .strict(),
+                z.object({ kind: z.literal("clear_flag"), flag: z.number().int() }).strict(),
                 z.object({ kind: z.literal("activate_group"), group: z.string().min(1) }).strict(),
-                z.object({ kind: z.literal("end_mission"), winner: z.enum(["red", "blue", "neutrals"]) }).strict(),
+                z.object({ kind: z.literal("deactivate_group"), group: z.string().min(1) }).strict(),
+                z.object({ kind: z.literal("group_on"), group: z.string().min(1) }).strict(),
+                z.object({ kind: z.literal("group_off"), group: z.string().min(1) }).strict(),
+                z
+                  .object({
+                    kind: z.literal("explode"),
+                    zone: z.string().min(1),
+                    power: z.number().min(1).max(10000).optional().describe("Explosion power"),
+                    altitudeMetres: z.number().min(0).optional(),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    kind: z.literal("smoke"),
+                    zone: z.string().min(1),
+                    preset: z.number().int().min(1).max(8).optional().describe("DCS smoke preset"),
+                    density: z.number().int().min(1).max(4).optional(),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    kind: z.literal("signal_flare"),
+                    zone: z.string().min(1),
+                    color: z.number().int().min(0).max(3).optional().describe("0=green 1=red 2=white 3=yellow"),
+                    altitudeMetres: z.number().min(0).optional(),
+                    bearing: z.number().min(0).max(359).optional(),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    kind: z.literal("end_mission"),
+                    winner: sideField,
+                    delaySeconds: z.number().int().min(0).optional(),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    kind: z.literal("message_to_group"),
+                    group: z.string().min(1),
+                    ...groupMessageFields,
+                  })
+                  .strict(),
+                z.object({ kind: z.literal("message_to_unit"), unit: z.string().min(1), ...messageFields }).strict(),
+                z
+                  .object({
+                    kind: z.literal("message_to_country"),
+                    countryId: z.number().int().min(0).describe("DCS country id, e.g. 2 = USA, 0 = Russia"),
+                    ...messageFields,
+                  })
+                  .strict(),
+                z
+                  .object({
+                    kind: z.literal("set_flag_random"),
+                    flag: z.number().int(),
+                    min: z.number().int(),
+                    max: z.number().int(),
+                  })
+                  .strict(),
+                z.object({ kind: z.literal("group_resume"), group: z.string().min(1) }).strict(),
+
+                // --- radio menu (F10 "Other") ---
+                z
+                  .object({
+                    kind: z.literal("add_radio_item"),
+                    text: z.string().min(1).describe("Menu label"),
+                    flag: z.number().int().describe("Flag set when the player picks the item"),
+                    value: z.number().int().optional().describe("Value written to the flag (default 1)"),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    kind: z.literal("add_radio_item_for_group"),
+                    group: z.string().min(1),
+                    text: z.string().min(1),
+                    flag: z.number().int(),
+                    value: z.number().int().optional(),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    kind: z.literal("wait_for_user_flag"),
+                    flag: z.number().int().describe("Flag a radio menu item raises when picked"),
+                    flagBack: z.number().int().optional(),
+                  })
+                  .strict(),
+                z.object({ kind: z.literal("remove_radio_item"), text: z.string().min(1) }).strict(),
+                z
+                  .object({
+                    kind: z.literal("remove_radio_item_for_group"),
+                    group: z.string().min(1),
+                    text: z.string().min(1),
+                  })
+                  .strict(),
+
+                // --- sound / radio (file is a path on disk; it is embedded in the .miz) ---
+                z
+                  .object({
+                    kind: z.literal("sound"),
+                    file: z.string().min(1),
+                    delaySeconds: z.number().int().min(0).optional(),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    kind: z.literal("sound_to_coalition"),
+                    coalition: sideField,
+                    file: z.string().min(1),
+                    delaySeconds: z.number().int().min(0).optional(),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    kind: z.literal("sound_to_group"),
+                    group: z.string().min(1),
+                    file: z.string().min(1),
+                    delaySeconds: z.number().int().min(0).optional(),
+                  })
+                  .strict(),
+                z.object({ kind: z.literal("stop_sound") }).strict(),
+                z
+                  .object({
+                    kind: z.literal("radio_transmission"),
+                    file: z.string().min(1).describe("Path to an .ogg to embed and broadcast"),
+                    zone: z.string().min(1).describe("Trigger zone the transmitter sits in"),
+                    frequencyMHz: z.number().min(0).describe("Frequency in MHz, e.g. 251 or 127.5"),
+                    name: z.string().min(1).describe("Transmission name (used to stop it later)"),
+                    power: z.number().int().min(1).optional(),
+                    modulationAM: z.boolean().optional().describe("true = AM (default), false = FM"),
+                    loop: z.boolean().optional(),
+                    delaySeconds: z.number().int().min(0).optional(),
+                    micEffects: z.boolean().optional(),
+                    squelchEffects: z.boolean().optional(),
+                  })
+                  .strict(),
+
+                // --- scripting ---
+                z
+                  .object({
+                    kind: z.literal("do_script"),
+                    text: z.string().min(1).describe("Inline Lua run in the mission environment"),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    kind: z.literal("do_script_file"),
+                    file: z.string().min(1).describe("Path to a .lua file to embed and run"),
+                  })
+                  .strict(),
               ])
             )
             .min(1)
             .describe("Trigger actions"),
         })
         .strict(),
-      outputSchema: z.object({ triggerIndex: z.number(), triggerCount: z.number() }),
+      outputSchema: z.object({
+        triggerIndex: z.number(),
+        triggerCount: z.number(),
+        compiled: z.boolean(),
+      }),
       annotations: authoringAnnotations,
     },
     async ({ sessionId, type, comment, conditions, actions }) => {
       try {
         const s = requireSession(sessionId);
-        const index = addTrigger(s.mission, {
-          type,
-          comment,
-          conditions: conditions as ConditionSpec[],
-          actions: actions as ActionSpec[],
-        });
+        // Embed any referenced sound/script files first, so the actions can be
+        // built against real resource keys.
+        const spec = actions as unknown as Record<string, unknown>[];
+        const embedded = await materializeResources(s, spec);
+        const index = addTrigger(
+          s.mission,
+          {
+            type,
+            comment,
+            conditions: conditions as ConditionSpec[],
+            actions: spec as unknown as ActionSpec[],
+          },
+          s.dictionary
+        );
         s.dirty = true;
         refresh(s);
+        const compiled = s.document.triggers.find((t) => t.index === index)?.compiled ?? false;
+        const extra = embedded.length ? ` Embedded ${embedded.map((e) => e.fileName).join(", ")}.` : "";
         return buildResult(
-          `Added ${type} trigger #${index}. Open the saved .miz in the DCS Mission Editor to finalize it.`,
-          { triggerIndex: index, triggerCount: s.document.summary.triggerCount }
+          compiled
+            ? `Added ${type} trigger #${index} and compiled it into mission.trig; it will fire when flown directly.${extra}`
+            : `Added ${type} trigger #${index}, but it could not be compiled — open the saved .miz in the ` +
+              `DCS Mission Editor once to finalize it.${extra}`,
+          {
+            triggerIndex: index,
+            triggerCount: s.document.summary.triggerCount,
+            compiled,
+            embedded,
+          }
         );
+      } catch (err) {
+        return errorResult(err);
+      }
+    }
+  );
+
+  server.registerTool(
+    "dcs_miz_load_scripts",
+    {
+      title: "Load mission scripts / frameworks",
+      description:
+        "Embed Lua scripting frameworks (MIST, MOOSE, Skynet-IADS) and/or your own setup scripts into " +
+        "an open mission, and wire them to run at mission start.\n\n" +
+        "All loads go into ONE 'Load Scripts' MISSION START trigger, in dependency order " +
+        "(MIST -> MOOSE -> Skynet -> your scripts). This matters: DCS gives no defined order between " +
+        "separate start triggers, and Skynet fails to initialise unless MIST loaded first. Requesting " +
+        "skynet pulls in mist automatically.\n\n" +
+        "Framework files are auto-discovered under 'Saved Games/DCS/Missions/LUA Scripts' and " +
+        "'Saved Games/DCS/Scripts'; pass paths explicitly to override. Re-loading a framework already " +
+        "in the mission reuses it instead of embedding a second copy.\n\n" +
+        "Args:\n  - sessionId\n  - frameworks?: ['mist'|'moose'|'skynet']\n" +
+        "  - frameworkPaths?: { mist?, moose?, skynet? } explicit .lua paths\n" +
+        "  - scripts?: [string] paths to your own .lua files, loaded after the frameworks\n\n" +
+        "Returns JSON: { triggerIndex, loaded: [{ framework?, fileName, resourceKey, bytes, reused }] }.",
+      inputSchema: z
+        .object({
+          sessionId: sessionIdField,
+          frameworks: z
+            .array(z.enum(["mist", "moose", "skynet"]))
+            .default([])
+            .describe("Frameworks to embed; dependencies are added automatically"),
+          frameworkPaths: z
+            .object({
+              mist: z.string().optional(),
+              moose: z.string().optional(),
+              skynet: z.string().optional(),
+            })
+            .strict()
+            .optional()
+            .describe("Explicit .lua paths, overriding auto-discovery"),
+          scripts: z
+            .array(z.string().min(1))
+            .default([])
+            .describe("Your own .lua files, loaded after the frameworks in the order given"),
+        })
+        .strict(),
+      outputSchema: z.object({
+        triggerIndex: z.number(),
+        loaded: z.array(
+          z.object({
+            framework: z.string().optional(),
+            fileName: z.string(),
+            sourcePath: z.string(),
+            resourceKey: z.string(),
+            bytes: z.number(),
+            reused: z.boolean(),
+          })
+        ),
+      }),
+      annotations: authoringAnnotations,
+    },
+    async ({ sessionId, frameworks, frameworkPaths, scripts }) => {
+      try {
+        const s = requireSession(sessionId);
+        if (frameworks.length === 0 && scripts.length === 0) {
+          throw new Error("Nothing to load: pass at least one framework or script path.");
+        }
+
+        const ordered = resolveLoadOrder(frameworks as FrameworkName[]);
+        const requests: { framework?: FrameworkName; filePath: string }[] = [];
+        for (const name of ordered) {
+          requests.push({
+            framework: name,
+            filePath: await resolveFrameworkPath(name, frameworkPaths?.[name]),
+          });
+        }
+        for (const filePath of scripts) requests.push({ filePath });
+
+        const { loaded, triggerIndex } = await loadScripts(
+          { mission: s.mission, mapResource: s.mapResource, files: s.files },
+          s.dictionary,
+          requests
+        );
+        s.dirty = true;
+        refresh(s);
+
+        const size = (bytes: number) =>
+          bytes >= 1024 ? `${Math.round(bytes / 1024)} KB` : `${bytes} B`;
+        const summary = loaded
+          .map((l) => `${l.framework ? FRAMEWORKS[l.framework].label : "script"} ${l.fileName}` +
+            `${l.reused ? " (already loaded)" : ` (${size(l.bytes)})`}`)
+          .join(", ");
+        return buildResult(
+          `Load order on start trigger #${triggerIndex}: ${summary}.`,
+          { triggerIndex, loaded }
+        );
+      } catch (err) {
+        return errorResult(err);
+      }
+    }
+  );
+
+  server.registerTool(
+    "dcs_miz_list_resources",
+    {
+      title: "List embedded resources",
+      description:
+        "List the files embedded in an open mission (scripts, sounds, pictures) and the resource key " +
+        "each is reachable by.\n\nArgs:\n  - sessionId\n\n" +
+        "Returns JSON: { resources: [{ key, fileName }], pendingFiles: [string] }.",
+      inputSchema: z.object({ sessionId: sessionIdField }).strict(),
+      outputSchema: z.object({
+        resources: z.array(z.object({ key: z.string(), fileName: z.string() })),
+        pendingFiles: z.array(z.string()),
+      }),
+      annotations: { ...authoringAnnotations, readOnlyHint: true, idempotentHint: true },
+    },
+    async ({ sessionId }) => {
+      try {
+        const s = requireSession(sessionId);
+        const resources = listResources(s.mapResource);
+        const pendingFiles = [...s.files.keys()].sort();
+        const lines = resources.length
+          ? resources.map((r) => `- ${r.fileName}  (${r.key})`).join("\n")
+          : "(none)";
+        return buildResult(`# Embedded resources\n\n${lines}`, { resources, pendingFiles });
       } catch (err) {
         return errorResult(err);
       }

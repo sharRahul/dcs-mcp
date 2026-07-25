@@ -1,0 +1,2683 @@
+{
+  "note": "Trigger format oracle captured from DCS Mission-Editor-saved .miz files. Each entry pairs a mission.trigrules spec with the mission.trig Lua DCS compiled for it. Regenerate with tests/build-trig-oracle.ts against a folder of ME-saved missions.",
+  "predicates": [
+    {
+      "predicate": "a_activate_group",
+      "role": "action",
+      "spec": {
+        "group": 2,
+        "predicate": "a_activate_group"
+      },
+      "lua": "a_activate_group(2)"
+    },
+    {
+      "predicate": "a_add_radio_item",
+      "role": "action",
+      "spec": {
+        "value": 0,
+        "radiotext": "DictKey_ActionRadioText_902",
+        "flag": 7,
+        "KeyDict_radiotext": "DictKey_ActionRadioText_902",
+        "predicate": "a_add_radio_item"
+      },
+      "lua": "a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_902\"), 7, 0)"
+    },
+    {
+      "predicate": "a_add_radio_item_for_group",
+      "role": "action",
+      "spec": {
+        "flag": 8,
+        "predicate": "a_add_radio_item_for_group",
+        "value": 1,
+        "group": 165,
+        "KeyDict_radiotext": "DictKey_ActionRadioText_1076",
+        "radiotext": "DictKey_ActionRadioText_1076"
+      },
+      "lua": "a_add_radio_item_for_group(165, getValueDictByKey(\"DictKey_ActionRadioText_1076\"), 8, 1)"
+    },
+    {
+      "predicate": "a_clear_flag",
+      "role": "action",
+      "spec": {
+        "flag": 8,
+        "predicate": "a_clear_flag"
+      },
+      "lua": "a_clear_flag(8)"
+    },
+    {
+      "predicate": "a_deactivate_group",
+      "role": "action",
+      "spec": {
+        "group": 219,
+        "predicate": "a_deactivate_group"
+      },
+      "lua": "a_deactivate_group(219)"
+    },
+    {
+      "predicate": "a_do_script",
+      "role": "action",
+      "spec": {
+        "text": "GRPC.load()",
+        "predicate": "a_do_script"
+      },
+      "lua": "a_do_script(\"GRPC.load()\")"
+    },
+    {
+      "predicate": "a_do_script_file",
+      "role": "action",
+      "spec": {
+        "density": 1,
+        "zone": "",
+        "preset": 1,
+        "file": "ResKey_Script",
+        "predicate": "a_do_script_file"
+      },
+      "lua": "a_do_script_file(getValueResourceByKey(\"ResKey_Script\"))"
+    },
+    {
+      "predicate": "a_effect_smoke",
+      "role": "action",
+      "spec": {
+        "density": 1,
+        "name": "",
+        "predicate": "a_effect_smoke",
+        "preset": 1,
+        "zone": 1
+      },
+      "lua": "a_effect_smoke(1, 1, 1, \"\")"
+    },
+    {
+      "predicate": "a_end_mission",
+      "role": "action",
+      "spec": {
+        "text": "",
+        "start_delay": 0,
+        "zone": "",
+        "predicate": "a_end_mission",
+        "winner": "coalition.side.BLUE",
+        "KeyDict_text": ""
+      },
+      "lua": "a_end_mission(\"coalition.side.BLUE\", getValueDictByKey(\"\"), 0)"
+    },
+    {
+      "predicate": "a_explosion",
+      "role": "action",
+      "spec": {
+        "altitude": 1,
+        "zone": 99,
+        "predicate": "a_explosion",
+        "volume": 100
+      },
+      "lua": "a_explosion(99, 1, 100)"
+    },
+    {
+      "predicate": "a_group_off",
+      "role": "action",
+      "spec": {
+        "group": 17,
+        "predicate": "a_group_off"
+      },
+      "lua": "a_group_off(17)"
+    },
+    {
+      "predicate": "a_group_on",
+      "role": "action",
+      "spec": {
+        "group": 17,
+        "predicate": "a_group_on"
+      },
+      "lua": "a_group_on(17)"
+    },
+    {
+      "predicate": "a_group_resume",
+      "role": "action",
+      "spec": {
+        "group": 27,
+        "predicate": "a_group_resume"
+      },
+      "lua": "a_group_resume(27)"
+    },
+    {
+      "predicate": "a_out_sound",
+      "role": "action",
+      "spec": {
+        "file": "ResKey_Action_1105",
+        "predicate": "a_out_sound"
+      },
+      "lua": "a_out_sound(getValueResourceByKey(\"ResKey_Action_1105\"), 0)"
+    },
+    {
+      "predicate": "a_out_sound_g",
+      "role": "action",
+      "spec": {
+        "group": 1,
+        "file": "ResKey_Action_55",
+        "predicate": "a_out_sound_g",
+        "start_delay": 0
+      },
+      "lua": "a_out_sound_g(1, getValueResourceByKey(\"ResKey_Action_55\"), 0)"
+    },
+    {
+      "predicate": "a_out_sound_s",
+      "role": "action",
+      "spec": {
+        "start_delay": 0,
+        "coalitionlist": "blue",
+        "predicate": "a_out_sound_s",
+        "file": "ResKey_Action_14"
+      },
+      "lua": "a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_14\"), 0)"
+    },
+    {
+      "predicate": "a_out_sound_stop",
+      "role": "action",
+      "spec": {
+        "predicate": "a_out_sound_stop"
+      },
+      "lua": "a_out_sound_stop()"
+    },
+    {
+      "predicate": "a_out_text_delay",
+      "role": "action",
+      "spec": {
+        "KeyDict_text": "DictKey_ActionText_1",
+        "clearview": false,
+        "predicate": "a_out_text_delay",
+        "seconds": 25,
+        "start_delay": 0,
+        "text": "DictKey_ActionText_1"
+      },
+      "lua": "a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_1\"), 25, false, 0)"
+    },
+    {
+      "predicate": "a_out_text_delay_c",
+      "role": "action",
+      "spec": {
+        "countrylist": 2,
+        "start_delay": 0,
+        "seconds": 10,
+        "KeyDict_text": "DictKey_ActionText_2508",
+        "text": "DictKey_ActionText_2508",
+        "predicate": "a_out_text_delay_c",
+        "clearview": true
+      },
+      "lua": "a_out_text_delay_c(2, getValueDictByKey(\"DictKey_ActionText_2508\"), 10, true, 0)"
+    },
+    {
+      "predicate": "a_out_text_delay_g",
+      "role": "action",
+      "spec": {
+        "seconds": 30,
+        "predicate": "a_out_text_delay_g",
+        "group": 90,
+        "text": "DictKey_ActionText_448",
+        "KeyDict_text": "DictKey_ActionText_448",
+        "clearview": false
+      },
+      "lua": "a_out_text_delay_g(90, getValueDictByKey(\"DictKey_ActionText_448\"), 30, false)"
+    },
+    {
+      "predicate": "a_out_text_delay_s",
+      "role": "action",
+      "spec": {
+        "KeyDict_text": "DictKey_ActionText_2",
+        "clearview": false,
+        "coalitionlist": "blue",
+        "predicate": "a_out_text_delay_s",
+        "seconds": 25,
+        "start_delay": 0,
+        "text": "DictKey_ActionText_2"
+      },
+      "lua": "a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_2\"), 25, false, 0)"
+    },
+    {
+      "predicate": "a_out_text_delay_u",
+      "role": "action",
+      "spec": {
+        "seconds": 20,
+        "start_delay": 3,
+        "unit": 1,
+        "predicate": "a_out_text_delay_u",
+        "text": "DictKey_ActionText_17",
+        "KeyDict_text": "DictKey_ActionText_17",
+        "clearview": false
+      },
+      "lua": "a_out_text_delay_u(1, getValueDictByKey(\"DictKey_ActionText_17\"), 20, false, 3)"
+    },
+    {
+      "predicate": "a_radio_transmission",
+      "role": "action",
+      "spec": {
+        "modulation": true,
+        "power": 100,
+        "squelch_effects": true,
+        "predicate": "a_radio_transmission",
+        "loop": false,
+        "name": "intro",
+        "frequency": 257,
+        "zone": 395,
+        "file": "ResKey_Action_6",
+        "start_delay": 0,
+        "mic_effects": true
+      },
+      "lua": "a_radio_transmission(getValueResourceByKey(\"ResKey_Action_6\"), 395, true, false, 257000, 100, \"intro\", 0, true, true)"
+    },
+    {
+      "predicate": "a_remove_radio_item",
+      "role": "action",
+      "spec": {
+        "KeyDict_radiotext": "DictKey_ActionRadioText_280",
+        "radiotext": "DictKey_ActionRadioText_280",
+        "predicate": "a_remove_radio_item"
+      },
+      "lua": "a_remove_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_280\"))"
+    },
+    {
+      "predicate": "a_remove_radio_item_for_group",
+      "role": "action",
+      "spec": {
+        "predicate": "a_remove_radio_item_for_group",
+        "group": 165,
+        "KeyDict_radiotext": "DictKey_ActionRadioText_952",
+        "radiotext": "DictKey_ActionRadioText_952"
+      },
+      "lua": "a_remove_radio_item_for_group(165, getValueDictByKey(\"DictKey_ActionRadioText_952\"))"
+    },
+    {
+      "predicate": "a_set_flag",
+      "role": "action",
+      "spec": {
+        "flag": 10,
+        "predicate": "a_set_flag"
+      },
+      "lua": "a_set_flag(10)"
+    },
+    {
+      "predicate": "a_set_flag_random",
+      "role": "action",
+      "spec": {
+        "flag": 3001,
+        "min_value": 1,
+        "predicate": "a_set_flag_random",
+        "max_value": 4
+      },
+      "lua": "a_set_flag_random(3001, 1, 4)"
+    },
+    {
+      "predicate": "a_set_flag_value",
+      "role": "action",
+      "spec": {
+        "flag": 2,
+        "max_value": 3,
+        "value": 3,
+        "min_value": 3,
+        "predicate": "a_set_flag_value"
+      },
+      "lua": "a_set_flag_value(2, 3)"
+    },
+    {
+      "predicate": "a_signal_flare",
+      "role": "action",
+      "spec": {
+        "altitude": 1,
+        "zone": 331,
+        "color": "3",
+        "predicate": "a_signal_flare",
+        "bearing": "0"
+      },
+      "lua": "a_signal_flare(331, 1, \"3\", \"0\")"
+    },
+    {
+      "predicate": "c_flag_equals",
+      "role": "condition",
+      "spec": {
+        "seconds": 60,
+        "coalitionlist": "red",
+        "predicate": "c_flag_equals",
+        "zone": 1,
+        "value": 1,
+        "text": "DictKey_5",
+        "KeyDict_text": "DictKey_5",
+        "flag": 9
+      },
+      "lua": "c_flag_equals(9, 1)"
+    },
+    {
+      "predicate": "c_flag_is_false",
+      "role": "condition",
+      "spec": {
+        "flag": 10,
+        "predicate": "c_flag_is_false"
+      },
+      "lua": "c_flag_is_false(10)"
+    },
+    {
+      "predicate": "c_flag_is_true",
+      "role": "condition",
+      "spec": {
+        "flag": "BR_END_MISSION",
+        "predicate": "c_flag_is_true",
+        "zone": ""
+      },
+      "lua": "c_flag_is_true(\"BR_END_MISSION\")"
+    },
+    {
+      "predicate": "c_flag_more",
+      "role": "condition",
+      "spec": {
+        "value": 5,
+        "predicate": "c_flag_more",
+        "flag": "1"
+      },
+      "lua": "c_flag_more(\"1\", 5)"
+    },
+    {
+      "predicate": "c_group_dead",
+      "role": "condition",
+      "spec": {
+        "group": 3,
+        "predicate": "c_group_dead"
+      },
+      "lua": "c_group_dead(3)"
+    },
+    {
+      "predicate": "c_group_life_less",
+      "role": "condition",
+      "spec": {
+        "coalitionlist": "red",
+        "unitType": "ALL",
+        "zone": 165,
+        "group": 72,
+        "predicate": "c_group_life_less",
+        "percent": 90,
+        "unit": 154
+      },
+      "lua": "c_group_life_less(72, 90)"
+    },
+    {
+      "predicate": "c_part_of_coalition_in_zone",
+      "role": "condition",
+      "spec": {
+        "coalitionlist": "blue",
+        "predicate": "c_part_of_coalition_in_zone",
+        "unitType": "AIRPLANE",
+        "zone": 1
+      },
+      "lua": "c_part_of_coalition_in_zone(\"blue\", 1, \"AIRPLANE\")"
+    },
+    {
+      "predicate": "c_part_of_group_in_zone",
+      "role": "condition",
+      "spec": {
+        "coalitionlist": "red",
+        "unitType": "ALL",
+        "zone": 10,
+        "group": 217,
+        "predicate": "c_part_of_group_in_zone"
+      },
+      "lua": "c_part_of_group_in_zone(217, 10)"
+    },
+    {
+      "predicate": "c_random_less",
+      "role": "condition",
+      "spec": {
+        "predicate": "c_random_less",
+        "coalitionlist": "red",
+        "percent": 33,
+        "zone": 651
+      },
+      "lua": "c_random_less(33)"
+    },
+    {
+      "predicate": "c_start_wait_for_user",
+      "role": "action",
+      "spec": {
+        "flag": 1,
+        "flag_back": 999,
+        "predicate": "c_start_wait_for_user"
+      },
+      "lua": "c_start_wait_for_user(1, 999)"
+    },
+    {
+      "predicate": "c_stop_wait_for_user",
+      "role": "action",
+      "spec": {
+        "predicate": "c_stop_wait_for_user"
+      },
+      "lua": "c_stop_wait_for_user()"
+    },
+    {
+      "predicate": "c_time_after",
+      "role": "condition",
+      "spec": {
+        "predicate": "c_time_after",
+        "seconds": 10
+      },
+      "lua": "c_time_after(10)"
+    },
+    {
+      "predicate": "c_time_since_flag",
+      "role": "condition",
+      "spec": {
+        "seconds": 6,
+        "zone": 95,
+        "flag": 20,
+        "coalitionlist": "red",
+        "predicate": "c_time_since_flag",
+        "unit": 91
+      },
+      "lua": "c_time_since_flag(20, 6)"
+    },
+    {
+      "predicate": "c_unit_dead",
+      "role": "condition",
+      "spec": {
+        "coalitionlist": "red",
+        "zone": 46,
+        "predicate": "c_unit_dead",
+        "unit": 172
+      },
+      "lua": "c_unit_dead(172)"
+    },
+    {
+      "predicate": "c_unit_in_zone",
+      "role": "condition",
+      "spec": {
+        "coalitionlist": "red",
+        "unitType": "ALL",
+        "zone": 102,
+        "predicate": "c_unit_in_zone",
+        "unit": 119
+      },
+      "lua": "c_unit_in_zone(119, 102)"
+    },
+    {
+      "predicate": "c_unit_out_zone",
+      "role": "condition",
+      "spec": {
+        "unit": 172,
+        "coalitionlist": "red",
+        "predicate": "c_unit_out_zone",
+        "zone": 523
+      },
+      "lua": "c_unit_out_zone(172, 523)"
+    }
+  ],
+  "rules": [
+    {
+      "type": "triggerOnce",
+      "index": 2,
+      "rules": [
+        {
+          "flag": "BR_END_MISSION",
+          "predicate": "c_flag_is_true",
+          "zone": ""
+        }
+      ],
+      "actions": [
+        {
+          "start_delay": 600,
+          "zone": "",
+          "predicate": "a_end_mission",
+          "winner": "coalition.side.BLUE",
+          "KeyDict_text": "",
+          "text": ""
+        }
+      ],
+      "condition": "return(c_flag_is_true(\"BR_END_MISSION\") )",
+      "action": "a_end_mission(\"coalition.side.BLUE\", getValueDictByKey(\"\"), 600); mission.trig.func[2]=nil;",
+      "func": "if mission.trig.conditions[2]() then mission.trig.actions[2]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 2,
+      "rules": [
+        {
+          "coalitionlist": "blue",
+          "predicate": "c_part_of_coalition_in_zone",
+          "unitType": "AIRPLANE",
+          "zone": 1
+        },
+        {
+          "flag": 10,
+          "predicate": "c_flag_is_false"
+        }
+      ],
+      "actions": [
+        {
+          "group": 2,
+          "predicate": "a_activate_group"
+        },
+        {
+          "KeyDict_text": "DictKey_ActionText_2",
+          "clearview": false,
+          "coalitionlist": "blue",
+          "predicate": "a_out_text_delay_s",
+          "seconds": 25,
+          "start_delay": 0,
+          "text": "DictKey_ActionText_2"
+        },
+        {
+          "flag": 10,
+          "predicate": "a_set_flag"
+        }
+      ],
+      "condition": "return(c_part_of_coalition_in_zone(\"blue\", 1, \"AIRPLANE\") and c_flag_is_false(10) )",
+      "action": "a_activate_group(2);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_2\"), 25, false, 0);a_set_flag(10); mission.trig.func[2]=nil;",
+      "func": "if mission.trig.conditions[2]() then mission.trig.actions[2]() end"
+    },
+    {
+      "type": "triggerFront",
+      "index": 3,
+      "rules": [
+        {
+          "group": 3,
+          "predicate": "c_group_dead"
+        }
+      ],
+      "actions": [
+        {
+          "density": 1,
+          "name": "",
+          "predicate": "a_effect_smoke",
+          "preset": 1,
+          "zone": 1
+        },
+        {
+          "KeyDict_text": "DictKey_ActionText_3",
+          "clearview": false,
+          "predicate": "a_out_text_delay",
+          "seconds": 25,
+          "start_delay": 0,
+          "text": "DictKey_ActionText_3"
+        }
+      ],
+      "condition": "return(c_group_dead(3) )",
+      "action": "a_effect_smoke(1, 1, 1, \"\");a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_3\"), 25, false, 0);",
+      "func": "if mission.trig.conditions[3]() then if not mission.trig.flag[3] then mission.trig.actions[3](); mission.trig.flag[3] = true;end; else mission.trig.flag[3] = false; end;"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 5,
+      "rules": [
+        {
+          "flag": 1,
+          "predicate": "c_flag_is_true"
+        },
+        {
+          "predicate": "c_time_after",
+          "seconds": 40
+        }
+      ],
+      "actions": [
+        {
+          "KeyDict_text": "DictKey_ActionText_4",
+          "clearview": false,
+          "predicate": "a_out_text_delay",
+          "seconds": 25,
+          "start_delay": 0,
+          "text": "DictKey_ActionText_4"
+        }
+      ],
+      "condition": "return(c_flag_is_true(1) and c_time_after(40) )",
+      "action": "a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_4\"), 25, false, 0); mission.trig.func[5]=nil;",
+      "func": "if mission.trig.conditions[5]() then mission.trig.actions[5]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 1,
+      "rules": [
+        {
+          "predicate": "c_part_of_coalition_in_zone",
+          "coalitionlist": "blue",
+          "unitType": "AIRPLANE",
+          "zone": 496
+        }
+      ],
+      "actions": [
+        {
+          "group": 93,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 97,
+          "predicate": "a_activate_group"
+        },
+        {
+          "start_delay": 0,
+          "coalitionlist": "blue",
+          "predicate": "a_out_sound_s",
+          "file": "ResKey_Action_14"
+        },
+        {
+          "coalitionlist": "blue",
+          "start_delay": 0,
+          "seconds": 20,
+          "predicate": "a_out_text_delay_s",
+          "text": "DictKey_ActionText_15",
+          "KeyDict_text": "DictKey_ActionText_15",
+          "clearview": false
+        }
+      ],
+      "condition": "return(c_part_of_coalition_in_zone(\"blue\", 496, \"AIRPLANE\") )",
+      "action": "a_activate_group(93);a_activate_group(97);a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_14\"), 0);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_15\"), 20, false, 0); mission.trig.func[1]=nil;",
+      "func": "if mission.trig.conditions[1]() then mission.trig.actions[1]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 2,
+      "rules": [
+        {
+          "predicate": "c_part_of_coalition_in_zone",
+          "coalitionlist": "blue",
+          "unitType": "GROUND",
+          "zone": 20
+        }
+      ],
+      "actions": [
+        {
+          "group": 179,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 228,
+          "predicate": "a_activate_group"
+        }
+      ],
+      "condition": "return(c_part_of_coalition_in_zone(\"blue\", 20, \"GROUND\") )",
+      "action": "a_activate_group(179);a_activate_group(228); mission.trig.func[2]=nil;",
+      "func": "if mission.trig.conditions[2]() then mission.trig.actions[2]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 7,
+      "rules": [
+        {
+          "predicate": "c_part_of_coalition_in_zone",
+          "coalitionlist": "blue",
+          "unitType": "HELICOPTER",
+          "zone": 53
+        }
+      ],
+      "actions": [
+        {
+          "file": "ResKey_Action_16",
+          "coalitionlist": "blue",
+          "start_delay": 0,
+          "predicate": "a_out_sound_s"
+        },
+        {
+          "coalitionlist": "blue",
+          "start_delay": 0,
+          "seconds": 30,
+          "KeyDict_text": "DictKey_ActionText_10",
+          "text": "DictKey_ActionText_10",
+          "predicate": "a_out_text_delay_s",
+          "clearview": false
+        },
+        {
+          "file": "ResKey_Action_11",
+          "coalitionlist": "blue",
+          "start_delay": 45,
+          "predicate": "a_out_sound_s"
+        }
+      ],
+      "condition": "return(c_part_of_coalition_in_zone(\"blue\", 53, \"HELICOPTER\") )",
+      "action": "a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_16\"), 0);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_10\"), 30, false, 0);a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_11\"), 45); mission.trig.func[7]=nil;",
+      "func": "if mission.trig.conditions[7]() then mission.trig.actions[7]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 1,
+      "rules": [
+        {
+          "predicate": "c_part_of_coalition_in_zone",
+          "coalitionlist": "blue",
+          "unitType": "AIRPLANE",
+          "zone": 51
+        }
+      ],
+      "actions": [
+        {
+          "group": 280,
+          "predicate": "a_deactivate_group"
+        },
+        {
+          "group": 270,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 263,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 259,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 262,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 261,
+          "predicate": "a_activate_group"
+        }
+      ],
+      "condition": "return(c_part_of_coalition_in_zone(\"blue\", 51, \"AIRPLANE\") )",
+      "action": "a_deactivate_group(280);a_activate_group(270);a_activate_group(263);a_activate_group(259);a_activate_group(262);a_activate_group(261); mission.trig.func[1]=nil;",
+      "func": "if mission.trig.conditions[1]() then mission.trig.actions[1]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 2,
+      "rules": [
+        {
+          "coalitionlist": "blue",
+          "unitType": "AIRPLANE",
+          "zone": 30,
+          "group": 272,
+          "predicate": "c_part_of_group_in_zone"
+        }
+      ],
+      "actions": [
+        {
+          "group": 279,
+          "predicate": "a_deactivate_group"
+        },
+        {
+          "group": 263,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 259,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 262,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 261,
+          "predicate": "a_activate_group"
+        }
+      ],
+      "condition": "return(c_part_of_group_in_zone(272, 30) )",
+      "action": "a_deactivate_group(279);a_activate_group(263);a_activate_group(259);a_activate_group(262);a_activate_group(261); mission.trig.func[2]=nil;",
+      "func": "if mission.trig.conditions[2]() then mission.trig.actions[2]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 1,
+      "rules": [
+        {
+          "predicate": "c_part_of_coalition_in_zone",
+          "coalitionlist": "blue",
+          "unitType": "AIRPLANE",
+          "zone": 1136
+        }
+      ],
+      "actions": [
+        {
+          "predicate": "a_activate_group",
+          "group": 1257
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 1274
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 1256
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 1276
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 1275
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 1259
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 1273
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 2519
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 2497
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 2526
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 2528
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 2518
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 2525
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 2517
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 2524
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 1264
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 2510
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 1260
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 1279
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 1280
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 2512
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 2667
+        }
+      ],
+      "condition": "return(c_part_of_coalition_in_zone(\"blue\", 1136, \"AIRPLANE\") )",
+      "action": "a_activate_group(1257);a_activate_group(1274);a_activate_group(1256);a_activate_group(1276);a_activate_group(1275);a_activate_group(1259);a_activate_group(1273);a_activate_group(2519);a_activate_group(2497);a_activate_group(2526);a_activate_group(2528);a_activate_group(2518);a_activate_group(2525);a_activate_group(2517);a_activate_group(2524);a_activate_group(1264);a_activate_group(2510);a_activate_group(1260);a_activate_group(1279);a_activate_group(1280);a_activate_group(2512);a_activate_group(2667); mission.trig.func[1]=nil;",
+      "func": "if mission.trig.conditions[1]() then mission.trig.actions[1]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 5,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 102,
+          "predicate": "c_time_after",
+          "seconds": 3
+        }
+      ],
+      "actions": [
+        {
+          "predicate": "a_activate_group",
+          "group": 110
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 119
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 120
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 111
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 112
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 113
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 114
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 115
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 116
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 117
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 118
+        }
+      ],
+      "condition": "return(c_time_after(3) )",
+      "action": "a_activate_group(110);a_activate_group(119);a_activate_group(120);a_activate_group(111);a_activate_group(112);a_activate_group(113);a_activate_group(114);a_activate_group(115);a_activate_group(116);a_activate_group(117);a_activate_group(118); mission.trig.func[5]=nil;",
+      "func": "if mission.trig.conditions[5]() then mission.trig.actions[5]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 2,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "seconds": 1,
+          "predicate": "c_time_after",
+          "zone": ""
+        }
+      ],
+      "actions": [
+        {
+          "file": "ResKey_Action_395",
+          "predicate": "a_do_script_file"
+        },
+        {
+          "file": "ResKey_Action_838",
+          "predicate": "a_do_script_file",
+          "zone": ""
+        },
+        {
+          "file": "ResKey_Action_893",
+          "predicate": "a_do_script_file",
+          "zone": ""
+        },
+        {
+          "predicate": "a_do_script_file",
+          "file": "ResKey_Action_894"
+        },
+        {
+          "predicate": "a_do_script_file",
+          "file": "ResKey_Action_896"
+        },
+        {
+          "file": "ResKey_Action_862",
+          "predicate": "a_do_script_file",
+          "zone": ""
+        },
+        {
+          "file": "ResKey_Action_863",
+          "predicate": "a_do_script_file",
+          "zone": ""
+        },
+        {
+          "file": "ResKey_Action_864",
+          "predicate": "a_do_script_file",
+          "zone": ""
+        },
+        {
+          "file": "ResKey_Action_865",
+          "predicate": "a_do_script_file",
+          "zone": ""
+        },
+        {
+          "file": "ResKey_Action_866",
+          "predicate": "a_do_script_file",
+          "zone": ""
+        },
+        {
+          "file": "ResKey_Action_867",
+          "predicate": "a_do_script_file",
+          "zone": ""
+        },
+        {
+          "file": "ResKey_Action_891",
+          "predicate": "a_do_script_file",
+          "zone": ""
+        },
+        {
+          "file": "ResKey_Action_892",
+          "predicate": "a_do_script_file",
+          "zone": ""
+        },
+        {
+          "text": "DictKey_ActionText_393",
+          "KeyDict_text": "DictKey_ActionText_393",
+          "file": "ResKey_Action_394",
+          "predicate": "a_do_script_file"
+        },
+        {
+          "file": "ResKey_Action_843",
+          "predicate": "a_do_script_file",
+          "zone": ""
+        }
+      ],
+      "condition": "return(c_time_after(1) )",
+      "action": "a_do_script_file(getValueResourceByKey(\"ResKey_Action_395\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_838\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_893\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_894\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_896\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_862\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_863\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_864\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_865\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_866\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_867\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_891\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_892\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_394\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_843\")); mission.trig.func[2]=nil;",
+      "func": "if mission.trig.conditions[2]() then mission.trig.actions[2]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 16,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "zone": 47,
+          "flag": 1,
+          "predicate": "c_unit_in_zone",
+          "unit": 91
+        },
+        {
+          "flag": 1,
+          "coalitionlist": "red",
+          "predicate": "c_flag_is_true",
+          "zone": 46
+        }
+      ],
+      "actions": [
+        {
+          "seconds": 30,
+          "clearview": false,
+          "KeyDict_text": "DictKey_ActionText_460",
+          "group": 90,
+          "text": "DictKey_ActionText_460",
+          "predicate": "a_out_text_delay_g"
+        },
+        {
+          "flag_back": 999,
+          "flag": 2,
+          "predicate": "c_start_wait_for_user"
+        }
+      ],
+      "condition": "return(c_unit_in_zone(91, 47) and c_flag_is_true(1) )",
+      "action": "a_out_text_delay_g(90, getValueDictByKey(\"DictKey_ActionText_460\"), 30, false);c_start_wait_for_user(2, 999); mission.trig.func[16]=nil;",
+      "func": "if mission.trig.conditions[16]() then mission.trig.actions[16]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 14,
+      "rules": [
+        {
+          "unit": 172,
+          "coalitionlist": "red",
+          "predicate": "c_unit_in_zone",
+          "zone": 142
+        },
+        {
+          "flag": 8,
+          "coalitionlist": "red",
+          "predicate": "c_flag_is_false",
+          "zone": 46
+        }
+      ],
+      "actions": [
+        {
+          "value": 0,
+          "radiotext": "DictKey_ActionRadioText_902",
+          "flag": 7,
+          "KeyDict_radiotext": "DictKey_ActionRadioText_902",
+          "predicate": "a_add_radio_item"
+        },
+        {
+          "value": 0,
+          "predicate": "a_add_radio_item",
+          "flag": 7,
+          "KeyDict_radiotext": "DictKey_ActionRadioText_644",
+          "radiotext": "DictKey_ActionRadioText_644"
+        },
+        {
+          "value": 1,
+          "radiotext": "DictKey_ActionRadioText_645",
+          "flag": 7,
+          "KeyDict_radiotext": "DictKey_ActionRadioText_645",
+          "predicate": "a_add_radio_item"
+        },
+        {
+          "seconds": 60,
+          "clearview": false,
+          "KeyDict_text": "DictKey_ActionText_957",
+          "group": 165,
+          "text": "DictKey_ActionText_957",
+          "predicate": "a_out_text_delay_g"
+        }
+      ],
+      "condition": "return(c_unit_in_zone(172, 142) and c_flag_is_false(8) )",
+      "action": "a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_902\"), 7, 0);a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_644\"), 7, 0);a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_645\"), 7, 1);a_out_text_delay_g(165, getValueDictByKey(\"DictKey_ActionText_957\"), 60, false); mission.trig.func[14]=nil;",
+      "func": "if mission.trig.conditions[14]() then mission.trig.actions[14]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 14,
+      "rules": [
+        {
+          "unit": 172,
+          "coalitionlist": "red",
+          "predicate": "c_unit_in_zone",
+          "zone": 142
+        },
+        {
+          "flag": 11,
+          "coalitionlist": "red",
+          "predicate": "c_flag_is_true",
+          "zone": 651
+        },
+        {
+          "flag": 8,
+          "coalitionlist": "red",
+          "predicate": "c_flag_is_false",
+          "zone": 651
+        }
+      ],
+      "actions": [
+        {
+          "flag": 7,
+          "predicate": "a_add_radio_item",
+          "value": 1,
+          "KeyDict_radiotext": "DictKey_ActionRadioText_854",
+          "radiotext": "DictKey_ActionRadioText_854"
+        },
+        {
+          "flag": 7,
+          "radiotext": "DictKey_ActionRadioText_644",
+          "value": 0,
+          "KeyDict_radiotext": "DictKey_ActionRadioText_644",
+          "predicate": "a_add_radio_item"
+        },
+        {
+          "flag": 7,
+          "predicate": "a_add_radio_item",
+          "value": 0,
+          "KeyDict_radiotext": "DictKey_ActionRadioText_645",
+          "radiotext": "DictKey_ActionRadioText_645"
+        },
+        {
+          "seconds": 20,
+          "clearview": false,
+          "KeyDict_text": "DictKey_ActionText_889",
+          "group": 165,
+          "text": "DictKey_ActionText_889",
+          "predicate": "a_out_text_delay_g"
+        }
+      ],
+      "condition": "return(c_unit_in_zone(172, 142) and c_flag_is_true(11) and c_flag_is_false(8) )",
+      "action": "a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_854\"), 7, 1);a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_644\"), 7, 0);a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_645\"), 7, 0);a_out_text_delay_g(165, getValueDictByKey(\"DictKey_ActionText_889\"), 20, false); mission.trig.func[14]=nil;",
+      "func": "if mission.trig.conditions[14]() then mission.trig.actions[14]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 58,
+      "rules": [
+        {
+          "flag": 11,
+          "coalitionlist": "red",
+          "predicate": "c_flag_is_true",
+          "zone": 46
+        },
+        {
+          "unit": 175,
+          "coalitionlist": "red",
+          "predicate": "c_unit_dead",
+          "zone": 46
+        },
+        {
+          "unit": 176,
+          "coalitionlist": "red",
+          "predicate": "c_unit_dead",
+          "zone": 46
+        }
+      ],
+      "actions": [
+        {
+          "flag": 12,
+          "predicate": "a_set_flag"
+        },
+        {
+          "flag": 13,
+          "predicate": "a_set_flag"
+        }
+      ],
+      "condition": "return(c_flag_is_true(11) and c_unit_dead(175) and c_unit_dead(176) )",
+      "action": "a_set_flag(12);a_set_flag(13); mission.trig.func[58]=nil;",
+      "func": "if mission.trig.conditions[58]() then mission.trig.actions[58]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 59,
+      "rules": [
+        {
+          "flag": 11,
+          "coalitionlist": "red",
+          "predicate": "c_flag_is_true",
+          "zone": 46
+        },
+        {
+          "unit": 172,
+          "coalitionlist": "red",
+          "predicate": "c_unit_dead",
+          "zone": 46
+        },
+        {
+          "unit": 173,
+          "coalitionlist": "red",
+          "predicate": "c_unit_dead",
+          "zone": 46
+        }
+      ],
+      "actions": [
+        {
+          "flag": 12,
+          "predicate": "a_set_flag"
+        }
+      ],
+      "condition": "return(c_flag_is_true(11) and c_unit_dead(172) and c_unit_dead(173) )",
+      "action": "a_set_flag(12); mission.trig.func[59]=nil;",
+      "func": "if mission.trig.conditions[59]() then mission.trig.actions[59]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 14,
+      "rules": [
+        {
+          "unit": 172,
+          "coalitionlist": "red",
+          "predicate": "c_unit_in_zone",
+          "zone": 142
+        },
+        {
+          "flag": 20,
+          "coalitionlist": "red",
+          "predicate": "c_flag_is_true",
+          "zone": 46
+        },
+        {
+          "flag": 8,
+          "coalitionlist": "red",
+          "predicate": "c_flag_is_false",
+          "zone": 46
+        }
+      ],
+      "actions": [
+        {
+          "flag": 7,
+          "radiotext": "DictKey_ActionRadioText_644",
+          "value": 1,
+          "KeyDict_radiotext": "DictKey_ActionRadioText_644",
+          "predicate": "a_add_radio_item"
+        },
+        {
+          "flag": 7,
+          "predicate": "a_add_radio_item",
+          "value": 0,
+          "KeyDict_radiotext": "DictKey_ActionRadioText_645",
+          "radiotext": "DictKey_ActionRadioText_645"
+        },
+        {
+          "seconds": 20,
+          "zone": 46,
+          "group": 165,
+          "text": "DictKey_ActionText_860",
+          "predicate": "a_out_text_delay_g",
+          "KeyDict_text": "DictKey_ActionText_860",
+          "clearview": false
+        }
+      ],
+      "condition": "return(c_unit_in_zone(172, 142) and c_flag_is_true(20) and c_flag_is_false(8) )",
+      "action": "a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_644\"), 7, 1);a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_645\"), 7, 0);a_out_text_delay_g(165, getValueDictByKey(\"DictKey_ActionText_860\"), 20, false); mission.trig.func[14]=nil;",
+      "func": "if mission.trig.conditions[14]() then mission.trig.actions[14]() end"
+    },
+    {
+      "type": "triggerStart",
+      "index": 1,
+      "rules": [
+        {
+          "value": 5,
+          "predicate": "c_flag_more",
+          "flag": "1"
+        }
+      ],
+      "actions": [
+        {
+          "flag": "1",
+          "predicate": "a_set_flag"
+        },
+        {
+          "predicate": "a_do_script_file",
+          "file": "ResKey_Action_7"
+        },
+        {
+          "predicate": "a_do_script_file",
+          "file": "ResKey_Action_8"
+        },
+        {
+          "predicate": "a_do_script_file",
+          "file": "ResKey_Action_9"
+        },
+        {
+          "predicate": "a_do_script_file",
+          "file": "ResKey_Action_10"
+        },
+        {
+          "predicate": "a_do_script_file",
+          "file": "ResKey_Action_11"
+        }
+      ],
+      "condition": "return(c_flag_more(\"1\", 5) )",
+      "action": "a_set_flag(\"1\");a_do_script_file(getValueResourceByKey(\"ResKey_Action_7\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_8\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_9\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_10\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_11\"));",
+      "funcStartup": "if mission.trig.conditions[1]() then mission.trig.actions[1]() end"
+    },
+    {
+      "type": "triggerStart",
+      "index": 1,
+      "rules": [
+        {
+          "predicate": "c_time_after",
+          "seconds": 5
+        }
+      ],
+      "actions": [
+        {
+          "predicate": "a_do_script_file",
+          "file": "ResKey_Action_6"
+        },
+        {
+          "predicate": "a_do_script_file",
+          "file": "ResKey_Action_8"
+        }
+      ],
+      "condition": "return(c_time_after(5) )",
+      "action": "a_do_script_file(getValueResourceByKey(\"ResKey_Action_6\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_8\"));",
+      "funcStartup": "if mission.trig.conditions[1]() then mission.trig.actions[1]() end"
+    },
+    {
+      "type": "triggerStart",
+      "index": 2,
+      "rules": [
+        {
+          "percent": 40,
+          "coalitionlist": "red",
+          "predicate": "c_random_less",
+          "zone": 3
+        }
+      ],
+      "actions": [
+        {
+          "max_value": 3,
+          "flag": 2,
+          "min_value": 1,
+          "predicate": "a_set_flag_random"
+        }
+      ],
+      "condition": "return(c_random_less(40) )",
+      "action": "a_set_flag_random(2, 1, 3);",
+      "funcStartup": "if mission.trig.conditions[2]() then mission.trig.actions[2]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 4,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 427,
+          "predicate": "c_time_after",
+          "seconds": 7
+        }
+      ],
+      "actions": [
+        {
+          "text": "ctld.activatePickupZone(\"pickzone1\")",
+          "predicate": "a_do_script"
+        },
+        {
+          "text": "ctld.activatePickupZone(\"pickzone2\")",
+          "predicate": "a_do_script"
+        },
+        {
+          "text": "ctld.activatePickupZone(\"pickzone3\")",
+          "predicate": "a_do_script"
+        },
+        {
+          "text": "ctld.activatePickupZone(\"pickzone4\")",
+          "predicate": "a_do_script"
+        },
+        {
+          "text": "ctld.activatePickupZone(\"pickzone5\")",
+          "predicate": "a_do_script"
+        },
+        {
+          "text": "ctld.activatePickupZone(\"pickzone6\")",
+          "predicate": "a_do_script"
+        },
+        {
+          "text": "ctld.activatePickupZone(\"pickzone7\")",
+          "predicate": "a_do_script"
+        },
+        {
+          "text": "ctld.activatePickupZone(\"pickzone8\")",
+          "predicate": "a_do_script"
+        }
+      ],
+      "condition": "return(c_time_after(7) )",
+      "action": "a_do_script(\"ctld.activatePickupZone(\\\"pickzone1\\\")\");a_do_script(\"ctld.activatePickupZone(\\\"pickzone2\\\")\");a_do_script(\"ctld.activatePickupZone(\\\"pickzone3\\\")\");a_do_script(\"ctld.activatePickupZone(\\\"pickzone4\\\")\");a_do_script(\"ctld.activatePickupZone(\\\"pickzone5\\\")\");a_do_script(\"ctld.activatePickupZone(\\\"pickzone6\\\")\");a_do_script(\"ctld.activatePickupZone(\\\"pickzone7\\\")\");a_do_script(\"ctld.activatePickupZone(\\\"pickzone8\\\")\"); mission.trig.func[4]=nil;",
+      "func": "if mission.trig.conditions[4]() then mission.trig.actions[4]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 6,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 427,
+          "value": 1,
+          "seconds": 7,
+          "predicate": "c_flag_equals",
+          "flag": "13"
+        }
+      ],
+      "actions": [
+        {
+          "text": "ctld.JTACAutoLase('BLUE_AFAC-1', 1688, false,\"vehicle\")",
+          "predicate": "a_do_script"
+        },
+        {
+          "text": "ctld.JTACAutoLase('BLUE_AFAC-2', 1688, true,\"vehicle\")",
+          "predicate": "a_do_script"
+        },
+        {
+          "text": "ctld.JTACAutoLase('RED_AFAC-2', 1678, true,\"vehicle\")",
+          "predicate": "a_do_script"
+        },
+        {
+          "text": "ctld.JTACAutoLase('Paphos_UH-60L-1', 1688, false,\"vehicle\")",
+          "predicate": "a_do_script"
+        },
+        {
+          "text": "ctld.JTACAutoLase('A-G_UH-60L-1', 1688, false,\"vehicle\")",
+          "predicate": "a_do_script"
+        },
+        {
+          "text": "ctld.JTACAutoLase('helicargo13', 1688, false,\"vehicle\")",
+          "predicate": "a_do_script"
+        },
+        {
+          "text": "ctld.JTACAutoLase('helicargo14', 1688, false,\"vehicle\")",
+          "predicate": "a_do_script"
+        },
+        {
+          "text": "ctld.JTACAutoLase('helicargo1', 1688, false,\"vehicle\")",
+          "predicate": "a_do_script"
+        },
+        {
+          "text": "ctld.JTACAutoLase('helicargo2', 1688, false,\"vehicle\")",
+          "predicate": "a_do_script"
+        },
+        {
+          "KeyDict_radiotext": "DictKey_ActionRadioText_280",
+          "radiotext": "DictKey_ActionRadioText_280",
+          "predicate": "a_remove_radio_item"
+        },
+        {
+          "seconds": 20,
+          "start_delay": 4,
+          "KeyDict_text": "DictKey_ActionText_285",
+          "text": "DictKey_ActionText_285",
+          "predicate": "a_out_text_delay",
+          "clearview": false
+        },
+        {
+          "file": "ResKey_Action_323",
+          "predicate": "a_out_sound",
+          "start_delay": 4
+        }
+      ],
+      "condition": "return(c_flag_equals(\"13\", 1) )",
+      "action": "a_do_script(\"ctld.JTACAutoLase('BLUE_AFAC-1', 1688, false,\\\"vehicle\\\")\");a_do_script(\"ctld.JTACAutoLase('BLUE_AFAC-2', 1688, true,\\\"vehicle\\\")\");a_do_script(\"ctld.JTACAutoLase('RED_AFAC-2', 1678, true,\\\"vehicle\\\")\");a_do_script(\"ctld.JTACAutoLase('Paphos_UH-60L-1', 1688, false,\\\"vehicle\\\")\");a_do_script(\"ctld.JTACAutoLase('A-G_UH-60L-1', 1688, false,\\\"vehicle\\\")\");a_do_script(\"ctld.JTACAutoLase('helicargo13', 1688, false,\\\"vehicle\\\")\");a_do_script(\"ctld.JTACAutoLase('helicargo14', 1688, false,\\\"vehicle\\\")\");a_do_script(\"ctld.JTACAutoLase('helicargo1', 1688, false,\\\"vehicle\\\")\");a_do_script(\"ctld.JTACAutoLase('helicargo2', 1688, false,\\\"vehicle\\\")\");a_remove_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_280\"));a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_285\"), 20, false, 4);a_out_sound(getValueResourceByKey(\"ResKey_Action_323\"), 4); mission.trig.func[6]=nil;",
+      "func": "if mission.trig.conditions[6]() then mission.trig.actions[6]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 8,
+      "rules": [
+        {
+          "seconds": 6,
+          "unitType": "ALL",
+          "zone": 427,
+          "value": 1,
+          "coalitionlist": "red",
+          "predicate": "c_flag_equals",
+          "flag": "411"
+        }
+      ],
+      "actions": [
+        {
+          "group": 155,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 490,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 226,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 312,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 442,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 467,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 443,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 1004,
+          "predicate": "a_activate_group"
+        },
+        {
+          "KeyDict_radiotext": "DictKey_ActionRadioText_334",
+          "radiotext": "DictKey_ActionRadioText_334",
+          "predicate": "a_remove_radio_item"
+        }
+      ],
+      "condition": "return(c_flag_equals(\"411\", 1) )",
+      "action": "a_activate_group(155);a_activate_group(490);a_activate_group(226);a_activate_group(312);a_activate_group(442);a_activate_group(467);a_activate_group(443);a_activate_group(1004);a_remove_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_334\")); mission.trig.func[8]=nil;",
+      "func": "if mission.trig.conditions[8]() then mission.trig.actions[8]() end"
+    },
+    {
+      "type": "triggerFront",
+      "index": 10,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": "",
+          "flag": "1",
+          "predicate": "c_flag_equals",
+          "value": 1
+        }
+      ],
+      "actions": [
+        {
+          "predicate": "a_activate_group",
+          "group": 674
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 64
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 64
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 668
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 668
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 671
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 678
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 303
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 303
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 678
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 674
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 667
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 667
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 685
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 685
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 684
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 684
+        },
+        {
+          "seconds": 30,
+          "start_delay": 0,
+          "KeyDict_text": "DictKey_ActionText_53",
+          "text": "DictKey_ActionText_53",
+          "predicate": "a_out_text_delay",
+          "clearview": false
+        },
+        {
+          "KeyDict_radiotext": "DictKey_ActionRadioText_10",
+          "radiotext": "DictKey_ActionRadioText_10",
+          "predicate": "a_remove_radio_item"
+        },
+        {
+          "predicate": "a_add_radio_item",
+          "flag": "1",
+          "KeyDict_radiotext": "DictKey_ActionRadioText_131",
+          "radiotext": "DictKey_ActionRadioText_131",
+          "value": 2
+        },
+        {
+          "file": "ResKey_Action_305",
+          "predicate": "a_out_sound",
+          "start_delay": 0
+        },
+        {
+          "file": "ResKey_Action_306",
+          "predicate": "a_out_sound",
+          "start_delay": 8.5
+        }
+      ],
+      "condition": "return(c_flag_equals(\"1\", 1) )",
+      "action": "a_activate_group(674);a_activate_group(64);a_group_on(64);a_activate_group(668);a_group_on(668);a_activate_group(671);a_activate_group(678);a_activate_group(303);a_group_on(303);a_group_on(678);a_group_on(674);a_activate_group(667);a_group_on(667);a_activate_group(685);a_group_on(685);a_activate_group(684);a_group_on(684);a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_53\"), 30, false, 0);a_remove_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_10\"));a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_131\"), \"1\", 2);a_out_sound(getValueResourceByKey(\"ResKey_Action_305\"), 0);a_out_sound(getValueResourceByKey(\"ResKey_Action_306\"), 8.5);",
+      "func": "if mission.trig.conditions[10]() then if not mission.trig.flag[10] then mission.trig.actions[10](); mission.trig.flag[10] = true;end; else mission.trig.flag[10] = false; end;"
+    },
+    {
+      "type": "triggerFront",
+      "index": 11,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": "",
+          "flag": "1",
+          "predicate": "c_flag_equals",
+          "value": 2
+        }
+      ],
+      "actions": [
+        {
+          "predicate": "a_group_off",
+          "group": 303
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 685
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 667
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 684
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 64
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 668
+        },
+        {
+          "seconds": 30,
+          "start_delay": 0,
+          "predicate": "a_out_text_delay",
+          "text": "DictKey_ActionText_126",
+          "KeyDict_text": "DictKey_ActionText_126",
+          "clearview": false
+        },
+        {
+          "KeyDict_radiotext": "DictKey_ActionRadioText_127",
+          "radiotext": "DictKey_ActionRadioText_127",
+          "predicate": "a_remove_radio_item"
+        },
+        {
+          "predicate": "a_add_radio_item",
+          "flag": "1",
+          "KeyDict_radiotext": "DictKey_ActionRadioText_129",
+          "radiotext": "DictKey_ActionRadioText_129",
+          "value": 1
+        },
+        {
+          "file": "ResKey_Action_307",
+          "predicate": "a_out_sound",
+          "start_delay": 0
+        }
+      ],
+      "condition": "return(c_flag_equals(\"1\", 2) )",
+      "action": "a_group_off(303);a_group_off(685);a_group_off(667);a_group_off(684);a_group_off(64);a_group_off(668);a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_126\"), 30, false, 0);a_remove_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_127\"));a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_129\"), \"1\", 1);a_out_sound(getValueResourceByKey(\"ResKey_Action_307\"), 0);",
+      "func": "if mission.trig.conditions[11]() then if not mission.trig.flag[11] then mission.trig.actions[11](); mission.trig.flag[11] = true;end; else mission.trig.flag[11] = false; end;"
+    },
+    {
+      "type": "triggerFront",
+      "index": 13,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": "",
+          "flag": "5",
+          "predicate": "c_flag_equals",
+          "value": 1
+        }
+      ],
+      "actions": [
+        {
+          "seconds": 30,
+          "start_delay": 0,
+          "predicate": "a_out_text_delay",
+          "text": "DictKey_ActionText_102",
+          "KeyDict_text": "DictKey_ActionText_102",
+          "clearview": false
+        },
+        {
+          "KeyDict_radiotext": "DictKey_ActionRadioText_103",
+          "radiotext": "DictKey_ActionRadioText_103",
+          "predicate": "a_remove_radio_item"
+        },
+        {
+          "radiotext": "DictKey_ActionRadioText_105",
+          "value": 2,
+          "KeyDict_radiotext": "DictKey_ActionRadioText_105",
+          "predicate": "a_add_radio_item",
+          "flag": "5"
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 286
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 308
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 679
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 669
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 686
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 676
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 680
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 682
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 681
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 308
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 680
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 676
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 669
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 686
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 286
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 288
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 677
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 288
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 677
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 300
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 274
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 274
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 300
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 256
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 305
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 670
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 313
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 675
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 313
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 256
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 305
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 670
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 68
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 673
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 68
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 670
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 670
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 67
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 672
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 67
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 301
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 49
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 49
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 301
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 14
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 27
+        },
+        {
+          "file": "ResKey_Action_308",
+          "predicate": "a_out_sound",
+          "start_delay": 0
+        },
+        {
+          "file": "ResKey_Action_309",
+          "predicate": "a_out_sound",
+          "start_delay": 4.5
+        }
+      ],
+      "condition": "return(c_flag_equals(\"5\", 1) )",
+      "action": "a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_102\"), 30, false, 0);a_remove_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_103\"));a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_105\"), \"5\", 2);a_activate_group(286);a_activate_group(308);a_activate_group(679);a_activate_group(669);a_activate_group(686);a_activate_group(676);a_activate_group(680);a_activate_group(682);a_activate_group(681);a_group_on(308);a_group_on(680);a_group_on(676);a_group_on(669);a_group_on(686);a_group_on(286);a_activate_group(288);a_activate_group(677);a_group_on(288);a_group_on(677);a_activate_group(300);a_activate_group(274);a_group_on(274);a_group_on(300);a_activate_group(256);a_activate_group(305);a_activate_group(670);a_activate_group(313);a_activate_group(675);a_group_on(313);a_group_on(256);a_group_on(305);a_group_on(670);a_activate_group(68);a_activate_group(673);a_group_on(68);a_activate_group(670);a_group_on(670);a_activate_group(67);a_activate_group(672);a_group_on(67);a_activate_group(301);a_activate_group(49);a_group_on(49);a_group_on(301);a_group_on(14);a_group_on(27);a_out_sound(getValueResourceByKey(\"ResKey_Action_308\"), 0);a_out_sound(getValueResourceByKey(\"ResKey_Action_309\"), 4.5);",
+      "func": "if mission.trig.conditions[13]() then if not mission.trig.flag[13] then mission.trig.actions[13](); mission.trig.flag[13] = true;end; else mission.trig.flag[13] = false; end;"
+    },
+    {
+      "type": "triggerFront",
+      "index": 14,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": "",
+          "flag": "5",
+          "predicate": "c_flag_equals",
+          "value": 2
+        }
+      ],
+      "actions": [
+        {
+          "seconds": 30,
+          "start_delay": 0,
+          "KeyDict_text": "DictKey_ActionText_106",
+          "text": "DictKey_ActionText_106",
+          "predicate": "a_out_text_delay",
+          "clearview": false
+        },
+        {
+          "KeyDict_radiotext": "DictKey_ActionRadioText_107",
+          "radiotext": "DictKey_ActionRadioText_107",
+          "predicate": "a_remove_radio_item"
+        },
+        {
+          "predicate": "a_add_radio_item",
+          "flag": "5",
+          "KeyDict_radiotext": "DictKey_ActionRadioText_112",
+          "radiotext": "DictKey_ActionRadioText_112",
+          "value": 1
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 286
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 308
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 680
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 676
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 677
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 682
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 669
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 686
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 300
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 274
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 256
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 305
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 670
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 313
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 68
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 67
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 670
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 301
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 49
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 14
+        },
+        {
+          "predicate": "a_group_off",
+          "group": 27
+        },
+        {
+          "file": "ResKey_Action_311",
+          "predicate": "a_out_sound",
+          "start_delay": 0
+        }
+      ],
+      "condition": "return(c_flag_equals(\"5\", 2) )",
+      "action": "a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_106\"), 30, false, 0);a_remove_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_107\"));a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_112\"), \"5\", 1);a_group_off(286);a_group_off(308);a_group_off(680);a_group_off(676);a_group_off(677);a_group_off(682);a_group_off(669);a_group_off(686);a_group_off(300);a_group_off(274);a_group_off(256);a_group_off(305);a_group_off(670);a_group_off(313);a_group_off(68);a_group_off(67);a_group_off(670);a_group_off(301);a_group_off(49);a_group_off(14);a_group_off(27);a_out_sound(getValueResourceByKey(\"ResKey_Action_311\"), 0);",
+      "func": "if mission.trig.conditions[14]() then if not mission.trig.flag[14] then mission.trig.actions[14](); mission.trig.flag[14] = true;end; else mission.trig.flag[14] = false; end;"
+    },
+    {
+      "type": "triggerFront",
+      "index": 16,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": "",
+          "flag": "8",
+          "predicate": "c_flag_equals",
+          "value": 1
+        }
+      ],
+      "actions": [
+        {
+          "predicate": "a_activate_group",
+          "group": 27
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 27
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 618
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 618
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 617
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 617
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 14
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 615
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 616
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 14
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 615
+        },
+        {
+          "predicate": "a_group_on",
+          "group": 616
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 1
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 281
+        },
+        {
+          "seconds": 30,
+          "start_delay": 0,
+          "predicate": "a_out_text_delay",
+          "text": "DictKey_ActionText_114",
+          "KeyDict_text": "DictKey_ActionText_114",
+          "clearview": false
+        },
+        {
+          "KeyDict_radiotext": "DictKey_ActionRadioText_115",
+          "radiotext": "DictKey_ActionRadioText_115",
+          "predicate": "a_remove_radio_item"
+        },
+        {
+          "predicate": "a_add_radio_item",
+          "flag": "8",
+          "KeyDict_radiotext": "DictKey_ActionRadioText_119",
+          "radiotext": "DictKey_ActionRadioText_119",
+          "value": 2
+        },
+        {
+          "file": "ResKey_Action_312",
+          "predicate": "a_out_sound",
+          "start_delay": 0
+        },
+        {
+          "file": "ResKey_Action_322",
+          "predicate": "a_out_sound",
+          "start_delay": 2
+        }
+      ],
+      "condition": "return(c_flag_equals(\"8\", 1) )",
+      "action": "a_activate_group(27);a_group_on(27);a_activate_group(618);a_group_on(618);a_activate_group(617);a_group_on(617);a_activate_group(14);a_activate_group(615);a_activate_group(616);a_group_on(14);a_group_on(615);a_group_on(616);a_activate_group(1);a_activate_group(281);a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_114\"), 30, false, 0);a_remove_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_115\"));a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_119\"), \"8\", 2);a_out_sound(getValueResourceByKey(\"ResKey_Action_312\"), 0);a_out_sound(getValueResourceByKey(\"ResKey_Action_322\"), 2);",
+      "func": "if mission.trig.conditions[16]() then if not mission.trig.flag[16] then mission.trig.actions[16](); mission.trig.flag[16] = true;end; else mission.trig.flag[16] = false; end;"
+    },
+    {
+      "type": "triggerContinious",
+      "index": 19,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "zone": 427,
+          "flag": "6",
+          "predicate": "c_time_since_flag",
+          "unit": 109,
+          "unitType": "ALL",
+          "value": 1,
+          "group": 15,
+          "percent": 10,
+          "seconds": 60
+        }
+      ],
+      "actions": [
+        {
+          "predicate": "a_clear_flag",
+          "flag": "6"
+        },
+        {
+          "group": 27,
+          "predicate": "a_group_resume"
+        }
+      ],
+      "condition": "return(c_time_since_flag(\"6\", 60) )",
+      "action": "a_clear_flag(\"6\");a_group_resume(27);",
+      "func": "if mission.trig.conditions[19]() then mission.trig.actions[19]() end"
+    },
+    {
+      "type": "triggerFront",
+      "index": 20,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 427,
+          "group": 27,
+          "predicate": "c_group_life_less",
+          "percent": 30
+        }
+      ],
+      "actions": [
+        {
+          "coalitionlist": "blue",
+          "start_delay": 0,
+          "seconds": 20,
+          "predicate": "a_out_text_delay_s",
+          "text": "DictKey_ActionText_122",
+          "KeyDict_text": "DictKey_ActionText_122",
+          "clearview": false
+        },
+        {
+          "seconds": 20,
+          "start_delay": 0,
+          "coalitionlist": "red",
+          "KeyDict_text": "DictKey_ActionText_331",
+          "text": "DictKey_ActionText_331",
+          "predicate": "a_out_text_delay_s",
+          "clearview": false
+        },
+        {
+          "file": "ResKey_Action_325",
+          "coalitionlist": "blue",
+          "start_delay": 0,
+          "predicate": "a_out_sound_s"
+        },
+        {
+          "predicate": "a_out_sound_s",
+          "file": "ResKey_Action_330",
+          "start_delay": 0,
+          "coalitionlist": "red"
+        }
+      ],
+      "condition": "return(c_group_life_less(27, 30) )",
+      "action": "a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_122\"), 20, false, 0);a_out_text_delay_s(\"red\", getValueDictByKey(\"DictKey_ActionText_331\"), 20, false, 0);a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_325\"), 0);a_out_sound_s(\"red\", getValueResourceByKey(\"ResKey_Action_330\"), 0);",
+      "func": "if mission.trig.conditions[20]() then if not mission.trig.flag[20] then mission.trig.actions[20](); mission.trig.flag[20] = true;end; else mission.trig.flag[20] = false; end;"
+    },
+    {
+      "type": "triggerFront",
+      "index": 23,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 427,
+          "group": 615,
+          "predicate": "c_group_life_less",
+          "percent": 1
+        },
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 427,
+          "group": 616,
+          "predicate": "c_group_life_less",
+          "percent": 1
+        }
+      ],
+      "actions": [
+        {
+          "flag": "20",
+          "predicate": "a_set_flag"
+        },
+        {
+          "seconds": 15,
+          "start_delay": 0,
+          "predicate": "a_out_text_delay",
+          "text": "DictKey_ActionText_136",
+          "KeyDict_text": "DictKey_ActionText_136",
+          "clearview": false
+        }
+      ],
+      "condition": "return(c_group_life_less(615, 1) and c_group_life_less(616, 1) )",
+      "action": "a_set_flag(\"20\");a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_136\"), 15, false, 0);",
+      "func": "if mission.trig.conditions[23]() then if not mission.trig.flag[23] then mission.trig.actions[23](); mission.trig.flag[23] = true;end; else mission.trig.flag[23] = false; end;"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 1,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 33,
+          "flag": "Reset",
+          "predicate": "c_flag_equals",
+          "value": 1
+        }
+      ],
+      "actions": [
+        {
+          "flag": "1",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "2",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "3",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "4",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "5",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "6",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "7",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "8",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "9",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "10",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "11",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "12",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "13",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "14",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "15",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "16",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "17",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "18",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "19",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "20",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "21",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "22",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "23",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "24",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "25",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "26",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "27",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "28",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        },
+        {
+          "flag": "Reset",
+          "predicate": "a_set_flag_value",
+          "value": 0
+        }
+      ],
+      "condition": "return(c_flag_equals(\"Reset\", 1) )",
+      "action": "a_set_flag_value(\"1\", 0);a_set_flag_value(\"2\", 0);a_set_flag_value(\"3\", 0);a_set_flag_value(\"4\", 0);a_set_flag_value(\"5\", 0);a_set_flag_value(\"6\", 0);a_set_flag_value(\"7\", 0);a_set_flag_value(\"8\", 0);a_set_flag_value(\"9\", 0);a_set_flag_value(\"10\", 0);a_set_flag_value(\"11\", 0);a_set_flag_value(\"12\", 0);a_set_flag_value(\"13\", 0);a_set_flag_value(\"14\", 0);a_set_flag_value(\"15\", 0);a_set_flag_value(\"16\", 0);a_set_flag_value(\"17\", 0);a_set_flag_value(\"18\", 0);a_set_flag_value(\"19\", 0);a_set_flag_value(\"20\", 0);a_set_flag_value(\"21\", 0);a_set_flag_value(\"22\", 0);a_set_flag_value(\"23\", 0);a_set_flag_value(\"24\", 0);a_set_flag_value(\"25\", 0);a_set_flag_value(\"26\", 0);a_set_flag_value(\"27\", 0);a_set_flag_value(\"28\", 0);a_set_flag_value(\"Reset\", 0); mission.trig.func[1]=nil;",
+      "func": "if mission.trig.conditions[1]() then mission.trig.actions[1]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 5,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": "",
+          "group": 16,
+          "predicate": "c_group_dead"
+        },
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": "",
+          "group": 14,
+          "predicate": "c_group_dead"
+        },
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": "",
+          "group": 15,
+          "predicate": "c_group_dead"
+        },
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": "",
+          "group": 13,
+          "predicate": "c_group_dead"
+        }
+      ],
+      "actions": [
+        {
+          "seconds": 20,
+          "start_delay": 0,
+          "KeyDict_text": "DictKey_ActionText_10",
+          "text": "DictKey_ActionText_10",
+          "predicate": "a_out_text_delay",
+          "clearview": false
+        },
+        {
+          "start_delay": 30,
+          "KeyDict_text": "DictKey_ActionText_11",
+          "winner": "blue",
+          "predicate": "a_end_mission",
+          "text": "DictKey_ActionText_11"
+        }
+      ],
+      "condition": "return(c_group_dead(16) and c_group_dead(14) and c_group_dead(15) and c_group_dead(13) )",
+      "action": "a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_10\"), 20, false, 0);a_end_mission(\"blue\", getValueDictByKey(\"DictKey_ActionText_11\"), 30); mission.trig.func[5]=nil;",
+      "func": "if mission.trig.conditions[5]() then mission.trig.actions[5]() end"
+    },
+    {
+      "type": "triggerFront",
+      "index": 27,
+      "rules": [
+        {
+          "zone": 1628,
+          "flag": "START-CTLD",
+          "text": "DictKey_ActionText_5191",
+          "predicate": "c_flag_is_true",
+          "KeyDict_text": "DictKey_ActionText_5191"
+        }
+      ],
+      "actions": [
+        {
+          "predicate": "a_do_script_file",
+          "file": "ResKey_Action_5126"
+        }
+      ],
+      "condition": "return(c_flag_is_true(\"START-CTLD\") )",
+      "action": "a_do_script_file(getValueResourceByKey(\"ResKey_Action_5126\"));",
+      "func": "if mission.trig.conditions[27]() then if not mission.trig.flag[27] then mission.trig.actions[27](); mission.trig.flag[27] = true;end; else mission.trig.flag[27] = false; end;"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 4,
+      "rules": [
+        {
+          "flag": "5",
+          "predicate": "c_flag_is_true"
+        }
+      ],
+      "actions": [
+        {
+          "predicate": "a_set_flag",
+          "flag": "10"
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 301
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 302
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 303
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 304
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 305
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 306
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 307
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 308
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 309
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 310
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 311
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 312
+        },
+        {
+          "predicate": "a_activate_group",
+          "group": 313
+        }
+      ],
+      "condition": "return(c_flag_is_true(\"5\") )",
+      "action": "a_set_flag(\"10\");a_activate_group(301);a_activate_group(302);a_activate_group(303);a_activate_group(304);a_activate_group(305);a_activate_group(306);a_activate_group(307);a_activate_group(308);a_activate_group(309);a_activate_group(310);a_activate_group(311);a_activate_group(312);a_activate_group(313); mission.trig.func[4]=nil;",
+      "func": "if mission.trig.conditions[4]() then mission.trig.actions[4]() end"
+    }
+  ]
+}

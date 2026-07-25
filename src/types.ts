@@ -13,6 +13,8 @@ export interface LatLon {
 
 export interface MissionUnit {
   name: string;
+  /** DCS `unitId`. Triggers reference units by this, never by name. */
+  id?: number;
   type: string;
   skill?: string;
   x: number;
@@ -23,6 +25,8 @@ export interface MissionUnit {
 
 export interface MissionGroup {
   name: string;
+  /** DCS `groupId`. Triggers reference groups by this, never by name. */
+  id?: number;
   category: GroupCategory;
   coalition: Coalition;
   country: string;
@@ -33,6 +37,8 @@ export interface MissionGroup {
 
 export interface TriggerZone {
   name: string;
+  /** DCS `zoneId`. Triggers reference zones by this, never by name. */
+  id?: number;
   x: number;
   y: number;
   radius?: number;
@@ -68,10 +74,16 @@ export interface MissionTrigger {
   /** Raw DCS predicate, e.g. 'triggerOnce', 'triggerStart', 'triggerContinious'. */
   predicate: string;
   comment?: string;
-  /** Group names or ids referenced by this trigger's actions. */
+  /** Group names or ids referenced by this trigger's conditions and actions. */
   groupRefs: (string | number)[];
-  /** Trigger-zone names or ids referenced by this trigger's conditions. */
+  /** Trigger-zone names or ids referenced by this trigger's conditions and actions. */
   zoneRefs: (string | number)[];
+  /** Unit names or ids referenced by this trigger's conditions. */
+  unitRefs: (string | number)[];
+  /** Flag ids or names referenced by this trigger's conditions and actions. */
+  flagRefs: (string | number)[];
+  /** True when the compiled runtime entry (`mission.trig`) exists for this index. */
+  compiled: boolean;
 }
 
 export interface MissionDocument {

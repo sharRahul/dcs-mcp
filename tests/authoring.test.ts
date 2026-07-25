@@ -15,6 +15,7 @@ import {
   setPayload,
   setGroupTask,
   addTrigger,
+  addTriggerZone,
   findGroup,
   findUnit,
 } from "../src/miz/authoring.js";
@@ -31,7 +32,10 @@ test("serializer round-trips an arbitrary data table", () => {
 
 function fixtureMiz(): string {
   const dir = mkdtempSync(join(tmpdir(), "dcs-auth-"));
-  const mission = `mission = { ["theatre"]="Caucasus", ["coalition"]={["blue"]={["name"]="blue",["country"]={[1]={["name"]="USA",["id"]=2,["plane"]={["group"]={[1]={["name"]="Existing 1",["task"]="CAP",["units"]={[1]={["name"]="Existing 1-1",["type"]="F-16C_50",["x"]=1,["y"]=2}}}}}}}}}, ["triggers"]={["zones"]={}}, ["weather"]={["qnh"]=760} }`;
+  // Every group carries a first route point, as one saved by the Mission Editor
+  // always does — the editor cannot open a mission where one does not.
+  const route = `["route"]={["points"]={[1]={["x"]=1,["y"]=2,["alt"]=6096,["alt_type"]="BARO",["type"]="Turning Point",["action"]="Turning Point",["speed"]=220,["speed_locked"]=true,["ETA"]=0,["ETA_locked"]=true,["name"]="",["formation_template"]="",["task"]={["id"]="ComboTask",["params"]={["tasks"]={}}}}}}`;
+  const mission = `mission = { ["theatre"]="Caucasus", ["coalition"]={["blue"]={["name"]="blue",["country"]={[1]={["name"]="USA",["id"]=2,["plane"]={["group"]={[1]={["name"]="Existing 1",["groupId"]=1,["task"]="CAP",${route},["units"]={[1]={["name"]="Existing 1-1",["unitId"]=1,["type"]="F-16C_50",["x"]=1,["y"]=2}}}}}}}}}, ["triggers"]={["zones"]={}}, ["weather"]={["qnh"]=760} }`;
   const zip = new AdmZip();
   zip.addFile("mission", Buffer.from(mission, "utf8"));
   zip.addFile("options", Buffer.from(`options = { ["foo"] = "keepme" }`, "utf8")); // unknown entry preserved
@@ -99,12 +103,16 @@ test("depth authoring: waypoints, payload, task, trigger survive round-trip", as
     gun: 100,
     pylons: [{ pylon: 3, CLSID: "{CLSID-TEST}" }],
   });
-  addTrigger(s.mission, {
-    type: "once",
-    comment: "welcome",
-    conditions: [{ kind: "time_after", seconds: 60 }],
-    actions: [{ kind: "message", text: "Fight's on", seconds: 15 }],
-  });
+  addTrigger(
+    s.mission,
+    {
+      type: "once",
+      comment: "welcome",
+      conditions: [{ kind: "time_after", seconds: 60 }],
+      actions: [{ kind: "message", text: "Fight's on", seconds: 15 }],
+    },
+    (s.dictionary ??= {})
+  );
 
   // Serialize -> reparse to prove lossless round-trip of the raw table.
   const reparsed = parse(serialize("mission", s.mission), "mission");
@@ -112,9 +120,14 @@ test("depth authoring: waypoints, payload, task, trigger survive round-trip", as
   const viper = findGroup(reparsed, "Viper 1")!;
   assert.equal(viper.group["task"], "SEAD");
   const points = viper.group["route"] as any;
-  assert.equal(Object.keys(points.points).length, 2);
-  assert.equal(points.points[1].name, "WP1");
-  assert.equal(points.points[1].speed, 250);
+  // Point 1 is the spawn point every group is created with; the two added
+  // waypoints follow it.
+  assert.equal(Object.keys(points.points).length, 3);
+  assert.equal(points.points[1].x, 500);
+  assert.equal(points.points[1].y, 600);
+  assert.equal(points.points[2].name, "WP1");
+  assert.equal(points.points[2].speed, 250);
+  assert.equal(points.points[3].x, 2000);
 
   const unit = findUnit(reparsed, "Viper 1-1")!;
   const payload = unit["payload"] as any;
@@ -124,7 +137,22 @@ test("depth authoring: waypoints, payload, task, trigger survive round-trip", as
   const trigrules = reparsed["trigrules"] as any;
   assert.equal(trigrules[1].predicate, "triggerOnce");
   assert.equal(trigrules[1].rules[1].predicate, "c_time_after");
-  assert.equal(trigrules[1].actions[1].predicate, "a_out_text");
+  assert.equal(trigrules[1].actions[1].predicate, "a_out_text_delay");
+
+  // The compiled runtime form survives the round-trip too, so the trigger fires
+  // without a Mission Editor pass.
+  const trig = reparsed["trig"] as any;
+  assert.equal(trig.conditions[1], "return(c_time_after(60) )");
+  assert.equal(
+    trig.actions[1],
+    `a_out_text_delay(getValueDictByKey("DictKey_ActionText_1"), 15, false, 0); mission.trig.func[1]=nil;`
+  );
+  assert.equal(trig.func[1], "if mission.trig.conditions[1]() then mission.trig.actions[1]() end");
+  assert.equal(trig.flag[1], true);
+
+  // Message text is stored in the dictionary, ME-style, and maxDictId advances.
+  assert.equal(s.dictionary!["DictKey_ActionText_1"], "Fight's on");
+  assert.equal(reparsed["maxDictId"], 1);
 
   closeSession(s.id);
 });
@@ -218,43 +246,152 @@ test("ids keep incrementing past ids already present in the source mission", asy
   closeSession(s.id);
 });
 
-test("validation rejects a trigger pointing at a group that does not exist", async () => {
+test("addTrigger refuses group, unit and zone names that are not in the mission", async () => {
   const s = await openSession(fixtureMiz());
 
-  addTrigger(s.mission, {
-    type: "once",
-    comment: "spawn reserves",
-    conditions: [{ kind: "time_after", seconds: 10 }],
-    actions: [{ kind: "activate_group", group: "Does Not Exist" }],
-  });
-  refresh(s);
+  assert.throws(
+    () =>
+      addTrigger(s.mission, {
+        type: "once",
+        conditions: [{ kind: "time_after", seconds: 10 }],
+        actions: [{ kind: "activate_group", group: "Does Not Exist" }],
+      }),
+    /No group named 'Does Not Exist'/
+  );
+  assert.throws(
+    () =>
+      addTrigger(s.mission, {
+        type: "once",
+        conditions: [{ kind: "unit_in_zone", unit: "Existing 1-1", zone: "Nowhere" }],
+        actions: [{ kind: "set_flag", flag: 1 }],
+      }),
+    /No trigger zone named 'Nowhere'/
+  );
+  assert.throws(
+    () =>
+      addTrigger(s.mission, {
+        type: "once",
+        conditions: [{ kind: "unit_dead", unit: "Ghost" }],
+        actions: [{ kind: "set_flag", flag: 1 }],
+      }),
+    /No unit named 'Ghost'/
+  );
 
-  const bad = validateMission(s.document);
-  assert.equal(bad.ok, false);
-  const issue = bad.errors.find((e) => e.code === "TRIGGER_GROUP_MISSING");
-  assert.ok(issue, `expected TRIGGER_GROUP_MISSING, got ${JSON.stringify(bad.errors)}`);
-  assert.match(issue!.message, /Does Not Exist/);
-  assert.match(issue!.message, /spawn reserves/);
-
-  // Adding the referenced group clears the error.
-  addAircraftGroup(s.mission, "plane", {
-    side: "blue", country: "USA", name: "Does Not Exist", type: "F-16C_50", count: 1, x: 0, y: 0,
-  });
-  refresh(s);
-  assert.equal(validateMission(s.document).errors.some((e) => e.code === "TRIGGER_GROUP_MISSING"), false);
-
+  // A rejected trigger must not be half-written into the mission.
+  assert.equal(Object.keys((s.mission["trigrules"] ?? {}) as object).length, 0);
   closeSession(s.id);
 });
 
-test("a trigger referencing an existing group validates cleanly", async () => {
+test("a trigger referencing existing content validates cleanly", async () => {
   const s = await openSession(fixtureMiz());
+  addTriggerZone(s.mission, { name: "Target Area", x: 100, y: 200, radius: 5000 });
   addTrigger(s.mission, {
     type: "once",
-    conditions: [{ kind: "time_after", seconds: 10 }],
+    conditions: [{ kind: "unit_in_zone", unit: "Existing 1-1", zone: "Target Area" }],
     actions: [{ kind: "activate_group", group: "Existing 1" }],
   });
   refresh(s);
   const report = validateMission(s.document);
-  assert.equal(report.errors.some((e) => e.code === "TRIGGER_GROUP_MISSING"), false);
+  assert.equal(report.ok, true, JSON.stringify(report.errors));
+  assert.equal(report.warnings.some((w) => w.code === "TRIGGER_NOT_COMPILED"), false);
+  closeSession(s.id);
+});
+
+test("validation flags dangling ids in triggers an existing mission already had", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "dcs-dangle-"));
+  // A mission whose trigger points at ids nothing in the mission defines: the
+  // Mission Editor lets this happen when content is deleted after the trigger.
+  const mission =
+    `mission = { ["theatre"]="Caucasus", ` +
+    `["coalition"]={["blue"]={["name"]="blue",["country"]={}}}, ` +
+    `["triggers"]={["zones"]={}}, ` +
+    `["trigrules"]={[1]={["predicate"]="triggerOnce",["comment"]="spawn reserves",` +
+    `["rules"]={[1]={["predicate"]="c_unit_in_zone",["unit"]=42,["zone"]=7}},` +
+    `["actions"]={[1]={["predicate"]="a_activate_group",["group"]=99}}}} }`;
+  const zip = new AdmZip();
+  zip.addFile("mission", Buffer.from(mission, "utf8"));
+  const path = join(dir, "dangling.miz");
+  writeFileSync(path, zip.toBuffer());
+
+  const s = await openSession(path);
+  const report = validateMission(s.document);
+  assert.equal(report.ok, false);
+
+  const group = report.errors.find((e) => e.code === "TRIGGER_GROUP_MISSING");
+  assert.ok(group, `expected TRIGGER_GROUP_MISSING, got ${JSON.stringify(report.errors)}`);
+  assert.match(group!.message, /'99'/);
+  assert.match(group!.message, /spawn reserves/);
+  assert.ok(report.errors.some((e) => e.code === "TRIGGER_ZONE_MISSING" && /'7'/.test(e.message)));
+  assert.ok(report.errors.some((e) => e.code === "TRIGGER_UNIT_MISSING" && /'42'/.test(e.message)));
+
+  // It also has no compiled runtime entry, so it would not fire if flown.
+  assert.ok(report.warnings.some((w) => w.code === "TRIGGER_NOT_COMPILED"));
+  closeSession(s.id);
+});
+
+test("unit headings are written in radians, as DCS stores them", async () => {
+  const s = await openSession(fixtureMiz());
+  addGroundGroup(s.mission, "vehicle", {
+    side: "red", country: "Russia", name: "Convoy", type: "Ural-4320T", count: 1,
+    x: 0, y: 0, heading: 90,
+  });
+  const convoy = findGroup(s.mission, "Convoy")!.group as any;
+  // 90 degrees is pi/2 radians, NOT 90. Writing degrees straight through would
+  // point the unit at roughly 117 degrees instead.
+  assert.ok(
+    Math.abs(convoy.units[1].heading - Math.PI / 2) < 1e-9,
+    `expected pi/2 radians, got ${convoy.units[1].heading}`
+  );
+
+  // Every heading must land in [0, 2pi) the way the editor writes them.
+  for (const deg of [0, 45, 180, 359, 360, 450, -90]) {
+    addGroundGroup(s.mission, "vehicle", {
+      side: "red", country: "Russia", name: `H${deg}`, type: "Ural-4320T", count: 1,
+      x: 0, y: 0, heading: deg,
+    });
+    const h = (findGroup(s.mission, `H${deg}`)!.group as any).units[1].heading;
+    assert.ok(h >= 0 && h < 2 * Math.PI, `heading ${deg} deg produced ${h} rad`);
+  }
+  closeSession(s.id);
+});
+
+test("group units trail the heading instead of a fixed diagonal", async () => {
+  const s = await openSession(fixtureMiz());
+
+  // Facing east (90 deg): the column must run west, i.e. along -y with x fixed.
+  addGroundGroup(s.mission, "vehicle", {
+    side: "red", country: "Russia", name: "Eastbound", type: "Ural-4320T", count: 3,
+    x: 1000, y: 2000, heading: 90,
+  });
+  const units = (findGroup(s.mission, "Eastbound")!.group as any).units;
+  for (let i = 1; i <= 3; i++) {
+    assert.ok(Math.abs(units[i].x - 1000) < 1e-6, `unit ${i} drifted north/south: x=${units[i].x}`);
+    assert.ok(Math.abs(units[i].y - (2000 - (i - 1) * 20)) < 1e-6, `unit ${i} y=${units[i].y}`);
+  }
+
+  // Facing north (0 deg): the column runs south, along -x with y fixed. The old
+  // fixed +30/+30 offset put it on a 45-degree diagonal regardless of heading.
+  addGroundGroup(s.mission, "vehicle", {
+    side: "red", country: "Russia", name: "Northbound", type: "Ural-4320T", count: 3,
+    x: 0, y: 0, heading: 0,
+  });
+  const north = (findGroup(s.mission, "Northbound")!.group as any).units;
+  assert.deepEqual(
+    [1, 2, 3].map((i) => [Math.round(north[i].x), Math.round(north[i].y)]),
+    [[0, 0], [-20, 0], [-40, 0]]
+  );
+
+  // The offset direction must always be exactly opposite the heading.
+  for (const deg of [0, 30, 90, 180, 270, 315]) {
+    addGroundGroup(s.mission, "vehicle", {
+      side: "red", country: "Russia", name: `Bearing${deg}`, type: "Ural-4320T", count: 2,
+      x: 0, y: 0, heading: deg,
+    });
+    const u = (findGroup(s.mission, `Bearing${deg}`)!.group as any).units;
+    const offsetBearing = (Math.atan2(u[2].y - u[1].y, u[2].x - u[1].x) * 180) / Math.PI;
+    const expected = (deg + 180) % 360;
+    const diff = Math.abs(((offsetBearing - expected + 540) % 360) - 180);
+    assert.ok(diff < 1e-6, `heading ${deg}: units offset toward ${offsetBearing}, expected ${expected}`);
+  }
   closeSession(s.id);
 });

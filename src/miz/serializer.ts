@@ -39,6 +39,16 @@ function quote(s: string): string {
   return `"${escaped}"`;
 }
 
+/**
+ * Quote a string as a Lua literal, for the compiled `mission.trig` code strings.
+ *
+ * Exported so the trigger compiler reuses this single escaping implementation
+ * rather than growing a second, subtly different one.
+ */
+export function quoteLuaString(s: string): string {
+  return quote(s);
+}
+
 function serializeNumber(n: number): string {
   if (!Number.isFinite(n)) return "0";
   if (Number.isInteger(n)) return n.toString();

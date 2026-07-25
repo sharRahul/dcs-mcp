@@ -33,6 +33,21 @@ export function validateMission(doc: MissionDocument): ValidationReport {
       });
     }
 
+    // The Mission Editor's `fixUnitsPos` indexes `route.points[1]` for every
+    // group that has a route, so an empty one makes the editor fail to open the
+    // WHOLE mission ("attempt to index field '?' (a nil value)"). This is an
+    // error, not a warning: the mission is unopenable.
+    if (group.waypointCount === 0) {
+      errors.push({
+        severity: "error",
+        code: "GROUP_NO_ROUTE_POINTS",
+        message:
+          `Group '${group.name}' has no route points. The DCS Mission Editor cannot open a mission ` +
+          `containing such a group; give it at least one waypoint at its spawn position.`,
+        location: `group:${group.name}`,
+      });
+    }
+
     for (const unit of group.units) {
       if (unitNames.has(unit.name)) {
         errors.push({
@@ -78,35 +93,76 @@ export function validateMission(doc: MissionDocument): ValidationReport {
     }
   }
 
-  // Trigger cross-references. A trigger pointing at a group or zone that is not
-  // in the mission does nothing at all in DCS, and does so silently.
-  const groupIds = new Set<string | number>();
-  for (const group of doc.groups) groupIds.add(group.name);
-  for (const zone of doc.zones) zoneNames.add(zone.name);
+  // Trigger cross-references. A trigger pointing at a group, unit or zone that is
+  // not in the mission does nothing at all in DCS, and does so silently. Triggers
+  // reference by numeric DCS id; names only appear in older, hand-edited missions,
+  // so both forms are resolvable here.
+  const groupRefs = new Set<string | number>();
+  for (const group of doc.groups) {
+    groupRefs.add(group.name);
+    if (group.id !== undefined) groupRefs.add(group.id);
+  }
+  const unitRefs = new Set<string | number>();
+  for (const group of doc.groups) {
+    for (const unit of group.units) {
+      unitRefs.add(unit.name);
+      if (unit.id !== undefined) unitRefs.add(unit.id);
+    }
+  }
+  const zoneRefs = new Set<string | number>();
+  for (const zone of doc.zones) {
+    zoneRefs.add(zone.name);
+    if (zone.id !== undefined) zoneRefs.add(zone.id);
+  }
+
+  const missingRef = (
+    label: string,
+    index: number,
+    refs: (string | number)[],
+    known: Set<string | number>,
+    code: string,
+    kind: string
+  ) => {
+    for (const ref of refs) {
+      if (known.has(ref)) continue;
+      errors.push({
+        severity: "error",
+        code,
+        message: `${label} references ${kind} '${ref}', which does not exist in this mission`,
+        location: `trigger:${index}`,
+      });
+    }
+  };
 
   for (const trigger of doc.triggers) {
     const label = trigger.comment ? `trigger #${trigger.index} ('${trigger.comment}')` : `trigger #${trigger.index}`;
-    for (const ref of trigger.groupRefs) {
-      // Numeric refs are DCS groupIds, which the canonical model does not track;
-      // only name-based references can be resolved here.
-      if (typeof ref === "string" && !groupIds.has(ref)) {
+    missingRef(label, trigger.index, trigger.groupRefs, groupRefs, "TRIGGER_GROUP_MISSING", "group");
+    missingRef(label, trigger.index, trigger.zoneRefs, zoneRefs, "TRIGGER_ZONE_MISSING", "trigger zone");
+    missingRef(label, trigger.index, trigger.unitRefs, unitRefs, "TRIGGER_UNIT_MISSING", "unit");
+
+    for (const flag of trigger.flagRefs) {
+      // DCS accepts an integer flag id or a named flag; anything else (a float,
+      // an empty name) is an editing mistake that never matches at runtime.
+      const valid = typeof flag === "number" ? Number.isInteger(flag) : flag.length > 0;
+      if (!valid) {
         errors.push({
           severity: "error",
-          code: "TRIGGER_GROUP_MISSING",
-          message: `${label} references group '${ref}', which does not exist in this mission`,
+          code: "TRIGGER_FLAG_INVALID",
+          message: `${label} uses flag '${flag}', which is neither an integer flag id nor a flag name`,
           location: `trigger:${trigger.index}`,
         });
       }
     }
-    for (const ref of trigger.zoneRefs) {
-      if (typeof ref === "string" && !zoneNames.has(ref)) {
-        errors.push({
-          severity: "error",
-          code: "TRIGGER_ZONE_MISSING",
-          message: `${label} references trigger zone '${ref}', which does not exist in this mission`,
-          location: `trigger:${trigger.index}`,
-        });
-      }
+
+    if (!trigger.compiled) {
+      warnings.push({
+        severity: "warning",
+        code: "TRIGGER_NOT_COMPILED",
+        message:
+          `${label} has no compiled runtime entry (mission.trig), so it will not fire unless the ` +
+          `mission is opened and saved in the DCS Mission Editor`,
+        location: `trigger:${trigger.index}`,
+      });
     }
   }
 
