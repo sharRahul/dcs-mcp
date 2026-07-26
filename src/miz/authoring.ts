@@ -101,6 +101,13 @@ export interface RoutePointSpec {
   type: string;
   action: string;
   name?: string;
+  /**
+   * The editor's "fix time" checkbox. Only the first point — the mission start —
+   * is ETA-locked in an ME-saved route; locking later waypoints pins each one to
+   * a computed arrival time, which the editor shows as a red ETA the moment any
+   * earlier leg changes. Defaults to false; `initialRoute` passes true.
+   */
+  etaLocked?: boolean;
 }
 
 /** Build one route point in the shape the Mission Editor writes. */
@@ -115,7 +122,7 @@ function routePoint(spec: RoutePointSpec): LuaTable {
     speed: spec.speed,
     speed_locked: true,
     ETA: 0,
-    ETA_locked: true,
+    ETA_locked: spec.etaLocked ?? false,
     name: spec.name ?? "",
     formation_template: "",
     task: { id: "ComboTask", params: { tasks: {} } },
@@ -142,6 +149,7 @@ function initialRoute(category: string, x: number, y: number, altitudeMetres?: n
         speed: defaults.speed,
         type: defaults.type,
         action: defaults.action,
+        etaLocked: true,
       }),
     },
   };
@@ -468,6 +476,7 @@ export function addWaypoint(mission: LuaTable, groupName: string, wp: WaypointAr
   const defaults = ROUTE_DEFAULTS[found.category] ?? ROUTE_DEFAULTS.vehicle;
   const route = (found.group["route"] ??= { points: {} }) as LuaTable;
   const points = (route["points"] ??= {}) as LuaTable;
+  const index = nextIndex(points);
   const point = routePoint({
     x: wp.x,
     y: wp.y,
@@ -476,8 +485,9 @@ export function addWaypoint(mission: LuaTable, groupName: string, wp: WaypointAr
     type: wp.type ?? defaults.type,
     action: wp.action ?? defaults.action,
     name: wp.name,
+    // Only the mission-start point is ETA-locked; appended waypoints never are.
+    etaLocked: index === 1,
   });
-  const index = nextIndex(points);
   points[index] = point;
   return index;
 }

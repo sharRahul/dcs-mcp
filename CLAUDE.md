@@ -83,9 +83,44 @@ An authored mission was loaded through the bridge and run. Confirmed live:
 MOOSE and Skynet in order and all three initialised; all 18 authored ground units reported
 `LAND` from `land.getSurfaceType`.
 
-Still unverified: the condition-driven triggers (`group_dead`, `unit_in_zone`,
-`part_of_coalition_in_zone`, the radio-menu handler) and `end_mission` need a full sortie
-that actually destroys the objectives.
+A second sortie (same day, flown from the DCS mission list, ~26 min, player F-16 SEAD
+against the SA-2) added the zone predicates:
+- `part_of_coalition_in_zone` on a **`change`** trigger (`triggerFront`) — fired once on the
+  false→true edge as the player crossed into `IngressZone` (t=37 and t=32 across two runs).
+  This is the only live proof of the `trig.flag[i]` latching.
+- `unit_in_zone` on a `once` trigger — fired on entering the SA-2 ring (t=184, t=153).
+
+Two further sorties (18:44–19:07 local, same mission) fired `group_dead`:
+`T7-Sa2Down` at t=231 and t=161. Its `set_flag`, coalition message and `once` self-disarm
+all ran. `c_group_dead` is verified.
+
+**`c_group_dead` does not track `S_EVENT_DEAD` one-for-one — do not use the event stream to
+predict it.** In both sorties the trigger went true roughly a second after the last
+`S_75M_Volhov` launcher died, while a radar unit still had not reported dead:
+- sortie A: DEAD seen for Mike-3/4/5/6 (the four launchers) at t=230; Mike-1 (`p-19 s-125 sr`)
+  and Mike-2 (`SNR_75V`) took HITs but emitted no DEAD at all. Trigger fired t=231.
+- sortie B: DEAD for Mike-1/3/5/6 plus one whose name no longer resolved (`initiator=unknown`)
+  at t=154, Mike-4 at t=160, trigger fired t=161 — and Mike-2 emitted its own KILL+DEAD 52 s
+  later at t=213.
+
+Whether DCS's group-dead check is launcher-weighted or simply leads the DEAD events cannot be
+told from the log; what is established is that it fires earlier than a naive "count the DEAD
+events" model predicts. Skynet's own `isDestroyed` is a third, later signal again — the site
+read `dead=true` only at the t=180 sample, 19 s after the trigger.
+
+Still unverified: `T8-Sa6Down` (the SA-6 was never engaged), the flag-ANDed win trigger
+`T9-Success` and `end_mission` that depends on it, and the radio-menu handler `T4-Sitrep` —
+that one needs someone to actually press the F10 item.
+
+Clean across all sorties: 18/18 units `LAND` and zero `TERRAIN_WATER`, MIST 4.5 / MOOSE /
+Skynet `ok=1` on every boot, `samSites=3 ewRadars=2` every time.
+
+Not our bug, seen in this sortie: Skynet 3.3.0 raises `Weapon doesn't exist` at
+`skynet-iads-compiled.lua:3179` (`SkynetIADSContact:getTypeName`) whenever a tracked contact
+is a weapon that expires between the nil check on `getDCSRepresentation()` and the
+`:getCategory()` call on the next line. It is raised from Skynet's own MIST-scheduled loop,
+only while missiles are in the air, and it reproduced in every sortie. Nothing in this repo
+calls that path.
 
 ---
 
@@ -154,6 +189,13 @@ Note DCS map axes: `x` is NORTH, `y` is EAST, so a heading's forward vector is
 `(cos h, sin h)`. Also: if a group has 2+ route points the editor overwrites each unit's
 heading from `atan2(p2 - p1)`, so an authored heading only sticks on a single-point group.
 
+**Only route point 1 is `ETA_locked`.** That field is the editor's "fix time" checkbox.
+`routePoint()` defaults it to false; `initialRoute()` passes true for the mission-start
+point, and `addWaypoint` passes `etaLocked: index === 1` so it is still correct when the
+appended point IS the start. Locking later waypoints pins each one to a computed arrival
+time, which the editor shows as a red ETA the moment any earlier leg changes. Covered by
+`tests/authoring.test.ts` — "only the mission-start point is ETA-locked".
+
 **A SAM site is not N copies of one vehicle.** `addGroundGroup` takes an optional
 `composition: [{ type, count }]` that puts mixed unit types in ONE group, laid out in
 order along the heading (`spacingMetres` overrides the per-category default). Skynet finds
@@ -194,6 +236,13 @@ for an `onSimulationFrame` tick like the mission-env commands (`needsSimThread`)
 Loading is **asynchronous**: it returns before the mission is up, and a mission that fails
 to open reports it in dcs.log and nowhere else. Poll `dcs_bridge_status` for
 `phase: running -> loading -> running`, then read the log.
+
+`dcs_bridge_status` sends the hook's `status` command, not `ping`, so it surfaces `phase`,
+`missionEnv`, `simTicking` and `mission` — check `phase` BEFORE any mission-environment tool
+or `dcs_load_mission`. It falls back to `ping` if `status` is rejected, so an older installed
+hook still reports connectivity. `ping` alone only proves the socket answers: it returns
+`{pong, time}` from the menu just as happily as from a running mission, which is exactly the
+false positive that made mission-env tools fail with `attempt to index global 'timer'`.
 
 ## Live telemetry
 

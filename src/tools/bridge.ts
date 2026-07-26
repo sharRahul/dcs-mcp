@@ -77,19 +77,53 @@ export function registerBridgeTools(server: McpServer): void {
     {
       title: "Check DCS bridge",
       description:
-        "Ping the live DCS bridge to check connectivity. Use before other live tools to confirm DCS " +
-        "is running with the hook installed.\n\nArgs: host?, port?\nReturns JSON: { connected, response }.",
+        "Check the live DCS bridge. Use before other live tools to confirm DCS is running with the " +
+        "hook installed, and to find out what state it is in.\n\n" +
+        "`phase` is the field that decides what else will work:\n" +
+        "  - menu     — DCS is at the menu/Mission Editor. Mission-environment tools (units, " +
+        "message, spawn, terrain, mission info) have no environment to talk to, and dcs_load_mission " +
+        "is refused: net.load_mission swaps the mission on a RUNNING session and does nothing from a " +
+        "cold menu. The user must fly something first.\n" +
+        "  - loading  — a mission is opening; poll until it turns running.\n" +
+        "  - running  — everything is available.\n\n" +
+        "`missionEnv` is derived from simulation frames, not from a probe, so it is false whenever " +
+        "mission-environment commands would fail. A paused mission produces no frames.\n\n" +
+        "Args: host?, port?\n" +
+        "Returns JSON: { connected, phase, missionEnv, simTicking, mission, response }.",
       inputSchema: z.object({ host: hostField, port: portField }).strict(),
-      outputSchema: z.object({ connected: z.boolean(), response: z.unknown() }),
+      outputSchema: z.object({
+        connected: z.boolean(),
+        phase: z.string().optional(),
+        missionEnv: z.boolean().optional(),
+        simTicking: z.boolean().optional(),
+        mission: z.string().optional(),
+        response: z.unknown(),
+      }),
       annotations: liveRead,
     },
     async ({ host, port }) => {
       try {
-        const data = await bridgeRequest({ cmd: "ping" }, { host, port });
-        return buildResult(`Connected to DCS bridge at ${host}:${port}.`, {
-          connected: true,
-          response: data,
-        });
+        // `status` carries phase/missionEnv/simTicking; `ping` only proves the
+        // socket answers. Fall back so an older installed hook still reports
+        // connectivity instead of failing outright.
+        let data: Record<string, unknown>;
+        try {
+          data = (await bridgeRequest({ cmd: "status" }, { host, port })) as Record<string, unknown>;
+        } catch {
+          data = (await bridgeRequest({ cmd: "ping" }, { host, port })) as Record<string, unknown>;
+        }
+        const phase = typeof data.phase === "string" ? data.phase : undefined;
+        return buildResult(
+          `Connected to DCS bridge at ${host}:${port}${phase ? ` (phase: ${phase})` : ""}.`,
+          {
+            connected: true,
+            ...(phase !== undefined ? { phase } : {}),
+            ...(typeof data.missionEnv === "boolean" ? { missionEnv: data.missionEnv } : {}),
+            ...(typeof data.simTicking === "boolean" ? { simTicking: data.simTicking } : {}),
+            ...(typeof data.mission === "string" ? { mission: data.mission } : {}),
+            response: data,
+          }
+        );
       } catch (err) {
         return errorResult(err);
       }
@@ -330,11 +364,15 @@ export function registerBridgeTools(server: McpServer): void {
     {
       title: "Load a mission in DCS",
       description:
-        "Tell the running DCS client to load a `.miz` file. Works from the main menu and over an " +
-        "already-running mission, so an authored mission can go straight from dcs_miz_save_as to " +
-        "flying without the user touching the UI.\n\n" +
+        "Swap the mission on an ALREADY-RUNNING DCS session, so an authored mission can go from " +
+        "dcs_miz_save_as to flying without the user touching the UI.\n\n" +
+        "REQUIRES a mission to already be running. This calls net.load_mission, which is DCS's " +
+        "server mission-rotation call; from a cold menu it returns nil and does nothing, so the " +
+        "hook refuses the request with 'no mission is running' rather than reporting a phantom " +
+        "success. Check dcs_bridge_status first: if phase is 'menu', ask the user to fly any " +
+        "mission, then call this to swap in the authored one.\n\n" +
         "Loading is ASYNCHRONOUS: this returns as soon as DCS accepts the request, not when the " +
-        "mission is up. Poll dcs_bridge_status (phase: menu -> loading -> running) and check " +
+        "mission is up. Poll dcs_bridge_status (phase: running -> loading -> running) and check " +
         "dcs_get_log_errors afterwards — a mission that fails to open reports it in dcs.log and " +
         "nowhere else.\n\n" +
         "This takes over the user's DCS client; confirm with them before calling it.\n\n" +

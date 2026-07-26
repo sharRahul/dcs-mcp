@@ -157,6 +157,42 @@ test("depth authoring: waypoints, payload, task, trigger survive round-trip", as
   closeSession(s.id);
 });
 
+test("only the mission-start point is ETA-locked", async () => {
+  const s = await openSession(fixtureMiz());
+  addAircraftGroup(s.mission, "plane", {
+    side: "blue",
+    country: "USA",
+    name: "Viper 1",
+    type: "F-16C_50",
+    count: 1,
+    x: 500,
+    y: 600,
+  });
+  addWaypoint(s.mission, "Viper 1", { x: 1000, y: 1100 });
+  addWaypoint(s.mission, "Viper 1", { x: 2000, y: 2100 });
+
+  const reparsed = parse(serialize("mission", s.mission), "mission");
+  const points = (findGroup(reparsed, "Viper 1")!.group["route"] as any).points;
+  assert.equal(points[1].ETA_locked, true, "waypoint 1 is the mission start");
+  assert.equal(points[2].ETA_locked, false);
+  assert.equal(points[3].ETA_locked, false);
+
+  // A ground group's seeded route point is a mission start too.
+  addGroundGroup(s.mission, "vehicle", {
+    side: "blue",
+    country: "USA",
+    name: "Convoy",
+    type: "M-1 Abrams",
+    count: 1,
+    x: 1,
+    y: 2,
+  });
+  const ground = findGroup(s.mission, "Convoy")!.group as any;
+  assert.equal(ground.route.points[1].ETA_locked, true);
+
+  closeSession(s.id);
+});
+
 test("addWaypoint throws for an unknown group", async () => {
   const s = await openSession(fixtureMiz());
   assert.throws(() => addWaypoint(s.mission, "Nope", { x: 0, y: 0 }), /No group named 'Nope'/);
