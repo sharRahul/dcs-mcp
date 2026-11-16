@@ -7,7 +7,8 @@
  */
 import { createHash } from "node:crypto";
 import path from "node:path";
-import { access, readFile, writeFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
+import { atomicWrite } from "../security/files.js";
 import AdmZip from "adm-zip";
 import { KNOWN_MIZ_ENTRIES } from "../constants.js";
 import {
@@ -88,7 +89,8 @@ export async function packMiz(
   replacements: Map<string, string | Buffer>,
   outPath: string,
   sourcePath?: string,
-  overwrite = false
+  overwrite = false,
+  removedEntries: ReadonlySet<string> = new Set()
 ): Promise<{ digest: string; outPath: string }> {
   if (!outPath.toLowerCase().endsWith(".miz")) {
     throw new ArchivePolicyError(`Output path must end in .miz: ${outPath}`);
@@ -107,6 +109,11 @@ export async function packMiz(
   }
 
   const zip = new AdmZip(sourceBytes);
+  for (const name of removedEntries) {
+    assertSafeEntryName(name);
+    if (['mission', 'options', 'warehouses', 'theatre', 'l10n/DEFAULT/dictionary', 'l10n/DEFAULT/mapResource'].includes(name)) throw new Error('Cannot delete a structural mission member');
+    zip.deleteFile(name);
+  }
   for (const [name, content] of replacements) {
     assertSafeEntryName(name);
     const buf = Buffer.isBuffer(content) ? content : Buffer.from(content, "utf8");
@@ -115,7 +122,10 @@ export async function packMiz(
   }
 
   const outBytes = zip.toBuffer();
-  await writeFile(outPath, outBytes);
+  assertArchiveWithinLimits(new AdmZip(outBytes).getEntries().map(e => ({
+    name: e.entryName, compressedSize: e.header.compressedSize, uncompressedSize: e.header.size,
+  })));
+  await atomicWrite(outPath, outBytes, { sourcePath, overwrite });
   const digest = createHash("sha256").update(outBytes).digest("hex");
   return { digest, outPath };
 }

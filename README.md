@@ -15,7 +15,7 @@ It never executes mission Lua (missions are parsed as data), never overwrites a 
 
 ## Install
 
-Node 18 or newer. The server runs straight from npm:
+Node 20 or newer. The server runs straight from npm:
 
 ```bash
 npx -y dcs-mcp-server --version
@@ -24,7 +24,7 @@ npx -y dcs-mcp-server --version
 Or from a clone:
 
 ```bash
-npm install && npm run build   # outputs dist/index.js
+npm ci && npm run build   # outputs dist/index.js
 npm test                       # optional
 ```
 
@@ -44,7 +44,7 @@ From a clone, use `"command": "node", "args": ["/absolute/path/to/dcs-mcp/dist/i
 
 - **Claude Code**: `claude mcp add dcs -- npx -y dcs-mcp-server`. The repo's own [`.mcp.json`](.mcp.json) runs `node dist/index.js` with a *relative* path, which only works when the client starts the server from the repository root — Claude Code does, for project-scoped servers. Build first.
 - **Claude Desktop**: add the block above to `claude_desktop_config.json`.
-- **Codex**: add an equivalent `command`/`args` entry in `~/.codex/config.toml`.
+- **Codex**: `codex mcp add dcs -- node /absolute/path/to/dcs-mcp/dist/index.js` for this feature checkout; build first. For the published package use `codex mcp add dcs -- npx -y dcs-mcp-server`.
 - **OpenCode**: add it under `mcp` in `opencode.json`.
 
 Optional environment variables:
@@ -520,6 +520,97 @@ Still honestly unverified:
 - `dcs_spawn_unit` and `dcs_send_message` are written against the DCS scripting API and, unlike the read paths, have not been exercised in a live mission since the thread-routing fix.
 - New in 0.2.0 and checked offline only (serialize → reparse round trips, the validator, PROJ cross-checks), but not yet opened in the Mission Editor or flown: airfield/carrier/FARP starts and parking-slot choice, static objects, FARPs, parked-static airfields, target areas, naval formations, forced options, the `catalogue` SAM templates, and trigger removal on missions saved by the Mission Editor. The record formats follow pydcs, whose missions DCS loads, but this project's rule is that nothing counts as verified until DCS has run it.
 
+## Advanced mission authoring and terrain planning
+
+The expanded offline tools add configurable flight roles and advanced waypoint tasks,
+per-aircraft payload validation, flight identity/radio settings, ground plans, surface
+tasking, ordered IADS setup, F10 threat circles, and warehouse editing with preservation.
+Requested parking now checks fit and duplicate assignments; FARP starts check pad capacity.
+
+Terrain tools provide elevation, slope, profiles, sampled LOS/masking/viewshed, route
+checks and placement checks for every unit in a ground group. They require a sourced
+offline grid or a matching live DCS theatre. No terrain elevations are bundled and no
+flat-terrain fallback is used. Visibility is geometric, not an authoritative sensor model.
+
+All additions are **offline tested; not newly DCS-verified**.
+Carrier recovery/deck compatibility, historical service dates, radio bands,
+installed liveries and creation of new warehouse stock identifiers remain gaps.
+
+- [Capability assessment and evidence](docs/capability_gap_analysis.md)
+- [Tool usage, examples and limitations](docs/authoring.md)
+- [Reproducible checks and DCS acceptance work](docs/verification.md)
+
+```bash
+npm run check
+npm run build
+npm test
+npm run verify:capabilities -- <new-output-directory>
+# Optional stock Lua 5.1 check, with mocked DCS/Skynet APIs:
+LUA51=/path/to/lua5.1 npm run verify:lua51
+```
+
+The proof command writes a .miz and JSON report, refuses to overwrite an existing
+mission, and labels synthetic terrain checks explicitly. Stock Lua checks are distinct
+from the existing DCS_LUA checks and do not count as testing inside DCS World.
+
+## Structured scenarios and cinematic direction
+
+Submit a mission specification directly from an MCP client with `dcs_scenario_validate`
+and `dcs_scenario_generate`. The local engine validates roles, countries, forces,
+starts, support aircraft, objectives and triggers, generates deterministic mission
+data from an optional seed, and embeds its specification/report. Campaign generation
+returns validated stage missions and an outcome transition manifest.
+
+The mission director adds condition-driven dialogue, takeoff/landing/combat-event
+cues, branches, reinforcement actions, timelines, shot lists and highlight suggestions.
+Missing audio produces explicit recording placeholders and subtitles. Built-in dialogue
+is fictional cinematic material; no paid TTS or external AI API is required.
+
+Mission configuration, F10 lines/polygons/text, score goals, full trigger replacement,
+briefing images, kneeboards and resource removal are also exposed as typed MCP tools.
+All additions remain offline tested, not DCS-verified. CSAR is zone/flag based; campaign
+manifests are not .cmp files, and carrier recovery remains unsupported.
+
+- [Mission design and tool contracts](docs/mission_design.md)
+- [Example specification](examples/scenarios/interception.json)
+- [Phase 4–6 verification](docs/verification.md)
+
+```bash
+npm run build
+npm run verify:design -- <new-output-directory>
+# Optional mocked Lua 5.1 execution, separate from DCS verification:
+LUA51=/path/to/lua5.1 npm run verify:design -- <another-new-directory>
+```
+
 ## License
 
 [Apache 2.0](LICENSE).
+
+
+## Live acceptance kit and runtime inspection
+
+This checkout adds `dcs_runtime_inspect` (bounded groups, unit states, flags and
+telemetry event cursors), `dcs_tool_catalogue` (paginated discovery), and shared
+acceptance tools: `dcs_acceptance_check`, `dcs_acceptance_generate`,
+`dcs_acceptance_job`, `dcs_acceptance_collect`. Generation returns a job id to poll;
+CLI and MCP use the same implementation. The catalogue currently has 102 tools.
+
+Generate ten missions and the Windows operator kit with one command after building:
+
+```bash
+npm run acceptance:generate -- ./live-acceptance-run
+```
+
+The destination must be new. Follow the generated README and manual test plan.
+[Live acceptance instructions](docs/testing/live-acceptance/readme.md) describe
+optional stock Lua 5.1 checks, bridge snapshots and hashed log/evidence collection.
+No generated scenario is live-passed. Collection reports pending until matching
+run/scenario logs, objective outcome and all operator checks/evidence are supplied;
+a pass is explicitly operator-attested. Screenshots and aircraft AI are not
+interpreted automatically.
+
+Dependencies use patched Zod 4 and SDK releases; unsafe integer inputs are now
+rejected and validation error wording may differ. See the single
+[verification record](docs/verification.md) for schema review and remaining gaps.
+Use the cloned server path to test these unreleased changes; npm still serves the
+published version. No paid AI or voice service is required.

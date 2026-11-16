@@ -1,0 +1,41 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { openSession, closeSession } from '../src/miz/sessions.js';
+import { luaArray, asTable } from '../src/miz/lua.js';
+import { listAssets } from '../src/miz/assets.js';
+test('phase 4–6 MCP contracts generate, direct, draw, embed, replace, score and save real mission sessions', { timeout: 60000 }, async () => {
+  const transport = new StdioClientTransport({ command: process.execPath, args: ['--import', 'tsx', 'src/index.ts'], env: { ...process.env, DCS_MCP_STATE_DIR: 'off' } as Record<string, string>, stderr: 'ignore' });
+  const client = new Client({ name: 'design-tests', version: '0' }); const dir = mkdtempSync(join(tmpdir(), 'dcs-design-mcp-')); await client.connect(transport);
+  const call = async (name: string, args: Record<string, unknown>) => { const r = await client.callTool({ name, arguments: args }); assert.ok(!r.isError, `${name}: ${JSON.stringify(r.content)}`); return r.structuredContent as Record<string, any>; };
+  try {
+    const names = (await client.listTools()).tools.map(t => t.name);
+    for (const name of ['dcs_miz_configure_mission', 'dcs_miz_add_drawing', 'dcs_miz_embed_asset', 'dcs_miz_remove_asset', 'dcs_miz_add_goal', 'dcs_miz_replace_trigger', 'dcs_miz_add_counter', 'dcs_miz_direct_mission', 'dcs_scenario_validate', 'dcs_scenario_generate', 'dcs_campaign_generate']) assert.ok(names.includes(name), name);
+    const specification = JSON.parse(readFileSync('examples/scenarios/interception.json', 'utf8'));
+    specification.forces.push({ name: 'Reinforcement', side: 'red', country: 'Russia', category: 'vehicle', type: 'T-72B', count: 1, position: { x: 10000, y: 10000 }, lateActivation: true });
+    const capabilities = await call('dcs_miz_trigger_capabilities', {}); assert.ok(capabilities.actions.includes('a_activate_group'));
+    const validated = await call('dcs_scenario_validate', { specification }); assert.equal(validated.valid, true);
+    const built = await call('dcs_scenario_generate', { specification }), sessionId = built.sessionId;
+    await call('dcs_miz_configure_mission', { sessionId, configuration: { coalitionBriefing: { red: 'Red briefing' }, forcedOptions: { externalViews: false } } });
+    await call('dcs_miz_add_drawing', { sessionId, drawing: { kind: 'text', name: 'Ingress', origin: { x: 1000, y: 2000 }, text: 'Ingress IP', layer: 'Blue' } });
+    await call('dcs_miz_add_counter', { sessionId, flag: 9000, increment: 1, conditions: [{ kind: 'flag_is_true', flag: 9001 }] });
+    await call('dcs_miz_add_unit_activation', { sessionId, unit: 'Reinforcement-1', activate: true, conditions: [{ kind: 'time_after', seconds: 600 }] });
+    await call('dcs_miz_add_goal', { sessionId, goal: { side: 'blue', score: 10, comment: 'Bonus', conditions: [{ kind: 'flag_is_true', flag: 9000 }] } });
+    await call('dcs_miz_replace_trigger', { sessionId, index: 1, trigger: { type: 'once', comment: 'Explicitly replaced', conditions: [{ kind: 'time_after', seconds: 20 }], actions: [{ kind: 'set_flag', flag: 9002, value: 1 }] } });
+    const media = join(dir, 'notes.txt'); writeFileSync(media, 'Mission production notes');
+    await call('dcs_miz_embed_asset', { sessionId, kind: 'media', path: media });
+    const list = await call('dcs_miz_list_assets', { sessionId }); assert.ok(list.assets.some((a: any) => a.path.endsWith('notes.txt')));
+    await call('dcs_miz_remove_asset', { sessionId, archivePath: 'l10n/DEFAULT/notes.txt' });
+    const current = await call('dcs_miz_mission_report', { sessionId }); assert.ok(current.report.triggers.some((t: any) => t.comment === 'Explicitly replaced'));
+    const saved = await call('dcs_miz_save_as', { sessionId, outPath: join(dir, 'design.miz') }); assert.equal(saved.saved, true, JSON.stringify(saved));
+    const reopened = await openSession(join(dir, 'design.miz'));
+    assert.equal(luaArray(reopened.mission.trigrules)[0].comment, 'Explicitly replaced'); assert.equal(reopened.mission.descriptionRedTask, 'Red briefing');
+    assert.equal(asTable(reopened.mission.forcedOptions)!.externalViews, false);
+    assert.equal(luaArray(reopened.mission.goals).length, 3); assert.ok(!listAssets(reopened).some(a => a.path.endsWith('notes.txt')));
+    assert.ok(listAssets(reopened).some(a => a.path.endsWith('scenario-report.json'))); closeSession(reopened.id);
+  } finally { await client.close(); rmSync(dir, { recursive: true, force: true }); }
+});

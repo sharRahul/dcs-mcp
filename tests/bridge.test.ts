@@ -114,3 +114,17 @@ test("bridge times out when the hook accepts but never answers or closes", async
     hook.close();
   }
 });
+
+test('bridge rejects malformed success envelopes and invalid options before connecting', async () => {
+ const hook = await fakeHook(() => ({ ok: 'yes', data: 'untrusted' }));
+ try { await assert.rejects(bridgeRequest({ cmd: 'status' }, { host: '127.0.0.1', port: hook.port }), /envelope|boolean|Malformed/i); }
+ finally { hook.close(); }
+ await assert.rejects(bridgeRequest({ cmd: 'ping' }, { host: '127.0.0.1', port: 0 }), (e: any) => e.code === 'INVALID_OPTIONS');
+ await assert.rejects(bridgeRequest({ cmd: 'ping', args: { text: 'x'.repeat(4 * 1024 * 1024) } }, { host: '127.0.0.1', port: 1 }), (e: any) => e.code === 'REQUEST_TOO_LARGE');
+});
+test('bridge preserves a multibyte UTF8 sequence split across TCP reads', async () => {
+ const server = net.createServer(socket => { socket.once('data', () => { const bytes = Buffer.from(JSON.stringify({ ok: true, data: '航空' }) + '\n'); const split = bytes.indexOf(Buffer.from('航')) + 1; socket.write(bytes.subarray(0, split)); setTimeout(() => socket.end(bytes.subarray(split)), 10); }); });
+ await new Promise<void>(r => server.listen(0, '127.0.0.1', r));
+ try { assert.equal(await bridgeRequest({ cmd: 'ping' }, { host: '127.0.0.1', port: (server.address() as net.AddressInfo).port }), '航空'); }
+ finally { server.close(); }
+});

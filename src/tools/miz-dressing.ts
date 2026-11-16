@@ -308,7 +308,7 @@ export function registerMizDressingTools(server: McpServer): void {
         "Static target-area templates (dcs_miz_add_target_area) and naval formations (dcs_miz_add_naval_group), " +
         "with their contents. SAM sites are in dcs_list_site_templates.\n\nReturns JSON: { targets, naval }.",
       inputSchema: z.object({ response_format: responseFormatField }).strict(),
-      outputSchema: z.object({ targets: z.array(z.record(z.unknown())), naval: z.array(z.record(z.unknown())) }),
+      outputSchema: z.object({ targets: z.array(z.record(z.string(), z.unknown())), naval: z.array(z.record(z.string(), z.unknown())) }),
       annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
     async (a) =>

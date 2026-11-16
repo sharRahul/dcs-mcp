@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "name": "Northern Watch",
+  "kind": "interception",
+  "theatre": "Caucasus",
+  "seed": 42,
+  "coalitions": {"blue": ["USA"], "red": ["Russia"]},
+  "player": {"group": "Intercept", "slot": "Player"},
+  "objective": "Intercept the opposing bomber group before the mission time limit.",
+  "difficulty": "normal",
+  "threatLevel": "low",
+  "durationSeconds": 1800,
+  "configuration": {
+    "date": {"year": 2025, "month": 6, "day": 15},
+    "startTime": 43200,
+    "weather": {"temperatureCelsius": 20, "qnhMmHg": 760, "visibilityMetres": 80000,
+      "wind": {"atGround": {"speed": 2, "dir": 90}, "at2000": {"speed": 5, "dir": 100}}},
+    "coalitionBriefing": {"blue": "Depart Kutaisi and intercept the bomber group. No weapons are automatically selected."},
+    "bullseyes": {"blue": {"x": -270000, "y": 700000}}
+  },
+  "forces": [
+    {"name": "Intercept", "side": "blue", "country": "USA", "category": "plane", "type": "FA-18C_hornet", "count": 2,
+      "position": {"x": -285000, "y": 680000}, "role": "interception", "targetGroup": "Bombers",
+      "start": {"kind": "parking_hot", "airfield": "Kutaisi"}, "frequencyMHz": 251},
+    {"name": "Bombers", "side": "red", "country": "Russia", "category": "plane", "type": "Tu-95MS", "count": 1,
+      "position": {"x": -180000, "y": 750000}, "role": "strike", "targetGroup": "Defenders",
+      "route": [{"x": -260000, "y": 700000, "altitudeMetres": 7000, "speedMps": 200}]},
+    {"name": "Defenders", "side": "blue", "country": "USA", "category": "vehicle", "type": "M-1 Abrams", "count": 2,
+      "position": {"x": -290000, "y": 680000}},
+    {"name": "Overlord", "side": "blue", "country": "USA", "category": "plane", "type": "E-3A", "count": 1,
+      "position": {"x": -330000, "y": 650000}, "role": "AWACS", "frequencyMHz": 255,
+      "orbit": {"point": {"x": -330000, "y": 650000}, "pattern": "Circle", "altitudeMetres": 8500, "speedMps": 180}}
+  ],
+  "requiredSupport": ["Overlord"],
+  "victory": [{"kind": "group_dead", "group": "Bombers"}],
+  "failure": [{"kind": "unit_dead", "unit": "Intercept-1"}],
+  "director": {
+    "name": "NorthernWatch",
+    "channels": [{"id": "control", "speaker": "Mission control", "callsign": "Overlord", "frequencyMHz": 251, "style": "nato"}],
+    "events": [
+      {"id": "brief", "phase": "briefing", "channel": "control", "when": {"atSeconds": 1}, "template": "check_in", "subject": "Northern Watch", "delivery": "radio"},
+      {"id": "depart", "phase": "atc_departure", "channel": "control", "when": {"worldEvent": {"kind": "takeoff", "unit": "Intercept-1"}}, "template": "depart", "subject": "the intercept", "delivery": "radio"},
+      {"id": "success", "phase": "victory", "channel": "control", "when": {"conditions": [{"kind": "group_dead", "group": "Bombers"}]}, "template": "success", "subject": "the intercept"}
+    ]
+  },
+  "assumptions": ["Example coordinates are not terrain-cleared.", "Select and validate an air-to-air payload before flying.", "Radio audio must be recorded and embedded separately."]
+}

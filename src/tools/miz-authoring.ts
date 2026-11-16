@@ -437,8 +437,8 @@ export function registerMizAuthoringTools(server: McpServer): void {
     {
       title: "Set unit payload",
       description:
-        "Set a unit's loadout: fuel, countermeasures, gun, and pylon stores. CLSIDs are DCS store " +
-        "ids (not validated offline).\n\n" +
+        "Set a unit's loadout with catalogue fuel/countermeasure limits and pylon/CLSID compatibility checks. Unknown aircraft weapon data is unvalidated. CLSIDs are DCS store " +
+        "ids (checked against the bundled per-aircraft pylon snapshot where available).\n\n" +
         "Args:\n  - sessionId, unit (unit name)\n  - fuel?, flare?, chaff?, gun?\n" +
         "  - pylons?: [{ pylon: number, CLSID: string }]\n\nReturns JSON: { unit }.",
       inputSchema: z
@@ -1053,7 +1053,7 @@ export function registerMizAuthoringTools(server: McpServer): void {
     async ({ sessionId, outPath, force, overwrite }) => {
       try {
         const s = requireSession(sessionId);
-        const report = validateMission(s.document);
+        const report = validateMission(s.document, s.mission);
         if (!report.ok && !force) {
           return buildResult(
             `Not saved: ${report.errors.length} validation error(s). Fix them or pass force=true.`,

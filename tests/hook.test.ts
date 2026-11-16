@@ -15,7 +15,7 @@ const EXPORT = "scripts/Export.lua";
 
 function parseLua(source: string, label: string): void {
   assert.doesNotThrow(
-    () => luaparse.parse(source, { luaVersion: "5.3", comments: false, scope: false }),
+    () => luaparse.parse(source, { luaVersion: "5.1", comments: false, scope: false }),
     `Lua syntax error in ${label}`
   );
 }

@@ -14,12 +14,19 @@
  * installs the live hook instead of starting the server.
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { GuardedStdioTransport } from "./security/transport.js";
+import { captureCatalogue, registerCatalogueTool } from "./tools/catalogue.js";
+import { registerMissionDesignTools } from "./tools/mission-design.js";
+import { registerAdvancedAuthoringTools } from "./tools/advanced-authoring.js";
+import { registerTerrainPlacementTools } from "./tools/terrain-placement.js";
+import { registerTerrainTools } from "./tools/terrain.js";
 import { registerMizTools } from "./tools/miz.js";
 import { registerMizAuthoringTools } from "./tools/miz-authoring.js";
 import { registerMizEditingTools } from "./tools/miz-editing.js";
 import { registerMizDressingTools } from "./tools/miz-dressing.js";
 import { registerReferenceTools } from "./tools/reference.js";
+import { registerAcceptanceTools } from "./tools/acceptance.js";
+import { registerRuntimeTools } from "./tools/runtime.js";
 import { registerBridgeTools } from "./tools/bridge.js";
 import { registerDiagnosticTools } from "./tools/diagnostics.js";
 import { registerPrompts, registerResources } from "./tools/resources.js";
@@ -28,21 +35,29 @@ import { findSavedGamesDirs, installHook } from "./dcs/install.js";
 import { SERVER_INSTRUCTIONS } from "./guide.js";
 import { PACKAGE_VERSION } from "./paths.js";
 
-function createServer(): McpServer {
+function createServer() {
   const server = new McpServer(
     { name: "dcs-mcp-server", version: PACKAGE_VERSION },
     { instructions: SERVER_INSTRUCTIONS }
   );
+  const catalogue = captureCatalogue(server);
   registerMizTools(server);
+  registerAdvancedAuthoringTools(server);
+  registerMissionDesignTools(server);
+  registerTerrainTools(server);
+  registerTerrainPlacementTools(server);
   registerMizAuthoringTools(server);
   registerMizEditingTools(server);
   registerMizDressingTools(server);
   registerReferenceTools(server);
   registerBridgeTools(server);
+  registerRuntimeTools(server);
+  registerAcceptanceTools(server);
   registerDiagnosticTools(server);
   registerResources(server);
   registerPrompts(server);
-  return server;
+  registerCatalogueTool(server, catalogue.entries);
+  return { server, schemas: catalogue.schemas };
 }
 
 async function installHookCli(args: string[]): Promise<number> {
@@ -87,8 +102,8 @@ async function main(): Promise<void> {
     return;
   }
   const stateDir = enableSessionPersistence();
-  const server = createServer();
-  await server.connect(new StdioServerTransport());
+  const { server } = createServer();
+  await server.connect(new GuardedStdioTransport());
   console.error(
     `dcs-mcp-server ${PACKAGE_VERSION} running on stdio` +
       (stateDir ? ` (session snapshots: ${stateDir})` : " (session snapshots disabled)")

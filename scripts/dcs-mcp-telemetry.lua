@@ -19,6 +19,8 @@
 ]]
 
 DCSMCP = DCSMCP or {}
+DCSMCP.events = DCSMCP.events or {}
+DCSMCP.eventSequence = DCSMCP.eventSequence or 0
 
 local PREFIX = "[DCSMCP] "
 local STATE_INTERVAL = 10 -- seconds between player state samples
@@ -165,6 +167,10 @@ function handler:onEvent(event)
     }
     if not interesting[name] then return end
 
+    DCSMCP.eventSequence = DCSMCP.eventSequence + 1
+    DCSMCP.events[#DCSMCP.events + 1] = { sequence = DCSMCP.eventSequence, time = event.time or timer.getTime(), kind = name,
+      initiator = describe(event.initiator), target = describe(event.target), weapon = describe(event.weapon), place = describe(event.place) }
+    while #DCSMCP.events > 256 do table.remove(DCSMCP.events, 1) end
     log("EVT", string.format(
       "t=%s ev=%s initiator=%s target=%s weapon=%s",
       r(event.time or timer.getTime()), name,
@@ -210,8 +216,21 @@ end
   logs nothing instead of erroring every 30 seconds.
 ]]
 local function sampleIADS()
+  -- Retain legacy missions and include networks created by the typed authoring tool.
+  local networks, seen = {}, {}
   for _, globalName in ipairs({ "redIADS", "blueIADS" }) do
     local iads = _G[globalName]
+    if iads then networks[globalName] = iads; seen[iads] = true end
+  end
+  if type(DCSMCP_IADS) == "table" then
+    for name, iads in pairs(DCSMCP_IADS) do
+      if type(iads) == "table" and not seen[iads] then
+        networks["configured:" .. tostring(name)] = iads
+        seen[iads] = true
+      end
+    end
+  end
+  for globalName, iads in pairs(networks) do
     if iads and iads.getSAMSites then
       local live, dark, cut, destroyed = 0, 0, 0, 0
       -- getSAMSites/getEarlyWarningRadars return a SkynetIADSTableDelegator, not
@@ -235,7 +254,7 @@ local function sampleIADS()
         -- from the cockpit.
         log("IADS_SITE", string.format(
           "t=%s net=%s site=%s nato=%s active=%s dead=%s power=%s link=%s radar=%s ammo=%s harmDef=%s auto=%s",
-          r(timer.getTime()), globalName, safe(site:getDCSName()), safe(site:getNatoName()),
+          r(timer.getTime()), safe(globalName), safe(site:getDCSName()), safe(site:getNatoName()),
           tostring(active), tostring(isDead), tostring(powered), tostring(connected),
           tostring(site:hasWorkingRadar()), tostring(site:hasRemainingAmmo()),
           tostring(site:isDefendingHARM()), tostring(site:getAutonomousState())))
@@ -243,7 +262,7 @@ local function sampleIADS()
       local ew = #(iads:getEarlyWarningRadars() or {})
       log("IADS", string.format(
         "t=%s net=%s samLive=%d samDark=%d samCut=%d samDead=%d ewr=%d",
-        r(timer.getTime()), globalName, live, dark, cut, destroyed, ew))
+        r(timer.getTime()), safe(globalName), live, dark, cut, destroyed, ew))
     end
   end
 end

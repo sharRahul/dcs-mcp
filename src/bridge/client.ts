@@ -8,6 +8,7 @@
  *   -> {"cmd":"<name>","args":{...},"env":"mission"|"export"}
  *   <- {"ok":true,"data":<any>} | {"ok":false,"error":"<message>"}
  */
+import { StringDecoder } from "node:string_decoder";
 import net from "node:net";
 import { BRIDGE_TIMEOUT_MS } from "../constants.js";
 
@@ -24,7 +25,7 @@ export interface BridgeRequest {
 }
 
 export class BridgeError extends Error {
-  constructor(message: string) {
+  constructor(message: string, public readonly code = "BRIDGE_ERROR", public readonly retryable = false) {
     super(message);
     this.name = "BridgeError";
   }
@@ -39,18 +40,22 @@ interface BridgeEnvelope {
 /** Send one request to the DCS hook server and return its `data` payload. */
 export function bridgeRequest(request: BridgeRequest, opts: BridgeOptions): Promise<unknown> {
   const timeoutMs = opts.timeoutMs ?? BRIDGE_TIMEOUT_MS;
+  if (!opts.host || !Number.isInteger(opts.port) || opts.port < 1 || opts.port > 65535 || !Number.isFinite(timeoutMs) || timeoutMs < 1 || timeoutMs > 120000)
+    return Promise.reject(new BridgeError('Invalid bridge host/port/timeout (timeout must be 1..120000ms)', 'INVALID_OPTIONS'));
   const payload = JSON.stringify(request);
 
+  if (Buffer.byteLength(payload) > 4 * 1024 * 1024) return Promise.reject(new BridgeError('Bridge request exceeds 4 MiB', 'REQUEST_TOO_LARGE'));
   return new Promise((resolve, reject) => {
     const socket = new net.Socket();
     let buffer = "";
+    let bytes = 0; const decoder = new StringDecoder("utf8");
     let settled = false;
 
     const timedOut = () =>
       reject(
         new BridgeError(
           `Timed out after ${timeoutMs}ms contacting the DCS hook server at ${opts.host}:${opts.port}. ` +
-            `Is DCS running with scripts/Hooks/dcs-mcp-hook.lua installed and a mission loaded?`
+            `Is DCS running with scripts/Hooks/dcs-mcp-hook.lua installed and a mission loaded?`, "TIMEOUT", true
         )
       );
 
@@ -99,7 +104,9 @@ export function bridgeRequest(request: BridgeRequest, opts: BridgeOptions): Prom
     );
 
     socket.on("data", (chunk) => {
-      buffer += chunk.toString("utf8");
+      bytes += chunk.length;
+      if (bytes > 8 * 1024 * 1024) { finish(() => reject(new BridgeError('Bridge response exceeds 8 MiB', 'RESPONSE_TOO_LARGE'))); return; }
+      buffer += decoder.write(chunk);
       const newline = buffer.indexOf("\n");
       if (newline === -1) return;
       const line = buffer.slice(0, newline).trim();
@@ -110,6 +117,9 @@ export function bridgeRequest(request: BridgeRequest, opts: BridgeOptions): Prom
         } catch {
           reject(new BridgeError(`Bridge returned malformed JSON: ${line.slice(0, 300)}`));
           return;
+        }
+        if (!env || typeof env !== 'object' || typeof env.ok !== 'boolean') {
+          reject(new BridgeError('Bridge response must contain boolean ok', 'MALFORMED_RESPONSE')); return;
         }
         if (!env.ok) {
           reject(new BridgeError(env.error ?? "DCS hook server reported an error"));

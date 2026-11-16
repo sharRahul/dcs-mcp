@@ -7,6 +7,7 @@
  * live dcs_convert_coords tool to turn lat/long into x/y when DCS is running.
  */
 import { asTable, luaArray, type LuaTable, type LuaValue } from "./lua.js";
+import { authoringData } from "../data/authoring.js";
 import { quoteLuaString } from "./serializer.js";
 import { nextDictId } from "./resources.js";
 import {
@@ -421,7 +422,12 @@ export function chooseParking(
   requested?: string[]
 ): Airport["slots"] {
   const dims = findUnitType(type)?.entry as FlyingType | undefined;
+  const flag = category === "helicopter" ? SLOT_HELI : SLOT_AIRPLANES;
+  const fitsSlot = (s: Airport["slots"][number]) => (s[4] & flag) !== 0 &&
+    (!dims || ((dims.width === null || dims.width < s[5]) &&
+    (dims.length === null || dims.length < s[6]) && (dims.height === null || dims.height < (s[7] || 1000))));
   if (requested && requested.length) {
+    if (new Set(requested).size !== requested.length) throw new Error("Duplicate requested parking slots");
     if (requested.length !== count) {
       throw new Error(`parking lists ${requested.length} slot(s) for a group of ${count} aircraft.`);
     }
@@ -429,19 +435,12 @@ export function chooseParking(
       const slot = airport.slots.find((s) => s[1] === name);
       if (!slot) throw new Error(`No parking slot '${name}' at ${airport.name}. Use dcs_list_airfields to see them.`);
       if (taken.has(name)) throw new Error(`Parking slot '${name}' at ${airport.name} is already used.`);
+      if (!fitsSlot(slot)) throw new Error(`Parking slot '${name}' at ${airport.name} does not fit ${type} (${category}).`);
       return slot;
     });
   }
-  const flag = category === "helicopter" ? SLOT_HELI : SLOT_AIRPLANES;
   const fits = airport.slots
-    .filter((s) => !taken.has(s[1]) && (s[4] & flag) !== 0)
-    .filter(
-      (s) =>
-        !dims ||
-        dims.width === null ||
-        dims.length === null ||
-        (dims.width < s[5] && dims.length < s[6] && (dims.height ?? 0) < (s[7] || 1000))
-    )
+    .filter((s) => !taken.has(s[1]) && fitsSlot(s))
     .sort((a, b) => a[1].localeCompare(b[1], undefined, { numeric: true }));
   if (fits.length < count) {
     throw new Error(
@@ -473,7 +472,8 @@ function defaultPayload(type: string): LuaTable | undefined {
 /** Add a fixed-wing or helicopter group. Returns the created group table. */
 export function addAircraftGroup(mission: LuaTable, category: AirCategory, args: AddGroupArgs): LuaTable {
   const start = args.start ?? { kind: "air" };
-  const country = ensureCountry(mission, args.side, args.country, countryId(args.country, args.countryId));
+  if (!Number.isInteger(args.count) || args.count < 1 || args.count > 16) throw new Error("Aircraft count must be 1..16");
+  if (findGroup(mission, args.name)) throw new Error(`Group '${args.name}' already exists`);
   const ids = maxIds(mission);
   const types = unitTypes(args);
 
@@ -497,12 +497,15 @@ export function addAircraftGroup(mission: LuaTable, category: AirCategory, args:
     const placements: { x: number; y: number; parking?: number; parkingId?: string }[] = [];
     const extra: LuaTable = {};
     if ("farp" in start) {
+      if (category !== "helicopter") throw new Error("FARP starts require helicopters");
       // pydcs `flight_group_from_unit`: link to the pad's unit id and park the
       // flight in a 10 m rectangle beside it; DCS assigns the actual pads.
       const pad = findUnit(mission, start.farp) ?? luaArray(findGroup(mission, start.farp)?.group["units"])[0];
       if (!pad || typeof pad["unitId"] !== "number" || pad["category"] !== "Heliports") {
         throw new Error(`No FARP or helipad named '${start.farp}' in this mission; add one with dcs_miz_add_farp.`);
       }
+      const capacity = pad.type === "FARP" ? 4 : 1;
+      if (linkedAircraftCount(mission, Number(pad.unitId)) + types.length > capacity) throw new Error(`FARP '${start.farp}' has insufficient pads (${capacity})`);
       const h = Number(pad["heading"] ?? 0);
       for (let i = 0; i < types.length; i++) {
         const fwd = Math.floor(i / 2) * 10;
@@ -521,6 +524,9 @@ export function addAircraftGroup(mission: LuaTable, category: AirCategory, args:
       }
       const shipGroup = findGroupOfUnit(mission, start.ship);
       if (shipGroup?.category !== "ship") throw new Error(`Unit '${start.ship}' is not a ship.`);
+      const capacity = authoringData().ships[String(ship.type)]?.parking;
+      if (capacity !== undefined && capacity < 1)
+        throw new Error(`Ship '${start.ship}' has no aircraft parking in the reference`);
       for (let i = 0; i < types.length; i++) {
         placements.push({ x: Number(ship["x"]), y: Number(ship["y"]) });
       }
@@ -590,6 +596,7 @@ export function addAircraftGroup(mission: LuaTable, category: AirCategory, args:
     if (payload) unit["payload"] = payload;
   }
 
+  const country = ensureCountry(mission, args.side, args.country, countryId(args.country, args.countryId));
   const catTable = (country[category] ??= { group: {} }) as LuaTable;
   const groups = (catTable["group"] ??= {}) as LuaTable;
   const firstUnit = asTable(units[1]);
@@ -829,6 +836,7 @@ export interface PayloadArgs {
 export function setPayload(mission: LuaTable, unitName: string, args: PayloadArgs): void {
   const unit = findUnit(mission, unitName);
   if (!unit) throw new Error(`No unit named '${unitName}' in this mission`);
+  validatePayload(unit, args);
   const payload = (unit["payload"] ??= { pylons: {}, fuel: "0", flare: 0, chaff: 0, gun: 100 }) as LuaTable;
   if (args.fuel !== undefined) payload["fuel"] = String(args.fuel); // DCS stores fuel as a string
   if (args.flare !== undefined) payload["flare"] = args.flare;
@@ -1736,4 +1744,55 @@ export function newMissionTable(theatre: string, startTime: number): LuaTable {
 /** Read a top-level table for null-safety in tools. */
 export function missionSection(mission: LuaTable, key: string): LuaValue | undefined {
   return asTable(mission[key]);
+}
+
+/** Validate known physical limits without executing Lua or assuming mod capabilities. */
+export function validatePayload(unit: LuaTable, args: PayloadArgs): void {
+  const ref = findUnitType(String(unit.type));
+  if (ref && !["plane", "helicopter"].includes(ref.category)) throw new Error("Payload requires an aircraft");
+  const data = ref?.entry as FlyingType | undefined;
+  for (const [key, limit] of [["fuel", data?.fuelMax], ["chaff", data?.chaff], ["flare", data?.flare], ["gun", 100]] as const) {
+    const value = args[key];
+    if (value !== undefined && (!Number.isFinite(value) || value < 0 || (limit != null && value > limit)))
+      throw new Error(`${key} must be non-negative and within the aircraft limit (${limit ?? "unknown"})`);
+  }
+  const seen = new Set<number>();
+  const pylons = authoringData().aircraft[String(unit.type)]?.pylons;
+  for (const p of args.pylons ?? []) {
+    if (!Number.isInteger(p.pylon) || p.pylon < 1 || seen.has(p.pylon) || !p.CLSID.trim()) throw new Error("Invalid or duplicate payload pylon");
+    seen.add(p.pylon);
+    // An empty catalogue is unknown, not evidence that a new/mod aircraft is unarmed.
+    if (pylons && Object.keys(pylons).length && !pylons[String(p.pylon)]?.includes(p.CLSID))
+      throw new Error(`Weapon '${p.CLSID}' is not catalogued on ${unit.type} pylon ${p.pylon}`);
+  }
+}
+
+function linkedAircraftCount(mission: LuaTable, unitId: number): number {
+  let total = 0;
+  eachGroup(mission, (group, category) => {
+    if (!["plane", "helicopter"].includes(category)) return;
+    const first = asTable(asTable(asTable(group.route)?.points)?.[1]);
+    if (first?.linkUnit === unitId && String(first.type).startsWith("TakeOff")) total += luaArray(group.units).length;
+  });
+  return total;
+}
+
+/** Full replacement at a stable index; unrelated structured/compiled triggers remain untouched. */
+export function replaceTrigger(mission: LuaTable, dictionary: LuaTable, index: number, spec: TriggerArgs): void {
+  const copy = structuredClone(mission), dict = structuredClone(dictionary);
+  const table = asTable(copy.trigrules);
+  if (!table || !asTable(table[index])) throw new Error(`No trigger #${index}`);
+  for (const section of ['custom', 'customStartup', 'events']) if (asTable(asTable(copy.trig)?.[section])?.[index] !== undefined)
+    throw new Error(`Cannot safely replace trigger with opaque ${section} runtime data`);
+  const temporary = addTrigger(copy, spec, dict);
+  table[index] = table[temporary]; delete table[temporary];
+  for (const section of Object.values(asTable(copy.trig) ?? {})) { const values = asTable(section); if (values) delete values[temporary]; }
+  compileTrig(copy);
+  Object.assign(mission, copy); Object.assign(dictionary, dict);
+}
+
+/** Discoverable scope of the captured compiler, not a claim to implement every DCS predicate. */
+export function triggerCapabilities() {
+  return { types: Object.keys(TRIGGER_PREDICATE), conditions: Object.keys(CONDITION_COMPILERS), actions: Object.keys(ACTION_COMPILERS),
+    policy: "Only mappings backed by the project's Mission Editor oracle are emitted; unknown imported compiled triggers are preserved" };
 }

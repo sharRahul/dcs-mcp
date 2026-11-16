@@ -19,6 +19,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, wri
 import { tmpdir } from "node:os";
 import path from "node:path";
 import AdmZip from "adm-zip";
+import { assertSafeEntryName } from "../security/archive-policy.js";
 import { packMiz, readMizArchive } from "./archive.js";
 import { buildMissionDocument, parseMissionTables } from "./parser.js";
 import { serializeLuaAssignment } from "./serializer.js";
@@ -33,6 +34,10 @@ export interface MissionSession {
   sourcePath?: string;
   openedAt: string;
   mission: LuaTable;
+  /** Set only when logistics is edited; otherwise retain the original archive member verbatim. */
+  warehouses?: LuaTable;
+  archiveFiles?: Map<string, Buffer>;
+  removedEntries?: Set<string>;
   dictionary: LuaTable;
   /** `l10n/DEFAULT/mapResource`: resource key -> embedded file name. */
   mapResource: LuaTable;
@@ -124,12 +129,18 @@ function snapshot(session: MissionSession): void {
     const source = path.join(dir, "source.miz");
     if (!existsSync(source)) writeFileSync(source, session.sourceBytes);
     writeFileSync(path.join(dir, "mission.lua"), serializeLuaAssignment("mission", session.mission));
+    if (session.warehouses) writeFileSync(path.join(dir, "warehouses.lua"), serializeLuaAssignment("warehouses", session.warehouses));
     writeFileSync(path.join(dir, "dictionary.lua"), serializeLuaAssignment("dictionary", session.dictionary));
     writeFileSync(path.join(dir, "mapResource.lua"), serializeLuaAssignment("mapResource", session.mapResource));
+    for (const name of readdirSync(path.join(dir, 'files'))) {
+      assertSafeResourceName(name);
+      const previous = path.join(dir, 'files', name);
+      if (!session.files.has(name) && statSync(previous).isFile()) rmSync(previous);
+    }
     for (const [name, bytes] of session.files) {
       assertSafeResourceName(name);
       const target = path.join(dir, "files", name);
-      if (!existsSync(target) || statSync(target).size !== bytes.length) writeFileSync(target, bytes);
+      if (!existsSync(target) || statSync(target).size !== bytes.length || !readFileSync(target).equals(bytes)) writeFileSync(target, bytes);
     }
     const meta: SnapshotMeta = {
       id: session.id,
@@ -141,6 +152,10 @@ function snapshot(session: MissionSession): void {
       groupCount: session.document.summary.groupCount,
       baseline: session.baseline,
     };
+    if (session.archiveFiles || session.removedEntries) writeFileSync(path.join(dir, "archive-edits.json"), JSON.stringify({
+      files: [...(session.archiveFiles ?? [])].map(([name, bytes]) => [name, bytes.toString('base64')]),
+      removed: [...(session.removedEntries ?? [])],
+    }));
     writeFileSync(path.join(dir, "meta.json"), JSON.stringify(meta));
   } catch (err) {
     console.error(`dcs-mcp: could not snapshot session ${session.id}: ${(err as Error).message}`);
@@ -201,6 +216,7 @@ export function restoreSession(id: string): MissionSession {
     sourcePath: meta.sourcePath,
     openedAt: meta.openedAt,
     mission,
+    ...(existsSync(path.join(dir, "warehouses.lua")) ? { warehouses: parseLuaAssignment(readFileSync(path.join(dir, "warehouses.lua"), "utf8"), "warehouses") } : {}),
     dictionary,
     mapResource,
     files,
@@ -209,6 +225,14 @@ export function restoreSession(id: string): MissionSession {
     baseline: meta.baseline,
     dirty: meta.dirty,
   };
+  const editsPath = path.join(dir, 'archive-edits.json');
+  if (existsSync(editsPath)) {
+    const edits = JSON.parse(readFileSync(editsPath, 'utf8')) as { files: [string, string][]; removed: string[] };
+    for (const [name] of edits.files) assertSafeEntryName(name);
+    for (const name of edits.removed) assertSafeEntryName(name);
+    session.archiveFiles = new Map(edits.files.map(([name, bytes]) => [name, Buffer.from(bytes, 'base64')]));
+    session.removedEntries = new Set(edits.removed);
+  }
   sessions.set(session.id, session);
   return session;
 }
@@ -273,6 +297,7 @@ export async function saveSessionAs(
   overwrite = false
 ): Promise<{ digest: string; outPath: string }> {
   const replacements = new Map<string, string | Buffer>();
+  if (session.warehouses) replacements.set("warehouses", serializeLuaAssignment("warehouses", session.warehouses));
   replacements.set("mission", serializeLuaAssignment("mission", session.mission));
   replacements.set("l10n/DEFAULT/dictionary", serializeLuaAssignment("dictionary", session.dictionary));
   replacements.set("l10n/DEFAULT/mapResource", serializeLuaAssignment("mapResource", session.mapResource));
@@ -280,14 +305,17 @@ export async function saveSessionAs(
   // dictionary; their names were validated when they were added.
   for (const [fileName, bytes] of session.files) {
     assertSafeResourceName(fileName);
-    replacements.set(`${L10N_PREFIX}${fileName}`, bytes);
+    if (!session.removedEntries?.has(`${L10N_PREFIX}${fileName}`)) replacements.set(`${L10N_PREFIX}${fileName}`, bytes);
   }
+  replacements.set('theatre', String(session.mission.theatre));
+  for (const [name, bytes] of session.archiveFiles ?? []) if (!session.removedEntries?.has(name)) replacements.set(name, bytes);
   const result = await packMiz(
     session.sourceBytes,
     replacements,
     outPath,
     session.sourcePath,
-    overwrite
+    overwrite,
+    session.removedEntries
   );
   session.dirty = false;
   snapshot(session);
