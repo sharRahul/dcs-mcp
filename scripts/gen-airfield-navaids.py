@@ -4,7 +4,8 @@
 pydcs's own airfield ATC frequencies.
 
     # one-off: python3 -m venv ocrenv && ocrenv/bin/pip install rapidocr-onnxruntime
-    ocrenv/bin/python -I scripts/gen-airfield-navaids.py <dir-of-04_AD_Day_*.png> data/airfield-radio.json data/airfield-navaids.json
+    ocrenv/bin/python -I scripts/gen-airfield-navaids.py "docs/aerodrome data_01-feb-2026" data/airfield-radio.json data/airfield-navaids.json
+(the page images are committed in that folder; the output records each image's sha256).
 
 A row is ACCEPTED only when:
   1. its OCR'd ATC block (VHF high + HF on line 1, UHF + VHF low on line 2) equals the four
