@@ -19,6 +19,8 @@
 ]]
 
 DCSMCP = DCSMCP or {}
+DCSMCP.events = DCSMCP.events or {}
+DCSMCP.eventSequence = DCSMCP.eventSequence or 0
 
 local PREFIX = "[DCSMCP] "
 local STATE_INTERVAL = 10 -- seconds between player state samples
@@ -165,6 +167,10 @@ function handler:onEvent(event)
     }
     if not interesting[name] then return end
 
+    DCSMCP.eventSequence = DCSMCP.eventSequence + 1
+    DCSMCP.events[#DCSMCP.events + 1] = { sequence = DCSMCP.eventSequence, time = event.time or timer.getTime(), kind = name,
+      initiator = describe(event.initiator), target = describe(event.target), weapon = describe(event.weapon), place = describe(event.place) }
+    while #DCSMCP.events > 256 do table.remove(DCSMCP.events, 1) end
     log("EVT", string.format(
       "t=%s ev=%s initiator=%s target=%s weapon=%s",
       r(event.time or timer.getTime()), name,

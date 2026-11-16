@@ -20,7 +20,7 @@ local queuedRequest = nil
 local clientSock = {
   settimeout = function() end,
   receive = function() local r = queuedRequest; queuedRequest = nil; return r or nil, "closed" end,
-  send = function(_, s) sent[#sent + 1] = s end,
+  send = function(_, s, first) sent[#sent + 1] = s:sub(first or 1); return #s end,
   close = function() end,
 }
 local serverSock = {
@@ -33,6 +33,12 @@ local serverSock = {
 }
 package.loaded["socket"] = { tcp = function() return serverSock end }
 
+-- A known readable virtual mission for the load guard; all other paths use real io.
+local originalOpen = io.open
+io.open = function(path, mode)
+  if path == "C:/m/swap.miz" then return { close = function() end } end
+  return originalOpen(path, mode)
+end
 local loadMissionCalls = {}
 net = {
   json2lua = function(s)

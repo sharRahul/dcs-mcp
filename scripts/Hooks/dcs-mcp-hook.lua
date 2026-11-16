@@ -27,6 +27,8 @@
 local HOST = "127.0.0.1"
 local PORT = 8899
 local ALLOW_EXEC = false        -- set true to enable the raw dcs_execute_lua tool
+local MAX_REQUEST_BYTES = 4 * 1024 * 1024
+local MAX_PENDING = 32
 local MAX_UNITS = 2000          -- cap on units returned by the "units" command
 local MAX_ACCEPTS_PER_FRAME = 4 -- connections accepted per simulation frame
 local REQUEST_TIMEOUT_S = 5     -- drop a client that never finishes its request line
@@ -94,7 +96,7 @@ local function enc(v)
       return "[" .. table.concat(parts, ",") .. "]"
     end
     if n == 0 then return "{}" end
-    for k, val in pairs(v) do parts[#parts+1] = '"' .. tostring(k) .. '":' .. enc(val) end
+    for k, val in pairs(v) do parts[#parts+1] = enc(tostring(k)) .. ':' .. enc(val) end
     return "{" .. table.concat(parts, ",") .. "}"
   end
   return "null"
@@ -161,6 +163,8 @@ function handlers.status()
     simTicking = ticking,
     missionEnv = inMission and ticking,
     errorCount = #errors,
+    loadError = missionState.loadError,
+    capabilities = { runtime = true, flags = true, events = "requires mission telemetry", rawExec = ALLOW_EXEC },
     version = version.dcs,
   })
 end
@@ -213,7 +217,8 @@ function handlers.units(args)
           local ll = { coord.LOtoLL(p) }
           out[#out+1] = { name = u:getName(), type = u:getTypeName(), coalition = sideName,
                           group = grp:getName(), x = p.x, y = p.z, lat = ll[1], lon = ll[2],
-                          alt = p.y, heading = u:getHeading() }
+                          alt = p.y }
+          pcall(function() local orientation = u:getPosition(); out[#out].heading = math.atan2(orientation.x.z, orientation.x.x) end)
           count = count + 1
         end
       end
@@ -223,6 +228,53 @@ function handlers.units(args)
     end
     return '{"ok":true,"data":' .. enc({ count = count, truncated = truncated, limit = limit, units = out }) .. '}'
   ]], coalitionArg, MAX_UNITS)
+  return runIn("mission", body)
+end
+
+-- Read-only bounded snapshot. Optional telemetry provides events; no handler is installed implicitly.
+function handlers.runtime(args)
+  args = args or {}
+  local flags, names = {}, {}
+  for i, value in ipairs(args.flags or {}) do
+    if i > 100 or type(value) ~= "number" and type(value) ~= "string" or #tostring(value) > 64 then return fail("runtime: invalid flags (max 100)") end
+    flags[#flags + 1] = string.format("%q", tostring(value))
+  end
+  for i, value in ipairs(args.groups or {}) do
+    if i > 100 or type(value) ~= "string" or #value > 200 then return fail("runtime: invalid group names") end
+    names[#names + 1] = string.format("%q", value)
+  end
+  local after = tonumber(args.afterSequence) or 0
+  if after ~= after or after == math.huge or after < 0 then return fail("runtime: invalid sequence") end
+  local body = string.format([[
+    local requestedFlags, requestedGroups = {%s}, {%s}
+    local out = { time = timer.getTime(), theatre = env.mission.theatre, flags = {}, groups = {}, events = {},
+      acceptance = DCSMCP_ACCEPTANCE, eventMonitoring = { available = DCSMCP ~= nil and DCSMCP.events ~= nil } }
+    for _, flag in ipairs(requestedFlags) do out.flags[flag] = trigger.misc.getUserFlag(flag) end
+    local function state(u)
+      local result = { name = u:getName(), type = u:getTypeName() }
+      for key, method in pairs({ point="getPoint", velocity="getVelocity", life="getLife", life0="getLife0", inAir="inAir", active="isActive" }) do
+        local ok, value = pcall(function() return u[method](u) end)
+        if ok then result[key] = value end
+      end
+      return result
+    end
+    local count = 0
+    for _, name in ipairs(requestedGroups) do
+      local group = Group.getByName(name)
+      local entry = { name = name, exists = group ~= nil and group:isExist(), units = {} }
+      if entry.exists then for _, unit in ipairs(group:getUnits() or {}) do
+        if count >= 2000 then out.truncated = true; break end
+        entry.units[#entry.units + 1] = state(unit); count = count + 1
+      end end
+      out.groups[#out.groups + 1] = entry
+    end
+    if out.eventMonitoring.available then
+      out.eventMonitoring.latestSequence = DCSMCP.eventSequence or 0
+      out.eventMonitoring.oldestSequence = DCSMCP.events[1] and DCSMCP.events[1].sequence or 0
+      for _, event in ipairs(DCSMCP.events) do if event.sequence > %d and #out.events < 200 then out.events[#out.events + 1] = event end end
+    end
+    return '{"ok":true,"data":' .. enc(out) .. '}'
+  ]], table.concat(flags, ","), table.concat(names, ","), math.floor(after))
   return runIn("mission", body)
 end
 
@@ -270,11 +322,14 @@ function handlers.spawn(args)
     local vec = coord.LLtoLO(lat, lon, 0)
     local group = {
       name = name, task = "Ground Nothing",
-      route = { points = {} },
+      route = { points = { { x = vec.x, y = vec.z, alt = 0, type = "Turning Point", action = "Off Road", speed = 0,
+        task = { id = "ComboTask", params = { tasks = {} } } } } },
       units = { { name = name .. "-1", type = unitType, x = vec.x, y = vec.z,
                   heading = heading, skill = "Average", playerCanDrive = false } },
     }
-    coalition.addGroup(countryId, Group.Category.GROUND, group)
+    if Group.getByName(name) or Unit.getByName(name .. "-1") then error("Spawn name conflicts with an existing group/unit") end
+    local spawned = coalition.addGroup(countryId, Group.Category.GROUND, group)
+    if not spawned then error("DCS did not create the group") end
     return '{"ok":true,"data":' .. enc({ spawned = name, x = vec.x, y = vec.z }) .. '}'
   ]],
     tostring(args.name or "MCP Group"),
@@ -378,6 +433,10 @@ function handlers.loadmission(args)
       "Start any mission and fly it, then retry to swap in '" .. path .. "'.")
   end
 
+  if path:find("%z") or path:find("[\r\n]") then return fail("loadmission: invalid path characters") end
+  local file = io.open(path, "rb")
+  if not file then return fail("loadmission: mission file is not readable") end
+  file:close()
   missionState.loadError = nil
 
   -- Reached only with a mission running, and (via `needsSimThread`) on the
@@ -418,7 +477,7 @@ end
 ----------------------------------------------------------------------
 local MISSION_ENV_COMMANDS = {
   mission = true, units = true, aircraft = true, message = true,
-  spawn = true, ll2xz = true, xz2ll = true, land = true, exec = true,
+  runtime = true, spawn = true, ll2xz = true, xz2ll = true, land = true, exec = true,
 }
 
 local function parseRequest(line)
@@ -458,7 +517,16 @@ end
 ----------------------------------------------------------------------
 local function respond(entry, req)
   local okr, res = pcall(dispatch, req)
-  entry.sock:send((okr and res or fail(res)) .. "\n")
+  entry.response = (okr and res or fail(res)) .. "\n"
+  entry.sent = 0
+end
+
+local function flushResponse(entry)
+  local last, err, partial = entry.sock:send(entry.response, entry.sent + 1)
+  entry.sent = last or partial or entry.sent
+  if entry.sent >= #entry.response then return true end
+  if err and err ~= "timeout" then return true end
+  return os.clock() >= entry.deadline
 end
 
 --[[
@@ -475,13 +543,18 @@ local function service(source)
   for _, entry in ipairs(pending) do
     local done = false
 
-    if entry.req then
+    if entry.response then
+      done = flushResponse(entry)
+    elseif #entry.buffer > MAX_REQUEST_BYTES then
+      pcall(function() entry.sock:send(fail("request exceeds 4 MiB") .. "\n") end)
+      done = true
+    elseif entry.req then
       -- Already read, and held back for the simulation thread. DCS runs Lua 5.1
       -- here, so there is no `goto`/`continue` to skip the read path with.
       if source == "sim" then
         local okr, e = pcall(respond, entry, entry.req)
-        if not okr then recordError("response failed", e) end
-        done = true
+        if not okr then recordError("response failed", e); done = true
+        else done = flushResponse(entry) end
       elseif now - lastSimFrame > SIM_STALL_S then
         -- No simulation frames are arriving: paused, or the mission ended
         -- between reading the request and answering it. Say so rather than
@@ -498,7 +571,7 @@ local function service(source)
       local line, err, partial = entry.sock:receive("*l")
       if line then
         entry.buffer = entry.buffer .. line
-        local req = parseRequest(entry.buffer)
+        local req = #entry.buffer <= MAX_REQUEST_BYTES and parseRequest(entry.buffer) or nil
         if not req then
           pcall(function() entry.sock:send(fail("Malformed request; expected JSON {\"cmd\":...}") .. "\n") end)
           done = true
@@ -508,8 +581,8 @@ local function service(source)
           entry.req = req
         else
           local okr, e = pcall(respond, entry, req)
-          if not okr then recordError("response failed", e) end
-          done = true
+          if not okr then recordError("response failed", e); done = true
+          else done = flushResponse(entry) end
         end
       elseif err == "timeout" then
         entry.buffer = entry.buffer .. (partial or "")
@@ -537,7 +610,8 @@ local function poll(source)
     local client = server:accept()
     if not client then break end
     client:settimeout(0) -- never block the simulation frame
-    pending[#pending + 1] = { sock = client, buffer = "", deadline = os.clock() + REQUEST_TIMEOUT_S }
+    if #pending >= MAX_PENDING then client:close()
+    else pending[#pending + 1] = { sock = client, buffer = "", deadline = os.clock() + REQUEST_TIMEOUT_S } end
   end
   service(source)
 end
@@ -655,6 +729,12 @@ end
 
 function callbacks.onMissionLoadEnd()
   missionState.phase = "loaded"
+end
+
+function callbacks.onMissionLoadError(message)
+  missionState.phase = "error"
+  missionState.loadError = tostring(message)
+  recordError("mission load error", message)
 end
 
 DCS.setUserCallbacks(callbacks)

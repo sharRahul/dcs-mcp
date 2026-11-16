@@ -7,7 +7,8 @@
  */
 import { createHash } from "node:crypto";
 import path from "node:path";
-import { access, readFile, writeFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
+import { atomicWrite } from "../security/files.js";
 import AdmZip from "adm-zip";
 import { KNOWN_MIZ_ENTRIES } from "../constants.js";
 import {
@@ -124,7 +125,7 @@ export async function packMiz(
   assertArchiveWithinLimits(new AdmZip(outBytes).getEntries().map(e => ({
     name: e.entryName, compressedSize: e.header.compressedSize, uncompressedSize: e.header.size,
   })));
-  await writeFile(outPath, outBytes);
+  await atomicWrite(outPath, outBytes, { sourcePath, overwrite });
   const digest = createHash("sha256").update(outBytes).digest("hex");
   return { digest, outPath };
 }

@@ -30,7 +30,10 @@ export function assertSafeEntryName(name: string): void {
   if (path.isAbsolute(normalized) || /^[a-zA-Z]:/.test(normalized)) {
     throw new ArchivePolicyError(`Archive entry uses an absolute path: ${name}`);
   }
-  const parts = normalized.split("/");
+  if (normalized.includes(':') || /[\x01-\x1f]/.test(normalized)) throw new ArchivePolicyError(`Archive entry contains unsafe Windows path characters: ${name}`);
+  const parts = normalized.replace(/\/$/, "").split("/");
+  if (parts.some(p => !p || p === "." || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(p))) throw new ArchivePolicyError(`Ambiguous or reserved archive path: ${name}`);
+  if (parts.some(p => p.endsWith(' ') || p.endsWith('.') && p !== '.' && p !== '..')) throw new ArchivePolicyError(`Ambiguous archive path: ${name}`);
   if (parts.some((p) => p === "..")) {
     throw new ArchivePolicyError(`Archive entry uses path traversal ('..'): ${name}`);
   }
@@ -45,8 +48,15 @@ export function assertArchiveWithinLimits(entries: EntryHeader[]): void {
   }
 
   let total = 0;
+  const seen = new Set<string>();
   for (const entry of entries) {
     assertSafeEntryName(entry.name);
+    const normalized = entry.name.replace(/\\/g, '/').replace(/\/+/g, '/').replace(/\/$/, '').toLowerCase();
+    if (seen.has(normalized)) throw new ArchivePolicyError(`Duplicate or ambiguous archive entry '${entry.name}'`);
+    seen.add(normalized);
+    if (![entry.compressedSize, entry.uncompressedSize].every(n => Number.isSafeInteger(n) && n >= 0)) throw new ArchivePolicyError('Invalid archive size metadata');
+    // A zero declaration with compressed payload bypassed older inflater limits.
+    if (entry.uncompressedSize === 0 && entry.compressedSize > 2) throw new ArchivePolicyError(`Suspicious zero-size compressed entry '${entry.name}'`);
 
     if (entry.uncompressedSize > ARCHIVE_LIMITS.maxEntryUncompressed) {
       throw new ArchivePolicyError(
