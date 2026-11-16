@@ -356,7 +356,7 @@ the completed Windows Lua conversion; live DCS acceptance remains pending.
 ## Drawings, radios, groups, weather, liveries, terrain packs — 0.3.0
 
 ```bash
-npm run build && npm test          # 236 tests: 231 pass, 5 skipped (need DCS_LUA)
+npm run build && npm test          # 237 tests: 232 pass, 5 skipped (need DCS_LUA)
 node --import tsx scripts/update-schema-fixture.mjs   # only after a deliberate schema change
 ```
 
@@ -370,4 +370,12 @@ page inconsistencies the generator resolves), action building and refusal, and c
 cross-checking. Regenerate the catalogue with
 `python3 -I scripts/gen-hoggit-data.py --fetch <cache-dir> data/hoggit.json` (needs
 wiki.hoggitworld.com; it fetches one page at a time because the wiki answers 503 to bursts).
+
+Airfield navaids (`data/airfield-navaids.json`) are OCR of DimOn's kneeboard images. The
+generator keeps a row only when its OCR'd ATC frequencies equal pydcs's for that airfield, and
+each value must pass its own range/format/colour check (`tests/hoggit.test.ts` re-asserts the
+ranges). Every extracted value on Caucasus p1, Syria p1 and Persian Gulf p1 was compared by eye
+with the page image: no wrong values; coverage is partial (some VOR/NDB/ILS/TACAN cells are not
+extracted). Regenerate with a rapidocr virtualenv:
+`ocrenv/bin/python -I scripts/gen-airfield-navaids.py <png-dir> data/airfield-radio.json data/airfield-navaids.json`.
 

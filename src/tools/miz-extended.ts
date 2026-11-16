@@ -143,7 +143,7 @@ export function registerMizExtendedTools(server: McpServer) {
   }, async a => result(callsignOptions(a.type, a.task)));
 
   server.registerTool('dcs_airfield_radio', {
-    description: "An airfield's ATC radios (HF / VHF low / VHF high / UHF, MHz) and runway designators, from pydcs's export of DCS airfield data. Runway headings are designator x 10, not measured. No TACAN/ILS/VOR/NDB, elevation or magnetic variation (not in the bundled data).",
+    description: "An airfield's ATC radios (HF / VHF low / VHF high / UHF, MHz) and runway designators, from pydcs's export of DCS airfield data. Runway headings are designator x 10, not measured. navaids (ICAO, elevation, TACAN, VOR, NDB, ILS MHz) come from DimOn's Aerodrome Data and Frequencies kneeboards by OCR, only where that row's ATC frequencies match pydcs; empty = not extracted. No magnetic variation.",
     inputSchema: z.object({ theatre: z.string().min(1), airfield: z.union([z.string().min(1), z.number().int()]) }).strict(), annotations: read,
   }, async a => { try { return result(airfieldRadio(a.theatre, a.airfield)); } catch (e) { return errorResult(e); } });
 }

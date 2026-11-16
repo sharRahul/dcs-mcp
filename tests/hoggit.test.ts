@@ -126,7 +126,28 @@ test("airfield ATC radios and runways come from the pydcs airport export", () =>
   const b = airfieldRadio("Caucasus", "Batumi");
   assert.deepEqual(b.atcMHz, { hf: 4.25, vhfLow: 40.4, vhfHigh: 131, uhf: 260 });
   assert.deepEqual(b.runways, [{ name: "31-13", ends: [{ name: "31", designatorHeading: 310 }, { name: "13", designatorHeading: 130 }] }]);
-  assert.equal(b.navaids, null);
+  // Navaids from the DimOn kneeboards (OCR), kept because the row's ATC matched pydcs exactly.
+  assert.deepEqual({ ...b.navaids, source: undefined }, { icao: "UGSB", elevation: { ft: 33, m: 10 }, tacan: ["16X"], vorMHz: [],
+    ndbKHz: [430], ilsMHz: [110.3], source: undefined });
+  assert.match(b.navaids!.source, /DimOn kneeboard 04_AD_Day_Caucasus_01\.png/);
   assert.equal(airfieldRadio("caucasus", 22).name, "Batumi");
   assert.throws(() => airfieldRadio("Caucasus", "Nowhere"), /No airfield/);
+});
+
+import { readFileSync } from "node:fs";
+test("every extracted navaid passes its own range/format check and names a real airfield", () => {
+  const nav = JSON.parse(readFileSync("data/airfield-navaids.json", "utf8"));
+  const radio = JSON.parse(readFileSync("data/airfield-radio.json", "utf8")).theatres;
+  let n = 0;
+  for (const [t, airfields] of Object.entries<Record<string, any>>(nav.theatres)) for (const [id, v] of Object.entries<any>(airfields)) {
+    n++;
+    assert.ok(radio[t][id]?.atcMHz, `${t}/${id} exists with ATC`);
+    for (const c of v.tacan ?? []) assert.match(c, /^(\d{1,3})[XY]$/);
+    for (const f of v.vorMHz ?? []) assert.ok(f >= 108 && f <= 117.95);
+    for (const f of v.ilsMHz ?? []) assert.ok(f >= 108.1 && f <= 111.95 && Math.round(f * 10) % 2 === 1, `ILS ${f}`);
+    for (const f of v.ndbKHz ?? []) assert.ok(f >= 190 && f <= 1750);
+    if (v.elevation) assert.ok(Math.abs(v.elevation.ft - v.elevation.m * 3.28084) <= 4);
+  }
+  assert.ok(n >= 350, `${n} airfields`);
+  assert.equal(airfieldRadio("PersianGulf", "Al Dhafra AFB").navaids!.tacan[0], "96X");
 });

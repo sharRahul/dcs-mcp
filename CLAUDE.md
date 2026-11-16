@@ -480,6 +480,11 @@ no adjacent ERROR line.
   user for the file.
 - `data/airfield-radio.json` (`scripts/gen-airfield-radio.py`, pydcs `terrain/*/airports.py` as AST data): ATC
   radios per airfield and runway designators. pydcs's runway "heading" is designator x 10 — never call it
-  measured. pydcs has beacon IDS only: no TACAN/ILS/VOR/NDB frequencies, elevation or magvar. dimon.one (the
-  DimOn "Aerodrome Data and Frequencies" kneeboards, freeware) has expired; that data would need the user's copy.
+  measured. pydcs has beacon IDS only: no TACAN/ILS/VOR/NDB frequencies, elevation or magvar.
+- `data/airfield-navaids.json` (`scripts/gen-airfield-navaids.py`): OCR (rapidocr, in a private venv) of DimOn's
+  "Aerodrome Data and Frequencies" DAY table pages (freeware; dimon.one has expired, so the user supplied a copy).
+  A row is kept ONLY if its OCR'd ATC 4-tuple equals pydcs for exactly one airfield and the names agree; each value
+  must pass its own check (elevation ft~m, TACAN NNX/Y, VOR magenta 108-117.95, NDB orange 190-1750, ILS green
+  108.10-111.95 odd tenth). 400 airfields; recall is partial by design. Spot-checked against the page images for
+  Caucasus, Syria p1 and Persian Gulf p1 with no wrong values. Never relax the ATC gate to raise coverage.
 
