@@ -21,7 +21,7 @@ export const configurationSchema = z.object({
   theatre: z.string().min(1).optional(),
   countries: z.array(z.object({ name: z.string().min(1), side: sideSchema }).strict()).max(100).optional(),
   date: z.object({ year: z.number().int().min(1900).max(2100), month: z.number().int().min(1).max(12), day: z.number().int().min(1).max(31) }).strict().optional(),
-  forcedOptions: z.record(z.union([z.boolean(), z.number().finite(), z.string()])).optional(), clearForcedOptions: z.array(z.string()).max(100).optional(),
+  forcedOptions: z.record(z.string(), z.union([z.boolean(), z.number().finite(), z.string()])).optional(), clearForcedOptions: z.array(z.string()).max(100).optional(),
   startTime: z.number().int().min(0).max(86399).optional(), weather: weatherEditSchema.optional(),
   title: z.string().max(1000).optional(), briefing: z.string().max(100000).optional(),
   coalitionBriefing: z.object({ blue: z.string().max(100000).optional(), red: z.string().max(100000).optional(), neutrals: z.string().max(100000).optional() }).strict().optional(),

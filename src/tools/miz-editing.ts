@@ -635,7 +635,7 @@ export function registerMizEditingTools(server: McpServer): void {
         "references.\n\nArgs: sessionId, response_format?\n\n" +
         "Returns JSON: { count, triggers: [{ index, predicate, comment, compiled, groupRefs, unitRefs, zoneRefs, flagRefs }] }.",
       inputSchema: z.object({ sessionId: sessionIdField, response_format: responseFormatField }).strict(),
-      outputSchema: z.object({ count: z.number(), triggers: z.array(z.record(z.unknown())) }),
+      outputSchema: z.object({ count: z.number(), triggers: z.array(z.record(z.string(), z.unknown())) }),
       annotations: readOnly,
     },
     async (a) => {
@@ -676,7 +676,7 @@ export function registerMizEditingTools(server: McpServer): void {
         "List a mission's trigger zones with id, position, radius and type.\n\nArgs: sessionId, response_format?\n\n" +
         "Returns JSON: { count, zones: [{ name, id, x, y, radius, type }] }.",
       inputSchema: z.object({ sessionId: sessionIdField, response_format: responseFormatField }).strict(),
-      outputSchema: z.object({ count: z.number(), zones: z.array(z.record(z.unknown())) }),
+      outputSchema: z.object({ count: z.number(), zones: z.array(z.record(z.string(), z.unknown())) }),
       annotations: readOnly,
     },
     async (a) => {

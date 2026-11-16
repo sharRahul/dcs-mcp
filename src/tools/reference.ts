@@ -58,7 +58,7 @@ export function registerReferenceTools(server: McpServer): void {
           response_format: responseFormatField,
         })
         .strict(),
-      outputSchema: z.object({ count: z.number(), types: z.array(z.record(z.unknown())) }),
+      outputSchema: z.object({ count: z.number(), types: z.array(z.record(z.string(), z.unknown())) }),
       annotations: readOnly,
     },
     async (a) => {
@@ -98,7 +98,7 @@ export function registerReferenceTools(server: McpServer): void {
         "Blue/Red' countries exist for mixed-equipment sides.\n\nArgs: query?\n\n" +
         "Returns JSON: { count, countries: [{ id, name, short }] }.",
       inputSchema: z.object({ query: z.string().max(60).optional(), response_format: responseFormatField }).strict(),
-      outputSchema: z.object({ count: z.number(), countries: z.array(z.record(z.unknown())) }),
+      outputSchema: z.object({ count: z.number(), countries: z.array(z.record(z.string(), z.unknown())) }),
       annotations: readOnly,
     },
     async (a) => {
@@ -136,8 +136,8 @@ export function registerReferenceTools(server: McpServer): void {
       outputSchema: z.object({
         theatre: z.string(),
         count: z.number(),
-        airfields: z.array(z.record(z.unknown())),
-        parking: z.array(z.record(z.unknown())).optional(),
+        airfields: z.array(z.record(z.string(), z.unknown())),
+        parking: z.array(z.record(z.string(), z.unknown())).optional(),
       }),
       annotations: readOnly,
     },
@@ -226,7 +226,7 @@ export function registerReferenceTools(server: McpServer): void {
         "registered with Skynet, never engaged), or 'catalogue' (types exist in DCS; this exact layout not " +
         "yet flown).\n\nReturns JSON: { templates: [{ id, description, provenance, composition, spacingMetres, skynetRole }] }.",
       inputSchema: z.object({ response_format: responseFormatField }).strict(),
-      outputSchema: z.object({ templates: z.array(z.record(z.unknown())) }),
+      outputSchema: z.object({ templates: z.array(z.record(z.string(), z.unknown())) }),
       annotations: readOnly,
     },
     async (a) =>
@@ -316,9 +316,9 @@ export function registerReferenceTools(server: McpServer): void {
       outputSchema: z.object({
         country: z.string(),
         generated: z.string(),
-        pages: z.record(z.string()),
-        offeredCounts: z.record(z.number()),
-        rows: z.array(z.record(z.unknown())),
+        pages: z.record(z.string(), z.string()),
+        offeredCounts: z.record(z.string(), z.number()),
+        rows: z.array(z.record(z.string(), z.unknown())),
       }),
       annotations: readOnly,
     },
@@ -380,7 +380,7 @@ export function registerReferenceTools(server: McpServer): void {
         "validator accepts them.\n\nArgs: refresh? (rescan now)\n\n" +
         "Returns JSON: { roots, mods: [{ id, folder, kind, units: [{ type, category, file }] }] }.",
       inputSchema: z.object({ refresh: z.boolean().default(false), response_format: responseFormatField }).strict(),
-      outputSchema: z.object({ roots: z.array(z.string()), mods: z.array(z.record(z.unknown())) }),
+      outputSchema: z.object({ roots: z.array(z.string()), mods: z.array(z.record(z.string(), z.unknown())) }),
       annotations: readOnly,
     },
     async (a) => {
