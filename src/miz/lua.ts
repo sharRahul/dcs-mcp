@@ -20,9 +20,16 @@ export interface LuaTable {
   [key: number]: LuaValue;
 }
 
-/** Convert a data-only Lua AST node into a plain JS value. */
-function evalNode(node: any): LuaValue {
+/**
+ * Convert a data-only Lua AST node into a plain JS value. `constants` (default: none) is a
+ * whitelist of bare identifiers a specific data file may use as named numbers, e.g. the
+ * main-task names in DCS UnitPayloads files; any other identifier is refused.
+ */
+function evalNode(node: any, constants?: Readonly<Record<string, number | string>>): LuaValue {
   switch (node.type) {
+    case "Identifier":
+      if (constants && Object.prototype.hasOwnProperty.call(constants, node.name)) return constants[node.name];
+      throw new Error(`Refusing to evaluate identifier '${node.name}': not a whitelisted constant`);
     case "StringLiteral":
       // Always decode from `raw`: luaparse leaves `value` null in its default
       // encoding mode, and where it is populated it is not escape-decoded.
@@ -35,12 +42,12 @@ function evalNode(node: any): LuaValue {
       return null;
     case "UnaryExpression":
       if (node.operator === "-") {
-        const inner = evalNode(node.argument);
+        const inner = evalNode(node.argument, constants);
         if (typeof inner === "number") return -inner;
       }
       throw new Error(`Unsupported unary operator '${node.operator}' in mission data`);
     case "TableConstructorExpression":
-      return evalTable(node);
+      return evalTable(node, constants);
     default:
       throw new Error(
         `Refusing to evaluate non-data Lua node '${node.type}'. Mission data must be literal.`
@@ -48,24 +55,24 @@ function evalNode(node: any): LuaValue {
   }
 }
 
-function evalTable(node: any): LuaTable {
+function evalTable(node: any, constants?: Readonly<Record<string, number | string>>): LuaTable {
   const table: LuaTable = {};
   let arrayIndex = 1;
   for (const field of node.fields) {
     switch (field.type) {
       case "TableKeyString":
-        table[field.key.name] = evalNode(field.value);
+        table[field.key.name] = evalNode(field.value, constants);
         break;
       case "TableKey": {
-        const key = evalNode(field.key);
+        const key = evalNode(field.key, constants);
         if (typeof key !== "string" && typeof key !== "number") {
           throw new Error("Unsupported table key type in mission data");
         }
-        table[key as string | number] = evalNode(field.value);
+        table[key as string | number] = evalNode(field.value, constants);
         break;
       }
       case "TableValue":
-        table[arrayIndex++] = evalNode(field.value);
+        table[arrayIndex++] = evalNode(field.value, constants);
         break;
       default:
         throw new Error(`Unsupported table field '${field.type}' in mission data`);
@@ -181,6 +188,28 @@ export function parseLuaAssignment(source: string, expectedName?: string): LuaTa
       ? `No assignment to global '${expectedName}' found`
       : "No table assignment found in Lua source"
   );
+}
+
+/**
+ * Parse a standalone DCS data file of the form `[local] name = { ... }` optionally followed
+ * by `return name` (e.g. the MissionEditor UnitPayloads Lua files). Any other statement is refused,
+ * and bare identifiers are allowed only from `constants`. Nothing is executed.
+ */
+export function parseLuaDataFile(source: string, name: string, constants: Readonly<Record<string, number | string>> = {}): LuaTable {
+  const ast = luaparse.parse(source, { luaVersion: "5.1", comments: false, scope: false, locations: false }) as any;
+  let value: LuaValue | undefined;
+  for (const stmt of ast.body) {
+    const assigns = stmt.type === "AssignmentStatement" || stmt.type === "LocalStatement";
+    if (assigns && stmt.variables.length === 1 && stmt.variables[0]?.type === "Identifier" && stmt.variables[0].name === name && stmt.init?.length === 1) {
+      value = evalNode(stmt.init[0], constants);
+    } else if (stmt.type === "ReturnStatement" && stmt.arguments.length === 1 && stmt.arguments[0].type === "Identifier" && stmt.arguments[0].name === name) {
+      continue;
+    } else {
+      throw new Error(`Refusing non-data statement '${stmt.type}' in data file`);
+    }
+  }
+  if (!value || typeof value !== "object") throw new Error(`No table assigned to '${name}'`);
+  return value;
 }
 
 /** Extract the sequential (1..n) values of a Lua table as a JS array. */

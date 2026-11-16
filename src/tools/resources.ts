@@ -7,7 +7,7 @@ import { ResourceTemplate, type McpServer } from "@modelcontextprotocol/sdk/serv
 import { z } from "zod";
 import { CONVENTIONS_GUIDE } from "../guide.js";
 import { countries, theatres, unitTypes, type UnitCategory } from "../data/reference.js";
-import { SITE_TEMPLATES } from "../miz/templates.js";
+import { allSiteTemplates } from "../miz/templates.js";
 import { xyToLatLon } from "../miz/projection.js";
 
 const json = (uri: string, data: unknown) => ({
@@ -43,7 +43,7 @@ export function registerResources(server: McpServer): void {
       description: "Air-defence site compositions with provenance.",
       mimeType: "application/json",
     },
-    async (uri) => json(uri.href, SITE_TEMPLATES)
+    async (uri) => json(uri.href, allSiteTemplates())
   );
 
   server.registerResource(

@@ -379,3 +379,9 @@ with the page image: no wrong values; coverage is partial (some VOR/NDB/ILS/TACA
 extracted). Regenerate with a rapidocr virtualenv:
 `ocrenv/bin/python -I scripts/gen-airfield-navaids.py <png-dir> data/airfield-radio.json data/airfield-navaids.json`.
 
+## Inspect/edit, goals, quad zones, imported templates, payload library — 0.4.0
+
+`tests/edit-more.test.ts` (round trips for task edits, unit edits, goals, quad zones, payload-library parsing incl.
+refused non-data files) and `tests/inspect-edit-server.test.ts` (stdio: import a site from a saved .miz, place it
+rotated, edit its tasks, set airbase ownership). Offline only; the payload tests use a synthetic UnitPayloads file.
+

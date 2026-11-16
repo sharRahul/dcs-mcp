@@ -15,13 +15,17 @@
  *   - "catalogue": every type id exists in the DCS unit catalogue and the mix is
  *                  the system's standard battery, but this exact group has not
  *                  yet been flown or opened in the Mission Editor by this project.
+ *   - "imported":  copied (types, order and exact per-unit offsets) from a mission the
+ *                  user supplied via dcs_import_site_template; this project has not flown
+ *                  it, and cannot prove the file was saved by the Mission Editor.
  *
  * Layout is the same column-along-heading the rest of the authoring API uses;
  * it is what the engaged SA-2 used and Skynet does not care about geometry.
  */
 import type { UnitComposition } from "./authoring.js";
+import { loadImportedTemplates } from "./site-import.js";
 
-export type TemplateProvenance = "engaged" | "me-saved" | "loaded" | "catalogue";
+export type TemplateProvenance = "engaged" | "me-saved" | "loaded" | "catalogue" | "imported";
 
 export interface SiteTemplate {
   id: string;
@@ -31,6 +35,10 @@ export interface SiteTemplate {
   spacingMetres: number;
   /** Skynet classifies sites by group-name prefix; this is the conventional one. */
   skynetRole: "sam" | "ewr";
+  /** Imported templates only: exact per-unit offsets from the lead (metres along / right of its heading). */
+  offsets?: { forward: number; right: number }[];
+  /** Imported templates only: where the layout came from. */
+  source?: { file: string; sha256: string; group: string; theatre: string; importedAt: string };
 }
 
 export const SITE_TEMPLATES: SiteTemplate[] = [
@@ -171,11 +179,18 @@ export const SITE_TEMPLATES: SiteTemplate[] = [
   },
 ];
 
+/** Built-in templates, then the user's imported ones (an import can never shadow a built-in id). */
+export function allSiteTemplates(): SiteTemplate[] {
+  const builtIn = new Set(SITE_TEMPLATES.map((t) => t.id.toLowerCase()));
+  return [...SITE_TEMPLATES, ...loadImportedTemplates().filter((t) => !builtIn.has(t.id.toLowerCase()))];
+}
+
 export function findSiteTemplate(id: string): SiteTemplate {
   const key = id.toLowerCase().replace(/[\s_]/g, "-");
-  const hit = SITE_TEMPLATES.find((t) => t.id.toLowerCase() === key);
+  const all = allSiteTemplates();
+  const hit = all.find((t) => t.id.toLowerCase().replace(/[\s_]/g, "-") === key);
   if (!hit) {
-    throw new Error(`Unknown site template '${id}'. Available: ${SITE_TEMPLATES.map((t) => t.id).join(", ")}.`);
+    throw new Error(`Unknown site template '${id}'. Available: ${all.map((t) => t.id).join(", ")}.`);
   }
   return hit;
 }
