@@ -1,4 +1,4 @@
-# DCS-MCP
+# DCS-MCP-SERVER
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server for **Digital Combat Simulator (DCS World)**. Works with any MCP client — Claude, Codex, OpenCode, etc. — over stdio.
 
