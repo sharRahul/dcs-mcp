@@ -59,9 +59,18 @@ Driven by any MCP client (Claude, Codex, OpenCode). TypeScript, stdio transport,
 - SAM templates carry `provenance` (`engaged`/`me-saved`/`loaded`/`catalogue`). Only promote a
   template after it is actually flown; never upgrade provenance on reasoning alone.
 
+Scene building (`src/miz/dressing.ts`): FARP statics follow pydcs `unit.py` (`category="Heliports"`,
+`shape_name` FARPS/FARP/invisiblefarp, `heliport_frequency|modulation|callsign_id`); FARP starts link
+`linkUnit`/`helipadId` to the pad like pydcs `flight_group_from_unit`. `occupiedParking` treats a
+static within half a slot's width as occupying it, in BOTH directions (flights avoid statics,
+`populateAirfield` avoids flights). Target grids, FARP support offsets and naval stations are our
+conventions — do not describe them as editor-derived. `verify-mission.mjs` checks the trailing
+column only for vehicle groups; ship groups may be formations.
+
 To verify in DCS next: a parking/hot/runway/carrier start opening in the ME and spawning on the
 ramp; a static of each category; forced options shown in the ME; one `catalogue` SAM (SA-10/SA-11)
-engaging under Skynet; removing a trigger from an ME-saved mission and flying it.
+engaging under Skynet; a helicopter cold start from a FARP and rearming from its support group;
+statics parked by populateAirfield sitting on their slots with no spawn collisions; removing a trigger from an ME-saved mission and flying it.
 
 ## Session snapshots
 

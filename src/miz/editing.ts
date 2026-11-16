@@ -428,6 +428,9 @@ function staticCategory(type: string): { category: string; shape?: string; rate?
   switch (hit.category) {
     case "static": {
       const s = hit.entry as StaticType;
+      if (s.category === "Heliports") {
+        throw new Error(`'${type}' is a heliport; add it with dcs_miz_add_farp so it gets its ATC settings.`);
+      }
       return { category: s.category, shape: s.shape ?? undefined, rate: s.rate, canCargo: s.canCargo };
     }
     case "plane":

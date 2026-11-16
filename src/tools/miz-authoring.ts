@@ -165,7 +165,7 @@ export function registerMizAuthoringTools(server: McpServer): void {
         "  - start?: where the flight begins. { kind: 'air' } (default, at x/y and altitude); " +
         "{ kind: 'runway', airfield }; { kind: 'parking_cold'|'parking_hot', airfield, parking?: [slot names] } " +
         "(free slots the aircraft fits are chosen if parking is omitted); { kind: 'ship_cold'|'ship_hot', ship: " +
-        "<carrier UNIT name> }. airfield is a name or id from dcs_list_airfields. For ground/ship starts the " +
+        "<carrier UNIT name> }; { kind: 'farp_cold'|'farp_hot', farp: <FARP name from dcs_miz_add_farp> }. airfield is a name or id from dcs_list_airfields. For ground/ship starts the " +
         "position args are ignored (pass any).\n\n" +
         "Returns JSON: { added: groupName, groupCount }.",
       inputSchema: z
@@ -195,6 +195,7 @@ export function registerMizAuthoringTools(server: McpServer): void {
                 })
                 .strict(),
               z.object({ kind: z.enum(["ship_cold", "ship_hot"]), ship: z.string().min(1) }).strict(),
+              z.object({ kind: z.enum(["farp_cold", "farp_hot"]), farp: z.string().min(1) }).strict(),
             ])
             .optional()
             .describe("Where the group starts (default: in the air at x/y)"),

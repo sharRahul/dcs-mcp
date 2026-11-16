@@ -82,7 +82,9 @@ for (const section of ["conditions", "actions", "func", "funcStartup"]) {
     if (typeof v === "string") chunks.push({ where: `trig.${section}[${k}]`, code: v });
   }
 }
-if (chunks.length === 0) fail("mission has no compiled trig entries at all");
+if (chunks.length === 0 && luaArray(mission["trigrules"]).length > 0) {
+  fail("mission has triggers but no compiled trig entries at all — they will never fire when flown");
+}
 else if (!lua) console.warn("warn  no luae.exe; skipping compiled-trigger syntax check");
 else {
   const checker = path.join(dir, "check.lua");
@@ -128,15 +130,17 @@ for (const g of doc.groups) {
     continue;
   }
 
-  // Units must trail the lead along the reciprocal of the heading. The old bug
+  // Vehicles must trail the lead along the reciprocal of the heading. The old bug
   // offset every group to the north-east, whose fingerprint is a 45-degree
-  // bearing regardless of which way the group faces.
+  // bearing regardless of which way the group faces. Ship groups may be a
+  // formation with stations ahead of and beside the lead
+  // (dcs_miz_add_naval_group), so for them only the shared heading is checked.
   if (g.units.length > 1) {
     const u2 = g.units[1];
     const bearing = Math.atan2(u2.y - lead.y, u2.x - lead.x);
     const expected = (h + Math.PI) % TWO_PI;
     const diff = Math.abs(((bearing - expected + Math.PI * 3) % TWO_PI) - Math.PI);
-    if (diff > 1e-6) {
+    if (g.category === "vehicle" && diff > 1e-6) {
       fail(
         `${g.name}: units offset toward ${((bearing + TWO_PI) % TWO_PI * 180 / Math.PI).toFixed(1)} deg, ` +
           `expected ${(expected * 180 / Math.PI).toFixed(1)} deg (heading ${(h * 180 / Math.PI).toFixed(1)})`

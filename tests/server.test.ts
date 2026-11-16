@@ -29,6 +29,8 @@ test("server exposes tools, resources and prompts, and authors a mission end to 
     for (const name of [
       "dcs_miz_remove_group", "dcs_miz_move_group", "dcs_miz_add_static", "dcs_miz_set_mission_options",
       "dcs_list_unit_types", "dcs_list_airfields", "dcs_geo_convert", "dcs_install_hook", "dcs_miz_restore_session",
+      "dcs_miz_add_farp", "dcs_miz_populate_airfield", "dcs_miz_add_target_area", "dcs_miz_add_naval_group",
+      "dcs_list_scene_templates",
     ]) {
       assert.ok(tools.includes(name), `missing tool ${name}`);
     }
@@ -57,6 +59,12 @@ test("server exposes tools, resources and prompts, and authors a mission end to 
     await call("dcs_miz_add_static", {
       sessionId, side: "blue", country: "USA", name: "HQ", type: ".Command Center", lat: 42.17, lon: 42.48,
     });
+    await call("dcs_miz_populate_airfield", {
+      sessionId, side: "blue", country: "USA", airfield: "Kutaisi", types: ["F-16C_50"], count: 3, namePrefix: "Ramp",
+    });
+    await call("dcs_miz_add_target_area", {
+      sessionId, side: "red", country: "Russia", name: "Depot", template: "fuel-depot", lat: 42.3, lon: 42.9, zone: true,
+    });
     await call("dcs_miz_add_ground_group", {
       sessionId, side: "blue", country: "USA", name: "Spare", type: "M-1 Abrams", x: -280000, y: 680000,
     });
@@ -75,7 +83,8 @@ test("server exposes tools, resources and prompts, and authors a mission end to 
     const reopened = await call("dcs_miz_open", { path: out });
     const groups = await call("dcs_miz_list_groups", { sessionId: reopened.sessionId, response_format: "json" });
     const names = (groups.groups as { name: string }[]).map((g) => g.name).sort();
-    assert.deepEqual(names, ["HQ", "SAM-Kilo", "Viper"]);
+    assert.ok(names.includes("HQ") && names.includes("SAM-Kilo") && names.includes("Viper") && names.includes("Ramp-3"));
+    assert.ok(names.includes("Depot-1") && !names.includes("Spare"));
 
     const conv = await call("dcs_geo_convert", { theatre: "caucasus", lat: 41.6103, lon: 41.5997 });
     assert.ok(Math.abs(conv.x - -355737.036) < 0.01);

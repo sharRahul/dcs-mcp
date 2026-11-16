@@ -62,6 +62,8 @@ The server sends MCP `instructions` with the conventions that matter most (axes,
 
 **Author (offline):** `dcs_miz_new`, `dcs_miz_add_aircraft_group`, `dcs_miz_add_ground_group`, `dcs_miz_add_static`, `dcs_miz_add_waypoint`, `dcs_miz_set_payload`, `dcs_miz_set_group_task`, `dcs_miz_add_trigger_zone`, `dcs_miz_add_trigger`, `dcs_miz_load_scripts`, `dcs_miz_list_resources`, `dcs_miz_set_weather`, `dcs_miz_set_briefing`, `dcs_miz_set_mission_options`, `dcs_miz_diff`, `dcs_miz_save_as`
 
+**Scene building (offline):** `dcs_miz_add_farp`, `dcs_miz_populate_airfield`, `dcs_miz_add_target_area`, `dcs_miz_add_naval_group`, `dcs_list_scene_templates`
+
 **Edit (offline):** `dcs_miz_remove_group`, `dcs_miz_remove_unit`, `dcs_miz_remove_zone`, `dcs_miz_remove_trigger`, `dcs_miz_remove_waypoint`, `dcs_miz_rename_group`, `dcs_miz_rename_unit`, `dcs_miz_move_group`, `dcs_miz_move_unit`, `dcs_miz_update_group`, `dcs_miz_update_waypoint`, `dcs_miz_update_zone`, `dcs_miz_update_trigger`
 
 **Inspect (offline):** `dcs_miz_open`, `dcs_miz_get_summary`, `dcs_miz_list_groups`, `dcs_miz_list_triggers`, `dcs_miz_list_zones`, `dcs_miz_get_weather`, `dcs_miz_get_briefing`, `dcs_miz_validate`, `dcs_miz_list_sessions`, `dcs_miz_restore_session`, `dcs_miz_close`
@@ -235,6 +237,15 @@ Point types and actions are the ones the Mission Editor writes (`TakeOffParking`
 ## Static objects
 
 `dcs_miz_add_static` places buildings, fortifications, FARP equipment, cargo (with `massKg` for sling loads), wrecks (`dead`), or any aircraft, vehicle or ship as scenery. The static `category` and `shape_name` come from the catalogue. An unknown type is an error rather than an invisible object.
+
+## FARPs, dressed airfields, ground targets and fleets
+
+- **FARPs.** `dcs_miz_add_farp` adds a 4-pad FARP, a single helipad or an invisible FARP. Each is a heliport static with its ATC frequency, modulation and callsign, the fields pydcs writes. Helicopters start from one with `start: { kind: "farp_cold" | "farp_hot", farp: "<name>" }`; the flight links to the pad's unit id, as a carrier start does. `support: true` adds the usual dressing (ammo dump, fuel depot, command bunker, tent, windsock) plus a support-vehicle group of the same side. In DCS, rearm and refuel at a FARP come from nearby friendly support *vehicles*, not from the statics.
+- **Filling an airfield.** `dcs_miz_populate_airfield` parks static aircraft, vehicles or equipment on free parking slots, taken from DCS's own airfield data. Aircraft only go on slots they fit (a KC-135 never lands on a fighter spot), and `slots: "shelters"` keeps them in hardened shelters. `dead: true` parks wrecks for a post-strike airfield. Slots used by flights are skipped, and later flights skip the statics, so nothing spawns into a parked aircraft. The data has no slot orientation, so without `heading` each object faces the airfield reference point. That is a heuristic.
+- **Ground targets.** `dcs_miz_add_target_area` builds `ammo-depot`, `fuel-depot`, `command-post`, `supply-yard` or `barracks` from statics. It lays them out in a grid rotated to a heading, with each object its own static (`<name>-N`). `zone: true` adds a covering trigger zone.
+- **Fleets.** `dcs_miz_add_naval_group` adds `csg` (CVN-71 with cruiser and destroyer screen), `lha-group`, `kuznetsov-group`, `red-sag` or `convoy` as one group, with each ship on its station relative to the lead. A ship's unit `<name>-1` is the carrier for deck starts. Add waypoints to get it moving.
+
+Every type in these templates is checked against the DCS catalogue by the tests. The *layouts* (grid spacing, FARP support positions, ship stations) are this project's conventions, not copied from Mission-Editor missions, and none has been flown yet. Check land targets with `dcs_check_terrain`.
 
 ## Mission options
 
@@ -439,7 +450,7 @@ Still honestly unverified:
 - Brand-new missions from `dcs_miz_new` are a best-effort skeleton.
 - Triggers `T8-Sa6Down` (the SA-6 was never engaged), the flag-ANDed win trigger, `end_mission`, and the F10 radio-menu handler, which needs someone to press the item.
 - `dcs_spawn_unit` and `dcs_send_message` are written against the DCS scripting API and, unlike the read paths, have not been exercised in a live mission since the thread-routing fix.
-- New in 0.2.0 and checked offline only (serialize → reparse round trips, the validator, PROJ cross-checks), but not yet opened in the Mission Editor or flown: airfield/carrier starts and parking-slot choice, static objects, forced options, the `catalogue` SAM templates, and trigger removal on missions saved by the Mission Editor. The record formats follow pydcs, whose missions DCS loads, but this project's rule is that nothing counts as verified until DCS has run it.
+- New in 0.2.0 and checked offline only (serialize → reparse round trips, the validator, PROJ cross-checks), but not yet opened in the Mission Editor or flown: airfield/carrier/FARP starts and parking-slot choice, static objects, FARPs, parked-static airfields, target areas, naval formations, forced options, the `catalogue` SAM templates, and trigger removal on missions saved by the Mission Editor. The record formats follow pydcs, whose missions DCS loads, but this project's rule is that nothing counts as verified until DCS has run it.
 
 ## License
 

@@ -18,6 +18,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { registerMizTools } from "./tools/miz.js";
 import { registerMizAuthoringTools } from "./tools/miz-authoring.js";
 import { registerMizEditingTools } from "./tools/miz-editing.js";
+import { registerMizDressingTools } from "./tools/miz-dressing.js";
 import { registerReferenceTools } from "./tools/reference.js";
 import { registerBridgeTools } from "./tools/bridge.js";
 import { registerDiagnosticTools } from "./tools/diagnostics.js";
@@ -35,6 +36,7 @@ function createServer(): McpServer {
   registerMizTools(server);
   registerMizAuthoringTools(server);
   registerMizEditingTools(server);
+  registerMizDressingTools(server);
   registerReferenceTools(server);
   registerBridgeTools(server);
   registerDiagnosticTools(server);

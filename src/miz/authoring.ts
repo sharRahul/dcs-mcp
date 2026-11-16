@@ -250,6 +250,8 @@ interface UnitSpec {
   firstUnitId: number;
   /** Override the per-category spacing (metres between units). */
   spacingMetres?: number;
+  /** Explicit (forward, right) offsets from the lead, one per unit. */
+  offsets?: { forward: number; right: number }[];
 }
 
 /**
@@ -270,14 +272,22 @@ function buildUnits(groupName: string, spec: UnitSpec): LuaTable {
   const forwardY = Math.sin(heading);
 
   const units: LuaTable = {};
+  if (spec.offsets && spec.offsets.length !== spec.types.length) {
+    throw new Error(`Group '${groupName}' has ${spec.types.length} unit(s) but ${spec.offsets.length} offset(s).`);
+  }
   for (let i = 1; i <= spec.types.length; i++) {
     const back = (i - 1) * spacing;
+    // Right of the heading is the forward vector turned 90 degrees clockwise:
+    // (cos(h + 90), sin(h + 90)) = (-sin h, cos h).
+    const off = spec.offsets?.[i - 1];
+    const dx = off ? off.forward * forwardX - off.right * forwardY : -back * forwardX;
+    const dy = off ? off.forward * forwardY + off.right * forwardX : -back * forwardY;
     const unit: LuaTable = {
       name: `${groupName}-${i}`,
       unitId: spec.firstUnitId + i - 1,
       type: spec.types[i - 1],
-      x: spec.x - back * forwardX,
-      y: spec.y - back * forwardY,
+      x: spec.x + dx,
+      y: spec.y + dy,
       heading,
       skill: spec.skill ?? "High",
     };
@@ -322,6 +332,12 @@ export interface AddGroupArgs {
   spacingMetres?: number;
   /** Aircraft only: where the group starts. Defaults to in the air at x/y. */
   start?: AircraftStart;
+  /**
+   * Explicit per-unit positions relative to the lead, in metres along the
+   * heading (`forward`) and to its right (`right`). One per unit, lead first.
+   * Overrides the default column — used for ship formations.
+   */
+  offsets?: { forward: number; right: number }[];
 }
 
 /** Expand `composition` (or the plain type/count pair) into one type per unit. */
@@ -350,7 +366,8 @@ export type AircraftStart =
   | { kind: "air" }
   | { kind: "runway"; airfield: string | number }
   | { kind: "parking_cold" | "parking_hot"; airfield: string | number; parking?: string[] }
-  | { kind: "ship_cold" | "ship_hot"; ship: string };
+  | { kind: "ship_cold" | "ship_hot"; ship: string }
+  | { kind: "farp_cold" | "farp_hot"; farp: string };
 
 const START_POINT: Record<Exclude<AircraftStart["kind"], "air">, { type: string; action: string }> = {
   runway: { type: "TakeOff", action: "From Runway" },
@@ -358,18 +375,34 @@ const START_POINT: Record<Exclude<AircraftStart["kind"], "air">, { type: string;
   parking_hot: { type: "TakeOffParkingHot", action: "From Parking Area Hot" },
   ship_cold: { type: "TakeOffParking", action: "From Parking Area" },
   ship_hot: { type: "TakeOffParkingHot", action: "From Parking Area Hot" },
+  farp_cold: { type: "TakeOffParking", action: "From Parking Area" },
+  farp_hot: { type: "TakeOffParkingHot", action: "From Parking Area Hot" },
 };
 
-/** Parking slots at an airdrome already claimed by units in this mission. */
-function occupiedParking(mission: LuaTable, airdromeId: number): Set<string> {
+/**
+ * Parking slots at an airfield already taken in this mission — by a flight that
+ * starts there (its units carry `parking_id`), or by a static object standing on
+ * the slot. Both directions matter: a flight spawned onto a slot with a parked
+ * static aircraft on it collides with it at mission start.
+ */
+export function occupiedParking(mission: LuaTable, airport: Airport): Set<string> {
   const taken = new Set<string>();
-  eachGroup(mission, (group) => {
+  const statics: { x: number; y: number }[] = [];
+  eachGroup(mission, (group, category) => {
+    if (category === "static") {
+      for (const unit of luaArray(group["units"])) statics.push({ x: Number(unit["x"]), y: Number(unit["y"]) });
+      return;
+    }
     const first = asTable(asTable(asTable(group["route"])?.["points"])?.[1]);
-    if (first?.["airdromeId"] !== airdromeId) return;
+    if (first?.["airdromeId"] !== airport.id) return;
     for (const unit of luaArray(group["units"])) {
       if (unit["parking_id"] !== undefined) taken.add(String(unit["parking_id"]));
     }
   });
+  for (const slot of airport.slots) {
+    const reach = Math.max(4, slot[5] / 2);
+    if (statics.some((p) => Math.hypot(p.x - slot[2], p.y - slot[3]) < reach)) taken.add(slot[1]);
+  }
   return taken;
 }
 
@@ -379,7 +412,7 @@ function occupiedParking(mission: LuaTable, airdromeId: number): Set<string> {
  * must allow the category (helicopter vs aeroplane). Slots are taken in slot-name
  * order, so a flight parks together.
  */
-function chooseParking(
+export function chooseParking(
   airport: Airport,
   category: AirCategory,
   type: string,
@@ -463,7 +496,25 @@ export function addAircraftGroup(mission: LuaTable, category: AirCategory, args:
     const point = START_POINT[start.kind];
     const placements: { x: number; y: number; parking?: number; parkingId?: string }[] = [];
     const extra: LuaTable = {};
-    if ("ship" in start) {
+    if ("farp" in start) {
+      // pydcs `flight_group_from_unit`: link to the pad's unit id and park the
+      // flight in a 10 m rectangle beside it; DCS assigns the actual pads.
+      const pad = findUnit(mission, start.farp) ?? luaArray(findGroup(mission, start.farp)?.group["units"])[0];
+      if (!pad || typeof pad["unitId"] !== "number" || pad["category"] !== "Heliports") {
+        throw new Error(`No FARP or helipad named '${start.farp}' in this mission; add one with dcs_miz_add_farp.`);
+      }
+      const h = Number(pad["heading"] ?? 0);
+      for (let i = 0; i < types.length; i++) {
+        const fwd = Math.floor(i / 2) * 10;
+        const right = (i % 2) * 10;
+        placements.push({
+          x: Number(pad["x"]) - fwd * Math.cos(h) - right * Math.sin(h),
+          y: Number(pad["y"]) - fwd * Math.sin(h) + right * Math.cos(h),
+        });
+      }
+      extra["linkUnit"] = pad["unitId"];
+      extra["helipadId"] = pad["unitId"];
+    } else if ("ship" in start) {
       const ship = findUnit(mission, start.ship);
       if (!ship || typeof ship["unitId"] !== "number") {
         throw new Error(`No ship unit named '${start.ship}' in this mission; add the ship first.`);
@@ -493,7 +544,7 @@ export function addAircraftGroup(mission: LuaTable, category: AirCategory, args:
           category,
           types[0],
           types.length,
-          occupiedParking(mission, airport.id),
+          occupiedParking(mission, airport),
           "parking" in airfieldStart ? airfieldStart.parking : undefined
         );
         for (const slot of slots) placements.push({ x: slot[2], y: slot[3], parking: slot[0], parkingId: slot[1] });
@@ -576,6 +627,7 @@ export function addGroundGroup(mission: LuaTable, category: GroundCategory, args
       category,
       firstUnitId: ids.unitId + 1,
       spacingMetres: args.spacingMetres,
+      offsets: args.offsets,
     }),
     route: initialRoute(category, args.x, args.y),
     x: args.x,

@@ -16,6 +16,7 @@ Conventions that are easy to get wrong:
 - Headings are DEGREES in this API (stored as radians in the file).
 - Unit types are exact DCS type ids ('FA-18C_hornet', 'Kub 1S91 str'); look them up with dcs_list_unit_types, never guess.
 - A SAM site is one group of mixed types (radar + launchers): use composition or site templates (dcs_list_site_templates).
+- FARPs, parked statics on airfields, static target areas and naval formations have their own tools (dcs_list_scene_templates).
 - Triggers reference names in this API; unknown names are errors. Order-dependent script loads belong in ONE start trigger (dcs_miz_load_scripts does this).
 - Never trust a ground coordinate you did not check: dcs_check_terrain (live) says land or water.
 - Removing something a trigger references is refused unless force=true (the trigger would never fire).
@@ -51,6 +52,15 @@ export const CONVENTIONS_GUIDE = `# DCS-MCP conventions
   Each template states its provenance: \`engaged\` (fought in a live sortie), \`me-saved\` (copied from a
   Mission-Editor mission), \`loaded\` (flown and registered with Skynet, never engaged) or \`catalogue\`
   (every type exists in DCS; this exact layout not yet flown or opened in the editor).
+
+## Scene building
+- \`dcs_miz_add_farp\` adds a FARP / helipad; helicopters start from it with start { kind: 'farp_cold', farp }.
+  support=true adds the dressing statics and a support-vehicle group — rearm/refuel comes from the vehicles.
+- \`dcs_miz_populate_airfield\` parks statics (aircraft, vehicles, equipment) on free parking slots from DCS's
+  own airfield data. Flights and parked statics never share a slot.
+- \`dcs_miz_add_target_area\` lays out a static target set (ammo-depot, fuel-depot, command-post, supply-yard,
+  barracks); \`dcs_miz_add_naval_group\` adds a ship formation (csg, lha-group, kuznetsov-group, red-sag,
+  convoy). Layouts are conventions, not copied from editor missions; check terrain for land targets.
 
 ## Triggers
 - Types: start (mission start), once, continuous, change (fires on the false->true edge).

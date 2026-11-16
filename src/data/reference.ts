@@ -96,6 +96,7 @@ export function countries(): Country[] {
 export function unitTypes(): UnitTypes {
   if (!unitTypesCache) {
     const { _source: _s, ...rest } = load<UnitTypes & { _source: string }>("unit-types.json");
+    rest.static = [...rest.static, ...HELIPORT_STATICS];
     unitTypesCache = rest;
   }
   return unitTypesCache;
@@ -149,8 +150,20 @@ export function findCountryById(id: number): Country | undefined {
   return countries().find((c) => c.id === id);
 }
 
+/**
+ * Heliport statics. pydcs models these in `unit.py` rather than its generated
+ * static catalogue, so they are listed here; dcs_miz_add_farp writes them.
+ */
+const HELIPORT_STATICS: StaticType[] = [
+  { type: "FARP", name: "FARP (4 pads)", group: "Heliport", shape: "FARPS", category: "Heliports", rate: 0, canCargo: false },
+  { type: "SINGLE_HELIPAD", name: "Single helipad", group: "Heliport", shape: "FARP", category: "Heliports", rate: 0, canCargo: false },
+  { type: "Invisible FARP", name: "Invisible FARP", group: "Heliport", shape: "invisiblefarp", category: "Heliports", rate: 0, canCargo: false },
+];
+
 /** Find a unit type in any category (exact type id). */
 export function findUnitType(type: string): { category: UnitCategory; entry: NamedType | FlyingType | StaticType } | undefined {
+  const heliport = HELIPORT_STATICS.find((h) => h.type === type);
+  if (heliport) return { category: "static", entry: heliport };
   const all = unitTypes();
   for (const category of Object.keys(all) as UnitCategory[]) {
     const entry = (all[category] as { type: string }[]).find((t) => t.type === type);
