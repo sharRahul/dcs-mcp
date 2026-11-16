@@ -260,9 +260,16 @@ Three sources, kept apart because they answer different questions:
 
 DCS's lists are permissive: Russia is offered an A-10C, and every country gets the WWII warbirds. So they say what is *possible*, not what is *realistic*. The validator warns (`COUNTRY_TYPE_NOT_OFFERED`) when a unit is outside its country's list.
 
-`dcs_country_inventory` takes each real-world type and marks it: in DCS and offered to the country; in DCS but under other countries only; available through an **installed mod**; or missing. The match is by designation family, so the Indian Air Force's Su-30MKI matches DCS's `Su-30`, which is a different variant. With a community Su-30MKI mod installed, the inventory points at the mod's type instead. Mods are found by scanning their Lua files as *text* for unit declarations (`make_flyable`, `add_aircraft` `Name`, `GT.Name`). They are never executed, so a mod that builds its type names in code can be missed. Mod types are accepted by every placement tool and by the validator.
+`dcs_country_inventory` takes each real-world type and marks it: in DCS and offered to the country; in DCS but under other countries only; available through an **installed mod**; or missing. The match is by designation family, so the Indian Air Force's Su-30MKI matches DCS's `Su-30`, which is a different variant. With a community Su-30MKI mod installed, the inventory also lists the mod's type, because it is the exact variant. Mods are matched to real types by designation or by a distinctive name word (a "Tejas" mod matches HAL Tejas). Mods are found by scanning their Lua files as *text* for unit declarations (`make_flyable`, `add_aircraft` `Name`, `GT.Name`). They are never executed, so a mod that builds its type names in code can be missed. Mod types are accepted by every placement tool and by the validator.
 
-The Wikipedia data is a dated snapshot (`generated` in the file) of English Wikipedia's lists. It can lag or lead real service status. Regenerate it with:
+The Wikipedia data is a dated snapshot (`generated` in the file) of English Wikipedia's lists. It can lag or lead real service status. Coverage is uneven, and the tool says when a list is missing:
+
+- **Aircraft and ground forces** are the strong part.
+- **Ships** are weak. Most navy pages list their major warship classes outside tables, so carriers and destroyers are often absent.
+- **No lists found** for Iraq, Qatar, Kuwait, Belarus and Kazakhstan.
+- **No aircraft list** for Germany, Pakistan, Saudi Arabia, both Koreas, Syria, Georgia, Australia, Greece, Poland, Sweden, Norway and the UAE.
+
+Regenerate it with:
 
 ```bash
 python3 -I scripts/gen-real-world-inventory.py data          # needs access to en.wikipedia.org
@@ -289,7 +296,7 @@ The bundled tables in [`data/`](data/) are what make the offline tools concrete:
 | File | Contents |
 |---|---|
 | `countries.json` | all 92 DCS countries and ids, with the unit types the Mission Editor offers each |
-| `real-world-inventory.json` | what each of 35 countries really operates (Wikipedia), matched to DCS types |
+| `real-world-inventory.json` | what 30 countries really operate (Wikipedia; 35 attempted), matched to DCS types |
 | `unit-types.json` | 144 planes, 26 helicopters, 361 vehicles, 57 ships, 263 statics (with aircraft tasks, fuel, dimensions; static category and shape) |
 | `theatres.json` | 12 theatres: projection constants and 771 airfields with their parking slots |
 

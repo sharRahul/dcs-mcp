@@ -79,6 +79,8 @@ statics parked by populateAirfield sitting on their slots with no spawn collisio
 - `data/real-world-inventory.json` = Wikipedia equipment lists (`scripts/gen-real-world-inventory.py`,
   needs en.wikipedia.org; use `?action=raw`, the API endpoint is rate-limited). Matching to DCS is
   by designation family (`su30`, `fa18`, `t72`) and is a heuristic: say "family match", not "same type".
+- The same script writes `docs/real-world-inventory.md` (per-country summary). Coverage: 30/35
+  countries; ships are weak (navy pages list major classes outside tables). Don't overstate it.
 - `src/dcs/mods.ts` scans mod Lua as TEXT (never executes) for `make_flyable`, `add_aircraft` Name,
   `GT.Name` + `add_surface_unit`. Mod types are accepted by the validator and unit search.
 - Templates and air wings never swap a type for another; they skip and report.

@@ -21,11 +21,26 @@ export function designationFamilies(text: string): Set<string> {
   return out;
 }
 
+const STOP = new Set(
+  "aircraft fighter helicopter system missile class sukhoi mikoyan boeing lockheed martin dassault airbus hindustan aeronautics limited general dynamics northrop grumman mod mods".split(" ")
+);
+
+/** Distinctive name words (Tejas, Rafale, Gripen), lower-cased. */
+function nameWords(text: string): Set<string> {
+  return new Set(
+    (text.match(/[A-Za-z]{4,}/g) ?? []).map((w) => w.toLowerCase()).filter((w) => !STOP.has(w))
+  );
+}
+
 export type Availability = "dcs-for-country" | "dcs-other-country" | "mod" | "missing";
 
 export interface InventoryRow extends RealWorldEntry {
   availability: Availability;
-  /** Installed mod units sharing a designation family (only when DCS has none). */
+  /**
+   * Installed mod units sharing a designation family or a distinctive name word
+   * with the real type. Listed even when DCS has the family, because a mod is
+   * often the exact variant (a Su-30MKI mod vs DCS's Su-30).
+   */
   mods: { type: string; mod: string }[];
 }
 
@@ -41,21 +56,24 @@ export interface CountryInventory {
 
 function annotate(rows: RealWorldEntry[], mods: InstalledMod[]): InventoryRow[] {
   return rows.map((row) => {
-    let availability: Availability = row.dcsForCountry.length
+    const text = `${row.name} ${row.wiki}`;
+    const families = designationFamilies(text);
+    const names = nameWords(text);
+    const found: { type: string; mod: string }[] = [];
+    for (const mod of mods) {
+      for (const u of mod.units) {
+        const byFamily = [...designationFamilies(u.type)].some((f) => families.has(f));
+        const byName = [...nameWords(u.type.replace(/_/g, " "))].some((w) => names.has(w));
+        if (byFamily || byName) found.push({ type: u.type, mod: mod.id });
+      }
+    }
+    const availability: Availability = row.dcsForCountry.length
       ? "dcs-for-country"
       : row.dcs.length
         ? "dcs-other-country"
-        : "missing";
-    const found: { type: string; mod: string }[] = [];
-    if (!row.dcs.length) {
-      const families = designationFamilies(`${row.name} ${row.wiki}`);
-      for (const mod of mods) {
-        for (const u of mod.units) {
-          if ([...designationFamilies(u.type)].some((f) => families.has(f))) found.push({ type: u.type, mod: mod.id });
-        }
-      }
-      if (found.length) availability = "mod";
-    }
+        : found.length
+          ? "mod"
+          : "missing";
     return { ...row, availability, mods: found };
   });
 }

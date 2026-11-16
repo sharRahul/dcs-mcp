@@ -99,3 +99,31 @@ test("designation families match variants to DCS families", () => {
   assert.ok(designationFamilies("Boeing F/A-18E/F Super Hornet").has("fa18"));
   assert.ok(designationFamilies("FA-18C_hornet").has("fa18"));
 });
+
+test("real-world inventory: known matches hold (Wikipedia snapshot)", async () => {
+  const { countryInventory } = await import("../src/miz/inventory.js");
+  const india = countryInventory("India", []);
+  const mki = india.aircraft.find((r) => /Su-30MKI/.test(r.name))!;
+  assert.ok(mki, "Su-30MKI row");
+  assert.deepEqual(mki.dcs, ["Su-30"]);
+  assert.equal(mki.availability, "dcs-for-country");
+  const rafale = india.aircraft.find((r) => /Rafale/.test(r.name))!;
+  assert.equal(rafale.availability, "missing");
+  const usa = countryInventory("USA", []);
+  assert.ok(usa.aircraft.find((r) => /F\/A-18C/.test(r.name))!.dcs.includes("FA-18C_hornet"));
+  const russia = countryInventory("Russia", []);
+  assert.ok(russia.ground.find((r) => /Buk/.test(r.name))!.dcs.some((t) => t.startsWith("SA-11 Buk")));
+  // A real type DCS lacks is matched to an installed mod by designation family.
+  const withMod = countryInventory("India", [
+    { id: "Example Tejas mod", folder: "x", kind: "aircraft", units: [{ type: "Tejas_Mk1", category: "plane", file: "entry.lua" }] },
+    { id: "Example MKI mod", folder: "y", kind: "aircraft", units: [{ type: "Su-30MKI", category: "plane", file: "entry.lua" }] },
+  ]);
+  const tejas = withMod.aircraft.find((r) => /Tejas/.test(r.name))!;
+  assert.equal(tejas.availability, "mod");
+  assert.deepEqual(tejas.mods, [{ type: "Tejas_Mk1", mod: "Example Tejas mod" }]);
+  // DCS has the Su-30 family, but the exact-variant mod is still pointed out.
+  const mki2 = withMod.aircraft.find((r) => /Su-30MKI/.test(r.name))!;
+  assert.equal(mki2.availability, "dcs-for-country");
+  assert.ok(mki2.mods.some((m) => m.type === "Su-30MKI"));
+  assert.throws(() => countryInventory("Narnia", []), /Unknown country/);
+});

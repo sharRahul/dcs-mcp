@@ -144,6 +144,7 @@ sukhoi mikoyan gurevich boeing lockheed martin general dynamics northrop grumman
 airbus eurocopter mcdonnell douglas bell sikorsky textron leonardo agusta westland
 hindustan aeronautics limited embraer antonov ilyushin tupolev beriev kamov mil yakovlev
 the and with type variant series block active service united states royal
+sam tel ewr str spaag spg ifv apc mbt atgm mlrs luv srbm tr ln sr cp c2 mod new old
 """.split())
 
 DESIG = re.compile(r"\b([A-Za-z]{1,5})[- ]?(\d{1,4})")
@@ -154,7 +155,12 @@ ALIASES = [
     (r"\bF/A-?", "FA-"),                    # F/A-18 -> FA-18C_hornet
     (r"\bAV-8B", "AV8BNA"),                 # AV-8B Harrier II -> AV8BNA
     (r"\bMi-17\b", "Mi-8"),                 # Mi-17 is the export Mi-8
-    (r"\bTejas\b", "Tejas"),
+    # Navy lists name hulls ("USS Lake Erie (CG-70)"); DCS models classes.
+    (r"\bCG-\d+", "Ticonderoga"),
+    (r"\bDDG-(5[1-9]|[6-9]\d|1[0-3]\d)\b", "Arleigh Burke"),
+    (r"\bFFG-([7-9]|[1-5]\d|6[01])\b", "Oliver Hazard Perry"),
+    # DCS has the Nimitz class as individual hulls (CVN-70 ... CVN-75).
+    (r"\bNimitz\b", "Nimitz CVN-70 CVN-71 CVN-72 CVN-73 CVN-74 CVN-75"),
 ]
 
 
@@ -164,14 +170,23 @@ def normalize(text):
     return text
 
 
-def words(text):
-    return {w.lower() for w in re.findall(r"[A-Za-z]{4,}", text) if w.lower() not in STOP}
+def words(text, minlen=4):
+    return {w.lower() for w in re.findall(r"[A-Za-z]{%d,}" % minlen, text) if w.lower() not in STOP}
+
+
+# British service marks written without a hyphen ("Wildcat AH1", "Typhoon FGR4",
+# "Voyager KC2") look like designations but are not; a real designation that
+# uses these letters is hyphenated (KC-135, C-17, AH-64).
+UK_MARKS = {"ah", "hm", "hc", "ht", "hu", "fgr", "gr", "kc", "cc", "asac", "mra", "rg", "aew", "t", "c", "r", "f", "w"}
+MARK = re.compile(r"\b([A-Za-z]{1,5})(\d{1,4})\b")
 
 
 def keys(text, ships=False):
     """Designation families (su30, f16, mig29, t72, bmp2) and, for ships, class words."""
     t = normalize(text)
-    out = {f"{a.lower()}{b}" for a, b in DESIG.findall(t)}
+    marks = {f"{a.lower()}{b}" for a, b in MARK.findall(t) if a.lower() in UK_MARKS}
+    hyphenated = {f"{a.lower()}{b}" for a, b in re.findall(r"\b([A-Za-z]{1,5})-(\d{1,4})", t)}
+    out = {f"{a.lower()}{b}" for a, b in DESIG.findall(t)} - (marks - hyphenated)
     if "AV8BNA" in t:
         out.add("av8")
     if ships:
@@ -196,12 +211,12 @@ def search_title(query):
     return None
 
 
-def page_rows(title, depth=0):
+def page_rows(title, kind, depth=0):
     """Rows of a list page; a hub page with no tables is followed to its sub-lists."""
     text = fetch(title)
     if not text:
         return None, []
-    rows = table_rows(text)
+    rows = table_rows(text, kind)
     if rows or depth > 0:
         return title, rows
     subs = []
@@ -209,7 +224,7 @@ def page_rows(title, depth=0):
         if target not in subs and target != title:
             subs.append(target)
     for sub in subs[:6]:
-        _t, sub_rows = page_rows(sub, depth + 1)
+        _t, sub_rows = page_rows(sub, kind, depth + 1)
         rows.extend(sub_rows)
     return title, rows
 
@@ -283,15 +298,37 @@ def is_equipment(name, target):
     return any(t not in GENERIC for t in tokens)
 
 
+PORT = re.compile(r"naval (station|base)|navy yard|fleet activities|dockyard|harbou?r\b|,", re.I)
+GENERIC |= set("""
+dock tender littoral hospital replenishment prepositioning expeditionary ocean cable research
+environmental trials torpedo mobile base fleet station sealift salvage rescue hydrographic
+oceanographic command transport ship-to-shore connector
+""".split())
+
 TABLE = re.compile(r"(?:\{\||\{\{\s*[Aa]vilisthead[^}]*\}\})(.*?)\n\|\}", re.S)
 
 
-def table_rows(wikitext):
-    """First meaningful wikilink of each table row: the equipment name."""
+SHIP_LINK = re.compile(
+    r"-class\b|\bclass\b|^(USS|USNS|HMS|INS|HMAS|HMCS|HMNZS|FS|ITS|ESPS|TCG|ROKS|JS|PNS|ARA|NRP|HNLMS|KD|BNS|"
+    r"CNS|RFS|HDMS|KNM|HSwMS|ORP|HS|ENS|IRIS|INS|NAeL|BAP)\b"
+)
+
+
+def table_rows(wikitext, kind="aircraft"):
+    """First meaningful wikilink of each table row: the equipment name.
+
+    Ship tables put a generic type or a home port in the first column, so for
+    ships the row's class (or named-ship) link is used, and a row without one
+    is skipped.
+    """
     rows = []
     for table in TABLE.findall(wikitext):
         for row in re.split(r"\n\|-[^\n]*", table)[1:]:
-            for target, label in re.findall(r"\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|([^\]]+))?\]\]", row):
+            links = re.findall(r"\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|([^\]]+))?\]\]", row)
+            if kind == "naval":
+                classy = [l for l in links if SHIP_LINK.search(l[0].strip())]
+                links = classy[:1] or [l for l in links if not PORT.search(l[0])]
+            for target, label in links:
                 target = target.strip()
                 if SKIP_LINK.search(target):
                     continue
@@ -322,8 +359,14 @@ def dcs_index(categories, ships=False):
     for cat in categories:
         for t in unit_types[cat]:
             k = keys(t["type"] + " " + t.get("name", ""), ships)
-            if not ships and not DESIG.search(t["type"]):
-                k |= {"w:" + w for w in words(t["type"])}  # 'Hawk', 'Tornado'...
+            # A one-word type id ('Hawk') can only be matched by name; a compound
+            # one ('Falcon_Gyrocopter') must not match every "Falcon".
+            if not ships and re.fullmatch(r"[A-Za-z]{4,}", t["type"]):
+                k |= {"w:" + t["type"].lower()}
+            if cat == "vehicle":
+                # Ground systems are often listed by name alone ("Buk", "Patriot",
+                # "Abrams"): the distinctive words of DCS's display name.
+                k |= {"w:" + w for w in words(t.get("name", ""), 3) if w not in GENERIC}
             idx.append((cat, t["type"], k))
     return idx
 
@@ -341,8 +384,13 @@ def match(entry, kind):
     # A row with a designation matches on it alone ('RQ-4 Global Hawk' is not the 'Hawk');
     # only a row without one ('BAE Systems Hawk') falls back to name words.
     if kind != "naval" and not DESIG.search(normalize(text)):
-        k |= {"w:" + w for w in words(text)}
-    return sorted({t for _c, t, tk in INDEX[kind] if k & tk})
+        k |= {"w:" + w for w in words(text, 3 if kind == "ground" else 4) if w not in GENERIC}
+    hits = sorted({t for _c, t, tk in INDEX[kind] if k & tk})
+    if not hits and kind == "ground":
+        # "MIM-104 Patriot": the designation matches nothing in DCS, the name does.
+        w = {"w:" + x for x in words(text, 3) if x not in GENERIC}
+        hits = sorted({t for _c, t, tk in INDEX[kind] if w & tk})
+    return hits
 
 
 result = {}
@@ -360,7 +408,7 @@ for country, (air_titles, army_titles, navy_titles) in COUNTRIES.items():
                 title = search_title(titles[0])
                 if not title or title in candidates:
                     break
-            found, rows = page_rows(title)
+            found, rows = page_rows(title, kind)
             if not found or not rows:
                 continue
             data["pages"][kind] = found
@@ -392,3 +440,47 @@ with open(os.path.join(OUT, "real-world-inventory.json"), "w", encoding="utf-8")
         ensure_ascii=False,
     )
     f.write("\n")
+
+# --- human-readable report --------------------------------------------------------
+LABEL = {"aircraft": "Aircraft", "ground": "Ground forces", "naval": "Ships"}
+lines = [
+    "# Real-world inventories vs DCS",
+    "",
+    f"Generated {date.today().isoformat()} by `scripts/gen-real-world-inventory.py` from English Wikipedia",
+    "(CC BY-SA 4.0). For each country: what it operates that DCS can place for it (family match,",
+    "often a different variant), what DCS has only under other countries, and what DCS lacks — the",
+    "types a third-party mod would have to supply. `dcs_country_inventory` gives the same per",
+    "country, plus matches against the mods installed on your machine.",
+    "",
+    "Matching is heuristic (shared designation or name). Ship coverage is weak: most navy pages",
+    "list their major classes outside tables.",
+    "",
+]
+for country, data in result.items():
+    if not any(data[k] for k in LABEL):
+        lines += [f"## {country}", "", "No Wikipedia equipment list found.", ""]
+        continue
+    lines += [f"## {country}", ""]
+    for kind, label in LABEL.items():
+        rows = data[kind]
+        if not rows:
+            lines.append(f"- **{label}:** no list found")
+            continue
+        here = sorted({t for r in rows for t in r["dcsForCountry"]})
+        other = sorted({r["name"] for r in rows if r["dcs"] and not r["dcsForCountry"]})
+        missing = [r["name"] for r in rows if not r["dcs"]]
+        lines.append(
+            f"- **{label}** ({len(rows)} listed, from *{data['pages'][kind]}*): "
+            f"{len(here)} DCS types offered to {country}; {len(other)} in DCS for other countries only; "
+            f"{len(missing)} not in DCS."
+        )
+        if kind == "aircraft":
+            if here:
+                lines.append(f"  - In DCS for {country}: " + ", ".join(f"`{t}`" for t in here))
+            if missing:
+                lines.append("  - Not in DCS (mod candidates): " + ", ".join(dict.fromkeys(missing)))
+    lines.append("")
+
+os.makedirs("docs", exist_ok=True)
+with open(os.path.join("docs", "real-world-inventory.md"), "w", encoding="utf-8") as f:
+    f.write("\n".join(lines) + "\n")
