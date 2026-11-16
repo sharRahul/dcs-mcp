@@ -344,3 +344,11 @@ runtime protocol mocks and compilation of all ten acceptance missions. The stock
 interpreter is set only as `LUA51`, never as `DCS_LUA`; DCS-specific tests remain
 honestly skipped until DCS is installed. Its artifact is
 `windows-lua51-offline-proof`. These Windows Lua checks still do not execute DCS.
+
+[Completed Windows CI run 43869548671](https://github.com/sharRahul/dcs-mcp/actions/runs/43869548671)
+passed all four jobs for `3b3b238be9a17efba42bbad7912137836095651e`: Node
+20/22/24 and the dedicated Windows stock Lua 5.1 job. MSVC source compilation,
+hook-load/runtime harnesses, advanced/design mocked runtime checks and ten-mission
+Lua compilation all passed. The `windows-lua51-offline-proof` artifact is available
+on that run. This supersedes the earlier Windows-only Node matrix evidence with
+the completed Windows Lua conversion; live DCS acceptance remains pending.
