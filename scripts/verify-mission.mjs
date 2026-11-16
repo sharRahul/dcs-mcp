@@ -16,6 +16,7 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { readMizArchive } from "../dist/miz/archive.js";
 import { parseMission, parseMissionTables } from "../dist/miz/parser.js";
 import { serializeLuaAssignment } from "../dist/miz/serializer.js";
@@ -64,7 +65,7 @@ writeFileSync(missionLua, serializeLuaAssignment("mission", mission), "utf8");
 if (!lua) {
   console.warn("warn  no luae.exe found; skipping Mission Editor open check");
 } else {
-  const harness = path.resolve(import.meta.dirname, "..", "tests", "fixtures", "me-open.lua");
+  const harness = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "tests", "fixtures", "me-open.lua");
   const run = spawnSync(lua, [harness, missionLua], { encoding: "utf8" });
   const out = `${run.stdout ?? ""}${run.stderr ?? ""}`;
   if (run.status !== 0 || !out.includes("ME_LOAD_OK")) fail(`Mission Editor open check:\n${out}`);

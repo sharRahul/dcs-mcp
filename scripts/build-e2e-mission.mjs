@@ -14,6 +14,7 @@
  *   node scripts/build-e2e-mission.mjs [outputPath]
  */
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { newSession, saveSessionAs, refresh } from "../dist/miz/sessions.js";
 import {
   addAircraftGroup,
@@ -29,7 +30,7 @@ import {
 import { loadScripts, resolveFrameworkPath } from "../dist/miz/frameworks.js";
 import { validateMission } from "../dist/miz/validator.js";
 
-const REPO = path.resolve(import.meta.dirname, "..");
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SAVED = path.join(process.env.USERPROFILE, "Saved Games", "DCS");
 const OUT = process.argv[2] ?? path.join(SAVED, "Missions", "dcs-mcp-e2e-persian-gulf.miz");
 
