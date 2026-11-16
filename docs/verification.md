@@ -329,3 +329,18 @@ dependencies `4815772`, acceptance/bridge hardening `aa58f9c`, lowercase documen
 `8e6c65f`, CLI validation `185cda2`, and portable schema/Windows CI `fab09f4`.
 This final documentation commit records those observed results. No npm package or
 public release was published.
+
+### Stock Lua 5.1 CI converted to Windows
+
+At the user's direction, the stock Lua checks now have a dedicated Windows job,
+`Lua 5.1 offline checks on Windows`; no Linux runner is configured. The job builds
+Lua 5.1.5 with MSVC from the [official Lua source archive](https://www.lua.org/ftp/)
+using the published SHA-256 `2640fc56a795f29d28ef15e13c34a47e223960b0240e8cb0a82d9b0738695333`.
+`scripts/build-lua51.ps1` verifies the hash before extracting or compiling and
+requires a fresh build directory. The MSVC setup action is pinned to a commit.
+
+It runs advanced setup, design success/failure cases, hook loading, partial-write/
+runtime protocol mocks and compilation of all ten acceptance missions. The stock
+interpreter is set only as `LUA51`, never as `DCS_LUA`; DCS-specific tests remain
+honestly skipped until DCS is installed. Its artifact is
+`windows-lua51-offline-proof`. These Windows Lua checks still do not execute DCS.

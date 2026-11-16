@@ -49,3 +49,9 @@ only swaps an already running session and returns an asynchronous request, not a
 success. Never invoke it during an unrelated flight without explicit operator intent.
 
 While DCS is running, query `dcs_runtime_inspect` with the manifest group names and outcome flag; save the response alongside operator evidence. Log collection works after DCS closes and does not require bridge access.
+
+CI runs stock Lua 5.1 checks on Windows in a dedicated job. To reproduce its
+interpreter build, open an x64 Visual Studio developer PowerShell and run
+`./scripts/build-lua51.ps1 -OutputDirectory C:\temp\stock-lua51-new`.
+Set `LUA51` to the printed executable path and run the compilation command above.
+This builds hash-checked official stock Lua; it does not install or run DCS.
