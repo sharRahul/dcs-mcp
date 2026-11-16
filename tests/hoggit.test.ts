@@ -97,3 +97,25 @@ test("configure_flight resolves callsign family by name and writes the unit tabl
   configureFlight(m, "Viper", { callsign: { family: 1, flight: 1, name: "Enfield" } }); // legacy form still accepted
   assert.equal((findUnit(m, "Viper-1")!.callsign as LuaTable).name, "Enfield11");
 });
+
+import { manualData } from "../src/miz/actions.js";
+
+test("ED's DCS User Manual editor menus cross-check the wiki catalogue", () => {
+  const md = manualData();
+  assert.match(md._url, /DCS_User_Manual_EN_2020\.pdf$/);
+  assert.deepEqual(Object.keys(md.groups).sort(), ["aircraft", "ship", "vehicle"]);
+  // Only literal name matches are linked; renamed editor entries stay unmapped.
+  const aircraft = md.groups.aircraft;
+  assert.equal(aircraft.find((i) => i.label === "Search Then Engage")!.key, null);
+  assert.equal(aircraft.find((i) => i.label === "Orbit")!.key, "Orbit");
+  assert.equal(md.groups.vehicle.find((i) => i.label === "Alarm State")!.key, "option:alarmState");
+  // Ship AttackGroup: in ED's naval editor menu, not on the wiki -> allowed with a warning.
+  assert.ok(listWaypointActions("ship").some((a) => a.key === "AttackGroup"));
+  const m = mission();
+  addGroundGroup(m, "ship", { side: "blue", country: "USA", name: "DDG", type: "USS_Arleigh_Burke_IIa", count: 1, x: -50000, y: 0 });
+  const r = addWaypointAction(m, "DDG", 1, { action: "AttackGroup", params: { groupId: "SAM" } });
+  assert.ok(r.warnings.some((w) => /DCS User Manual editor menu/.test(w)));
+  // Scripting-only command on aircraft: allowed by the wiki, flagged as not in the editor menu.
+  const s = addWaypointAction(m, "Viper", 1, { action: "SetUnlimitedFuel", params: { value: true } });
+  assert.ok(s.warnings.some((w) => /Not linked to an entry/.test(w)));
+});

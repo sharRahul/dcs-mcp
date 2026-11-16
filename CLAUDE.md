@@ -472,4 +472,10 @@ no adjacent ERROR line.
 - TACAN: hoggit's SystemName table predates TACAN_TANKER_Y; flight.ts keeps pydcs `system = 5 if Y else 4`.
 - `src/miz/callsigns.ts`: type-specific numbers only where pydcs `callnames` equals the wiki list exactly.
 - Neither source has radio bands or per-airframe starting fuel: keep refusing to claim them.
+- `data/me-manual-actions.json` (`scripts/gen-me-manual-actions.py`, from ED's DCS User Manual PDF via
+  `pdftotext -layout`): editor menu labels per group type, linked to hoggit keys by LITERAL name only. The
+  manual's aircraft chapter covers planes and helicopters together, so it never splits them. It can ADD a
+  ship/vehicle category (ship AttackGroup) with a warning; a missing editor label is a warning, never a refusal.
+- files.digitalcombatsimulator.com is behind a Cloudflare browser challenge; do not script around it — ask the
+  user for the file.
 

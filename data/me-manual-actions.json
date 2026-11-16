@@ -1,0 +1,433 @@
+{
+ "_source": "DCS User Manual (Eagle Dynamics), table of contents of the Advanced Actions chapters; labels only, linked to data/hoggit.json by literal name match. Manual created 2022-07-27; DCS has changed since.",
+ "_url": "https://www.digitalcombatsimulator.com/upload/iblock/ed6/87v22jwd1xh51i3rgki944xsf503istq/DCS_User_Manual_EN_2020.pdf",
+ "_sha256": "449d733375bed6e599db703fe6e18527bfab403c0d6a080e03948b2b683408ce",
+ "groups": {
+  "aircraft": [
+   {
+    "label": "Aerobatics",
+    "menu": "task",
+    "key": null
+   },
+   {
+    "label": "Attack Group",
+    "menu": "task",
+    "key": "AttackGroup"
+   },
+   {
+    "label": "Attack Map Object",
+    "menu": "task",
+    "key": "AttackMapObject"
+   },
+   {
+    "label": "Attack Unit",
+    "menu": "task",
+    "key": "AttackUnit"
+   },
+   {
+    "label": "Bombing",
+    "menu": "task",
+    "key": "Bombing"
+   },
+   {
+    "label": "Bombing Runway",
+    "menu": "task",
+    "key": "BombingRunway"
+   },
+   {
+    "label": "Cargo Transportation",
+    "menu": "task",
+    "key": "CargoTransportation"
+   },
+   {
+    "label": "Embarking",
+    "menu": "task",
+    "key": "Embarking"
+   },
+   {
+    "label": "Disembarking",
+    "menu": "task",
+    "key": null
+   },
+   {
+    "label": "Escort",
+    "menu": "task",
+    "key": "Escort"
+   },
+   {
+    "label": "Follow",
+    "menu": "task",
+    "key": "Follow"
+   },
+   {
+    "label": "Ground Escort",
+    "menu": "task",
+    "key": "GroundEscort"
+   },
+   {
+    "label": "FAC – Assign Group",
+    "menu": "task",
+    "key": null
+   },
+   {
+    "label": "Orbit",
+    "menu": "task",
+    "key": "Orbit"
+   },
+   {
+    "label": "Land",
+    "menu": "task",
+    "key": "Land"
+   },
+   {
+    "label": "Refueling",
+    "menu": "task",
+    "key": "Refueling"
+   },
+   {
+    "label": "WW2: Carpet Bombing",
+    "menu": "task",
+    "key": null
+   },
+   {
+    "label": "WW2: Big Formation",
+    "menu": "task",
+    "key": null
+   },
+   {
+    "label": "Search Then Engage",
+    "menu": "enroute",
+    "key": null
+   },
+   {
+    "label": "Search Then Engage in Zone",
+    "menu": "enroute",
+    "key": null
+   },
+   {
+    "label": "Search Then Engage Group",
+    "menu": "enroute",
+    "key": null
+   },
+   {
+    "label": "Search Then Engage Unit",
+    "menu": "enroute",
+    "key": null
+   },
+   {
+    "label": "Refueling",
+    "menu": "enroute",
+    "key": "Refueling"
+   },
+   {
+    "label": "AWACS",
+    "menu": "enroute",
+    "key": "AWACS"
+   },
+   {
+    "label": "FAC",
+    "menu": "enroute",
+    "key": "FAC"
+   },
+   {
+    "label": "FAC – Engage Group",
+    "menu": "enroute",
+    "key": "FAC_EngageGroup"
+   },
+   {
+    "label": "Run Script",
+    "menu": "command",
+    "key": null
+   },
+   {
+    "label": "Script File",
+    "menu": "command",
+    "key": null
+   },
+   {
+    "label": "Set Frequency",
+    "menu": "command",
+    "key": "SetFrequency"
+   },
+   {
+    "label": "Set Frequency for unit",
+    "menu": "command",
+    "key": "SetFrequencyForUnit"
+   },
+   {
+    "label": "Transmit Message",
+    "menu": "command",
+    "key": "TransmitMessage"
+   },
+   {
+    "label": "Stop Transmission",
+    "menu": "command",
+    "key": "StopTransmission"
+   },
+   {
+    "label": "Switch Waypoint",
+    "menu": "command",
+    "key": "SwitchWaypoint"
+   },
+   {
+    "label": "Invisible",
+    "menu": "command",
+    "key": "SetInvisible"
+   },
+   {
+    "label": "Immortal",
+    "menu": "command",
+    "key": "SetImmortal"
+   },
+   {
+    "label": "EPLRS",
+    "menu": "command",
+    "key": "EPLRS"
+   },
+   {
+    "label": "Smoke On_Off",
+    "menu": "command",
+    "key": "SMOKE_ON_OFF"
+   },
+   {
+    "label": "ROE (Rules of Engagement)",
+    "menu": "option",
+    "key": "option:roe"
+   },
+   {
+    "label": "Reaction to Threat",
+    "menu": "option",
+    "key": "option:reactionToThreat"
+   },
+   {
+    "label": "Radar Using",
+    "menu": "option",
+    "key": "option:radarUsing"
+   },
+   {
+    "label": "Chaff – Flare Using",
+    "menu": "option",
+    "key": null
+   },
+   {
+    "label": "Formation",
+    "menu": "option",
+    "key": "option:formation"
+   },
+   {
+    "label": "RTB on Bingo Fuel",
+    "menu": "option",
+    "key": null
+   },
+   {
+    "label": "RTB on out of ammo",
+    "menu": "option",
+    "key": "option:rtbOnOutOfAmmo"
+   },
+   {
+    "label": "Silence",
+    "menu": "option",
+    "key": "option:silence"
+   },
+   {
+    "label": "ECM Using",
+    "menu": "option",
+    "key": "option:ECMUsing"
+   },
+   {
+    "label": "Restrict Air-to-Air Attack",
+    "menu": "option",
+    "key": null
+   },
+   {
+    "label": "Restrict Jettison",
+    "menu": "option",
+    "key": null
+   },
+   {
+    "label": "Restrict Afterburner",
+    "menu": "option",
+    "key": null
+   },
+   {
+    "label": "Restrict Air-to-Ground Attack",
+    "menu": "option",
+    "key": null
+   },
+   {
+    "label": "AA Missile attack ranges",
+    "menu": "option",
+    "key": null
+   },
+   {
+    "label": "No Report Waypoint Pass",
+    "menu": "option",
+    "key": null
+   },
+   {
+    "label": "Radio usage when contact",
+    "menu": "option",
+    "key": null
+   },
+   {
+    "label": "Radio usage when engage",
+    "menu": "option",
+    "key": null
+   },
+   {
+    "label": "Radio usage when kill target",
+    "menu": "option",
+    "key": null
+   }
+  ],
+  "ship": [
+   {
+    "label": "Fire at Point",
+    "menu": "task",
+    "key": "FireAtPoint"
+   },
+   {
+    "label": "Attack Group",
+    "menu": "task",
+    "key": "AttackGroup"
+   },
+   {
+    "label": "Run Script",
+    "menu": "command",
+    "key": null
+   },
+   {
+    "label": "Script File",
+    "menu": "command",
+    "key": null
+   },
+   {
+    "label": "Invisible",
+    "menu": "command",
+    "key": "SetInvisible"
+   },
+   {
+    "label": "Immortal",
+    "menu": "command",
+    "key": "SetImmortal"
+   },
+   {
+    "label": "ROE (Rules of Engagement)",
+    "menu": "option",
+    "key": "option:roe"
+   },
+   {
+    "label": "Alarm State",
+    "menu": "option",
+    "key": "option:alarmState"
+   }
+  ],
+  "vehicle": [
+   {
+    "label": "FAC – Assign Group",
+    "menu": "task",
+    "key": null
+   },
+   {
+    "label": "Fire at Point",
+    "menu": "task",
+    "key": "FireAtPoint"
+   },
+   {
+    "label": "Hold",
+    "menu": "task",
+    "key": "Hold"
+   },
+   {
+    "label": "Embark to Transport (work in progress)",
+    "menu": "task",
+    "key": "EmbarkToTransport"
+   },
+   {
+    "label": "Go to Waypoint",
+    "menu": "task",
+    "key": "goToWaypoint"
+   },
+   {
+    "label": "FAC",
+    "menu": "enroute",
+    "key": "FAC"
+   },
+   {
+    "label": "FAC – Engage Group",
+    "menu": "enroute",
+    "key": "FAC_EngageGroup"
+   },
+   {
+    "label": "Run Script",
+    "menu": "command",
+    "key": null
+   },
+   {
+    "label": "Script File",
+    "menu": "command",
+    "key": null
+   },
+   {
+    "label": "Set Callsign",
+    "menu": "command",
+    "key": "SetCallsign"
+   },
+   {
+    "label": "Set Frequency",
+    "menu": "command",
+    "key": "SetFrequency"
+   },
+   {
+    "label": "Transmit Message",
+    "menu": "command",
+    "key": "TransmitMessage"
+   },
+   {
+    "label": "Stop Transmission",
+    "menu": "command",
+    "key": "StopTransmission"
+   },
+   {
+    "label": "Go to Waypoint",
+    "menu": "command",
+    "key": "goToWaypoint"
+   },
+   {
+    "label": "Invisible",
+    "menu": "command",
+    "key": "SetInvisible"
+   },
+   {
+    "label": "Immortal",
+    "menu": "command",
+    "key": "SetImmortal"
+   },
+   {
+    "label": "EPLRS",
+    "menu": "command",
+    "key": "EPLRS"
+   },
+   {
+    "label": "ROE (Rules of Engagement)",
+    "menu": "option",
+    "key": "option:roe"
+   },
+   {
+    "label": "Disperse Under Fire",
+    "menu": "option",
+    "key": null
+   },
+   {
+    "label": "Alarm State",
+    "menu": "option",
+    "key": "option:alarmState"
+   },
+   {
+    "label": "Engage Air Weapons",
+    "menu": "option",
+    "key": "option:engage_air_weapons"
+   }
+  ]
+ }
+}

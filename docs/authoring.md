@@ -68,7 +68,16 @@ Hoggit DCS scripting wiki (`data/hoggit.json`, `scripts/gen-hoggit-data.py`) to 
 waypoint: documented params only, required params enforced, enum params (expend,
 pattern, designation, modulation) checked, options by numeric id for the group's
 Air/Ground/Naval domain with their documented values. The wiki describes the scripting
-API; the Mission Editor may write extra fields, and none of these has been ME-verified. Arrays must contain exactly one entry per aircraft. Unknown fields remain.
+API; the Mission Editor may write extra fields, and none of these has been ME-verified.
+
+The catalogue is cross-checked against the Mission Editor's own Advanced Actions menus
+from ED's DCS User Manual (`data/me-manual-actions.json`, `scripts/gen-me-manual-actions.py`,
+PDF created 2022-07-27, sha256 recorded). Labels link to catalogue entries only by literal
+name match; renamed editor entries ("Search Then Engage", "Chaff - Flare Using", "RTB on
+Bingo Fuel", ...) stay unmapped. An action missing from the menu for that group type is
+allowed with a warning; a ship/vehicle action the manual lists but the wiki does not
+(ship Attack Group) is allowed and says so. The manual has no per-airframe fuel defaults or
+radio bands either: its payload screen gives fuel as a percentage of the type's maximum. Arrays must contain exactly one entry per aircraft. Unknown fields remain.
 
 `dcs_miz_add_waypoint_task` appends to a 1-based ComboTask without replacing existing
 actions. Typed tasks cover Orbit (including duration), EngageTargets or a zone,

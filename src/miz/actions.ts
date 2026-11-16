@@ -30,6 +30,27 @@ export interface HoggitData {
   actions: Record<string, ActionEntry>;
   callsigns: Record<string, { label: string; names: Record<string, string> }>;
 }
+interface ManualData { _source: string; _url: string; groups: Record<'aircraft' | 'ship' | 'vehicle', { label: string; menu: string; key: string | null }[]> }
+let manualCache: ManualData | undefined;
+/** ED's DCS User Manual (2022) Advanced Actions menus, linked to catalogue keys by literal name. */
+export function manualData(): ManualData {
+  return manualCache ??= JSON.parse(readFileSync(packagePath('data', 'me-manual-actions.json'), 'utf8')) as ManualData;
+}
+const manualGroup = (c: Category) => (c === 'plane' || c === 'helicopter' ? 'aircraft' : c) as 'aircraft' | 'ship' | 'vehicle';
+function editorLabel(key: string, c: Category): string | undefined {
+  return manualData().groups[manualGroup(c)]?.find(i => i.key === key)?.label;
+}
+/**
+ * Categories an action applies to: the wiki's, plus a ship/vehicle category where ED's
+ * manual lists it in that group's editor menu. The manual's aircraft chapter covers planes
+ * and helicopters together, so it only adds aircraft where the wiki lists neither.
+ */
+function categoriesOf(key: string, a: ActionEntry): Category[] {
+  const cats = new Set(a.categories);
+  for (const c of ['ship', 'vehicle'] as const) if (editorLabel(key, c)) cats.add(c);
+  if (!cats.has('plane') && !cats.has('helicopter') && editorLabel(key, 'plane')) { cats.add('plane'); cats.add('helicopter'); }
+  return [...cats].sort() as Category[];
+}
 let cached: HoggitData | undefined;
 export function hoggitData(): HoggitData {
   return cached ??= JSON.parse(readFileSync(packagePath('data', 'hoggit.json'), 'utf8')) as HoggitData;
@@ -39,8 +60,9 @@ const CATEGORIES = new Set(['plane', 'helicopter', 'vehicle', 'ship']);
 
 export function listWaypointActions(category?: Category, kind?: 'task' | 'command' | 'option') {
   return Object.entries(hoggitData().actions)
-    .filter(([, a]) => (!category || a.categories.includes(category)) && (!kind || a.kind === kind))
-    .map(([key, a]) => ({ key, kind: a.kind, taskType: a.taskType, categories: a.categories, page: a.page,
+    .filter(([key, a]) => (!category || categoriesOf(key, a).includes(category)) && (!kind || a.kind === kind))
+    .map(([key, a]) => ({ key, kind: a.kind, taskType: a.taskType, categories: categoriesOf(key, a), page: a.page,
+      editorLabel: category ? editorLabel(key, category) ?? null : undefined,
       ...(a.kind === 'option' ? { optionIds: a.optionIds, values: a.values?.kind,
         allowed: a.values?.kind === 'enum' ? a.values.values : a.values?.kind === 'range' ? { min: a.values.min, max: a.values.max } : undefined }
         : { params: a.params, required: a.required }) }));
@@ -136,8 +158,12 @@ export function buildWaypointAction(mission: LuaTable, found: FoundGroup, req: A
   if (!CATEGORIES.has(category)) throw new Error(`Group category '${found.category}' has no waypoint actions`);
   const entry = hoggitData().actions[req.action];
   if (!entry) throw new Error(`Unknown action '${req.action}'. Use dcs_list_waypoint_actions.`);
-  if (!entry.categories.includes(category)) throw new Error(`'${req.action}' is documented for ${entry.categories.join(', ')}, not ${category} groups`);
+  const cats = categoriesOf(req.action, entry);
+  if (!cats.includes(category)) throw new Error(`'${req.action}' is documented for ${cats.join(', ')}, not ${category} groups`);
   const warnings: string[] = [];
+  const label = editorLabel(req.action, category);
+  if (!label) warnings.push(`Not linked to an entry in the DCS User Manual (2022) editor menu for ${manualGroup(category)} groups; the manual may predate it, name it differently, or it may be scripting-only.`);
+  else if (!entry.categories.includes(category)) warnings.push(`Offered for ${category} groups by the DCS User Manual editor menu ("${label}"); the Hoggit wiki does not list it for them.`);
   if (entry.kind === 'option') {
     if (req.params && Object.keys(req.params).length) throw new Error('Options take value, not params');
     const id = entry.optionIds?.[DOMAIN[category]];

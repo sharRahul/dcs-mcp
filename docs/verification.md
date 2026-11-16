@@ -356,7 +356,7 @@ the completed Windows Lua conversion; live DCS acceptance remains pending.
 ## Drawings, radios, groups, weather, liveries, terrain packs — 0.3.0
 
 ```bash
-npm run build && npm test          # 234 tests: 229 pass, 5 skipped (need DCS_LUA)
+npm run build && npm test          # 235 tests: 230 pass, 5 skipped (need DCS_LUA)
 node --import tsx scripts/update-schema-fixture.mjs   # only after a deliberate schema change
 ```
 
