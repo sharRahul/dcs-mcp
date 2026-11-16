@@ -123,5 +123,6 @@
   "dcs_miz_points_in_zone": "1711857095712bf4f032028483ae32a96820f0b18d83dec3f8509fd59e484b91",
   "dcs_list_waypoint_actions": "2c69a2d25d8913e779d2de878b56c2435e7321e8e2c4b012a7f2533c5a14528b",
   "dcs_miz_add_waypoint_action": "73c93c6f7e912ccbddc5b3d6f6679930c53c8d5ba7ffc4c8fd06ba9bc3edf928",
-  "dcs_list_callsigns": "c031b9afaeb6135c2ed748676aa79088bb11450d890f7da0d57b7015d9291cde"
+  "dcs_list_callsigns": "c031b9afaeb6135c2ed748676aa79088bb11450d890f7da0d57b7015d9291cde",
+  "dcs_airfield_radio": "01cb4d4d68b63e26852e228a2d22ffbac04d31cec7b7f01eacdd89ee51e19aa9"
 }

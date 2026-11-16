@@ -69,7 +69,7 @@ The server sends MCP `instructions` with the conventions that matter most (axes,
 
 **Drawings, radios, groups, weather, geometry (offline):** `dcs_miz_add_drawing` (lines, polygons, circles, ovals, rectangles, arrows, oblongs, text, icons), `dcs_miz_list_drawings`, `dcs_miz_remove_drawing`, `dcs_miz_clear_drawing_layer`, `dcs_list_radios`, `dcs_miz_set_radio_presets`, `dcs_miz_reset_radio_presets`, `dcs_miz_set_intra_flight_frequency`, `dcs_miz_clone_group`, `dcs_miz_add_units_to_group`, `dcs_miz_find_groups_near`, `dcs_miz_set_route`, `dcs_list_cloud_presets`, `dcs_miz_set_cloud_preset`, `dcs_geometry`, `dcs_miz_points_in_zone`, `dcs_list_liveries`, `dcs_check_livery`
 
-**Waypoint actions and callsigns (offline, from the Hoggit DCS wiki):** `dcs_list_waypoint_actions`, `dcs_miz_add_waypoint_action` (every documented task, command and option, any group category), `dcs_list_callsigns`
+**Waypoint actions and callsigns (offline, from the Hoggit DCS wiki):** `dcs_list_waypoint_actions`, `dcs_miz_add_waypoint_action` (every documented task, command and option, any group category), `dcs_list_callsigns`, `dcs_airfield_radio` (ATC radios and runway designators from pydcs)
 
 **Terrain packs:** `dcs_terrain_build_pack` (samples DCS's own terrain once, with a mission running), `dcs_terrain_list_packs`, `dcs_terrain_remove_pack` — afterwards `dcs_terrain_analyze` works offline inside the pack's coverage
 

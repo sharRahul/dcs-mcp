@@ -10,6 +10,7 @@ import { listCloudPresets, setCloudPreset } from '../miz/weather.js';
 import { lerp, pointFromBearing, pointsInZone, randomPointInCircle } from '../miz/geometry.js';
 import { addWaypointAction, listWaypointActions } from '../miz/actions.js';
 import { callsignOptions } from '../miz/callsigns.js';
+import { airfieldRadio } from '../data/airfield-radio.js';
 import { liveriesForType, liveryStatus, scanLiveries } from '../dcs/liveries.js';
 import { addUnitsToGroup, cloneGroup, findGroupsNear, setRoute } from '../miz/groups.js';
 import { refresh, requireSession } from '../miz/sessions.js';
@@ -140,4 +141,9 @@ export function registerMizExtendedTools(server: McpServer) {
     description: 'NATO callsign families available to an aircraft type (numbers from the Hoggit wiki enums: 1-8 generic, AWACS 1-5 and tanker 1-3 by main task, 9+ type-specific only where pydcs callnames match the wiki list exactly). Use the family number or name in dcs_miz_configure_flight callsign, or SetCallsign.',
     inputSchema: z.object({ type: z.string().min(1), task: z.string().optional().describe('Main task, e.g. AWACS or Refueling') }).strict(), annotations: read,
   }, async a => result(callsignOptions(a.type, a.task)));
+
+  server.registerTool('dcs_airfield_radio', {
+    description: "An airfield's ATC radios (HF / VHF low / VHF high / UHF, MHz) and runway designators, from pydcs's export of DCS airfield data. Runway headings are designator x 10, not measured. No TACAN/ILS/VOR/NDB, elevation or magnetic variation (not in the bundled data).",
+    inputSchema: z.object({ theatre: z.string().min(1), airfield: z.union([z.string().min(1), z.number().int()]) }).strict(), annotations: read,
+  }, async a => { try { return result(airfieldRadio(a.theatre, a.airfield)); } catch (e) { return errorResult(e); } });
 }

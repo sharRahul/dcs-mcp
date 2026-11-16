@@ -478,4 +478,8 @@ no adjacent ERROR line.
   ship/vehicle category (ship AttackGroup) with a warning; a missing editor label is a warning, never a refusal.
 - files.digitalcombatsimulator.com is behind a Cloudflare browser challenge; do not script around it — ask the
   user for the file.
+- `data/airfield-radio.json` (`scripts/gen-airfield-radio.py`, pydcs `terrain/*/airports.py` as AST data): ATC
+  radios per airfield and runway designators. pydcs's runway "heading" is designator x 10 — never call it
+  measured. pydcs has beacon IDS only: no TACAN/ILS/VOR/NDB frequencies, elevation or magvar. dimon.one (the
+  DimOn "Aerodrome Data and Frequencies" kneeboards, freeware) has expired; that data would need the user's copy.
 

@@ -220,7 +220,7 @@ and safe-integer bounds, 93 were equivalent. The remaining five were reviewed:
   clients should use the error status and actionable message rather than parsing
   Zod-specific error prose. No implicit arbitrary Lua fallback was added.
 
-The 102 input/output schemas (125 since 0.3.0) are locked by SHA-256 regression fixtures in
+The 102 input/output schemas (126 since 0.3.0) are locked by SHA-256 regression fixtures in
 `tests/fixtures/mcp-schema-sha256.json`, exercised through a real stdio SDK client.
 
 ### Reproduction and live status
@@ -356,7 +356,7 @@ the completed Windows Lua conversion; live DCS acceptance remains pending.
 ## Drawings, radios, groups, weather, liveries, terrain packs — 0.3.0
 
 ```bash
-npm run build && npm test          # 235 tests: 230 pass, 5 skipped (need DCS_LUA)
+npm run build && npm test          # 236 tests: 231 pass, 5 skipped (need DCS_LUA)
 node --import tsx scripts/update-schema-fixture.mjs   # only after a deliberate schema change
 ```
 

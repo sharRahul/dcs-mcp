@@ -119,3 +119,14 @@ test("ED's DCS User Manual editor menus cross-check the wiki catalogue", () => {
   const s = addWaypointAction(m, "Viper", 1, { action: "SetUnlimitedFuel", params: { value: true } });
   assert.ok(s.warnings.some((w) => /Not linked to an entry/.test(w)));
 });
+
+import { airfieldRadio } from "../src/data/airfield-radio.js";
+
+test("airfield ATC radios and runways come from the pydcs airport export", () => {
+  const b = airfieldRadio("Caucasus", "Batumi");
+  assert.deepEqual(b.atcMHz, { hf: 4.25, vhfLow: 40.4, vhfHigh: 131, uhf: 260 });
+  assert.deepEqual(b.runways, [{ name: "31-13", ends: [{ name: "31", designatorHeading: 310 }, { name: "13", designatorHeading: 130 }] }]);
+  assert.equal(b.navaids, null);
+  assert.equal(airfieldRadio("caucasus", 22).name, "Batumi");
+  assert.throws(() => airfieldRadio("Caucasus", "Nowhere"), /No airfield/);
+});

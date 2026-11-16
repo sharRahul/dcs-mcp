@@ -164,6 +164,8 @@ pydcs 1.0.0; no new item has been opened in the Mission Editor or flown.
 | Terrain elevation offline (was live-only) | P | src/terrain/packs.ts: packs sampled from DCS `land` via the bridge, stored on disk, used offline. Bare-earth, resolution = chosen spacing, 262,144 nodes per pack. No pack has been built against a real DCS install yet |
 | Geometry helpers / point-in-zone | F | src/miz/geometry.ts; flat grid, x north / y east |
 
+| Airfield ATC radios / runways | P | src/data/airfield-radio.ts + data/airfield-radio.json from pydcs's airport export: 4 ATC radios (where pydcs has them) and runway designators for all 771 airfields. Navaids, elevation and magvar absent |
+
 Still open from this list: radio bands and starting fuel per airframe (neither pydcs nor the
 Hoggit wiki has them; the wiki only links an external spreadsheet for radios), and
 DCS-install-derived (rather than pydcs) data.
