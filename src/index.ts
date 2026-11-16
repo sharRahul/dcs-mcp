@@ -15,6 +15,10 @@
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { registerMissionDesignTools } from "./tools/mission-design.js";
+import { registerAdvancedAuthoringTools } from "./tools/advanced-authoring.js";
+import { registerTerrainPlacementTools } from "./tools/terrain-placement.js";
+import { registerTerrainTools } from "./tools/terrain.js";
 import { registerMizTools } from "./tools/miz.js";
 import { registerMizAuthoringTools } from "./tools/miz-authoring.js";
 import { registerMizEditingTools } from "./tools/miz-editing.js";
@@ -34,6 +38,10 @@ function createServer(): McpServer {
     { instructions: SERVER_INSTRUCTIONS }
   );
   registerMizTools(server);
+  registerAdvancedAuthoringTools(server);
+  registerMissionDesignTools(server);
+  registerTerrainTools(server);
+  registerTerrainPlacementTools(server);
   registerMizAuthoringTools(server);
   registerMizEditingTools(server);
   registerMizDressingTools(server);

@@ -520,6 +520,68 @@ Still honestly unverified:
 - `dcs_spawn_unit` and `dcs_send_message` are written against the DCS scripting API and, unlike the read paths, have not been exercised in a live mission since the thread-routing fix.
 - New in 0.2.0 and checked offline only (serialize → reparse round trips, the validator, PROJ cross-checks), but not yet opened in the Mission Editor or flown: airfield/carrier/FARP starts and parking-slot choice, static objects, FARPs, parked-static airfields, target areas, naval formations, forced options, the `catalogue` SAM templates, and trigger removal on missions saved by the Mission Editor. The record formats follow pydcs, whose missions DCS loads, but this project's rule is that nothing counts as verified until DCS has run it.
 
+## Advanced mission authoring and terrain planning
+
+The expanded offline tools add configurable flight roles and advanced waypoint tasks,
+per-aircraft payload validation, flight identity/radio settings, ground plans, surface
+tasking, ordered IADS setup, F10 threat circles, and warehouse editing with preservation.
+Requested parking now checks fit and duplicate assignments; FARP starts check pad capacity.
+
+Terrain tools provide elevation, slope, profiles, sampled LOS/masking/viewshed, route
+checks and placement checks for every unit in a ground group. They require a sourced
+offline grid or a matching live DCS theatre. No terrain elevations are bundled and no
+flat-terrain fallback is used. Visibility is geometric, not an authoritative sensor model.
+
+All additions are **offline tested; not newly DCS-verified**.
+Carrier recovery/deck compatibility, historical service dates, radio bands,
+installed liveries and creation of new warehouse stock identifiers remain gaps.
+
+- [Capability assessment and evidence](docs/CAPABILITY_GAP_ANALYSIS.md)
+- [Tool usage, examples and limitations](docs/AUTHORING.md)
+- [Reproducible checks and DCS acceptance work](docs/VERIFICATION.md)
+
+```bash
+npm run check
+npm run build
+npm test
+npm run verify:capabilities -- <new-output-directory>
+# Optional stock Lua 5.1 check, with mocked DCS/Skynet APIs:
+LUA51=/path/to/lua5.1 npm run verify:lua51
+```
+
+The proof command writes a .miz and JSON report, refuses to overwrite an existing
+mission, and labels synthetic terrain checks explicitly. Stock Lua checks are distinct
+from the existing DCS_LUA checks and do not count as testing inside DCS World.
+
+## Structured scenarios and cinematic direction
+
+Submit a mission specification directly from an MCP client with `dcs_scenario_validate`
+and `dcs_scenario_generate`. The local engine validates roles, countries, forces,
+starts, support aircraft, objectives and triggers, generates deterministic mission
+data from an optional seed, and embeds its specification/report. Campaign generation
+returns validated stage missions and an outcome transition manifest.
+
+The mission director adds condition-driven dialogue, takeoff/landing/combat-event
+cues, branches, reinforcement actions, timelines, shot lists and highlight suggestions.
+Missing audio produces explicit recording placeholders and subtitles. Built-in dialogue
+is fictional cinematic material; no paid TTS or external AI API is required.
+
+Mission configuration, F10 lines/polygons/text, score goals, full trigger replacement,
+briefing images, kneeboards and resource removal are also exposed as typed MCP tools.
+All additions remain offline tested, not DCS-verified. CSAR is zone/flag based; campaign
+manifests are not .cmp files, and carrier recovery remains unsupported.
+
+- [Mission design and tool contracts](docs/MISSION_DESIGN.md)
+- [Example specification](examples/scenarios/interception.json)
+- [Phase 4–6 verification](docs/PHASE_4_6_VERIFICATION.md)
+
+```bash
+npm run build
+npm run verify:design -- <new-output-directory>
+# Optional mocked Lua 5.1 execution, separate from DCS verification:
+LUA51=/path/to/lua5.1 npm run verify:design -- <another-new-directory>
+```
+
 ## License
 
 [Apache 2.0](LICENSE).

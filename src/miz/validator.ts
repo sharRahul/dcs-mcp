@@ -1,12 +1,18 @@
 /** Structural and semantic validation of a parsed MissionDocument. */
+import { validateAuthoring } from "./advanced-validation.js";
+import type { LuaTable } from "./lua.js";
 import type { MissionDocument, ValidationIssue, ValidationReport } from "../types.js";
 import { countryOffers, findUnitType } from "../data/reference.js";
 import { findModUnit } from "../dcs/mods.js";
 
 /** Run read-only validation over a parsed mission. Never modifies the document. */
-export function validateMission(doc: MissionDocument): ValidationReport {
+export function validateMission(doc: MissionDocument, mission?: LuaTable): ValidationReport {
   const errors: ValidationIssue[] = [];
   const warnings: ValidationIssue[] = [];
+
+  if (mission) for (const issue of validateAuthoring(mission)) {
+    (issue.severity === "error" ? errors : warnings).push(issue);
+  }
 
   if (doc.theatre === "unknown") {
     warnings.push({ severity: "warning", code: "THEATRE_MISSING", message: "Mission has no theatre set" });

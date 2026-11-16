@@ -293,8 +293,8 @@ export function registerMizTools(server: McpServer): void {
     },
     async ({ sessionId, response_format }) => {
       try {
-        const { document } = requireSession(sessionId);
-        const report = validateMission(document);
+        const { document, mission } = requireSession(sessionId);
+        const report = validateMission(document, mission);
         return render(
           response_format,
           () => {

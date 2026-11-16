@@ -101,7 +101,7 @@ test("depth authoring: waypoints, payload, task, trigger survive round-trip", as
     chaff: 60,
     flare: 60,
     gun: 100,
-    pylons: [{ pylon: 3, CLSID: "{CLSID-TEST}" }],
+    pylons: [{ pylon: 3, CLSID: "ALQ_184" }],
   });
   addTrigger(
     s.mission,
@@ -132,7 +132,7 @@ test("depth authoring: waypoints, payload, task, trigger survive round-trip", as
   const unit = findUnit(reparsed, "Viper 1-1")!;
   const payload = unit["payload"] as any;
   assert.equal(payload.fuel, "3200"); // stored as string
-  assert.equal(payload.pylons[3].CLSID, "{CLSID-TEST}");
+  assert.equal(payload.pylons[3].CLSID, "ALQ_184");
 
   const trigrules = reparsed["trigrules"] as any;
   assert.equal(trigrules[1].predicate, "triggerOnce");

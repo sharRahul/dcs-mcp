@@ -12,11 +12,16 @@
     "dist",
     "data",
     "scripts",
+    "examples",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
     "build": "tsc",
+    "check": "tsc --noEmit",
+    "verify:design": "node scripts/verify-design.mjs",
+    "verify:lua51": "node scripts/verify-lua51.mjs",
+    "verify:capabilities": "node scripts/verify-capabilities.mjs",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
@@ -42,7 +47,7 @@
     "type": "git",
     "url": "git+https://github.com/sharRahul/dcs-mcp.git"
   },
-  "homepage": "https://www.dcs-mcp.com",
+  "homepage": "https://github.com/sharRahul/dcs-mcp",
   "bugs": {
     "url": "https://github.com/sharRahul/dcs-mcp/issues"
   },

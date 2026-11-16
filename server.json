@@ -3,7 +3,7 @@
   "name": "io.github.sharRahul/dcs-mcp",
   "title": "DCS World",
   "description": "Author and edit DCS World .miz missions offline, and control a running DCS through a bundled hook.",
-  "websiteUrl": "https://www.dcs-mcp.com",
+  "websiteUrl": "https://github.com/sharRahul/dcs-mcp",
   "repository": {
     "url": "https://github.com/sharRahul/dcs-mcp",
     "source": "github"

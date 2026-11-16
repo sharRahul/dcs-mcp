@@ -399,3 +399,37 @@ reported a reachable environment for commands that then failed on a nil global.
 Install with a copy into `Saved Games/DCS/Scripts/Hooks/`; DCS must be restarted to pick it
 up. Confirm via `Saved Games/DCS/Logs/dcs.log` — look for `Loaded ...dcs-mcp-hook.lua` with
 no adjacent ERROR line.
+
+## Advanced authoring additions (offline only)
+
+- Read docs/AUTHORING.md, CAPABILITY_GAP_ANALYSIS.md and VERIFICATION.md for scope/evidence.
+- src/miz/flight.ts: strict role templates and typed tasks; aliases never invent DCS main tasks.
+- src/terrain/: explicit sourced grids or structured live bridge. Missing data is unavailable,
+  unknown surface is indeterminate. Never add a flat fallback or call geometry authoritative radar.
+- src/miz/operations.ts: layout conventions, surface tasking, standard-layer F10 circles.
+- src/miz/logistics.ts + sessions.ts: warehouses remain opaque until edited, then snapshot/save
+  their raw table. Existing wsType data is preserved; new stock identifiers are refused.
+- scripts/gen-authoring-data.py reads pinned pydcs 1.0.0 as AST data, no imports/execution.
+  Do not hand-edit data/authoring.json; hashes in its metadata identify the source files.
+- IADS setup registers in DCSMCP_IADS; telemetry samples it alongside redIADS/blueIADS,
+  deduplicating objects. Iterate Skynet collections with ipairs as before.
+- validateMission optionally takes raw mission data for payload/parking/reference checks.
+  Only known task ids are interpreted: EPLRS.groupId is a network number, not a mission group.
+- npm run verify:capabilities produces an offline proof artifact. verify:lua51 uses LUA51
+  with mocked DCS APIs, never DCS_LUA and never a DCS-verification claim.
+- No new feature's DCS runtime status or existing SAM provenance has been promoted.
+
+## Mission design, scenarios and director (Phases 4–6)
+
+- Read docs/MISSION_DESIGN.md for native contracts and limits; no comparison/site information belongs in repo docs.
+- src/scenario/engine.ts independently validates structured specifications. Never silently replace units or invent terrain/loadouts.
+- The scenario report/spec are generation snapshots; miz/report.ts recomputes current state after edits.
+- Goal definitions need BOTH goals and result tables. Conditions reuse the existing oracle-backed trigger compiler.
+- Director phases do not authenticate radio procedures. Missing audio must emit no radio/sound action; use placeholders/subtitles.
+- World cues use guarded public world event handlers, with explicit initiator unit matching.
+- Outcome arbitration uses public flag/timer APIs with a one-second failure-priority window; no new DCS predicates.
+- DCS group activation is group-scoped. Refuse independent-unit activation for multi-unit groups.
+- Assets use l10n/DEFAULT/mapResource or KNEEBOARD/<type>/IMAGES. Track deletions and extra archive files through snapshots/save.
+- Snapshot resource pruning prevents deleted assets from reappearing. Never execute supplied Lua on the server; syntax parsing is allowed.
+- verify:design writes an offline proof mission/report. Optional LUA51 checks use mocks, not DCS_LUA or a DCS-verification claim.
+- CSAR pickup, .cmp/cross-mission persistence, full DCS predicate coverage and moving-deck recovery remain explicitly unsupported.

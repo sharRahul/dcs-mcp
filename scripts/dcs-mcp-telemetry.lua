@@ -210,8 +210,21 @@ end
   logs nothing instead of erroring every 30 seconds.
 ]]
 local function sampleIADS()
+  -- Retain legacy missions and include networks created by the typed authoring tool.
+  local networks, seen = {}, {}
   for _, globalName in ipairs({ "redIADS", "blueIADS" }) do
     local iads = _G[globalName]
+    if iads then networks[globalName] = iads; seen[iads] = true end
+  end
+  if type(DCSMCP_IADS) == "table" then
+    for name, iads in pairs(DCSMCP_IADS) do
+      if type(iads) == "table" and not seen[iads] then
+        networks["configured:" .. tostring(name)] = iads
+        seen[iads] = true
+      end
+    end
+  end
+  for globalName, iads in pairs(networks) do
     if iads and iads.getSAMSites then
       local live, dark, cut, destroyed = 0, 0, 0, 0
       -- getSAMSites/getEarlyWarningRadars return a SkynetIADSTableDelegator, not
@@ -235,7 +248,7 @@ local function sampleIADS()
         -- from the cockpit.
         log("IADS_SITE", string.format(
           "t=%s net=%s site=%s nato=%s active=%s dead=%s power=%s link=%s radar=%s ammo=%s harmDef=%s auto=%s",
-          r(timer.getTime()), globalName, safe(site:getDCSName()), safe(site:getNatoName()),
+          r(timer.getTime()), safe(globalName), safe(site:getDCSName()), safe(site:getNatoName()),
           tostring(active), tostring(isDead), tostring(powered), tostring(connected),
           tostring(site:hasWorkingRadar()), tostring(site:hasRemainingAmmo()),
           tostring(site:isDefendingHARM()), tostring(site:getAutonomousState())))
@@ -243,7 +256,7 @@ local function sampleIADS()
       local ew = #(iads:getEarlyWarningRadars() or {})
       log("IADS", string.format(
         "t=%s net=%s samLive=%d samDark=%d samCut=%d samDead=%d ewr=%d",
-        r(timer.getTime()), globalName, live, dark, cut, destroyed, ew))
+        r(timer.getTime()), safe(globalName), live, dark, cut, destroyed, ew))
     end
   end
 end

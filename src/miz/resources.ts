@@ -43,7 +43,7 @@ export function nextDictId(mission: LuaTable): number {
  * writing anywhere else in the archive.
  */
 export function assertSafeResourceName(fileName: string): void {
-  if (!fileName || fileName !== path.basename(fileName)) {
+  if (!fileName || /[\\/]/.test(fileName) || fileName !== path.basename(fileName)) {
     throw new ArchivePolicyError(
       `Resource file name must be a bare file name without directories: ${JSON.stringify(fileName)}`
     );
