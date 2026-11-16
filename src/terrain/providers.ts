@@ -14,14 +14,14 @@ export interface ElevationGrid {
   /** DCS land surface codes 1..5, nearest node. Optional: suitability becomes indeterminate. */
   surfaces?: (number | null)[];
 }
-export function gridProvider(grid: ElevationGrid, theatre: string): TerrainProvider {
+export function gridProvider(grid: ElevationGrid, theatre: string, maxNodes = 65536): TerrainProvider {
   if ((resolveTheatreName(grid.theatre) ?? grid.theatre) !== (resolveTheatreName(theatre) ?? theatre))
     throw new TerrainUnavailable(`Grid theatre '${grid.theatre}' does not match '${theatre}'`);
   positive(grid.spacingMetres, 'grid spacing'); finite(grid.origin.x, 'origin.x'); finite(grid.origin.y, 'origin.y');
   if (!grid.source.trim()) throw new Error('Grid source/provenance is required');
   const size = grid.rows * grid.columns;
-  if (![grid.rows, grid.columns].every(n => Number.isInteger(n) && n >= 2) || size > 65536 ||
-    grid.heights.length !== size || (grid.surfaces && grid.surfaces.length !== size)) throw new Error('Invalid grid dimensions or data length (maximum 65536 nodes)');
+  if (![grid.rows, grid.columns].every(n => Number.isInteger(n) && n >= 2) || size > maxNodes ||
+    grid.heights.length !== size || (grid.surfaces && grid.surfaces.length !== size)) throw new Error(`Invalid grid dimensions or data length (maximum ${maxNodes} nodes)`);
   if (grid.heights.some(h => h !== null && !Number.isFinite(h))) throw new Error('Invalid grid elevation');
   if (grid.surfaces?.some(s => s !== null && ![1, 2, 3, 4, 5].includes(s))) throw new Error('Invalid DCS surface code');
   return { source: grid.source, theatre, resolutionMetres: grid.spacingMetres, async sample(points) {

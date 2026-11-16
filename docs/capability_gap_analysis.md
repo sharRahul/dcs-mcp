@@ -145,3 +145,24 @@ operations, AI routing and terrain. Full authoritative sensor/terrain models,
 period-compatible equipment datasets, native .cmp campaigns, pickup/rescue logic,
 and the complete Mission Editor predicate/action catalogue remain incomplete.
 Do not mark these items closed based on offline tests.
+
+## Drawings, radios, groups, weather, liveries and terrain packs — 0.3.0
+
+Offline tested only (tests/gap.test.ts, tests/extended-server.test.ts). Format evidence is
+pydcs 1.0.0; no new item has been opened in the Mission Editor or flown.
+
+| Capability (baseline above) | Now | Evidence and remaining limits |
+|---|---|---|
+| Unique names (groups/units/statics/zones) | F | `assertNamesFree`, zone check in `addTriggerZone`; refusal leaves the mission untouched. Validator already reported duplicates |
+| Radio presets / intra-flight frequency (was M) | P | src/miz/radios.ts from pydcs `panel_radio`/`radio_frequency` (88 airframes with presets). Unknown radios/channels refused. **No band data exists in pydcs: frequencies are not band-checked** |
+| Installed liveries (was M) | P | src/dcs/liveries.ts, pydcs LiveryScanner paths; installed / not_installed / unknown. Zipped liveries listed by id only |
+| Callsign families | M | unchanged: no source data |
+| F10 drawing primitives (was M) | F (format) / T | all pydcs primitives incl. oval, rectangle, arrow, freehand line, icons (9 pydcs standard icons only), line styles, list/remove/clear layer. ME rendering unverified |
+| Group clone / grow / spatial search / route replace | F (offline) | src/miz/groups.ts; clone refuses parking/ship/FARP starts and drops datalinks |
+| Cloud presets | F (offline) | src/miz/weather.ts, 30 pydcs presets with base ranges |
+| Terrain elevation offline (was live-only) | P | src/terrain/packs.ts: packs sampled from DCS `land` via the bridge, stored on disk, used offline. Bare-earth, resolution = chosen spacing, 262,144 nodes per pack. No pack has been built against a real DCS install yet |
+| Geometry helpers / point-in-zone | F | src/miz/geometry.ts; flat grid, x north / y east |
+
+Still open from this list: radio bands, callsign families, starting fuel per airframe (no
+source), the full DCS waypoint-action table, DCS-install-derived (rather than pydcs) data.
+

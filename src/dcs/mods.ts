@@ -52,7 +52,7 @@ export function modRoots(env: NodeJS.ProcessEnv = process.env): string[] {
   return roots.filter((r) => existsSync(r));
 }
 
-function defaultInstallDirs(env: NodeJS.ProcessEnv): string[] {
+export function defaultInstallDirs(env: NodeJS.ProcessEnv): string[] {
   const pf = env.ProgramFiles ?? "C:\\Program Files";
   return [
     path.join(pf, "Eagle Dynamics", "DCS World"),

@@ -433,3 +433,28 @@ no adjacent ERROR line.
 - Snapshot resource pruning prevents deleted assets from reappearing. Never execute supplied Lua on the server; syntax parsing is allowed.
 - verify:design writes an offline proof mission/report. Optional LUA51 checks use mocks, not DCS_LUA or a DCS-verification claim.
 - CSAR pickup, .cmp/cross-mission persistence, full DCS predicate coverage and moving-deck recovery remain explicitly unsupported.
+
+## Drawings, radios, groups, weather, liveries, terrain packs (0.3.0) — offline only
+
+- `src/miz/drawings.ts`: every pydcs drawing primitive (`dcs/drawing/*.py`): Line modes segment/segments/free,
+  Polygon modes circle/oval/rect/free/arrow, TextBox, Icon (pydcs `StandardIcon` only — no other icon files are
+  known), LineStyle values. Oblong = pydcs `add_oblong` free polygon. Text font is pydcs's
+  `DejaVuLGCSansCondensed.ttf`. None of the new shapes has been opened in the ME.
+- `src/miz/radios.ts`: `unit.Radio` = deep copy of pydcs `panel_radio`; `group.frequency`/`radioSet` like
+  `FlyingGroup.set_frequency`. pydcs has NO band data: never claim a frequency is band-valid.
+- `src/miz/groups.ts`: clone refuses parking/ship/FARP starts (slot reuse) and drops `datalinks` (they name the
+  source unit ids). `setRoute` always keeps point 1. `assertNamesFree` (authoring.ts) guards every new group,
+  unit, static and zone name.
+- `src/miz/weather.ts`: cloud presets from pydcs `cloud_presets.py`, `_make_cloud_dict`, `validate_base`.
+- `scripts/gen-authoring-data.py` now also emits `radioFrequency`, `panelRadio`, `liveryName` and `cloudPresets`;
+  source hashes for the old files are unchanged. Regenerate, never hand-edit.
+- `src/dcs/liveries.ts`: pydcs `LiveryScanner` paths, description.lua read as TEXT, never throws; no roots
+  found = `unknown`, not `not_installed`.
+- `src/terrain/packs.ts`: packs are sampled from the live `land` command only (`dcs_terrain_build_pack`);
+  nothing else may write one. Offline `dcs_terrain_analyze` with no grid uses packs; outside coverage = null.
+- `tests/fixtures/mcp-schema-sha256.json`: after a deliberate schema change run
+  `node --import tsx scripts/update-schema-fixture.mjs` and review the +/~/- list it prints.
+- To verify in DCS next: each new drawing primitive in the ME/F10; presets showing in a Client cockpit; a cloned
+  group and a set_route group opening in the ME; a cloud preset in the ME weather panel; one terrain pack
+  built from a running mission and compared against `dcs_check_terrain`.
+

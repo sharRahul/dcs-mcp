@@ -220,7 +220,7 @@ and safe-integer bounds, 93 were equivalent. The remaining five were reviewed:
   clients should use the error status and actionable message rather than parsing
   Zod-specific error prose. No implicit arbitrary Lua fallback was added.
 
-The final 102 input/output schemas are locked by SHA-256 regression fixtures in
+The 102 input/output schemas (122 since 0.3.0) are locked by SHA-256 regression fixtures in
 `tests/fixtures/mcp-schema-sha256.json`, exercised through a real stdio SDK client.
 
 ### Reproduction and live status
@@ -352,3 +352,16 @@ hook-load/runtime harnesses, advanced/design mocked runtime checks and ten-missi
 Lua compilation all passed. The `windows-lua51-offline-proof` artifact is available
 on that run. This supersedes the earlier Windows-only Node matrix evidence with
 the completed Windows Lua conversion; live DCS acceptance remains pending.
+
+## Drawings, radios, groups, weather, liveries, terrain packs — 0.3.0
+
+```bash
+npm run build && npm test          # 229 tests: 224 pass, 5 skipped (need DCS_LUA)
+node --import tsx scripts/update-schema-fixture.mjs   # only after a deliberate schema change
+```
+
+`tests/gap.test.ts` covers each module with serialize -> reparse round trips; `tests/extended-server.test.ts`
+drives every new tool through a real stdio client, saves, and reopens the `.miz`. The terrain-pack tests use
+a synthetic stand-in for the live bridge, so they prove storage and interpolation, not DCS terrain values.
+Linux local run only; no Windows CI run, Mission Editor open or flight has been performed for these additions.
+

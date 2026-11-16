@@ -67,6 +67,10 @@ The server sends MCP `instructions` with the conventions that matter most (axes,
 
 **Edit (offline):** `dcs_miz_remove_group`, `dcs_miz_remove_unit`, `dcs_miz_remove_zone`, `dcs_miz_remove_trigger`, `dcs_miz_remove_waypoint`, `dcs_miz_rename_group`, `dcs_miz_rename_unit`, `dcs_miz_move_group`, `dcs_miz_move_unit`, `dcs_miz_update_group`, `dcs_miz_update_waypoint`, `dcs_miz_update_zone`, `dcs_miz_update_trigger`
 
+**Drawings, radios, groups, weather, geometry (offline):** `dcs_miz_add_drawing` (lines, polygons, circles, ovals, rectangles, arrows, oblongs, text, icons), `dcs_miz_list_drawings`, `dcs_miz_remove_drawing`, `dcs_miz_clear_drawing_layer`, `dcs_list_radios`, `dcs_miz_set_radio_presets`, `dcs_miz_reset_radio_presets`, `dcs_miz_set_intra_flight_frequency`, `dcs_miz_clone_group`, `dcs_miz_add_units_to_group`, `dcs_miz_find_groups_near`, `dcs_miz_set_route`, `dcs_list_cloud_presets`, `dcs_miz_set_cloud_preset`, `dcs_geometry`, `dcs_miz_points_in_zone`, `dcs_list_liveries`, `dcs_check_livery`
+
+**Terrain packs:** `dcs_terrain_build_pack` (samples DCS's own terrain once, with a mission running), `dcs_terrain_list_packs`, `dcs_terrain_remove_pack` — afterwards `dcs_terrain_analyze` works offline inside the pack's coverage
+
 **Inspect (offline):** `dcs_miz_open`, `dcs_miz_get_summary`, `dcs_miz_list_groups`, `dcs_miz_list_triggers`, `dcs_miz_list_zones`, `dcs_miz_get_weather`, `dcs_miz_get_briefing`, `dcs_miz_validate`, `dcs_miz_list_sessions`, `dcs_miz_restore_session`, `dcs_miz_close`
 
 **Reference (offline):** `dcs_list_unit_types`, `dcs_list_countries`, `dcs_country_inventory`, `dcs_list_installed_mods`, `dcs_list_airfields`, `dcs_list_site_templates`, `dcs_geo_convert`
@@ -528,13 +532,24 @@ tasking, ordered IADS setup, F10 threat circles, and warehouse editing with pres
 Requested parking now checks fit and duplicate assignments; FARP starts check pad capacity.
 
 Terrain tools provide elevation, slope, profiles, sampled LOS/masking/viewshed, route
-checks and placement checks for every unit in a ground group. They require a sourced
-offline grid or a matching live DCS theatre. No terrain elevations are bundled and no
-flat-terrain fallback is used. Visibility is geometric, not an authoritative sensor model.
+checks and placement checks for every unit in a ground group. They use a sourced offline
+grid, an installed **terrain pack**, or a matching live DCS theatre. No terrain elevations
+are bundled and no flat-terrain fallback is used. Visibility is geometric, not an
+authoritative sensor model.
+
+A terrain pack is built from DCS itself: with a mission running on the theatre,
+`dcs_terrain_build_pack` samples `land.getHeight` / `land.getSurfaceType` on a grid
+(up to 512 x 512 nodes per pack; tile larger areas) and stores it under
+`DCS_MCP_TERRAIN_DIR` (default `%LOCALAPPDATA%\dcs-mcp\terrain`, or `~/.dcs-mcp/terrain`).
+Later analysis interpolates between those nodes with DCS closed. Packs are bare-earth
+(no buildings or trees) and only as fine as the spacing you chose.
 
 All additions are **offline tested; not newly DCS-verified**.
-Carrier recovery/deck compatibility, historical service dates, radio bands,
-installed liveries and creation of new warehouse stock identifiers remain gaps.
+Carrier recovery/deck compatibility, historical service dates, radio frequency bands
+(pydcs carries none, so preset frequencies are not band-checked) and creation of new
+warehouse stock identifiers remain gaps. Liveries are checked against the folders installed
+on this machine (scanned like pydcs's LiveryScanner); with no DCS found the answer is
+"unknown", never "missing".
 
 - [Capability assessment and evidence](docs/capability_gap_analysis.md)
 - [Tool usage, examples and limitations](docs/authoring.md)

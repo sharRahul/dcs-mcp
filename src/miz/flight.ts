@@ -3,7 +3,8 @@
  */
 import { z } from 'zod';
 import { authoringData } from '../data/authoring.js';
-import { countries, countryOffers, findUnitType, type FlyingType } from '../data/reference.js';
+import { countries, countryOffers, findCountryById, findUnitType, type FlyingType } from '../data/reference.js';
+import { liveryStatus } from '../dcs/liveries.js';
 import { asTable, luaArray, type LuaTable } from './lua.js';
 import { addAircraftGroup, addWaypoint, eachGroup, findGroup, findUnit, setPayload, type AddGroupArgs, type AirCategory } from './authoring.js';
 
@@ -158,7 +159,14 @@ export function configureFlight(mission: LuaTable, name: string, input: z.input<
     appendWaypointTask(copy, name, 1, { kind: 'option', option: 'formation', value: FORMATIONS[config.formation] });
     Object.assign(group, requireFlight(copy, name).group);
   }
-  if (config.livery) warnings.push('Livery id stored; installed livery availability is not known offline');
+  if (config.livery) {
+    const country = findCountryById(Number(found.country.id))?.name;
+    const check = liveryStatus(String(units[0]?.type), config.livery, country);
+    warnings.push(check.status === 'installed'
+      ? (check.reason ? `livery_country_restricted: ${check.reason}` : 'Livery found in an installed Liveries folder')
+      : check.status === 'not_installed' ? `livery_not_installed: ${check.reason}; the id was stored anyway`
+      : `Livery id stored; installation unknown (${check.reason})`);
+  }
   if (config.frequencyMHz !== undefined) warnings.push('Frequency stored in MHz; aircraft-specific radio bands are not in the bundled data');
   if (config.callsign !== undefined) warnings.push('Callsign stored; aircraft/country-specific callsign family availability is not in the bundled data');
   Object.assign(found.group, group);

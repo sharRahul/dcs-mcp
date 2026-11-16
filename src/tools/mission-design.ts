@@ -53,7 +53,7 @@ export function registerMissionDesignTools(server: McpServer) {
     inputSchema: z.object({ sessionId, point: referencePointSchema }).strict(), annotations: writes,
   }, async a => { try { const s = requireSession(a.sessionId); const data = addReferencePoint(s.mission, a.point.group, a.point.name, a.point.position); s.dirty = true; refresh(s); return result(data); } catch (e) { return errorResult(e); } });
   server.registerTool('dcs_miz_add_drawing', {
-    description: 'F10 line/polyline, polygon/operational boundary/target area, circle/threat ring, or text label/waypoint annotation. Vertices are absolute DCS x/y metres; serialized vertices are relative to origin. Only standard layers Red/Blue/Neutral/Common/Author. Runtime visibility depends on F10 options and DCS roles. Preserves existing objects. Offline format evidence: pydcs.',
+    description: 'F10 drawing: line (segment/segments/freehand), free polygon, circle, oval, rectangle, arrow, oblong corridor, text box or standard icon, with pydcs line styles. Vertices are absolute DCS x/y metres; serialized vertices are relative to origin. Only standard layers Red/Blue/Neutral/Common/Author. Runtime visibility depends on F10 options and DCS roles. Preserves existing objects. Offline format evidence: pydcs.',
     inputSchema: z.object({ sessionId, drawing: drawingSchema }).strict(), annotations: writes,
   }, async a => { try { const s = requireSession(a.sessionId); const data = addDrawing(s.mission, a.drawing); s.dirty = true; refresh(s); return result(data); } catch (e) { return errorResult(e); } });
   server.registerTool('dcs_miz_embed_asset', {
