@@ -29,7 +29,7 @@ Driven by any MCP client (Claude, Codex, OpenCode). TypeScript, stdio transport,
 - Every authoring change must round-trip: serialize → reparse → assert. Add a test.
 - Be honest about what needs DCS/Mission-Editor verification; don't claim unverified behavior.
 
-- CI (`.github/workflows/ci.yml`) runs build + test on Node 18/20/22, Ubuntu and Windows.
+- CI (`.github/workflows/ci.yml`) runs build + test on Node 18/20/22 on Windows (DCS is Windows-only).
 
 ---
 

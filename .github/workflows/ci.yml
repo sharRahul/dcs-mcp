@@ -10,12 +10,12 @@ permissions:
 
 jobs:
   test:
-    name: Node ${{ matrix.node }} on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    # DCS World runs on Windows only, so that is the only platform tested.
+    name: Node ${{ matrix.node }} on Windows
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
         node: [18, 20, 22]
     steps:
       - uses: actions/checkout@v4
@@ -28,5 +28,5 @@ jobs:
       # Tests that need DCS's own Lua (luae.exe) skip themselves unless DCS_LUA is set.
       - run: npm test
       - name: Package contents
-        if: matrix.os == 'ubuntu-latest' && matrix.node == 22
+        if: matrix.node == 22
         run: npm pack --dry-run
