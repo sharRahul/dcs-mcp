@@ -72,6 +72,17 @@ ramp; a static of each category; forced options shown in the ME; one `catalogue`
 engaging under Skynet; a helicopter cold start from a FARP and rearming from its support group;
 statics parked by populateAirfield sitting on their slots with no spawn collisions; removing a trigger from an ME-saved mission and flying it.
 
+## Countries, real-world inventories, mods
+
+- `data/countries.json` `units` = what the ME OFFERS a country (pydcs countries.py). Permissive —
+  never describe it as real-world. `countryOffers()` drives COUNTRY_TYPE_NOT_OFFERED (warning).
+- `data/real-world-inventory.json` = Wikipedia equipment lists (`scripts/gen-real-world-inventory.py`,
+  needs en.wikipedia.org; use `?action=raw`, the API endpoint is rate-limited). Matching to DCS is
+  by designation family (`su30`, `fa18`, `t72`) and is a heuristic: say "family match", not "same type".
+- `src/dcs/mods.ts` scans mod Lua as TEXT (never executes) for `make_flyable`, `add_aircraft` Name,
+  `GT.Name` + `add_surface_unit`. Mod types are accepted by the validator and unit search.
+- Templates and air wings never swap a type for another; they skip and report.
+
 ## Session snapshots
 
 `enableSessionPersistence()` (called by the server at startup, not by tests unless they opt in)

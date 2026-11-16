@@ -14,7 +14,8 @@ Workflow: dcs_bridge_status first to decide live vs offline. Offline: dcs_miz_ne
 Conventions that are easy to get wrong:
 - Map axes: x = NORTH metres, y = EAST metres. Every placement tool also accepts lat/lon and converts offline from the theatre's projection.
 - Headings are DEGREES in this API (stored as radians in the file).
-- Unit types are exact DCS type ids ('FA-18C_hornet', 'Kub 1S91 str'); look them up with dcs_list_unit_types, never guess.
+- Unit types are exact DCS type ids ('FA-18C_hornet', 'Kub 1S91 str'); look them up with dcs_list_unit_types, never guess. It also lists unit mods installed on this machine (dcs_list_installed_mods).
+- For a realistic order of battle use dcs_country_inventory (what the country really operates, from Wikipedia, vs what DCS or an installed mod can place). dcs_list_unit_types country=X is only what the Mission Editor allows.
 - A SAM site is one group of mixed types (radar + launchers): use composition or site templates (dcs_list_site_templates).
 - FARPs, parked statics on airfields, static target areas and naval formations have their own tools (dcs_list_scene_templates).
 - Triggers reference names in this API; unknown names are errors. Order-dependent script loads belong in ONE start trigger (dcs_miz_load_scripts does this).
@@ -45,6 +46,16 @@ export const CONVENTIONS_GUIDE = `# DCS-MCP conventions
 - \`dcs_list_airfields\` lists airfields for a theatre with their parking capacity; aircraft groups can start
   from parking (cold/hot), the runway, or a carrier/ship.
 
+## Countries, realism and mods
+- Three different questions, three sources:
+  1. What the Mission Editor allows a country: \`dcs_list_unit_types country=X\` (DCS's own, permissive list —
+     Russia is allowed an A-10C). The validator warns (COUNTRY_TYPE_NOT_OFFERED) outside it.
+  2. What the country really operates: \`dcs_country_inventory\` (Wikipedia snapshot, matched to DCS by designation
+     family, so Su-30MKI maps to DCS 'Su-30' — a different variant).
+  3. What this machine adds: \`dcs_list_installed_mods\` (Saved Games and install Mods folders, scanned as text).
+- A real type DCS lacks may be flyable through a mod; the inventory marks those 'mod' when one is installed.
+- Templates never silently swap a type: anything the country is not offered is reported.
+
 ## SAM sites
 - A site is ONE group of mixed unit types: search radar + track radar + launchers (+ command post).
   A group of launchers alone registers with Skynet and never fires.
@@ -60,7 +71,7 @@ export const CONVENTIONS_GUIDE = `# DCS-MCP conventions
   own airfield data. Flights and parked statics never share a slot.
 - \`dcs_miz_add_target_area\` lays out a static target set (ammo-depot, fuel-depot, command-post, supply-yard,
   barracks); \`dcs_miz_add_naval_group\` adds a ship formation (csg, lha-group, kuznetsov-group, red-sag,
-  convoy). Layouts are conventions, not copied from editor missions; check terrain for land targets.
+  convoy) and, with airWing 'auto' or a list, the aircraft on the lead ship's deck. Layouts are conventions, not copied from editor missions; check terrain for land targets.
 
 ## Triggers
 - Types: start (mission start), once, continuous, change (fires on the false->true edge).

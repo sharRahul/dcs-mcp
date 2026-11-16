@@ -30,7 +30,7 @@ test("server exposes tools, resources and prompts, and authors a mission end to 
       "dcs_miz_remove_group", "dcs_miz_move_group", "dcs_miz_add_static", "dcs_miz_set_mission_options",
       "dcs_list_unit_types", "dcs_list_airfields", "dcs_geo_convert", "dcs_install_hook", "dcs_miz_restore_session",
       "dcs_miz_add_farp", "dcs_miz_populate_airfield", "dcs_miz_add_target_area", "dcs_miz_add_naval_group",
-      "dcs_list_scene_templates",
+      "dcs_list_scene_templates", "dcs_country_inventory", "dcs_list_installed_mods",
     ]) {
       assert.ok(tools.includes(name), `missing tool ${name}`);
     }

@@ -7,9 +7,10 @@
  * support placement, ship stations) are conventions, and each says so.
  */
 import { luaArray, type LuaTable } from "./lua.js";
-import { addGroundGroup, chooseParking, countryId, ensureCountry, maxIds, occupiedParking, type Side } from "./authoring.js";
+import { findModUnit } from "../dcs/mods.js";
+import { addAircraftGroup, addGroundGroup, chooseParking, countryId, ensureCountry, maxIds, occupiedParking, type Side } from "./authoring.js";
 import { addStatic } from "./editing.js";
-import { findAirport, findUnitType, resolveTheatreName, type ParkingSlotTuple } from "../data/reference.js";
+import { countryOffers, findAirport, findUnitType, resolveTheatreName, type ParkingSlotTuple } from "../data/reference.js";
 
 const DEG = Math.PI / 180;
 
@@ -395,6 +396,14 @@ export interface NavalTemplate {
   side: "blue" | "red";
   /** Lead first; stations are metres ahead (+) / astern (-) and right (+) / left (-) of the lead. */
   ships: { type: string; forward: number; right: number }[];
+  /** Default air wing for `airWing: "auto"`; the lead ship is the deck. */
+  airWing?: AirWingSquadron[];
+}
+
+export interface AirWingSquadron {
+  type: string;
+  count: number;
+  category: "plane" | "helicopter";
 }
 
 /**
@@ -415,6 +424,13 @@ export const NAVAL_TEMPLATES: NavalTemplate[] = [
       { type: "USS_Arleigh_Burke_IIa", forward: 1000, right: 2500 },
       { type: "USS_Arleigh_Burke_IIa", forward: 1000, right: -2500 },
     ],
+    airWing: [
+      { type: "FA-18C_hornet", count: 4, category: "plane" },
+      { type: "F-14B", count: 2, category: "plane" },
+      { type: "E-2C", count: 1, category: "plane" },
+      { type: "S-3B Tanker", count: 1, category: "plane" },
+      { type: "SH-60B", count: 1, category: "helicopter" },
+    ],
   },
   {
     id: "lha-group",
@@ -424,6 +440,11 @@ export const NAVAL_TEMPLATES: NavalTemplate[] = [
       { type: "LHA_Tarawa", forward: 0, right: 0 },
       { type: "USS_Arleigh_Burke_IIa", forward: 2000, right: 1000 },
       { type: "PERRY", forward: -1500, right: -1000 },
+    ],
+    airWing: [
+      { type: "AV8BNA", count: 4, category: "plane" },
+      { type: "CH-53E", count: 2, category: "helicopter" },
+      { type: "UH-1H", count: 2, category: "helicopter" },
     ],
   },
   {
@@ -435,6 +456,10 @@ export const NAVAL_TEMPLATES: NavalTemplate[] = [
       { type: "PIOTR", forward: 3000, right: 0 },
       { type: "NEUSTRASH", forward: 1000, right: 2500 },
       { type: "REZKY", forward: 1000, right: -2500 },
+    ],
+    airWing: [
+      { type: "Su-33", count: 4, category: "plane" },
+      { type: "Ka-27", count: 2, category: "helicopter" },
     ],
   },
   {
@@ -469,3 +494,78 @@ export function findNavalTemplate(id: string): NavalTemplate {
   return hit;
 }
 
+
+/**
+ * Fixed-wing types DCS can operate from a carrier deck. Curated: the unit data
+ * has no carrier flag. Helicopters can use any ship with a deck.
+ */
+export const CARRIER_CAPABLE_PLANES = new Set([
+  "FA-18C_hornet",
+  "F-14A-135-GR",
+  "F-14B",
+  "E-2C",
+  "S-3B",
+  "S-3B Tanker",
+  "Su-33",
+  "AV8BNA",
+]);
+
+export interface AirWingResult {
+  groups: { name: string; type: string; count: number }[];
+  /** Squadrons left out, and why (e.g. the country is not offered the type). */
+  skipped: { type: string; reason: string }[];
+  notes: string[];
+}
+
+/**
+ * Put an air wing on a ship's deck: one aircraft group per squadron, each a
+ * ship start linked to the deck ship. Squadrons whose type the Mission Editor
+ * does not offer the country are skipped with the reason, never silently
+ * swapped for something else.
+ */
+export function addAirWing(
+  mission: LuaTable,
+  args: {
+    side: Side;
+    country: string;
+    countryId?: number;
+    /** Unit name of the ship the wing operates from. */
+    deck: string;
+    namePrefix: string;
+    squadrons: AirWingSquadron[];
+    hot?: boolean;
+    skill?: string;
+  }
+): AirWingResult {
+  const result: AirWingResult = { groups: [], skipped: [], notes: [] };
+  for (const sq of args.squadrons) {
+    const known = findUnitType(sq.type) ?? findModUnit(sq.type);
+    if (!known) {
+      result.skipped.push({ type: sq.type, reason: "not a DCS type (see dcs_list_unit_types / dcs_list_installed_mods)" });
+      continue;
+    }
+    if (sq.category === "plane" && !CARRIER_CAPABLE_PLANES.has(sq.type)) {
+      result.notes.push(`${sq.type} is not on the carrier-capable list; it is placed as asked but may not launch.`);
+    }
+    const offered = countryOffers(args.country, sq.type);
+    if (offered === false) {
+      result.skipped.push({ type: sq.type, reason: `the Mission Editor does not offer ${sq.type} to ${args.country}` });
+      continue;
+    }
+    const name = `${args.namePrefix}-${sq.type.replace(/[^A-Za-z0-9]+/g, "")}`;
+    addAircraftGroup(mission, sq.category, {
+      side: args.side,
+      country: args.country,
+      countryId: args.countryId,
+      name,
+      type: sq.type,
+      count: sq.count,
+      x: 0,
+      y: 0,
+      skill: args.skill ?? "High",
+      start: { kind: args.hot ? "ship_hot" : "ship_cold", ship: args.deck },
+    });
+    result.groups.push({ name, type: sq.type, count: sq.count });
+  }
+  return result;
+}

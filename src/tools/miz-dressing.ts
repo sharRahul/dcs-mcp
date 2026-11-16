@@ -6,6 +6,8 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { refresh, requireSession, type MissionSession } from "../miz/sessions.js";
 import {
+  addAirWing,
+  type AirWingResult,
   addFarp,
   addTargetArea,
   findNavalTemplate,
@@ -14,6 +16,7 @@ import {
   TARGET_TEMPLATES,
 } from "../miz/dressing.js";
 import { addGroundGroup, addTriggerZone } from "../miz/authoring.js";
+import { countryOffers } from "../data/reference.js";
 import { buildResult, errorResult, render, responseFormatField } from "./format.js";
 import { positionFields, resolvePosition } from "./position.js";
 
@@ -190,9 +193,14 @@ export function registerMizDressingTools(server: McpServer): void {
         NAVAL_TEMPLATES.map((t) => `'${t.id}' (${t.description})`).join("; ") +
         ". Stations are a conventional screen (kilometres apart), not copied from an editor mission. Add " +
         "waypoints with dcs_miz_add_waypoint to get it moving; a carrier recovering aircraft should steam into " +
-        "the wind. Carrier unit names are <name>-1 — use that as start.ship for deck starts.\n\n" +
-        "Args: sessionId, side, country, name, template, x/y or lat/lon, heading?, skill?\n\n" +
-        "Returns JSON: { added, ships: [{ name, type }] }.",
+        "the wind. The lead ship is <name>-1 — the deck for start.ship.\n\n" +
+        "airWing puts aircraft on the lead ship's deck as ship starts, one group per squadron, under the same " +
+        "country: 'auto' uses the template's wing (csg: F/A-18C, F-14B, E-2C, S-3B tanker, SH-60B; lha-group: " +
+        "AV-8B, CH-53E, UH-1H; kuznetsov-group: Su-33, Ka-27), or pass [{ type, count, category }]. A squadron " +
+        "whose type the Mission Editor does not offer the country is skipped and reported, never swapped. Ships " +
+        "the country is not offered are reported too.\n\n" +
+        "Args: sessionId, side, country, name, template, x/y or lat/lon, heading?, skill?, airWing? ('none'|'auto'|[...]), airWingHot?\n\n" +
+        "Returns JSON: { added, ships: [{ name, type }], airWing?: { groups, skipped, notes }, notOffered }.",
       inputSchema: z
         .object({
           sessionId: sessionIdField,
@@ -202,9 +210,38 @@ export function registerMizDressingTools(server: McpServer): void {
           ...positionFields,
           heading: z.number().min(0).max(360).default(0),
           skill: z.enum(["Average", "Good", "High", "Excellent", "Random"]).default("Excellent"),
+          airWing: z
+            .union([
+              z.enum(["none", "auto"]),
+              z
+                .array(
+                  z
+                    .object({
+                      type: z.string().min(1),
+                      count: z.number().int().min(1).max(16),
+                      category: z.enum(["plane", "helicopter"]),
+                    })
+                    .strict()
+                )
+                .min(1)
+                .max(12),
+            ])
+            .default("none"),
+          airWingHot: z.boolean().default(false).describe("Hot (engines running) deck starts"),
         })
         .strict(),
-      outputSchema: z.object({ added: z.string(), ships: z.array(z.object({ name: z.string(), type: z.string() })) }),
+      outputSchema: z.object({
+        added: z.string(),
+        ships: z.array(z.object({ name: z.string(), type: z.string() })),
+        airWing: z
+          .object({
+            groups: z.array(z.object({ name: z.string(), type: z.string(), count: z.number() })),
+            skipped: z.array(z.object({ type: z.string(), reason: z.string() })),
+            notes: z.array(z.string()),
+          })
+          .optional(),
+        notOffered: z.array(z.string()),
+      }),
       annotations,
     },
     async (a) => {
@@ -219,9 +256,31 @@ export function registerMizDressingTools(server: McpServer): void {
           offsets: t.ships.map(({ forward, right }) => ({ forward, right })),
           ...pos, heading: a.heading, skill: a.skill,
         });
-        touched(s);
         const ships = t.ships.map((ship, i) => ({ name: `${a.name}-${i + 1}`, type: ship.type }));
-        return buildResult(`Added naval group '${a.name}' (${ships.length} ships).`, { added: a.name, ships });
+        const notOffered = [...new Set(t.ships.map((x) => x.type))].filter((x) => countryOffers(a.country, x) === false);
+        let wing: AirWingResult | undefined;
+        if (a.airWing !== "none") {
+          const squadrons = a.airWing === "auto" ? t.airWing : a.airWing;
+          if (!squadrons?.length) throw new Error(`Template '${t.id}' has no default air wing; pass airWing as a list.`);
+          wing = addAirWing(s.mission, {
+            side: a.side, country: a.country, countryId: a.countryId, deck: ships[0].name,
+            namePrefix: a.name, squadrons, hot: a.airWingHot,
+          });
+        }
+        touched(s);
+        const parts = [`Added naval group '${a.name}' (${ships.length} ships).`];
+        if (notOffered.length) parts.push(`The Mission Editor does not offer ${notOffered.join(", ")} to ${a.country}.`);
+        if (wing) {
+          parts.push(`Air wing on ${ships[0].name}: ${wing.groups.map((g) => `${g.count}× ${g.type}`).join(", ") || "none"}.`);
+          for (const sk of wing.skipped) parts.push(`Skipped ${sk.type}: ${sk.reason}.`);
+          parts.push(...wing.notes);
+        }
+        return buildResult(parts.join(" "), {
+          added: a.name,
+          ships,
+          ...(wing ? { airWing: wing as unknown as Record<string, unknown> } : {}),
+          notOffered,
+        } as Record<string, unknown>);
       } catch (err) {
         return errorResult(err);
       }

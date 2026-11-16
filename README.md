@@ -52,7 +52,8 @@ Optional environment variables:
 | Variable | Default | Purpose |
 |---|---|---|
 | `DCS_BRIDGE_HOST` / `DCS_BRIDGE_PORT` | `127.0.0.1` / `8899` | Where the live hook listens |
-| `DCS_SAVED_GAMES` | `Saved Games/DCS` (then `DCS.openbeta`) | DCS profile folder for the log, frameworks and hook installer |
+| `DCS_SAVED_GAMES` | `Saved Games/DCS` (then `DCS.openbeta`) | DCS profile folder for the log, frameworks, mods and hook installer |
+| `DCS_INSTALL_DIR` | `Program Files/Eagle Dynamics/DCS World*` | DCS install, scanned for unit mods |
 | `DCS_MCP_STATE_DIR` | `<tmp>/dcs-mcp-sessions` | Session snapshots; `off` disables them |
 | `DCS_ALLOW_RAW_LUA` | unset | `1` exposes `dcs_execute_lua` (also needs `ALLOW_EXEC` in the hook) |
 
@@ -68,7 +69,7 @@ The server sends MCP `instructions` with the conventions that matter most (axes,
 
 **Inspect (offline):** `dcs_miz_open`, `dcs_miz_get_summary`, `dcs_miz_list_groups`, `dcs_miz_list_triggers`, `dcs_miz_list_zones`, `dcs_miz_get_weather`, `dcs_miz_get_briefing`, `dcs_miz_validate`, `dcs_miz_list_sessions`, `dcs_miz_restore_session`, `dcs_miz_close`
 
-**Reference (offline):** `dcs_list_unit_types`, `dcs_list_countries`, `dcs_list_airfields`, `dcs_list_site_templates`, `dcs_geo_convert`
+**Reference (offline):** `dcs_list_unit_types`, `dcs_list_countries`, `dcs_country_inventory`, `dcs_list_installed_mods`, `dcs_list_airfields`, `dcs_list_site_templates`, `dcs_geo_convert`
 
 **Live (DCS running):** `dcs_bridge_status`, `dcs_get_self_data`, `dcs_get_mission_info`, `dcs_get_all_units`, `dcs_get_aircraft_list`, `dcs_send_message`, `dcs_spawn_unit`, `dcs_convert_coords`, `dcs_check_terrain`, `dcs_load_mission`, and (gated) `dcs_execute_lua`
 
@@ -247,6 +248,36 @@ Point types and actions are the ones the Mission Editor writes (`TakeOffParking`
 
 Every type in these templates is checked against the DCS catalogue by the tests. The *layouts* (grid spacing, FARP support positions, ship stations) are this project's conventions, not copied from Mission-Editor missions, and none has been flown yet. Check land targets with `dcs_check_terrain`.
 
+## Countries: what DCS allows, what is real, and mods
+
+Three sources, kept apart because they answer different questions:
+
+| Question | Tool | Source |
+|---|---|---|
+| What does the Mission Editor allow this country? | `dcs_list_unit_types country=…` | DCS's own per-country lists (via pydcs) in `data/countries.json` |
+| What does the country actually operate? | `dcs_country_inventory` | Wikipedia equipment lists in `data/real-world-inventory.json` |
+| What does *this machine* add? | `dcs_list_installed_mods` | unit mods in Saved Games and the DCS install |
+
+DCS's lists are permissive: Russia is offered an A-10C, and every country gets the WWII warbirds. So they say what is *possible*, not what is *realistic*. The validator warns (`COUNTRY_TYPE_NOT_OFFERED`) when a unit is outside its country's list.
+
+`dcs_country_inventory` takes each real-world type and marks it: in DCS and offered to the country; in DCS but under other countries only; available through an **installed mod**; or missing. The match is by designation family, so the Indian Air Force's Su-30MKI matches DCS's `Su-30`, which is a different variant. With a community Su-30MKI mod installed, the inventory points at the mod's type instead. Mods are found by scanning their Lua files as *text* for unit declarations (`make_flyable`, `add_aircraft` `Name`, `GT.Name`). They are never executed, so a mod that builds its type names in code can be missed. Mod types are accepted by every placement tool and by the validator.
+
+The Wikipedia data is a dated snapshot (`generated` in the file) of English Wikipedia's lists. It can lag or lead real service status. Regenerate it with:
+
+```bash
+python3 -I scripts/gen-real-world-inventory.py data          # needs access to en.wikipedia.org
+```
+
+**Carrier air wings.** `dcs_miz_add_naval_group` with `airWing: "auto"` adds the template's wing to the lead ship's deck under the same country:
+
+| Template | Wing |
+|---|---|
+| `csg` | F/A-18C ×4, F-14B ×2, E-2C, S-3B tanker, SH-60B |
+| `lha-group` | AV-8B ×4, CH-53E ×2, UH-1H ×2 |
+| `kuznetsov-group` | Su-33 ×4, Ka-27 ×2 |
+
+You can also pass your own `[{ type, count, category }]`. A squadron the country is not offered is skipped and reported, never swapped for something else. Site and naval templates likewise report ship or SAM types the country is not offered.
+
 ## Mission options
 
 `dcs_miz_set_mission_options` sets the date (validated, leap years included), the start time and the forced options. Forced options are the realism and difficulty settings that override each player's own: labels, external views, F10 view, G-effects, unlimited fuel or weapons, civil traffic and so on. Each value is type-checked against the list the Mission Editor writes. `clearForcedOptions` hands a setting back to the player.
@@ -257,7 +288,8 @@ The bundled tables in [`data/`](data/) are what make the offline tools concrete:
 
 | File | Contents |
 |---|---|
-| `countries.json` | all 92 DCS countries and ids |
+| `countries.json` | all 92 DCS countries and ids, with the unit types the Mission Editor offers each |
+| `real-world-inventory.json` | what each of 35 countries really operates (Wikipedia), matched to DCS types |
 | `unit-types.json` | 144 planes, 26 helicopters, 361 vehicles, 57 ships, 263 statics (with aircraft tasks, fuel, dimensions; static category and shape) |
 | `theatres.json` | 12 theatres: projection constants and 771 airfields with their parking slots |
 

@@ -68,12 +68,51 @@ def attrs(body, indent):
     return out
 
 
+# --- class name -> DCS type id, per pydcs module ---------------------------------
+def class_ids(file, nested_level):
+    out = {}
+    for name, _b, body in class_blocks(read(file), 0):
+        if nested_level == 0:
+            a = attrs(body, 4)
+            if "id" in a:
+                out[name] = literal(a["id"])
+        else:
+            for inner, _ib, ibody in class_blocks(body, 4):
+                a = attrs(ibody, 8)
+                if "id" in a:
+                    out[f"{name}.{inner}"] = literal(a["id"])
+    return out
+
+
+MODULE_IDS = {
+    "planes": class_ids("planes.py", 0),
+    "helicopters": class_ids("helicopters.py", 0),
+    "ships": class_ids("ships.py", 0),
+    "vehicles": class_ids("vehicles.py", 1),
+}
+
 # --- countries ----------------------------------------------------------------
+# Each country also lists the unit types the Mission Editor offers for it. This
+# is DCS's own (permissive) list, not a real-world order of battle: Russia is
+# offered an A-10C. Real-world inventories come from data/real-world-inventory.json.
+REF = re.compile(r"= (planes|helicopters|ships|vehicles)\.([\w.]+)")
 countries = []
 for name, _base, body in class_blocks(read("countries.py"), 0):
     a = attrs(body, 4)
-    if "id" in a and "name" in a:
-        countries.append({"id": literal(a["id"]), "name": literal(a["name"]), "short": literal(a.get("shortname", '""'))})
+    if "id" not in a or "name" not in a:
+        continue
+    units = {"plane": [], "helicopter": [], "ship": [], "vehicle": []}
+    key = {"planes": "plane", "helicopters": "helicopter", "ships": "ship", "vehicles": "vehicle"}
+    for mod, ref in REF.findall(body):
+        type_id = MODULE_IDS[mod].get(ref)
+        if type_id is not None and type_id not in units[key[mod]]:
+            units[key[mod]].append(type_id)
+    countries.append({
+        "id": literal(a["id"]),
+        "name": literal(a["name"]),
+        "short": literal(a.get("shortname", '""')),
+        "units": units,
+    })
 countries.sort(key=lambda c: c["id"])
 
 # --- tasks: class name -> DCS task string --------------------------------------

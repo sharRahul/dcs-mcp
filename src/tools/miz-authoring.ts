@@ -32,6 +32,7 @@ import {
 import { buildResult, errorResult, validationReportSchema, weatherSchema } from "./format.js";
 import { positionFields, resolvePosition } from "./position.js";
 import { findSiteTemplate } from "../miz/templates.js";
+import { countryOffers } from "../data/reference.js";
 import type { MissionSession } from "../miz/sessions.js";
 import type { MissionDocument } from "../types.js";
 import { readFile } from "node:fs/promises";
@@ -320,6 +321,12 @@ export function registerMizAuthoringTools(server: McpServer): void {
         const note = template
           ? ` Site template ${template.id} (provenance: ${template.provenance}` +
             `${template.provenance === "catalogue" ? " — types exist in DCS; this layout is not yet flown or ME-verified" : ""}).` +
+            (() => {
+              const off = [...new Set(template.composition.map((c) => c.type))].filter(
+                (t) => countryOffers(a.country, t) === false
+              );
+              return off.length ? ` The Mission Editor does not offer ${off.join(", ")} to ${a.country}.` : "";
+            })() +
             (template.skynetRole === "sam" && !a.name.startsWith("SAM")
               ? " Skynet's usual addSAMSitesByPrefix('SAM') will not pick up this group name."
               : "")

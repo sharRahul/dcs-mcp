@@ -15,7 +15,9 @@
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "dcs-mcp-server",
       "version": "0.2.0",
-      "transport": { "type": "stdio" },
+      "transport": {
+        "type": "stdio"
+      },
       "environmentVariables": [
         {
           "name": "DCS_BRIDGE_HOST",
@@ -32,6 +34,12 @@
         {
           "name": "DCS_SAVED_GAMES",
           "description": "DCS Saved Games profile folder, if not Saved Games/DCS or DCS.openbeta",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "DCS_INSTALL_DIR",
+          "description": "DCS install folder, scanned for unit mods (default: Program Files/Eagle Dynamics/DCS World*)",
           "isRequired": false,
           "format": "string"
         },

@@ -13,6 +13,30 @@ export interface Country {
   id: number;
   name: string;
   short: string;
+  /**
+   * Unit types the Mission Editor offers this country (DCS's own list, via
+   * pydcs). Permissive, not a real-world order of battle: Russia is offered an
+   * A-10C. Statics are available to every country and are not listed.
+   */
+  units: { plane: string[]; helicopter: string[]; ship: string[]; vehicle: string[] };
+}
+
+/** One equipment row from a country's Wikipedia list, matched to DCS. */
+export interface RealWorldEntry {
+  name: string;
+  /** Wikipedia article title. */
+  wiki: string;
+  /** DCS types sharing a designation family (heuristic). Empty: DCS has no such type. */
+  dcs: string[];
+  /** Those of `dcs` the Mission Editor offers this country. */
+  dcsForCountry: string[];
+}
+
+export interface RealWorldCountry {
+  pages: Partial<Record<"aircraft" | "ground" | "naval", string>>;
+  aircraft: RealWorldEntry[];
+  ground: RealWorldEntry[];
+  naval: RealWorldEntry[];
 }
 
 export interface FlyingType {
@@ -88,6 +112,23 @@ function load<T>(file: string): T {
 let countriesCache: Country[] | undefined;
 let unitTypesCache: UnitTypes | undefined;
 let theatresCache: Record<string, Theatre> | undefined;
+let realWorldCache: { generated: string; countries: Record<string, RealWorldCountry> } | undefined;
+
+/** Real-world inventories from Wikipedia (data/real-world-inventory.json). */
+export function realWorldInventory(): { generated: string; countries: Record<string, RealWorldCountry> } {
+  return (realWorldCache ??= load<{ generated: string; countries: Record<string, RealWorldCountry> }>(
+    "real-world-inventory.json"
+  ));
+}
+
+/** Does the Mission Editor offer this type to this country? Undefined when unknowable. */
+export function countryOffers(countryName: string, type: string): boolean | undefined {
+  const c = findCountry(countryName);
+  if (!c?.units) return undefined;
+  const hit = findUnitType(type);
+  if (!hit || hit.category === "static") return undefined;
+  return (c.units[hit.category as keyof Country["units"]] ?? []).includes(type);
+}
 
 export function countries(): Country[] {
   return (countriesCache ??= load<{ countries: Country[] }>("countries.json").countries);

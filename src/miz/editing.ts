@@ -23,7 +23,8 @@ import {
   maxIds,
   type Side,
 } from "./authoring.js";
-import { findUnitType, unitTypes, type StaticType } from "../data/reference.js";
+import { findCountry, findUnitType, unitTypes, type StaticType } from "../data/reference.js";
+import { installedMods } from "../dcs/mods.js";
 import type { MissionTrigger } from "../types.js";
 
 function toList(items: LuaTable[]): LuaTable {
@@ -581,22 +582,51 @@ export function setMissionOptions(mission: LuaTable, args: MissionOptionsArgs): 
   return changed;
 }
 
-/** Search the unit catalogue. */
+export interface UnitTypeHit {
+  category: string;
+  type: string;
+  name?: string;
+  group?: string;
+  tasks?: string[];
+  /** "dcs" (bundled catalogue) or "mod:<plugin id>" (installed on this machine). */
+  source: string;
+}
+
+/**
+ * Search the unit catalogue, optionally narrowed to what the Mission Editor
+ * offers a country, and including unit mods installed on this machine.
+ */
 export function searchUnitTypes(
   category: "plane" | "helicopter" | "vehicle" | "ship" | "static" | undefined,
   query: string | undefined,
-  limit: number
-): { category: string; type: string; name?: string; group?: string; tasks?: string[] }[] {
+  limit: number,
+  options: { country?: string; includeMods?: boolean } = {}
+): UnitTypeHit[] {
   const all = unitTypes();
   const cats = category ? [category] : (Object.keys(all) as (keyof typeof all)[]);
-  const q = query?.toLowerCase();
-  const out: { category: string; type: string; name?: string; group?: string; tasks?: string[] }[] = [];
+  const words = query?.toLowerCase().split(/\s+/).filter(Boolean) ?? [];
+  const matches = (hay: string) => words.every((w) => hay.toLowerCase().includes(w));
+  const country = options.country ? findCountry(options.country) : undefined;
+  if (options.country && !country) throw new Error(`Unknown country '${options.country}' (see dcs_list_countries).`);
+  const out: UnitTypeHit[] = [];
   for (const c of cats) {
+    const offered = country && c !== "static" ? new Set(country.units[c as keyof typeof country.units]) : undefined;
     for (const t of all[c] as { type: string; name?: string; group?: string; tasks?: string[] }[]) {
-      const hay = `${t.type} ${t.name ?? ""} ${t.group ?? ""}`.toLowerCase();
-      if (q && !q.split(/\s+/).every((word) => hay.includes(word))) continue;
-      out.push({ category: c, type: t.type, name: t.name, group: t.group, tasks: t.tasks });
+      if (offered && !offered.has(t.type)) continue;
+      if (!matches(`${t.type} ${t.name ?? ""} ${t.group ?? ""}`)) continue;
+      out.push({ category: c, type: t.type, name: t.name, group: t.group, tasks: t.tasks, source: "dcs" });
       if (out.length >= limit) return out;
+    }
+  }
+  if (options.includeMods !== false) {
+    for (const mod of installedMods()) {
+      for (const u of mod.units) {
+        const cat = u.category === "unknown" ? "plane" : u.category;
+        if (category && category !== cat) continue;
+        if (!matches(`${u.type} ${mod.id}`)) continue;
+        out.push({ category: cat, type: u.type, group: mod.kind, source: `mod:${mod.id}` });
+        if (out.length >= limit) return out;
+      }
     }
   }
   return out;

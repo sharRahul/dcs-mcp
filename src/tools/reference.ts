@@ -18,6 +18,8 @@ import {
 import { searchUnitTypes } from "../miz/editing.js";
 import { latLonToXY, xyToLatLon } from "../miz/projection.js";
 import { SITE_TEMPLATES } from "../miz/templates.js";
+import { countryInventory, type InventoryRow } from "../miz/inventory.js";
+import { installedMods, modRoots } from "../dcs/mods.js";
 import { buildResult, errorResult, render, responseFormatField } from "./format.js";
 
 const readOnly = {
@@ -38,16 +40,20 @@ export function registerReferenceTools(server: McpServer): void {
     {
       title: "Find unit types",
       description:
-        "Search the bundled DCS unit catalogue for exact type ids — the strings dcs_miz_add_* need. " +
+        "Search the bundled DCS unit catalogue — plus unit mods installed on this machine — for exact type " +
+        "ids, the strings dcs_miz_add_* need. country= narrows to what the Mission Editor offers that country " +
+        "(DCS's own, permissive list; for what it really operates use dcs_country_inventory). " +
         "Every word of the query must match the type id, display name or family (e.g. 'sa-11', " +
         "'hornet', 'abrams', 'farp', 'cargo'). Aircraft entries include their supported tasks. Types added " +
         "by newer DCS versions or mods may be missing; those still work, but the validator warns.\n\n" +
-        "Args: category? ('plane'|'helicopter'|'vehicle'|'ship'|'static'), query?, limit? (default 50)\n\n" +
-        "Returns JSON: { count, types: [{ category, type, name?, group?, tasks? }] }.",
+        "Args: category? ('plane'|'helicopter'|'vehicle'|'ship'|'static'), query?, country?, includeMods? (default true), limit? (default 50)\n\n" +
+        "Returns JSON: { count, types: [{ category, type, name?, group?, tasks?, source ('dcs' | 'mod:<id>') }] }.",
       inputSchema: z
         .object({
           category: z.enum(["plane", "helicopter", "vehicle", "ship", "static"]).optional(),
           query: z.string().max(100).optional(),
+          country: z.string().min(1).optional().describe("Only types the Mission Editor offers this country"),
+          includeMods: z.boolean().default(true).describe("Include unit mods installed on this machine"),
           limit: z.number().int().min(1).max(500).default(50),
           response_format: responseFormatField,
         })
@@ -56,7 +62,12 @@ export function registerReferenceTools(server: McpServer): void {
       annotations: readOnly,
     },
     async (a) => {
-      const types = searchUnitTypes(a.category, a.query, a.limit);
+      let types;
+      try {
+        types = searchUnitTypes(a.category, a.query, a.limit, { country: a.country, includeMods: a.includeMods });
+      } catch (err) {
+        return errorResult(err);
+      }
       return render(
         a.response_format,
         () =>
@@ -66,7 +77,7 @@ export function registerReferenceTools(server: McpServer): void {
                 "",
                 ...types.map(
                   (t) =>
-                    `- \`${t.type}\` (${t.category}${t.group ? `/${t.group}` : ""})` +
+                    `- \`${t.type}\` (${t.category}${t.group ? `/${t.group}` : ""}${t.source !== "dcs" ? `, ${t.source}` : ""})` +
                     `${t.name && t.name !== t.type ? ` — ${t.name}` : ""}` +
                     `${t.tasks?.length ? ` — tasks: ${t.tasks.join(", ")}` : ""}`
                 ),
@@ -269,6 +280,123 @@ export function registerReferenceTools(server: McpServer): void {
           `${id}: lat ${out.lat.toFixed(6)}, lon ${out.lon.toFixed(6)} = x ${out.x.toFixed(1)} (north), ` +
             `y ${out.y.toFixed(1)} (east)`,
           { theatre: id as string, ...out }
+        );
+      } catch (err) {
+        return errorResult(err);
+      }
+    }
+  );
+
+  server.registerTool(
+    "dcs_country_inventory",
+    {
+      title: "Country inventory (real world vs DCS)",
+      description:
+        "What a country actually operates — aircraft, ground forces, ships, from Wikipedia's equipment lists — " +
+        "set against what DCS can place for it. Each real-world type is marked:\n" +
+        "  - dcs-for-country: a DCS type exists and the Mission Editor offers it to this country,\n" +
+        "  - dcs-other-country: DCS has the type, but not for this country (use a Combined Joint Task Forces " +
+        "country, or accept the validator warning),\n" +
+        "  - mod: DCS lacks it, but a unit mod installed on this machine matches (e.g. a community Su-30MKI),\n" +
+        "  - missing: nothing in DCS or the installed mods.\n" +
+        "Matching is by designation family (Su-30MKI ~ Su-30), so the DCS type is often a different variant. " +
+        "Wikipedia lists are a snapshot (see `generated`); they can lag or lead real service status.\n\n" +
+        "Args: country, kind? ('aircraft'|'ground'|'naval'), availability? (filter)\n\n" +
+        "Returns JSON: { country, generated, pages, offeredCounts, rows: [{ kind, name, wiki, availability, dcs, dcsForCountry, mods }] }.",
+      inputSchema: z
+        .object({
+          country: z.string().min(1),
+          kind: z.enum(["aircraft", "ground", "naval"]).optional(),
+          availability: z.enum(["dcs-for-country", "dcs-other-country", "mod", "missing"]).optional(),
+          response_format: responseFormatField,
+        })
+        .strict(),
+      outputSchema: z.object({
+        country: z.string(),
+        generated: z.string(),
+        pages: z.record(z.string()),
+        offeredCounts: z.record(z.number()),
+        rows: z.array(z.record(z.unknown())),
+      }),
+      annotations: readOnly,
+    },
+    async (a) => {
+      try {
+        const inv = countryInventory(a.country);
+        const kinds = a.kind ? [a.kind] : (["aircraft", "ground", "naval"] as const);
+        const rows: (InventoryRow & { kind: string })[] = [];
+        for (const kind of kinds) {
+          for (const row of inv[kind]) {
+            if (!a.availability || row.availability === a.availability) rows.push({ ...row, kind });
+          }
+        }
+        const label = (r: InventoryRow) =>
+          r.availability === "dcs-for-country"
+            ? `DCS: ${r.dcsForCountry.join(", ")}`
+            : r.availability === "dcs-other-country"
+              ? `DCS (not offered to ${inv.country}): ${r.dcs.join(", ")}`
+              : r.availability === "mod"
+                ? `installed mod: ${r.mods.map((m) => `${m.type} (${m.mod})`).join(", ")}`
+                : "not in DCS or installed mods";
+        return render(
+          a.response_format,
+          () =>
+            [
+              `# ${inv.country}: real-world inventory vs DCS (Wikipedia snapshot ${inv.generated})`,
+              ...kinds.flatMap((kind) => [
+                "",
+                `## ${kind}${inv.pages[kind] ? ` — from "${inv.pages[kind]}"` : " — no Wikipedia list found"}`,
+                ...rows.filter((r) => r.kind === kind).map((r) => `- ${r.name}: ${label(r)}`),
+              ]),
+            ].join("\n"),
+          {
+            country: inv.country,
+            generated: inv.generated,
+            pages: inv.pages as Record<string, string>,
+            offeredCounts: inv.offeredCounts,
+            rows: rows as unknown as Record<string, unknown>[],
+          }
+        );
+      } catch (err) {
+        return errorResult(err);
+      }
+    }
+  );
+
+  server.registerTool(
+    "dcs_list_installed_mods",
+    {
+      title: "List installed unit mods",
+      description:
+        "Unit mods installed on this machine: Saved Games/DCS*/Mods/{aircraft,tech} and the DCS install's " +
+        "Mods (set DCS_INSTALL_DIR if DCS is not under Program Files/Eagle Dynamics). Mod files are scanned " +
+        "as text for unit declarations (make_flyable, add_aircraft Name, GT.Name) — never executed — so a " +
+        "mod that builds names in code may be missed. Types found here can be used in dcs_miz_add_* and the " +
+        "validator accepts them.\n\nArgs: refresh? (rescan now)\n\n" +
+        "Returns JSON: { roots, mods: [{ id, folder, kind, units: [{ type, category, file }] }] }.",
+      inputSchema: z.object({ refresh: z.boolean().default(false), response_format: responseFormatField }).strict(),
+      outputSchema: z.object({ roots: z.array(z.string()), mods: z.array(z.record(z.unknown())) }),
+      annotations: readOnly,
+    },
+    async (a) => {
+      try {
+        const roots = modRoots();
+        const mods = installedMods(a.refresh, roots);
+        return render(
+          a.response_format,
+          () =>
+            roots.length === 0
+              ? "No DCS Saved Games or install folder found on this machine (set DCS_SAVED_GAMES / DCS_INSTALL_DIR)."
+              : mods.length === 0
+                ? `No unit mods found under:\n${roots.map((r) => `- ${r}`).join("\n")}`
+                : mods
+                    .map(
+                      (m) =>
+                        `- **${m.id}** (${m.kind}, ${m.folder}): ` +
+                        m.units.map((u) => `\`${u.type}\` (${u.category})`).join(", ")
+                    )
+                    .join("\n"),
+          { roots, mods: mods as unknown as Record<string, unknown>[] }
         );
       } catch (err) {
         return errorResult(err);
