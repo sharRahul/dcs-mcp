@@ -44,7 +44,7 @@
   "dcs_miz_add_ground_group": "1b20a4c6113aea3e44d79e71ce3a1660e40756f904ba12f0a64b12376ca35d27",
   "dcs_miz_add_trigger_zone": "db26c75e2b8ad489e5e9392cfad6ce28c84b1fc0a6387b78a18666a5c468c8e7",
   "dcs_miz_add_waypoint": "ee47c11e2eafbd9586dd68d6ae31698fd23999a49e99ae1314e4c0cdd4c5437e",
-  "dcs_miz_set_payload": "48112007b66386d6fa7a043f15ae5aa07bc9d6cdcf0210858af487f021045e5d",
+  "dcs_miz_set_payload": "544a4a61f027f31a4bd58e37582fe36d59f6816e2aa8020e0ffc946b512d1ebf",
   "dcs_miz_set_group_task": "35df746cfc6eddf571b70888b4ab8275ffbc92c274e1ae5721ac6b4c1c7a26f3",
   "dcs_miz_add_trigger": "1abf115c4fb300f5a6c0ce97c718dde43e8e7f9174b4e330fe452670cc94959f",
   "dcs_miz_load_scripts": "4a73daf553e4b9ba9a30a76b854240ebbf569179b9dd4b420884d9548a1abeb2",
@@ -141,5 +141,11 @@
   "dcs_import_site_template": "1d9a2ba879506b2bdff72c5b27b14f828af95526a809e88d09f6e759cf264be3",
   "dcs_remove_site_template": "87099ef2d2168f66f91563be384ee8975ac9f0f2db831ebfade26d0ab714cc0e",
   "dcs_list_loadouts": "f3fe22716981d14ff90121e3a4e4fb82c7019afacd1f34a16d44d49d3368caa5",
-  "dcs_miz_apply_loadout": "39e825e1bf6b1d92cf6b81314801f911ba5f88f36c36eb6905151f96d2e4d31c"
+  "dcs_miz_apply_loadout": "39e825e1bf6b1d92cf6b81314801f911ba5f88f36c36eb6905151f96d2e4d31c",
+  "dcs_aircraft_fuel": "bd0168622525965ff1eff11192eaa41276783dffbe0edf0149487f49f6981923",
+  "dcs_miz_fuel_report": "aab2f258699337328371a3aaacae1d7eb58bff0a942dab23ef7940ba13d2335d",
+  "dcs_data_provenance": "73177f815899beece715cd2cfd833c6d0521c26d10e2ffe6bb47a57cff1d3404",
+  "dcs_import_warehouse_donor": "6ef27bdbefcdf6d0e0c1be117faba9a4baf807f6d761e70f97a3106b2fb0cdaa",
+  "dcs_list_warehouse_donors": "73177f815899beece715cd2cfd833c6d0521c26d10e2ffe6bb47a57cff1d3404",
+  "dcs_miz_add_warehouse_stock": "a4e0658792c3d1080891df090d41e873c1dcaea0bdbbb14deb3b2f2d2e661c3d"
 }

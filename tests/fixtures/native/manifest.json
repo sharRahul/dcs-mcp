@@ -1,0 +1,4 @@
+{
+  "_about": "Mission-Editor-saved .miz files used as native regression fixtures. Add an entry per file; tests/native.test.ts runs the full suite over each. See README.md.",
+  "fixtures": []
+}

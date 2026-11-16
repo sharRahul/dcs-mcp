@@ -29,7 +29,9 @@ Driven by any MCP client (Claude, Codex, OpenCode). TypeScript, stdio transport,
 - Every authoring change must round-trip: serialize → reparse → assert. Add a test.
 - Be honest about what needs DCS/Mission-Editor verification; don't claim unverified behavior.
 
-- CI (`.github/workflows/ci.yml`) runs build + test on Node 18/20/22 on Windows (DCS is Windows-only).
+- CI (`.github/workflows/ci.yml`) runs build + test on Node 20/22/24 on Windows (DCS is Windows-only), a stock Lua 5.1
+  job (incl. the compatibility matrix under the editor fix-ups), and a Linux job that regenerates the pydcs-derived
+  data byte-for-byte from the sha256-pinned pydcs 1.0.0 wheel.
 
 ---
 
@@ -505,4 +507,24 @@ no adjacent ERROR line.
   anything. No directories found = `unknown`. Library CLSIDs absent from the pydcs catalogue are warnings.
 - ED's manual documents user templates at Saved Games/DCS/MissionEditor/templates.lua but not its format; it is not
   parsed. Radio bands and per-airframe starting fuel remain unsourced.
+
+## Fuel, radio bands, provenance, donors, native fixtures, compatibility (0.5.0) — offline only
+
+- Fuel: `src/miz/fuel.ts`. Maximum = pydcs `fuel_max`; percent is of that maximum (ED manual: INTERNAL FUEL slider is
+  % of maximum). `FUEL_NOT_NUMERIC` / `PAYLOAD_LIMIT` in the validator. Never invent per-airframe default fuel.
+- Radio bands: `data/radio-bands.json` (`scripts/gen-radio-bands.py`, Hoggit "<type> Radios" pages; only A-10C exists).
+  A pydcs radio gets a band ONLY when every default channel fits exactly one documented band (A-10C_2 radio 1 does not,
+  so it is unmapped). Out-of-band is an error only where a band is known. Validator: RADIO_UNKNOWN,
+  RADIO_UNKNOWN_CHANNEL, RADIO_FREQUENCY_INVALID, RADIO_MODULATION_INVALID, RADIO_OUT_OF_BAND.
+- Provenance: `src/data/provenance.ts` registers EVERY data/*.json (tests/provenance.test.ts fails on an unregistered
+  or unpinned file). pydcs-derived files carry `_sha256` of their inputs and regenerate byte-for-byte (CI job).
+  `unitTypes()` must skip every `_`-prefixed metadata key — `_sha256` broke `findUnitType` once.
+  real-world-inventory `_revisions` were pinned after generation (`scripts/pin-wikipedia-revisions.py`, batched; the
+  per-page API trips 429); same-day edits are flagged `mayPostdateGeneration`.
+- Warehouse donors: `src/miz/warehouse-donor.ts`. New stock is added ONLY by copying a donor entry with a valid wsType;
+  donors come from user-supplied missions and record the file sha256. Never fabricate wsType.
+- Native fixtures: `tests/fixtures/native/` (manifest + README) and `tests/native.test.ts`. NONE committed yet: no
+  ME-saved mission was available (pydcs sdists ship none). `DCS_NATIVE_MIZ_DIR` runs the suite over a local folder.
+- `tests/compat.test.ts`: every theatre (parking start), every aircraft/vehicle/ship/static type, every site template,
+  drawing kind and catalogued option; runs `me-open.lua` when LUA51/DCS_LUA is set.
 

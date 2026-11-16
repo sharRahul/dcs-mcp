@@ -3,6 +3,8 @@ import { eachGroup, validatePayload, type PayloadArgs } from './authoring.js';
 import { asTable, luaArray, type LuaTable, type LuaValue } from './lua.js';
 import { findAirport, findUnitType, type FlyingType } from '../data/reference.js';
 import type { ValidationIssue } from '../types.js';
+import { authoringData } from '../data/authoring.js';
+import { radioBand } from '../data/radio-bands.js';
 export function validateAuthoring(mission: LuaTable): ValidationIssue[] {
   const issues: ValidationIssue[] = [], parking = new Map<string, string>();
   const groupIds = new Set<number>(), unitIds = new Set<number>();
@@ -18,6 +20,13 @@ export function validateAuthoring(mission: LuaTable): ValidationIssue[] {
     }
   });
   eachGroup(mission, (group, category) => {
+    if (category === 'plane' || category === 'helicopter') {
+      const where = `group:${group.name}`;
+      if (group.frequency !== undefined && !(typeof group.frequency === 'number' && Number.isFinite(group.frequency) && group.frequency > 0))
+        issue('RADIO_FREQUENCY_INVALID', `Group frequency '${group.frequency}' is not a positive MHz value`, where);
+      if (group.modulation !== undefined && group.modulation !== 0 && group.modulation !== 1)
+        issue('RADIO_MODULATION_INVALID', `Group modulation '${group.modulation}' is not 0 (AM) or 1 (FM)`, where);
+    }
     for (const unit of luaArray(group.units)) {
       const hit = findUnitType(String(unit.type)), location = `unit:${unit.name}`;
       if (hit && category !== 'static' && hit.category !== category) issue('UNIT_CATEGORY_MISMATCH', `${unit.type} is ${hit.category}, not ${category}`, location);
@@ -29,9 +38,30 @@ export function validateAuthoring(mission: LuaTable): ValidationIssue[] {
       if (payload) {
         const args: PayloadArgs = {};
         for (const key of ['fuel', 'chaff', 'flare', 'gun'] as const) if (payload[key] !== undefined) args[key] = Number(payload[key]);
+        // DCS stores internal fuel as a numeric string; anything else is unreadable to the editor.
+        if (payload.fuel !== undefined && (typeof payload.fuel === 'boolean' || !Number.isFinite(Number(payload.fuel)) || String(payload.fuel).trim() === '')) {
+          issue('FUEL_NOT_NUMERIC', `Internal fuel '${payload.fuel}' is not a number`, location);
+          delete args.fuel;
+        }
         try { validatePayload(unit, args); } catch (error) { issue('PAYLOAD_LIMIT', (error as Error).message, location); }
         const stores = Object.entries(asTable(payload.pylons) ?? {}).map(([key, value]) => ({ pylon: Number(key), CLSID: String(asTable(value)?.CLSID ?? '') }));
         try { validatePayload(unit, { pylons: stores }); } catch (error) { issue('PAYLOAD_NOT_CATALOGUED', (error as Error).message, location, 'warning'); }
+      }
+      // Radio presets: structure against pydcs panel_radio, values, and documented bands.
+      const radio = asTable(unit.Radio);
+      if (radio) {
+        const panel = authoringData().aircraft[String(unit.type)]?.panelRadio;
+        for (const [r, cfg] of Object.entries(radio)) {
+          const channels = asTable(asTable(cfg)?.channels) ?? {};
+          if (panel && !panel[r]) issue('RADIO_UNKNOWN', `${unit.type} has no preset radio ${r}`, location, 'warning');
+          for (const [c, f] of Object.entries(channels)) {
+            const mhz = Number(f);
+            if (!Number.isFinite(mhz) || mhz <= 0) { issue('RADIO_FREQUENCY_INVALID', `Radio ${r} channel ${c}: '${f}' is not a positive MHz value`, location); continue; }
+            if (panel?.[r] && !(c in panel[r].channels)) issue('RADIO_UNKNOWN_CHANNEL', `${unit.type} radio ${r} has no channel ${c}`, location, 'warning');
+            const band = radioBand(String(unit.type), r);
+            if (band && (mhz < band.minMHz || mhz > band.maxMHz)) issue('RADIO_OUT_OF_BAND', `Radio ${r} channel ${c}: ${mhz} MHz outside ${band.band} ${band.minMHz}-${band.maxMHz} MHz`, location);
+          }
+        }
       }
       const first = asTable(asTable(asTable(group.route)?.points)?.[1]);
       if (unit.parking_id !== undefined && first?.airdromeId !== undefined) {

@@ -16,6 +16,7 @@ import {
   setBriefing,
   setGroupTask,
   setPayload,
+  findUnit,
   setWeather,
   type ActionSpec,
   type ConditionSpec,
@@ -32,6 +33,7 @@ import {
 import { buildResult, errorResult, validationReportSchema, weatherSchema } from "./format.js";
 import { positionFields, resolvePosition } from "./position.js";
 import { findSiteTemplate } from "../miz/templates.js";
+import { fuelKgFromPercent } from "../miz/fuel.js";
 import { countryOffers } from "../data/reference.js";
 import type { MissionSession } from "../miz/sessions.js";
 import type { MissionDocument } from "../types.js";
@@ -442,13 +444,14 @@ export function registerMizAuthoringTools(server: McpServer): void {
       description:
         "Set a unit's loadout with catalogue fuel/countermeasure limits and pylon/CLSID compatibility checks. Unknown aircraft weapon data is unvalidated. CLSIDs are DCS store " +
         "ids (checked against the bundled per-aircraft pylon snapshot where available).\n\n" +
-        "Args:\n  - sessionId, unit (unit name)\n  - fuel?, flare?, chaff?, gun?\n" +
+        "Args:\n  - sessionId, unit (unit name)\n  - fuel? (kg) or fuelPercent? (% of the type's pydcs maximum), flare?, chaff?, gun?\n" +
         "  - pylons?: [{ pylon: number, CLSID: string }]\n\nReturns JSON: { unit }.",
       inputSchema: z
         .object({
           sessionId: sessionIdField,
           unit: z.string().min(1).describe("Unit name (e.g. 'Colt 1-1')"),
           fuel: z.number().min(0).optional().describe("Internal fuel in kg"),
+          fuelPercent: z.number().min(0).max(100).optional().describe("Internal fuel as % of the type's maximum (the editor's INTERNAL FUEL slider); not with fuel"),
           flare: z.number().int().min(0).optional(),
           chaff: z.number().int().min(0).optional(),
           gun: z.number().int().min(0).max(100).optional().describe("Gun ammo percent"),
@@ -461,9 +464,15 @@ export function registerMizAuthoringTools(server: McpServer): void {
       outputSchema: z.object({ unit: z.string() }),
       annotations: authoringAnnotations,
     },
-    async ({ sessionId, unit, ...args }) => {
+    async ({ sessionId, unit, fuelPercent, ...args }) => {
       try {
         const s = requireSession(sessionId);
+        if (fuelPercent !== undefined) {
+          if (args.fuel !== undefined) throw new Error("Give fuel (kg) or fuelPercent, not both");
+          const u = findUnit(s.mission, unit);
+          if (!u) throw new Error(`No unit named '${unit}' in this mission`);
+          args.fuel = fuelKgFromPercent(String(u.type), fuelPercent);
+        }
         setPayload(s.mission, unit, args);
         s.dirty = true;
         refresh(s);

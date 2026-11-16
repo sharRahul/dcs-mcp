@@ -142,7 +142,9 @@ export function countries(): Country[] {
 
 export function unitTypes(): UnitTypes {
   if (!unitTypesCache) {
-    const { _source: _s, ...rest } = load<UnitTypes & { _source: string }>("unit-types.json");
+    // Drop every metadata key (_source, _sha256, ...): only the category arrays are unit types.
+    const raw = load<Record<string, unknown>>("unit-types.json");
+    const rest = Object.fromEntries(Object.entries(raw).filter(([k]) => !k.startsWith("_"))) as unknown as UnitTypes;
     rest.static = [...rest.static, ...HELIPORT_STATICS];
     unitTypesCache = rest;
   }

@@ -385,3 +385,13 @@ extracted). Regenerate with a rapidocr virtualenv:
 refused non-data files) and `tests/inspect-edit-server.test.ts` (stdio: import a site from a saved .miz, place it
 rotated, edit its tasks, set airbase ownership). Offline only; the payload tests use a synthetic UnitPayloads file.
 
+## Fuel, radio bands, provenance, donors, native fixtures, compatibility — 0.5.0
+
+- `tests/quality.test.ts`, `tests/quality-server.test.ts`: fuel limits/percent/audit, documented radio bands and RADIO_*
+  validator codes, donor harvest/import/add-stock (synthetic donor; no ME-saved warehouse was available).
+- `tests/provenance.test.ts`: every dataset registered and pinned; with `PYDCS_SRC` set (CI job `provenance`), the five
+  pydcs-derived files regenerate byte-for-byte from the sha256-pinned pydcs 1.0.0 wheel.
+- `tests/native.test.ts`: the native-fixture suite, proven on a self-made mission; no ME-saved fixture committed yet.
+- `tests/compat.test.ts`: all 12 theatres with parking starts, all 170 aircraft, 361 vehicle, 57 ship and every
+  non-heliport static type, all site templates, drawing kinds and catalogued options; editor fix-ups in the CI Lua job.
+
