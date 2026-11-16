@@ -7,3 +7,4 @@ dist/
 .DS_Store
 /docs/evidence/
 __pycache__/
+.gitignore
