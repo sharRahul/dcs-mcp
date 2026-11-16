@@ -1,5 +1,6 @@
 /** Structural and semantic validation of a parsed MissionDocument. */
 import type { MissionDocument, ValidationIssue, ValidationReport } from "../types.js";
+import { findUnitType } from "../data/reference.js";
 
 /** Run read-only validation over a parsed mission. Never modifies the document. */
 export function validateMission(doc: MissionDocument): ValidationReport {
@@ -174,6 +175,56 @@ export function validateMission(doc: MissionDocument): ValidationReport {
       code: "QNH_RANGE",
       message: `QNH ${qnh} mmHg is outside the plausible range 650-850`,
     });
+  }
+
+  // Unit types the catalogue does not know. A warning, not an error: new modules
+  // and mods add types the bundled list predates. A typo, though, spawns nothing.
+  const unknownTypes = new Map<string, string>();
+  for (const group of doc.groups) {
+    for (const unit of group.units) {
+      if (unit.type && !findUnitType(unit.type) && !unknownTypes.has(unit.type)) {
+        unknownTypes.set(unit.type, unit.name);
+      }
+    }
+  }
+  for (const [type, unit] of unknownTypes) {
+    warnings.push({
+      severity: "warning",
+      code: "UNKNOWN_UNIT_TYPE",
+      message:
+        `Unit type '${type}' (first used by '${unit}') is not in the bundled DCS catalogue. If it is not a ` +
+        `mod or a very new module, it is a typo and the unit will not spawn; see dcs_list_unit_types.`,
+      location: `unit:${unit}`,
+    });
+  }
+
+  // Only one unit can be the single-player aircraft; multiplayer slots are 'Client'.
+  const players = doc.groups.flatMap((g) => g.units.filter((u) => u.skill === "Player"));
+  if (players.length > 1) {
+    warnings.push({
+      severity: "warning",
+      code: "MULTIPLE_PLAYER_UNITS",
+      message:
+        `${players.length} units have skill 'Player' (${players.map((u) => u.name).slice(0, 6).join(", ")}). ` +
+        `A mission has one Player aircraft; make the others 'Client' slots.`,
+    });
+  }
+
+  // A country belongs to exactly one coalition.
+  const sideOf = new Map<string, string>();
+  for (const [side, names] of Object.entries(doc.summary.countriesByCoalition ?? {})) {
+    for (const name of names) {
+      const previous = sideOf.get(name);
+      if (previous && previous !== side) {
+        errors.push({
+          severity: "error",
+          code: "COUNTRY_ON_TWO_SIDES",
+          message: `Country '${name}' appears in both the ${previous} and ${side} coalitions.`,
+          location: `country:${name}`,
+        });
+      }
+      sideOf.set(name, side);
+    }
   }
 
   return { ok: errors.length === 0, errors, warnings };

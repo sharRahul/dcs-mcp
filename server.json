@@ -1,0 +1,53 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
+  "name": "io.github.sharRahul/dcs-mcp",
+  "title": "DCS World",
+  "description": "Author and edit DCS World .miz missions offline, and control a running DCS through a bundled hook.",
+  "websiteUrl": "https://www.dcs-mcp.com",
+  "repository": {
+    "url": "https://github.com/sharRahul/dcs-mcp",
+    "source": "github"
+  },
+  "version": "0.2.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "dcs-mcp-server",
+      "version": "0.2.0",
+      "transport": { "type": "stdio" },
+      "environmentVariables": [
+        {
+          "name": "DCS_BRIDGE_HOST",
+          "description": "Host of the live hook (default 127.0.0.1)",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "DCS_BRIDGE_PORT",
+          "description": "Port of the live hook (default 8899)",
+          "isRequired": false,
+          "format": "number"
+        },
+        {
+          "name": "DCS_SAVED_GAMES",
+          "description": "DCS Saved Games profile folder, if not Saved Games/DCS or DCS.openbeta",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "DCS_MCP_STATE_DIR",
+          "description": "Where session snapshots are kept ('off' disables them)",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "DCS_ALLOW_RAW_LUA",
+          "description": "Set to 1 to expose dcs_execute_lua (also requires ALLOW_EXEC in the hook)",
+          "isRequired": false,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}

@@ -30,6 +30,8 @@ import {
   type FrameworkName,
 } from "../miz/frameworks.js";
 import { buildResult, errorResult, validationReportSchema, weatherSchema } from "./format.js";
+import { positionFields, resolvePosition } from "./position.js";
+import { findSiteTemplate } from "../miz/templates.js";
 import type { MissionSession } from "../miz/sessions.js";
 import type { MissionDocument } from "../types.js";
 import { readFile } from "node:fs/promises";
@@ -91,10 +93,7 @@ async function materializeResources(
   return embedded;
 }
 
-const positionFields = {
-  x: z.number().describe("DCS internal x coordinate (metres, north). Use dcs_convert_coords for lat/long."),
-  y: z.number().describe("DCS internal y coordinate (metres, east)."),
-};
+
 
 const authoringAnnotations = {
   readOnlyHint: false,
@@ -157,10 +156,17 @@ export function registerMizAuthoringTools(server: McpServer): void {
     {
       title: "Add aircraft group",
       description:
-        "Add a fixed-wing or helicopter group to an open mission. Positions are DCS x/y metres; use " +
-        "dcs_convert_coords to convert lat/long when DCS is running.\n\n" +
-        "Args:\n  - sessionId, side, country (e.g. 'USA'), name, type (e.g. 'FA-18C_hornet')\n" +
-        "  - category ('plane'|'helicopter'), count, x, y, altitudeMetres?, heading?, skill?, task?\n\n" +
+        "Add a fixed-wing or helicopter group to an open mission. Position is x/y (DCS metres, x=north) " +
+        "or lat/lon (converted offline). Exact type ids come from dcs_list_unit_types; units get full " +
+        "fuel and the type's countermeasures by default (change with dcs_miz_set_payload).\n\n" +
+        "Args:\n  - sessionId, side, country (exact DCS name, see dcs_list_countries), name, type (e.g. 'FA-18C_hornet')\n" +
+        "  - category ('plane'|'helicopter'), count, x/y or lat/lon, altitudeMetres?, heading? (degrees), " +
+        "skill? ('Client' = multiplayer slot, 'Player' = the single-player aircraft), task?\n" +
+        "  - start?: where the flight begins. { kind: 'air' } (default, at x/y and altitude); " +
+        "{ kind: 'runway', airfield }; { kind: 'parking_cold'|'parking_hot', airfield, parking?: [slot names] } " +
+        "(free slots the aircraft fits are chosen if parking is omitted); { kind: 'ship_cold'|'ship_hot', ship: " +
+        "<carrier UNIT name> }. airfield is a name or id from dcs_list_airfields. For ground/ship starts the " +
+        "position args are ignored (pass any).\n\n" +
         "Returns JSON: { added: groupName, groupCount }.",
       inputSchema: z
         .object({
@@ -177,6 +183,21 @@ export function registerMizAuthoringTools(server: McpServer): void {
           heading: z.number().min(0).max(359).default(0),
           skill: z.enum(["Average", "Good", "High", "Excellent", "Random", "Client", "Player"]).default("High"),
           task: z.string().optional().describe("Group task, e.g. 'CAP', 'CAS', 'SEAD'"),
+          start: z
+            .discriminatedUnion("kind", [
+              z.object({ kind: z.literal("air") }).strict(),
+              z.object({ kind: z.literal("runway"), airfield: z.union([z.string().min(1), z.number().int()]) }).strict(),
+              z
+                .object({
+                  kind: z.enum(["parking_cold", "parking_hot"]),
+                  airfield: z.union([z.string().min(1), z.number().int()]),
+                  parking: z.array(z.string().min(1)).min(1).max(16).optional(),
+                })
+                .strict(),
+              z.object({ kind: z.enum(["ship_cold", "ship_hot"]), ship: z.string().min(1) }).strict(),
+            ])
+            .optional()
+            .describe("Where the group starts (default: in the air at x/y)"),
         })
         .strict(),
       outputSchema: z.object({ added: z.string(), groupCount: z.number() }),
@@ -185,6 +206,9 @@ export function registerMizAuthoringTools(server: McpServer): void {
     async (a) => {
       try {
         const s = requireSession(a.sessionId);
+        // Ground and ship starts take their position from the airfield/ship.
+        const pos =
+          a.start && a.start.kind !== "air" ? { x: a.x ?? 0, y: a.y ?? 0 } : resolvePosition(s, a);
         addAircraftGroup(s.mission, a.category, {
           side: a.side,
           country: a.country,
@@ -192,12 +216,13 @@ export function registerMizAuthoringTools(server: McpServer): void {
           name: a.name,
           type: a.type,
           count: a.count,
-          x: a.x,
-          y: a.y,
+          x: pos.x,
+          y: pos.y,
           altitudeMetres: a.altitudeMetres,
           heading: a.heading,
           skill: a.skill,
           task: a.task,
+          start: a.start,
         });
         s.dirty = true;
         refresh(s);
@@ -216,9 +241,13 @@ export function registerMizAuthoringTools(server: McpServer): void {
     {
       title: "Add ground/ship group",
       description:
-        "Add a ground-vehicle or ship group to an open mission (DCS x/y metres).\n\n" +
-        "Args:\n  - sessionId, side, country, name, type (e.g. 'M-1 Abrams')\n" +
-        "  - category ('vehicle'|'ship'), count, x, y, heading?, skill?\n" +
+        "Add a ground-vehicle or ship group to an open mission. Position is x/y (DCS metres, x=north) or " +
+        "lat/lon (converted offline). Check the spot is land with dcs_check_terrain when DCS is running: " +
+        "a vehicle on water does not error, it just sits inert.\n\n" +
+        "Args:\n  - sessionId, side, country, name, type (exact id from dcs_list_unit_types, e.g. 'M-1 Abrams')\n" +
+        "  - category ('vehicle'|'ship'), count, x/y or lat/lon, heading? (degrees), skill?\n" +
+        "  - site?: a SAM/EWR template id from dcs_list_site_templates (e.g. 'SA-2', 'SA-10', 'Hawk'); sets " +
+        "the composition and spacing. Overrides type/count/composition.\n" +
         "  - composition?: [{ type, count }] mixed unit types in ONE group, in order. Use this for " +
         "SAM sites: a site is not N copies of one vehicle — an SA-6 needs its '1S91 str' radar AND " +
         "'Kub 2P25 ln' launchers in the same group or it registers with Skynet and never shoots. " +
@@ -233,7 +262,12 @@ export function registerMizAuthoringTools(server: McpServer): void {
           country: z.string().min(1),
           countryId: z.number().int().optional(),
           name: z.string().min(1).max(64),
-          type: z.string().min(1).describe("DCS vehicle/ship type id, e.g. 'M-1 Abrams'"),
+          type: z
+            .string()
+            .min(1)
+            .optional()
+            .describe("DCS vehicle/ship type id, e.g. 'M-1 Abrams' (not needed with site/composition)"),
+          site: z.string().min(1).optional().describe("Site template id, e.g. 'SA-2' (dcs_list_site_templates)"),
           category: z.enum(["vehicle", "ship"]).default("vehicle"),
           count: z.number().int().min(1).max(50).default(1),
           ...positionFields,
@@ -259,24 +293,37 @@ export function registerMizAuthoringTools(server: McpServer): void {
     async (a) => {
       try {
         const s = requireSession(a.sessionId);
+        const pos = resolvePosition(s, a);
+        const template = a.site ? findSiteTemplate(a.site) : undefined;
+        const composition = template?.composition ?? a.composition;
+        const type = a.type ?? composition?.[0]?.type;
+        if (!type) throw new Error("Pass type, composition or site.");
+        if (template && a.category !== "vehicle") throw new Error("Site templates are ground vehicles.");
         const group = addGroundGroup(s.mission, a.category, {
           side: a.side,
           country: a.country,
           countryId: a.countryId,
           name: a.name,
-          type: a.type,
+          type,
           count: a.count,
-          x: a.x,
-          y: a.y,
+          x: pos.x,
+          y: pos.y,
           heading: a.heading,
           skill: a.skill,
-          composition: a.composition,
-          spacingMetres: a.spacingMetres,
+          composition,
+          spacingMetres: a.spacingMetres ?? template?.spacingMetres,
         });
         s.dirty = true;
         refresh(s);
         const unitCount = Object.keys((group["units"] ?? {}) as Record<string, unknown>).length;
-        return buildResult(`Added ${a.category} group '${a.name}' (${unitCount} unit(s)).`, {
+        const note = template
+          ? ` Site template ${template.id} (provenance: ${template.provenance}` +
+            `${template.provenance === "catalogue" ? " — types exist in DCS; this layout is not yet flown or ME-verified" : ""}).` +
+            (template.skynetRole === "sam" && !a.name.startsWith("SAM")
+              ? " Skynet's usual addSAMSitesByPrefix('SAM') will not pick up this group name."
+              : "")
+          : "";
+        return buildResult(`Added ${a.category} group '${a.name}' (${unitCount} unit(s)).${note}`, {
           added: a.name,
           groupCount: s.document.summary.groupCount,
           unitCount,
@@ -308,7 +355,8 @@ export function registerMizAuthoringTools(server: McpServer): void {
     async (a) => {
       try {
         const s = requireSession(a.sessionId);
-        addTriggerZone(s.mission, { name: a.name, x: a.x, y: a.y, radius: a.radius });
+        const pos = resolvePosition(s, a);
+        addTriggerZone(s.mission, { name: a.name, x: pos.x, y: pos.y, radius: a.radius });
         s.dirty = true;
         refresh(s);
         return buildResult(`Added trigger zone '${a.name}'.`, {
@@ -352,9 +400,10 @@ export function registerMizAuthoringTools(server: McpServer): void {
     async (a) => {
       try {
         const s = requireSession(a.sessionId);
+        const pos = resolvePosition(s, a);
         const index = addWaypoint(s.mission, a.group, {
-          x: a.x,
-          y: a.y,
+          x: pos.x,
+          y: pos.y,
           altitudeMetres: a.altitudeMetres,
           speedMps: a.speedMps,
           type: a.type,

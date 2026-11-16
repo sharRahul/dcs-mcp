@@ -28,8 +28,9 @@ export interface LogEntry {
 
 const LINE_RE = /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3})\s+(ALERT|ERROR|WARNING|INFO|DEBUG)\s+(\S+)\s*(?:\([^)]*\))?:\s?(.*)$/;
 
-/** Default log location for a stock install. */
+/** Default log location: `$DCS_SAVED_GAMES/Logs`, else a stock install's. */
 export function defaultLogPath(): string {
+  if (process.env.DCS_SAVED_GAMES) return path.join(process.env.DCS_SAVED_GAMES, "Logs", "dcs.log");
   const home = process.env.USERPROFILE ?? process.env.HOME ?? "";
   return path.join(home, "Saved Games", "DCS", "Logs", "dcs.log");
 }
