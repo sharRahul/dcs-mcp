@@ -296,7 +296,7 @@ predicates. Add a genuine ME donor fixture to `tests/fixtures/` only when suppli
 with redistribution permission. Record live evidence using the generated kit and
 update this document with observed results, never presumed behavior.
 
-GitHub CI status will be recorded below after the actual PR workflow completes.
+GitHub CI completed successfully for implementation commit `fab09f4`; see the completed run below.
 
 
 ### CI correction and Windows-only workflow
@@ -311,3 +311,21 @@ At the user's request CI runs only on Windows. The Linux stock-Lua job was remov
 Node 22 on Windows generates and uploads the complete offline-checked acceptance
 kit. Local stock Lua 5.1 checks are explicitly mock/format evidence. Actual DCS
 execution remains the manual Windows acceptance stage.
+
+
+### Completed GitHub CI
+
+[Windows CI run 43868925800](https://github.com/sharRahul/dcs-mcp/actions/runs/43868925800)
+completed **successfully** for `fab09f44bf936694c1c7f34b6f67fdea9b174b83`:
+Node 20, 22 and 24 on Windows all passed. Node 22 also passed package inspection,
+capability/design proof generation and ten-mission acceptance-kit generation.
+The run uploaded `offline-capability-proof` and `live-acceptance-kit-offline-only`.
+These are Windows offline test results; the five existing DCS-dependent tests remain
+skipped and none of the ten scenarios is live-passed.
+
+Branch: `feat/mission-acceptance-hardening`. Draft [PR #5](https://github.com/sharRahul/dcs-mcp/pull/5)
+targets main; it is not merged. Commits include authoring/scenarios `0ac9c15`, patched
+dependencies `4815772`, acceptance/bridge hardening `aa58f9c`, lowercase documentation
+`8e6c65f`, CLI validation `185cda2`, and portable schema/Windows CI `fab09f4`.
+This final documentation commit records those observed results. No npm package or
+public release was published.
