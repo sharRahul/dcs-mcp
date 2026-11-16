@@ -11,6 +11,12 @@
  *   - the plugin id from `declare_plugin("ID", ...)`.
  * That is a heuristic, so results say where each type was found. A mod that
  * builds its type names in code will not be seen; pass the type id directly.
+ *
+ * Mods are strictly ADDITIVE. The bundled DCS catalogue (from pydcs) is always
+ * consulted first and a mod can never replace or hide one of its types. And
+ * discovery can never break anything that works without it: every filesystem
+ * error is swallowed and simply yields fewer mods, so validation, saving and
+ * every DCS-only workflow behave exactly as if no mods were installed.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
@@ -126,32 +132,44 @@ export function scanModFolder(folder: string, kind: string): InstalledMod {
 let cache: { at: number; mods: InstalledMod[] } | undefined;
 const CACHE_MS = 60_000;
 
-/** All installed unit mods. Cached for a minute; `refresh` rescans. */
-export function installedMods(refresh = false, roots = modRoots()): InstalledMod[] {
-  if (!refresh && cache && Date.now() - cache.at < CACHE_MS) return cache.mods;
+/** All installed unit mods. Cached for a minute; `refresh` rescans. Never throws. */
+export function installedMods(refresh = false, roots?: string[]): InstalledMod[] {
+  if (!refresh && !roots && cache && Date.now() - cache.at < CACHE_MS) return cache.mods;
   const mods: InstalledMod[] = [];
-  for (const root of roots) {
+  let dirs: string[];
+  try {
+    dirs = roots ?? modRoots();
+  } catch {
+    dirs = [];
+  }
+  for (const root of dirs) {
     for (const kind of ["aircraft", "tech"]) {
       const dir = path.join(root, kind);
-      if (!existsSync(dir)) continue;
-      for (const name of readdirSync(dir)) {
+      let names: string[];
+      try {
+        names = existsSync(dir) ? readdirSync(dir) : [];
+      } catch {
+        continue; // unreadable folder: skip it, never fail the caller
+      }
+      for (const name of names) {
         const folder = path.join(dir, name);
         try {
           if (!statSync(folder).isDirectory()) continue;
+          const mod = scanModFolder(folder, kind);
+          if (mod.units.length) mods.push(mod);
         } catch {
           continue;
         }
-        const mod = scanModFolder(folder, kind);
-        if (mod.units.length) mods.push(mod);
       }
     }
   }
-  cache = { at: Date.now(), mods };
+  if (!roots) cache = { at: Date.now(), mods };
   return mods;
 }
 
 /** Find an installed mod unit by exact type id. */
-export function findModUnit(type: string, mods = installedMods()): (ModUnit & { mod: string }) | undefined {
+export function findModUnit(type: string, mods?: InstalledMod[]): (ModUnit & { mod: string }) | undefined {
+  mods ??= installedMods();
   for (const mod of mods) {
     const unit = mod.units.find((u) => u.type === type);
     if (unit) return { ...unit, mod: mod.id };

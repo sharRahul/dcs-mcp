@@ -26,8 +26,14 @@ export interface RealWorldEntry {
   name: string;
   /** Wikipedia article title. */
   wiki: string;
-  /** DCS types sharing a designation family (heuristic). Empty: DCS has no such type. */
+  /**
+   * DCS types whose pydcs id/name shares a designation (or, for unnumbered
+   * systems, a name) that appears literally in the Wikipedia row. Empty: DCS has
+   * no such type.
+   */
   dcs: string[];
+  /** Of `dcs`, those with the same FULL designation (C-17A = C-17A); the rest are family matches. */
+  exact: string[];
   /** Those of `dcs` the Mission Editor offers this country. */
   dcsForCountry: string[];
 }

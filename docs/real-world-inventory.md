@@ -1,13 +1,16 @@
 # Real-world inventories vs DCS
 
 Generated 2026-11-16 by `scripts/gen-real-world-inventory.py` from English Wikipedia
-(CC BY-SA 4.0). For each country: what it operates that DCS can place for it (family match,
-often a different variant), what DCS has only under other countries, and what DCS lacks — the
-types a third-party mod would have to supply. `dcs_country_inventory` gives the same per
-country, plus matches against the mods installed on your machine.
+(CC BY-SA 4.0) and pydcs. For each country: the DCS types it can field that it really operates,
+what DCS has only under other countries, and what DCS lacks (the types a third-party mod would
+have to supply, as an addition to the stock ones). `dcs_country_inventory` gives the same per
+country, plus the mods installed on your machine.
 
-Matching is heuristic (shared designation or name). Ship coverage is weak: most navy pages
-list their major classes outside tables.
+No guessing: a real type is matched to a DCS type only when a designation (or name) appears
+literally in both the Wikipedia row and the pydcs type. Many matches are family matches (Su-30MKI
+~ DCS `Su-30`, a different variant); a type pydcs names differently (Mirage 2000 = `M-2000C`)
+is left unmatched rather than mapped by hand. Ship coverage is weak: most navy pages list
+their major classes outside tables.
 
 ## USA
 
@@ -15,7 +18,7 @@ list their major classes outside tables.
   - In DCS for USA: `A-10A`, `A-10C`, `A-10C_2`, `AH-1W`, `AH-64A`, `AH-64D`, `AH-64D_BLK_II`, `AV8BNA`, `B-1B`, `B-52H`, `C-130`, `C-130J-30`, `C-17A`, `CH-47D`, `CH-47Fbl1`, `CH-53E`, `E-2C`, `E-3A`, `F-117A`, `F-15C`, `F-15E`, `F-15ESE`, `F-16A`, `F-16A MLU`, `F-16C bl.50`, `F-16C bl.52d`, `F-5E`, `F-5E-3`, `F-5E-3_FC`, `F/A-18A`, `F/A-18C`, `FA-18C_hornet`, `KC-135`, `KC135MPRS`, `MQ-9 Reaper`, `Mi-8MT`, `SH-60B`, `UH-1H`, `UH-60A`
   - Not in DCS (mod candidates): IOC, OA-1K Skyraider II, A-29C Super Tucano, EA-37B Compass Call, B-2 Spirit, B-21 Raider, C-5M Super Galaxy, C-12C/D/F/J Huron, C-21A Learjet 35, VC-25A, C-32A/B Air Force Two, C-37A/B Gulfstream V, C-40B/C, KC-46A Pegasus, LC-130H Hercules, AC-130J Ghostrider, HC-130J Combat King II, MC-130J Commando II, WC-130J Hercules, WC-135R Constant Phoenix, TC-135S/W, C-146A Wolfhound, C-147A, E-4B (NAOC), E-9A Widget, QF-16, F-22A Raptor, F-35A Lightning II, TG-15A, TG-15B, TG-16A, TG-17A, HH-60G/U Pave Hawk, MH-139A Grey Wolf, P-9A Pale Ale, RQ-4B Global Hawk, RQ-20 Puma, RQ-170 Sentinel, T-1A Jayhawk, T-6A Texan II, T-7 Red Hawk, T-38A/C/AT-38B Talon, T-41D Mescalero, T-51A Cessna, T-53A Kadet II, U-2S Dragon Lady, U-28A Draco, UV-18B Twin Otter, CV-22B Osprey, X-62 VISTA, BQM-167 Skeeter, CN-235, Dzyne ULTRA, MC/RC-12D/H/K, C-12J, C-20H, C-26E Metroliner, C-27J Spartan, UC-35, C-41 Aviocar, AH/MH-6M Little Bird, UH-72A/B Lakota, MQ-1C Gray Eagle, CQ-10 Snowgoose, RQ-11 Raven, UV-18C, Black Hornet Nano, CL-650, Prioria Robotics Maveric, C-37B Gulfstream 550, HC-144B Ocean Sentry, MH-60T Jayhawk, MH-65E Dolphin, C-20G Grey Ghost, KC-130J Super Hercules, VH-92A Patriot, CQ-24A<br />K-MAX, T-34C Turbo Mentor, Teledyne FLIR, RQ-7B Shadow, EA-18G Growler, C-2A Greyhound, C-38A Courier, E-6B Mercury, F-35C Lightning II, TH-57B/C Sea Ranger, TH-73A Thrasher, P-3C Orion, NRL support, P-8A Poseidon, MQ-4C Triton, MQ-8C Fire Scout, RQ-21A Blackjack, MQ-25A Stingray, MQ-27B ScanEagle, T-44C Pegasus, T-45C Goshawk, T-54A Marlin II, NU-1B Otter, U-6A Beaver, CMV-22B Osprey, X-26A Frigate Glider, X-37B
 - **Ground forces** (149 listed, from *List of equipment of the United States Army*): 47 DCS types offered to USA; 3 in DCS for other countries only; 120 not in DCS.
-- **Ships** (89 listed, from *List of current ships of the United States Navy*): 4 DCS types offered to USA; 3 in DCS for other countries only; 81 not in DCS.
+- **Ships** (89 listed, from *List of current ships of the United States Navy*): 3 DCS types offered to USA; 3 in DCS for other countries only; 83 not in DCS.
 
 ## Russia
 
@@ -35,9 +38,9 @@ list their major classes outside tables.
 
 ## France
 
-- **Aircraft** (54 listed, from *List of active French military aircraft*): 6 DCS types offered to France; 0 in DCS for other countries only; 48 not in DCS.
-  - In DCS for France: `C-130`, `C-130J-30`, `E-3A`, `M-2000C`, `MQ-9 Reaper`, `Mirage 2000-5`
-  - Not in DCS (mod candidates): Dassault Rafale, Fighter bomber, Airbus A400M, CASA CN235, Airbus A330, Dassault Falcon 900, Dassault Falcon 7X, DHC-6 Twin Otter, Daher TBM700, Airbus A330 MRTT Phénix, Lockheed Martin KC-130 Super Hercules, Beechcraft King Air 350ER, Alpha Jet, Extra 330, Pilatus PC-21, Pilatus PC-7, Embraer EMB 121 Xingu, Grob G120, Cirrus SR20, Cirrus SR22, Airbus Helicopters H225M Caracal, ALAT, Eurocopter EC225 Super Puma Mk2, Sud-Aviation SA330 Puma, SAR, Eurocopter AS555 Fennec, Aerospatiale AS332 Super Puma, MALE, LEO, CSO, Airbus Defence and Space, Pléaides, SAR-Lupe, CERES, Syracuse IV, Alcatel Alenia Space, Athena-Fidus, Telecommunication satellites, IRIS², Galileo, Soyuz ST-B, Ariane 62 block2, GRAVES, SAMP/T Mamba, medium to long range air defence system, Thales Crotale, MICA VL, Thales
+- **Aircraft** (54 listed, from *List of active French military aircraft*): 4 DCS types offered to France; 0 in DCS for other countries only; 50 not in DCS.
+  - In DCS for France: `C-130`, `C-130J-30`, `E-3A`, `MQ-9 Reaper`
+  - Not in DCS (mod candidates): Dassault Rafale, Dassault Mirage 2000, Fighter bomber, Mirage 2000D, Airbus A400M, CASA CN235, Airbus A330, Dassault Falcon 900, Dassault Falcon 7X, DHC-6 Twin Otter, Daher TBM700, Airbus A330 MRTT Phénix, Lockheed Martin KC-130 Super Hercules, Beechcraft King Air 350ER, Alpha Jet, Extra 330, Pilatus PC-21, Pilatus PC-7, Embraer EMB 121 Xingu, Grob G120, Cirrus SR20, Cirrus SR22, Airbus Helicopters H225M Caracal, ALAT, Eurocopter EC225 Super Puma Mk2, Sud-Aviation SA330 Puma, SAR, Eurocopter AS555 Fennec, Aerospatiale AS332 Super Puma, MALE, LEO, CSO, Airbus Defence and Space, Pléaides, SAR-Lupe, CERES, Syracuse IV, Alcatel Alenia Space, Athena-Fidus, Telecommunication satellites, IRIS², Galileo, Soyuz ST-B, Ariane 62 block2, GRAVES, SAMP/T Mamba, medium to long range air defence system, Thales Crotale, MICA VL, Thales
 - **Ground forces** (104 listed, from *List of equipment of the French Army*): 11 DCS types offered to France; 8 in DCS for other countries only; 88 not in DCS.
 - **Ships** (33 listed, from *List of active French Navy ships*): 0 DCS types offered to France; 0 in DCS for other countries only; 33 not in DCS.
 
@@ -49,9 +52,9 @@ list their major classes outside tables.
 
 ## India
 
-- **Aircraft** (53 listed, from *List of active Indian military aircraft*): 18 DCS types offered to India; 1 in DCS for other countries only; 35 not in DCS.
-  - In DCS for India: `A-50`, `AH-64D_BLK_II`, `C-130`, `C-130J-30`, `C-17A`, `CH-47Fbl1`, `Hawk`, `IL-76MD`, `IL-78M`, `KC135MPRS`, `Ka-27`, `M-2000C`, `MQ-9 Reaper`, `Mi-24V`, `Mi-8MT`, `MiG-29 Fulcrum`, `MiG-29A`, `Su-30`
-  - Not in DCS (mod candidates): Dassault Rafale, HAL Tejas, SEPECAT Jaguar, Embraer EMB-145I, Airbus A321, Boeing 707, Boeing 737, Gulfstream III, Gulfstream G100, Airbus A330 MRTT, Boeing 777, Embraer Legacy 600, Airbus C-295, Antonov An-32, Dornier 228, Hawker Siddeley HS 748, Aérospatiale Alouette III, Cheetal, Aérospatiale SA 315B, HAL Dhruv, HAL Light Utility Helicopter, HAL Prachand, HAL Rudra, HAL Kiran, HAL HTT-40, Pilatus PC-7, Pipistrel Virus, IAI Heron, IAI Searcher, DRDO Nishant, Elbit Hermes 900, Boeing P-8, Britten-Norman BN-2, Westland Sea King, Kamov Ka-31
+- **Aircraft** (53 listed, from *List of active Indian military aircraft*): 16 DCS types offered to India; 1 in DCS for other countries only; 37 not in DCS.
+  - In DCS for India: `A-50`, `AH-64D_BLK_II`, `C-130`, `C-130J-30`, `C-17A`, `CH-47Fbl1`, `Hawk`, `IL-76MD`, `IL-78M`, `KC135MPRS`, `Ka-27`, `MQ-9 Reaper`, `Mi-24V`, `MiG-29 Fulcrum`, `MiG-29A`, `Su-30`
+  - Not in DCS (mod candidates): Dassault Mirage 2000, Dassault Rafale, HAL Tejas, SEPECAT Jaguar, Embraer EMB-145I, Airbus A321, Boeing 707, Boeing 737, Gulfstream III, Gulfstream G100, Airbus A330 MRTT, Boeing 777, Embraer Legacy 600, Airbus C-295, Antonov An-32, Dornier 228, Hawker Siddeley HS 748, Aérospatiale Alouette III, Cheetal, Aérospatiale SA 315B, HAL Dhruv, HAL Light Utility Helicopter, Mil Mi-17, HAL Prachand, HAL Rudra, HAL Kiran, HAL HTT-40, Pilatus PC-7, Pipistrel Virus, IAI Heron, IAI Searcher, DRDO Nishant, Elbit Hermes 900, Boeing P-8, Britten-Norman BN-2, Westland Sea King, Kamov Ka-31
 - **Ground forces** (115 listed, from *List of equipment of the Indian Army*): 27 DCS types offered to India; 11 in DCS for other countries only; 90 not in DCS.
 - **Ships** (131 listed, from *List of active Indian Navy ships*): 1 DCS types offered to India; 0 in DCS for other countries only; 130 not in DCS.
 
@@ -67,14 +70,14 @@ list their major classes outside tables.
 
 - **Aircraft:** no list found
 - **Ground forces** (330 listed, from *List of equipment of the Pakistan Army*): 27 DCS types offered to Pakistan; 53 in DCS for other countries only; 259 not in DCS.
-- **Ships** (19 listed, from *List of active ships of the Pakistan Navy*): 1 DCS types offered to Pakistan; 1 in DCS for other countries only; 17 not in DCS.
+- **Ships** (19 listed, from *List of active ships of the Pakistan Navy*): 0 DCS types offered to Pakistan; 1 in DCS for other countries only; 18 not in DCS.
 
 ## Iran
 
 - **Aircraft** (34 listed, from *List of aircraft of the Iranian Air Force*): 18 DCS types offered to Iran; 0 in DCS for other countries only; 25 not in DCS.
   - In DCS for Iran: `C-130`, `C-130J-30`, `CH-47D`, `CH-47Fbl1`, `F-14A-135-GR`, `F-14A-135-GR-Early`, `F-14B`, `F-4E-45MC`, `F-5E`, `F-5E-3`, `F-5E-3_FC`, `F4U-1D`, `F4U-1D_CW`, `IL-76MD`, `MiG-29 Fulcrum`, `MiG-29A`, `Su-24M`, `UH-1H`
   - Not in DCS (mod candidates): HESA Saeqeh, HESA Kowsar, HESA Azarakhsh, Chengdu J-7, Mirage F1, Lockheed P-3 Orion, Dassault Falcon 20, Dassault Falcon 50, Fokker F27 Friendship, Pilatus PC-6 Porter, Boeing 707, Boeing 747, Lockheed JetStar, Yak-130, Fajr F.3, HESA Dorna, IRIAF Parastu-14, HESA Yasin, HESA Simorgh, Chengdu FT-7, TB-21 Tobago / TB-200 Trinidad, PAC MFI-17 Mushshak, Pilatus PC-7 Turbo Trainer, Beechcraft Bonanza, Agusta Bell 206
-- **Ground forces** (29 listed, from *List of equipment of the Islamic Republic of Iran Air Defense Force*): 29 DCS types offered to Iran; 0 in DCS for other countries only; 19 not in DCS.
+- **Ground forces:** no list found
 - **Ships** (29 listed, from *List of current ships of the Islamic Republic of Iran Navy*): 1 DCS types offered to Iran; 0 in DCS for other countries only; 28 not in DCS.
 
 ## Israel
@@ -91,7 +94,7 @@ list their major classes outside tables.
   - In DCS for Turkey: `C-130`, `C-130J-30`, `C-17A`, `F-16C bl.50`, `F-16C bl.52d`, `F-4E-45MC`, `F4U-1D`, `F4U-1D_CW`, `KC-135`, `KC135MPRS`, `UH-1H`, `UH-60A`
   - Not in DCS (mod candidates): Eurofighter Typhoon, Tranche 5, KAAN, E-7 Peace Eagle, Electronic warfare, CN-235, A400M Atlas, AS532 Cougar, SAR, T625 Gökbey, SZD-50 Puchacz, SF.260, MFI-395 Super Mushshak, KT-1 Woongbi, TAI Hürkuş, T-38 Talon, CF-5A/B Freedom Fighter, TAI Hürjet, TAI Anka, Bayraktar Akinci, TAI Aksungur
 - **Ground forces** (251 listed, from *List of equipment of the Turkish Land Forces*): 22 DCS types offered to Turkey; 17 in DCS for other countries only; 213 not in DCS.
-- **Ships** (74 listed, from *List of active ships of the Turkish Naval Forces*): 2 DCS types offered to Turkey; 3 in DCS for other countries only; 68 not in DCS.
+- **Ships:** no list found
 
 ## Saudi Arabia
 
@@ -121,9 +124,9 @@ list their major classes outside tables.
 
 ## Ukraine
 
-- **Aircraft** (119 listed, from *List of active Ukrainian military aircraft*): 13 DCS types offered to Ukraine; 1 in DCS for other countries only; 108 not in DCS.
-  - In DCS for Ukraine: `An-26B`, `An-30M`, `L-39C`, `L-39ZA`, `M-2000C`, `Mi-8MT`, `MiG-29 Fulcrum`, `MiG-29A`, `MiG-29S`, `Su-24M`, `Su-24MR`, `Su-25`, `Su-27`
-  - Not in DCS (mod candidates): SAAB 340, Antonov An-24, Antonov An-70, Mil Mi-9, Direct Fly Alto, Bayraktar TB2, Air-launched cruise missile, Storm Shadow, R-73, R-60, R-27, AIM-9 Sidewinder, AIM-120 AMRAAM, AIM-7 Sparrow, RIM-7 Sea Sparrow, Kh-25, Kh-29, Kh-58, AGM-88 HARM, Decoy missiles, ADM-160 MALD, Guided bomb, KAB-1500L, KAB-500KR, MAM-L, Joint Direct Attack Munition, GBU-39 Small Diameter Bomb, Armement Air-Sol Modulaire, Paveway IV, Unguided bomb, OFAB-100-120, FAB-250, FAB-500, S-8, S-13, S-24, S-25, Hydra 70, S-300PS, S-200, 9K37 Buk M1, S-125 Neva/Pechora, IRIS-T SLM, United States, MIM-104 Patriot, SAMP/T, MIM-23 Hawk, ZU-23-2, P-14, P-18, P-19, P-35, AN/MPQ-61, AN/MPQ-62, AN/MPQ-64 Sentinel, Ground Master 200, Thomson-CSF RAC 3D, PS-90, VERA passive radar, Air Force General Command, Air Command West, Air Command Center, Air Command South, Air Command East, Aviation Corps, 7th Tactical Aviation Brigade, 15th Transport Aviation Brigade, 25th Transport Aviation Brigade, 39th Tactical Aviation Brigade, 40th Tactical Aviation Brigade, 107th Aviation Wing, 114th Tactical Aviation Brigade, 203rd Training Aviation Brigade, 204th Tactical Aviation Brigade, 299th Tactical Aviation Brigade, 383rd Unmanned Aircraft Brigade, 456th Transport Aviation Brigade, 831st Tactical Aviation Brigade, Anti-Aircraft Defense Missile Artillery Corps, 96th Anti-Aircraft Missile Brigade, 138th Anti-Aircraft Missile Brigade, 160th Anti-Aircraft Missile Brigade, 201st Anti-Aircraft Missile Brigade, 208th Anti-Aircraft Missile Brigade, 11th Anti-Aircraft Missile Regiment, 14th Anti-aircraft Missile Regiment, 156th Anti-Aircraft Missile Regiment, 223rd Anti-Aircraft Missile Regiment, 225th Anti-Aircraft Missile Regiment, 301st Anti-Aircraft Missile Regiment, 302nd Anti-Aircraft Missile Regiment, 540th Anti-Aircraft Missile Regiment, Radio-Technical Troops, 1st Radio Technical Brigade, 14th Radio Technical Brigade, 19th Special Purpose Radio Intercept Brigade, 138th Radio Technical Brigade, 164th Radio Technical Brigade, Signal Corps, 31st Communication Regiment, 43rd Communication Regiment, 57th Communication Regiment, 76th Communication Regiment, 101st Communication Regiment, Electronic Warfare Corps, Pervomaisk, Air Force ground forces, 1st Air Force Rifle Brigade
+- **Aircraft** (119 listed, from *List of active Ukrainian military aircraft*): 12 DCS types offered to Ukraine; 1 in DCS for other countries only; 110 not in DCS.
+  - In DCS for Ukraine: `An-26B`, `An-30M`, `L-39C`, `L-39ZA`, `Mi-8MT`, `MiG-29 Fulcrum`, `MiG-29A`, `MiG-29S`, `Su-24M`, `Su-24MR`, `Su-25`, `Su-27`
+  - Not in DCS (mod candidates): Dassault Mirage 2000, SAAB 340, Antonov An-24, Antonov An-70, Mil Mi-9, Mil Mi-17, Direct Fly Alto, Bayraktar TB2, Air-launched cruise missile, Storm Shadow, R-73, R-60, R-27, AIM-9 Sidewinder, AIM-120 AMRAAM, AIM-7 Sparrow, RIM-7 Sea Sparrow, Kh-25, Kh-29, Kh-58, AGM-88 HARM, Decoy missiles, ADM-160 MALD, Guided bomb, KAB-1500L, KAB-500KR, MAM-L, Joint Direct Attack Munition, GBU-39 Small Diameter Bomb, Armement Air-Sol Modulaire, Paveway IV, Unguided bomb, OFAB-100-120, FAB-250, FAB-500, S-8, S-13, S-24, S-25, Hydra 70, S-300PS, S-200, 9K37 Buk M1, S-125 Neva/Pechora, IRIS-T SLM, United States, MIM-104 Patriot, SAMP/T, MIM-23 Hawk, ZU-23-2, P-14, P-18, P-19, P-35, AN/MPQ-61, AN/MPQ-62, AN/MPQ-64 Sentinel, Ground Master 200, Thomson-CSF RAC 3D, PS-90, VERA passive radar, Air Force General Command, Air Command West, Air Command Center, Air Command South, Air Command East, Aviation Corps, 7th Tactical Aviation Brigade, 15th Transport Aviation Brigade, 25th Transport Aviation Brigade, 39th Tactical Aviation Brigade, 40th Tactical Aviation Brigade, 107th Aviation Wing, 114th Tactical Aviation Brigade, 203rd Training Aviation Brigade, 204th Tactical Aviation Brigade, 299th Tactical Aviation Brigade, 383rd Unmanned Aircraft Brigade, 456th Transport Aviation Brigade, 831st Tactical Aviation Brigade, Anti-Aircraft Defense Missile Artillery Corps, 96th Anti-Aircraft Missile Brigade, 138th Anti-Aircraft Missile Brigade, 160th Anti-Aircraft Missile Brigade, 201st Anti-Aircraft Missile Brigade, 208th Anti-Aircraft Missile Brigade, 11th Anti-Aircraft Missile Regiment, 14th Anti-aircraft Missile Regiment, 156th Anti-Aircraft Missile Regiment, 223rd Anti-Aircraft Missile Regiment, 225th Anti-Aircraft Missile Regiment, 301st Anti-Aircraft Missile Regiment, 302nd Anti-Aircraft Missile Regiment, 540th Anti-Aircraft Missile Regiment, Radio-Technical Troops, 1st Radio Technical Brigade, 14th Radio Technical Brigade, 19th Special Purpose Radio Intercept Brigade, 138th Radio Technical Brigade, 164th Radio Technical Brigade, Signal Corps, 31st Communication Regiment, 43rd Communication Regiment, 57th Communication Regiment, 76th Communication Regiment, 101st Communication Regiment, Electronic Warfare Corps, Pervomaisk, Air Force ground forces, 1st Air Force Rifle Brigade
 - **Ground forces** (578 listed, from *List of equipment of the Ukrainian Ground Forces*): 126 DCS types offered to Ukraine; 34 in DCS for other countries only; 431 not in DCS.
 - **Ships:** no list found
 
@@ -135,9 +138,9 @@ list their major classes outside tables.
 
 ## Egypt
 
-- **Aircraft** (45 listed, from *List of active Egyptian military aircraft*): 19 DCS types offered to Egypt; 0 in DCS for other countries only; 29 not in DCS.
-  - In DCS for Egypt: `AH-64A`, `AH-64D`, `AH-64D_BLK_II`, `C-130`, `C-130J-30`, `CH-47D`, `CH-47Fbl1`, `E-2C`, `F-16A`, `F-16C bl.50`, `F-16C bl.52d`, `IL-76MD`, `Ka-50`, `L-39C`, `M-2000C`, `Mi-24V`, `Mi-8MT`, `MiG-29 Fulcrum`, `UH-60A`
-  - Not in DCS (mod candidates): Dassault Rafale, McDonnell Douglas KC-10 Extender, Antonov An-74, Beechcraft 1900, CASA C-295, Aérospatiale Gazelle, AgustaWestland AW109, AgustaWestland AW139, AgustaWestland AW149, AgustaWestland AW189, SH-2G Super Seasprite, Westland Sea King, Alpha Jet, Embraer EMB-312, Grob G 115, K-8, Air Tractor AT-802, ASN-209, WJ-700, Egypt, R4E-50 skyeye, CAIG Wing Loong, CAIG Wing Loong II, CASC Rainbow, Yabhon United 40, RQ-20 Puma, 324 Scarab, Lipán M3, Meggitt Banshee
+- **Aircraft** (45 listed, from *List of active Egyptian military aircraft*): 18 DCS types offered to Egypt; 0 in DCS for other countries only; 31 not in DCS.
+  - In DCS for Egypt: `AH-64A`, `AH-64D`, `AH-64D_BLK_II`, `C-130`, `C-130J-30`, `CH-47D`, `CH-47Fbl1`, `E-2C`, `F-16A`, `F-16C bl.50`, `F-16C bl.52d`, `IL-76MD`, `Ka-50`, `L-39C`, `Mi-24V`, `Mi-8MT`, `MiG-29 Fulcrum`, `UH-60A`
+  - Not in DCS (mod candidates): Dassault Rafale, Mirage 2000, McDonnell Douglas KC-10 Extender, Antonov An-74, Beechcraft 1900, CASA C-295, Aérospatiale Gazelle, AgustaWestland AW109, AgustaWestland AW139, AgustaWestland AW149, AgustaWestland AW189, Mil Mi-17, SH-2G Super Seasprite, Westland Sea King, Alpha Jet, Embraer EMB-312, Grob G 115, K-8, Air Tractor AT-802, ASN-209, WJ-700, Egypt, R4E-50 skyeye, CAIG Wing Loong, CAIG Wing Loong II, CASC Rainbow, Yabhon United 40, RQ-20 Puma, 324 Scarab, Lipán M3, Meggitt Banshee
 - **Ground forces** (221 listed, from *List of equipment of the Egyptian Army*): 73 DCS types offered to Egypt; 20 in DCS for other countries only; 156 not in DCS.
 - **Ships:** no list found
 

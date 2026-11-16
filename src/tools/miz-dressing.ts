@@ -7,6 +7,7 @@ import { z } from "zod";
 import { refresh, requireSession, type MissionSession } from "../miz/sessions.js";
 import {
   addAirWing,
+  autoAirWing,
   type AirWingResult,
   addFarp,
   addTargetArea,
@@ -195,10 +196,12 @@ export function registerMizDressingTools(server: McpServer): void {
         "waypoints with dcs_miz_add_waypoint to get it moving; a carrier recovering aircraft should steam into " +
         "the wind. The lead ship is <name>-1 — the deck for start.ship.\n\n" +
         "airWing puts aircraft on the lead ship's deck as ship starts, one group per squadron, under the same " +
-        "country: 'auto' uses the template's wing (csg: F/A-18C, F-14B, E-2C, S-3B tanker, SH-60B; lha-group: " +
-        "AV-8B, CH-53E, UH-1H; kuznetsov-group: Su-33, Ka-27), or pass [{ type, count, category }]. A squadron " +
-        "whose type the Mission Editor does not offer the country is skipped and reported, never swapped. Ships " +
-        "the country is not offered are reported too.\n\n" +
+        "country. 'auto' starts from the template's candidates (csg: F/A-18C, F-14B, E-2C, S-3B tanker, SH-60B; " +
+        "lha-group: AV-8B, CH-53E, UH-1H; kuznetsov-group: Su-33, Ka-27) and keeps only types the Mission Editor " +
+        "offers the country (pydcs) AND, where the country has a Wikipedia aircraft list, that it currently " +
+        "operates — so the retired F-14 and S-3 drop out for the USA. Or pass [{ type, count, category }]. " +
+        "Nothing is ever swapped: every dropped squadron is reported with the rule that removed it. Ships the " +
+        "country is not offered are reported too.\n\n" +
         "Args: sessionId, side, country, name, template, x/y or lat/lon, heading?, skill?, airWing? ('none'|'auto'|[...]), airWingHot?\n\n" +
         "Returns JSON: { added, ships: [{ name, type }], airWing?: { groups, skipped, notes }, notOffered }.",
       inputSchema: z
@@ -259,13 +262,23 @@ export function registerMizDressingTools(server: McpServer): void {
         const ships = t.ships.map((ship, i) => ({ name: `${a.name}-${i + 1}`, type: ship.type }));
         const notOffered = [...new Set(t.ships.map((x) => x.type))].filter((x) => countryOffers(a.country, x) === false);
         let wing: AirWingResult | undefined;
+        let autoNote: string[] = [];
         if (a.airWing !== "none") {
-          const squadrons = a.airWing === "auto" ? t.airWing : a.airWing;
-          if (!squadrons?.length) throw new Error(`Template '${t.id}' has no default air wing; pass airWing as a list.`);
+          let squadrons = a.airWing === "auto" ? undefined : a.airWing;
+          if (a.airWing === "auto") {
+            if (!t.airWing?.length) throw new Error(`Template '${t.id}' has no default air wing; pass airWing as a list.`);
+            const auto = autoAirWing(t, a.country);
+            squadrons = auto.squadrons;
+            autoNote = [
+              `Air wing basis: ${auto.basis}.`,
+              ...auto.dropped.map((d) => `Left out ${d.type}: ${d.reason}.`),
+            ];
+          }
           wing = addAirWing(s.mission, {
             side: a.side, country: a.country, countryId: a.countryId, deck: ships[0].name,
-            namePrefix: a.name, squadrons, hot: a.airWingHot,
+            namePrefix: a.name, squadrons: squadrons ?? [], hot: a.airWingHot,
           });
+          wing.notes.unshift(...autoNote);
         }
         touched(s);
         const parts = [`Added naval group '${a.name}' (${ships.length} ships).`];

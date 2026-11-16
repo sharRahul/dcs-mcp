@@ -260,7 +260,31 @@ Three sources, kept apart because they answer different questions:
 
 DCS's lists are permissive: Russia is offered an A-10C, and every country gets the WWII warbirds. So they say what is *possible*, not what is *realistic*. The validator warns (`COUNTRY_TYPE_NOT_OFFERED`) when a unit is outside its country's list.
 
-`dcs_country_inventory` takes each real-world type and marks it: in DCS and offered to the country; in DCS but under other countries only; available through an **installed mod**; or missing. The match is by designation family, so the Indian Air Force's Su-30MKI matches DCS's `Su-30`, which is a different variant. With a community Su-30MKI mod installed, the inventory also lists the mod's type, because it is the exact variant. Mods are matched to real types by designation or by a distinctive name word (a "Tejas" mod matches HAL Tejas). Mods are found by scanning their Lua files as *text* for unit declarations (`make_flyable`, `add_aircraft` `Name`, `GT.Name`). They are never executed, so a mod that builds its type names in code can be missed. Mod types are accepted by every placement tool and by the validator.
+### Built from data, not guesses
+
+The inventory comes from two sources only: pydcs (DCS's own type ids, names and per-country lists) and Wikipedia's equipment lists. A real-world type is matched to a DCS type only when a designation appears **literally in both**: "Su-30" in the Wikipedia row *Sukhoi Su-30MKI* and in the pydcs type `Su-30`. Unnumbered systems and ship classes match by a name, again only when it is in both ("Buk", "Ticonderoga"). No mapping is added from outside knowledge. The one normalisation is notation: `F/A-18` is written `FA-18` so Wikipedia and pydcs spell it the same way.
+
+Each match is labelled. `exact` means the same full designation (Wikipedia's C-17A and DCS's `C-17A`); anything else is a **family** match. The Su-30MKI → `Su-30` match is a family match, so the DCS aircraft is a different variant. A type that pydcs names differently gets no match rather than an invented one: pydcs calls the Mirage 2000 `M-2000C` with no "Mirage" in it. Search for those with `dcs_list_unit_types`.
+
+`dcs_country_inventory` marks every real-world type as one of:
+
+- in DCS and offered to the country,
+- in DCS for other countries only,
+- available through an **installed mod**,
+- or missing.
+
+### Mods are an addition, never a replacement
+
+Everything works exactly as before when no mods are installed, and mods cannot break DCS or pydcs behaviour:
+
+- The bundled DCS catalogue is always checked first. A mod that re-declares a stock type id (say `FA-18C_hornet`) is ignored for that id, so stock types are never shadowed.
+- Search lists DCS types first, then mod types after them.
+- The inventory shows installed mods *alongside* the DCS match. A Su-30MKI mod is listed next to DCS's `Su-30`, not instead of it.
+- Discovery cannot fail a caller. An unreadable or missing Mods folder just yields fewer mods, and validation and saving carry on as if none were installed.
+
+Mods are found by scanning their Lua files as *text* for unit declarations (`make_flyable`, `add_aircraft` `Name`, `GT.Name`). They are never executed, so a mod that builds its type names in code can be missed; pass its type id directly. They are matched to real types by a designation or a distinctive name in both (a "Tejas" mod matches HAL Tejas).
+
+### Coverage
 
 The Wikipedia data is a dated snapshot (`generated` in the file) of English Wikipedia's lists. It can lag or lead real service status. Coverage is uneven, and the tool says when a list is missing:
 
@@ -269,21 +293,26 @@ The Wikipedia data is a dated snapshot (`generated` in the file) of English Wiki
 - **No lists found** for Iraq, Qatar, Kuwait, Belarus and Kazakhstan.
 - **No aircraft list** for Germany, Pakistan, Saudi Arabia, both Koreas, Syria, Georgia, Australia, Greece, Poland, Sweden, Norway and the UAE.
 
-Regenerate it with:
+A per-country summary, including the aircraft each country operates that DCS lacks, is in [`docs/real-world-inventory.md`](docs/real-world-inventory.md). Regenerate both with:
 
 ```bash
 python3 -I scripts/gen-real-world-inventory.py data          # needs access to en.wikipedia.org
 ```
 
-**Carrier air wings.** `dcs_miz_add_naval_group` with `airWing: "auto"` adds the template's wing to the lead ship's deck under the same country:
+### Carrier air wings
 
-| Template | Wing |
-|---|---|
-| `csg` | F/A-18C ×4, F-14B ×2, E-2C, S-3B tanker, SH-60B |
-| `lha-group` | AV-8B ×4, CH-53E ×2, UH-1H ×2 |
-| `kuznetsov-group` | Su-33 ×4, Ka-27 ×2 |
+`dcs_miz_add_naval_group` with `airWing: "auto"` puts aircraft on the lead ship's deck under the same country. It starts from the template's candidates and keeps a squadron only if the data supports it:
 
-You can also pass your own `[{ type, count, category }]`. A squadron the country is not offered is skipped and reported, never swapped for something else. Site and naval templates likewise report ship or SAM types the country is not offered.
+1. the Mission Editor offers the type to the country (pydcs), and
+2. where the country has a Wikipedia aircraft list, the country currently operates it.
+
+| Template | Candidates | Kept for the template's usual country |
+|---|---|---|
+| `csg` | F/A-18C ×4, F-14B ×2, E-2C, S-3B tanker, SH-60B | USA: F/A-18C, E-2C, SH-60B. The F-14 and S-3 are retired and absent from the Wikipedia list. |
+| `lha-group` | AV-8B ×4, CH-53E ×2, UH-1H ×2 | USA: all |
+| `kuznetsov-group` | Su-33 ×4, Ka-27 ×2 | Russia: all |
+
+Every squadron that is left out is reported, with the rule that removed it. Nothing is ever swapped for another type. You can also pass your own `[{ type, count, category }]`, which is checked against the country's DCS list. Site and naval templates likewise report ship or SAM types the country is not offered.
 
 ## Mission options
 

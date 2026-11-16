@@ -77,12 +77,21 @@ statics parked by populateAirfield sitting on their slots with no spawn collisio
 - `data/countries.json` `units` = what the ME OFFERS a country (pydcs countries.py). Permissive —
   never describe it as real-world. `countryOffers()` drives COUNTRY_TYPE_NOT_OFFERED (warning).
 - `data/real-world-inventory.json` = Wikipedia equipment lists (`scripts/gen-real-world-inventory.py`,
-  needs en.wikipedia.org; use `?action=raw`, the API endpoint is rate-limited). Matching to DCS is
-  by designation family (`su30`, `fa18`, `t72`) and is a heuristic: say "family match", not "same type".
+  needs en.wikipedia.org; use `?action=raw`, the API endpoint is rate-limited).
+- NO GUESSING in the inventory: a row matches a DCS type only when a designation (or, for
+  unnumbered systems/ship classes, a name) appears LITERALLY in both the Wikipedia row and the
+  pydcs id/name. Never add an alias from outside knowledge (Mirage->M-2000C, Mi-17->Mi-8, hull
+  numbers->class were removed for exactly this reason). The only normalisation is notation
+  (`F/A-` -> `FA-`). `exact` = same full designation; everything else is a family match.
+- `autoAirWing` keeps a template squadron only if pydcs offers it to the country AND (when the
+  country has a Wikipedia aircraft list) the country operates it. Dropped squadrons are reported.
 - The same script writes `docs/real-world-inventory.md` (per-country summary). Coverage: 30/35
   countries; ships are weak (navy pages list major classes outside tables). Don't overstate it.
 - `src/dcs/mods.ts` scans mod Lua as TEXT (never executes) for `make_flyable`, `add_aircraft` Name,
-  `GT.Name` + `add_surface_unit`. Mod types are accepted by the validator and unit search.
+  `GT.Name` + `add_surface_unit`. Mods are STRICTLY ADDITIVE: `findUnitType` (pydcs) is always
+  checked first, a mod re-declaring a stock id is ignored for it, search lists DCS first, and
+  `installedMods()` never throws (unreadable folders yield fewer mods). Keep it that way: nothing
+  that works with no mods installed may start failing because of a mod folder.
 - Templates and air wings never swap a type for another; they skip and report.
 
 ## Session snapshots

@@ -10,7 +10,15 @@ import { luaArray, type LuaTable } from "./lua.js";
 import { findModUnit } from "../dcs/mods.js";
 import { addAircraftGroup, addGroundGroup, chooseParking, countryId, ensureCountry, maxIds, occupiedParking, type Side } from "./authoring.js";
 import { addStatic } from "./editing.js";
-import { countryOffers, findAirport, findUnitType, resolveTheatreName, type ParkingSlotTuple } from "../data/reference.js";
+import {
+  countryOffers,
+  findAirport,
+  findCountry,
+  findUnitType,
+  realWorldInventory,
+  resolveTheatreName,
+  type ParkingSlotTuple,
+} from "../data/reference.js";
 
 const DEG = Math.PI / 180;
 
@@ -568,4 +576,37 @@ export function addAirWing(
     result.groups.push({ name, type: sq.type, count: sq.count });
   }
   return result;
+}
+
+/**
+ * The template's air wing, narrowed by DATA rather than by judgement:
+ *   1. pydcs: the Mission Editor must offer the type to the country;
+ *   2. Wikipedia: when the country has a real-world aircraft list, the type must
+ *      appear in it (via its DCS match) — so retired types drop out, e.g. the
+ *      F-14 and S-3 for the US Navy.
+ * Every squadron dropped is reported with which rule removed it.
+ */
+export function autoAirWing(
+  template: NavalTemplate,
+  country: string
+): { squadrons: AirWingSquadron[]; dropped: { type: string; reason: string }[]; basis: string } {
+  const dropped: { type: string; reason: string }[] = [];
+  const c = findCountry(country);
+  const real = c ? realWorldInventory().countries[c.name] : undefined;
+  const operated = real?.aircraft.length ? new Set(real.aircraft.flatMap((r) => r.dcsForCountry)) : undefined;
+  const squadrons = (template.airWing ?? []).filter((sq) => {
+    if (countryOffers(country, sq.type) === false) {
+      dropped.push({ type: sq.type, reason: `the Mission Editor does not offer it to ${country} (pydcs)` });
+      return false;
+    }
+    if (operated && !operated.has(sq.type)) {
+      dropped.push({ type: sq.type, reason: `not in ${country}'s current aircraft list (Wikipedia)` });
+      return false;
+    }
+    return true;
+  });
+  const basis = operated
+    ? `pydcs country list + Wikipedia "${real!.pages.aircraft}"`
+    : `pydcs country list only (no Wikipedia aircraft list for ${country})`;
+  return { squadrons, dropped, basis };
 }

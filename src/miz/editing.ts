@@ -619,8 +619,10 @@ export function searchUnitTypes(
     }
   }
   if (options.includeMods !== false) {
+    // Mods only ADD types: one that reuses a DCS type id is the DCS type, not a mod.
     for (const mod of installedMods()) {
       for (const u of mod.units) {
+        if (findUnitType(u.type)) continue;
         const cat = u.category === "unknown" ? "plane" : u.category;
         if (category && category !== cat) continue;
         if (!matches(`${u.type} ${mod.id}`)) continue;

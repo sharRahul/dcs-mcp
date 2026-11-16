@@ -13,10 +13,13 @@ equipment of the <army>", and "List of active <navy> ships" (first title that
 exists wins). Pages are read with ?action=raw (wikitext); nothing is executed.
 Wikipedia content is CC BY-SA 4.0; only type names and links are kept.
 
-Matching is HEURISTIC and labelled as such: a Wikipedia row matches a DCS type
-when they share a designation (Su-30MKI -> family "su30" -> DCS 'Su-30') or, for
-ships, a distinctive class word ("Ticonderoga"). `match` is "family" because a
-DCS type is often a different variant of the real one.
+No guessing: a Wikipedia row is matched to a DCS type only when a designation
+(Su-30MKI and pydcs 'Su-30' share "Su-30") or, for unnumbered systems and ship
+classes, a distinctive name ("Buk", "Ticonderoga") appears literally in BOTH the
+Wikipedia row and the pydcs type id or display name. Nothing maps one type to
+another from outside knowledge. `exact` lists the DCS types with the same full
+designation; the rest of `dcs` share only the family, so they are a different
+variant of the real type.
 
 Usage:
   python3 -I scripts/gen-real-world-inventory.py data            # fetch + write
@@ -149,18 +152,13 @@ sam tel ewr str spaag spg ifv apc mbt atgm mlrs luv srbm tr ln sr cp c2 mod new 
 
 DESIG = re.compile(r"\b([A-Za-z]{1,5})[- ]?(\d{1,4})")
 
-# Where DCS's type id spells a family differently from the real designation.
+# Notation only - no knowledge of which aircraft is which. Wikipedia writes
+# "F/A-18", pydcs has both "F/A-18C" and "FA-18C_hornet"; the slash is dropped so
+# the three spell the same designation. Nothing here maps one type to another:
+# every match below is a designation (or, for unnumbered systems, a name) that
+# appears literally in BOTH the Wikipedia row and the pydcs type id/name.
 ALIASES = [
-    (r"\bMirage\s*(\d{4})", r"M-\1"),     # Mirage 2000 -> M-2000C
-    (r"\bF/A-?", "FA-"),                    # F/A-18 -> FA-18C_hornet
-    (r"\bAV-8B", "AV8BNA"),                 # AV-8B Harrier II -> AV8BNA
-    (r"\bMi-17\b", "Mi-8"),                 # Mi-17 is the export Mi-8
-    # Navy lists name hulls ("USS Lake Erie (CG-70)"); DCS models classes.
-    (r"\bCG-\d+", "Ticonderoga"),
-    (r"\bDDG-(5[1-9]|[6-9]\d|1[0-3]\d)\b", "Arleigh Burke"),
-    (r"\bFFG-([7-9]|[1-5]\d|6[01])\b", "Oliver Hazard Perry"),
-    # DCS has the Nimitz class as individual hulls (CVN-70 ... CVN-75).
-    (r"\bNimitz\b", "Nimitz CVN-70 CVN-71 CVN-72 CVN-73 CVN-74 CVN-75"),
+    (r"\bF/A-?", "FA-"),
 ]
 
 
@@ -187,8 +185,6 @@ def keys(text, ships=False):
     marks = {f"{a.lower()}{b}" for a, b in MARK.findall(t) if a.lower() in UK_MARKS}
     hyphenated = {f"{a.lower()}{b}" for a, b in re.findall(r"\b([A-Za-z]{1,5})-(\d{1,4})", t)}
     out = {f"{a.lower()}{b}" for a, b in DESIG.findall(t)} - (marks - hyphenated)
-    if "AV8BNA" in t:
-        out.add("av8")
     if ships:
         out |= {w for w in words(t) if len(w) >= 5}
     return out
@@ -378,6 +374,18 @@ INDEX = {
 }
 
 
+def full_designations(text):
+    """Whole designations with suffix, normalised: 'C-17A' -> 'c17a', 'Su-30MKI' -> 'su30mki'."""
+    t = normalize(text)
+    return {re.sub(r"[^a-z0-9]", "", m.lower()) for m in re.findall(r"\b[A-Za-z]{1,5}-?\d{1,4}[A-Za-z]{0,4}\b", t)}
+
+
+def exact_matches(entry, hits):
+    """DCS types whose own full designation equals one in the Wikipedia row."""
+    row = full_designations(entry["name"] + " " + entry["wiki"])
+    return [t for t in hits if full_designations(t) & row]
+
+
 def match(entry, kind):
     text = entry["name"] + " " + entry["wiki"]
     k = keys(text, ships=(kind == "naval"))
@@ -417,6 +425,9 @@ for country, (air_titles, army_titles, navy_titles) in COUNTRIES.items():
                 entries.append({
                     **row,
                     "dcs": dcs,
+                    # Of `dcs`, those with the SAME full designation (C-17A = C-17A);
+                    # the rest share only the family (Su-30MKI ~ Su-30).
+                    "exact": exact_matches(row, dcs),
                     # Every matched DCS type the Mission Editor offers this country.
                     "dcsForCountry": [t for t in dcs if t in allowed_all],
                 })
@@ -447,13 +458,16 @@ lines = [
     "# Real-world inventories vs DCS",
     "",
     f"Generated {date.today().isoformat()} by `scripts/gen-real-world-inventory.py` from English Wikipedia",
-    "(CC BY-SA 4.0). For each country: what it operates that DCS can place for it (family match,",
-    "often a different variant), what DCS has only under other countries, and what DCS lacks — the",
-    "types a third-party mod would have to supply. `dcs_country_inventory` gives the same per",
-    "country, plus matches against the mods installed on your machine.",
+    "(CC BY-SA 4.0) and pydcs. For each country: the DCS types it can field that it really operates,",
+    "what DCS has only under other countries, and what DCS lacks (the types a third-party mod would",
+    "have to supply, as an addition to the stock ones). `dcs_country_inventory` gives the same per",
+    "country, plus the mods installed on your machine.",
     "",
-    "Matching is heuristic (shared designation or name). Ship coverage is weak: most navy pages",
-    "list their major classes outside tables.",
+    "No guessing: a real type is matched to a DCS type only when a designation (or name) appears",
+    "literally in both the Wikipedia row and the pydcs type. Many matches are family matches (Su-30MKI",
+    "~ DCS `Su-30`, a different variant); a type pydcs names differently (Mirage 2000 = `M-2000C`)",
+    "is left unmatched rather than mapped by hand. Ship coverage is weak: most navy pages list",
+    "their major classes outside tables.",
     "",
 ]
 for country, data in result.items():

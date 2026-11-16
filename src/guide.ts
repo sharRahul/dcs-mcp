@@ -50,9 +50,11 @@ export const CONVENTIONS_GUIDE = `# DCS-MCP conventions
 - Three different questions, three sources:
   1. What the Mission Editor allows a country: \`dcs_list_unit_types country=X\` (DCS's own, permissive list —
      Russia is allowed an A-10C). The validator warns (COUNTRY_TYPE_NOT_OFFERED) outside it.
-  2. What the country really operates: \`dcs_country_inventory\` (Wikipedia snapshot, matched to DCS by designation
-     family, so Su-30MKI maps to DCS 'Su-30' — a different variant).
+  2. What the country really operates: \`dcs_country_inventory\` (Wikipedia snapshot). A row matches a DCS type only
+     when a designation or name appears literally in both the row and the pydcs type — no outside mapping. \`exact\`
+     = same full designation; otherwise a family match (Su-30MKI ~ DCS 'Su-30', a different variant).
   3. What this machine adds: \`dcs_list_installed_mods\` (Saved Games and install Mods folders, scanned as text).
+     Mods are an ADDITION: DCS types always come first and are never replaced; no mods installed = same behaviour.
 - A real type DCS lacks may be flyable through a mod; the inventory marks those 'mod' when one is installed.
 - Templates never silently swap a type: anything the country is not offered is reported.
 
@@ -71,7 +73,8 @@ export const CONVENTIONS_GUIDE = `# DCS-MCP conventions
   own airfield data. Flights and parked statics never share a slot.
 - \`dcs_miz_add_target_area\` lays out a static target set (ammo-depot, fuel-depot, command-post, supply-yard,
   barracks); \`dcs_miz_add_naval_group\` adds a ship formation (csg, lha-group, kuznetsov-group, red-sag,
-  convoy) and, with airWing 'auto' or a list, the aircraft on the lead ship's deck. Layouts are conventions, not copied from editor missions; check terrain for land targets.
+  convoy) and, with airWing 'auto' or a list, the aircraft on the lead ship's deck. 'auto' keeps only types
+  pydcs offers the country and (where known) the country's Wikipedia list shows it operating. Layouts are conventions, not copied from editor missions; check terrain for land targets.
 
 ## Triggers
 - Types: start (mission start), once, continuous, change (fires on the false->true edge).

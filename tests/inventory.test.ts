@@ -127,3 +127,49 @@ test("real-world inventory: known matches hold (Wikipedia snapshot)", async () =
   assert.ok(mki2.mods.some((m) => m.type === "Su-30MKI"));
   assert.throws(() => countryInventory("Narnia", []), /Unknown country/);
 });
+
+test("auto air wing is narrowed by data: pydcs country list + Wikipedia, never swapped", async () => {
+  const { autoAirWing } = await import("../src/miz/dressing.js");
+  const usa = autoAirWing(findNavalTemplate("csg"), "USA");
+  const kept = usa.squadrons.map((s) => s.type);
+  assert.ok(kept.includes("FA-18C_hornet") && kept.includes("E-2C"));
+  // Retired from US service, so absent from the Wikipedia list: dropped and reported.
+  for (const retired of ["F-14B", "S-3B Tanker"]) {
+    assert.ok(!kept.includes(retired));
+    assert.match(usa.dropped.find((d) => d.type === retired)!.reason, /Wikipedia/);
+  }
+  assert.match(usa.basis, /Wikipedia/);
+  const rus = autoAirWing(findNavalTemplate("kuznetsov-group"), "Russia");
+  assert.deepEqual(rus.squadrons.map((s) => s.type), ["Su-33", "Ka-27"]);
+  // A country DCS does not offer these types to gets nothing, with pydcs as the reason.
+  const odd = autoAirWing(findNavalTemplate("kuznetsov-group"), "USA");
+  assert.equal(odd.squadrons.length, 0);
+  assert.ok(odd.dropped.every((d) => /pydcs/.test(d.reason)));
+});
+
+test("mods are strictly additive and discovery never fails the caller", () => {
+  const root = mkdtempSync(join(tmpdir(), "dcs-mods2-"));
+  const mod = join(root, "Mods", "aircraft", "Clash");
+  mkdirSync(mod, { recursive: true });
+  // A mod re-declaring a stock DCS type id must not turn it into a mod type.
+  writeFileSync(join(mod, "entry.lua"), `make_flyable('FA-18C_hornet')\nmake_flyable('Totally_New_Jet')\n`);
+  clearModCache();
+  const found = installedMods(true, [join(root, "Mods")]);
+  assert.equal(found.length, 1);
+  // Unreadable / missing roots: no throw, no mods.
+  assert.deepEqual(installedMods(true, [join(root, "does-not-exist"), "\u0000bad"]), []);
+  clearModCache();
+
+  // Search puts DCS first and never lists a stock id as a mod.
+  const hits = searchUnitTypes("plane", "FA-18C_hornet", 50);
+  assert.ok(hits.every((h) => h.source === "dcs"));
+});
+
+test("real-world matches record exact vs family", async () => {
+  const { countryInventory } = await import("../src/miz/inventory.js");
+  const usa = countryInventory("USA", []);
+  const c17 = usa.aircraft.find((r) => /C-17A/.test(r.name))!;
+  assert.deepEqual(c17.exact, ["C-17A"]);
+  const mki = countryInventory("India", []).aircraft.find((r) => /Su-30MKI/.test(r.name))!;
+  assert.deepEqual(mki.exact, []); // Su-30 is the family, not the MKI
+});

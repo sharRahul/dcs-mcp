@@ -299,7 +299,9 @@ export function registerReferenceTools(server: McpServer): void {
         "country, or accept the validator warning),\n" +
         "  - mod: DCS lacks it, but a unit mod installed on this machine matches (e.g. a community Su-30MKI),\n" +
         "  - missing: nothing in DCS or the installed mods.\n" +
-        "Matching is by designation family (Su-30MKI ~ Su-30), so the DCS type is often a different variant. " +
+        "No guessing: a row matches a DCS type only when a designation or name appears literally in both the " +
+        "Wikipedia row and the pydcs type. `exact` = same full designation (C-17A); otherwise a family match " +
+        "(Su-30MKI ~ Su-30: a different variant). Mods are an addition: they are listed alongside, never instead of, DCS types. " +
         "Wikipedia lists are a snapshot (see `generated`); they can lag or lead real service status.\n\n" +
         "Args: country, kind? ('aircraft'|'ground'|'naval'), availability? (filter)\n\n" +
         "Returns JSON: { country, generated, pages, offeredCounts, rows: [{ kind, name, wiki, availability, dcs, dcsForCountry, mods }] }.",
@@ -331,13 +333,16 @@ export function registerReferenceTools(server: McpServer): void {
           }
         }
         const label = (r: InventoryRow) =>
-          r.availability === "dcs-for-country"
-            ? `DCS: ${r.dcsForCountry.join(", ")}`
+          (r.availability === "dcs-for-country"
+            ? `DCS: ${r.dcsForCountry.map((t) => (r.exact.includes(t) ? t : `${t} (family)`)).join(", ")}`
             : r.availability === "dcs-other-country"
               ? `DCS (not offered to ${inv.country}): ${r.dcs.join(", ")}`
               : r.availability === "mod"
                 ? `installed mod: ${r.mods.map((m) => `${m.type} (${m.mod})`).join(", ")}`
-                : "not in DCS or installed mods";
+                : "not in DCS or installed mods") +
+          (r.availability !== "mod" && r.mods.length
+            ? `; also installed mod: ${r.mods.map((m) => `${m.type} (${m.mod})`).join(", ")}`
+            : "");
         return render(
           a.response_format,
           () =>
@@ -381,7 +386,7 @@ export function registerReferenceTools(server: McpServer): void {
     async (a) => {
       try {
         const roots = modRoots();
-        const mods = installedMods(a.refresh, roots);
+        const mods = installedMods(a.refresh);
         return render(
           a.response_format,
           () =>
