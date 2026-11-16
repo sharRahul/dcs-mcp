@@ -1,7 +1,14 @@
 /** Offline `.miz` mission inspection tools (read-only, no running DCS required). */
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { closeSession, listSessions, openSession, requireSession } from "../miz/sessions.js";
+import {
+  closeSession,
+  listSessions,
+  listSnapshots,
+  openSession,
+  requireSession,
+  restoreSession,
+} from "../miz/sessions.js";
 import { validateMission } from "../miz/validator.js";
 import {
   ResponseFormat,
@@ -319,8 +326,11 @@ export function registerMizTools(server: McpServer): void {
       description:
         "List every mission session currently open in this server, with the source file (if any), " +
         "when it was opened, whether it has unsaved changes, and its group/unit counts. Use this to " +
-        "recover a sessionId you no longer have.\n\nArgs:\n  - response_format ('markdown' | 'json')\n\n" +
-        "Returns JSON: { count, sessions: [{ sessionId, sourcePath, openedAt, dirty, theatre, groupCount, unitCount }] }.",
+        "recover a sessionId you no longer have. Also lists `restorable` snapshots: sessions from an " +
+        "earlier server process that were snapshotted to disk (reopen with dcs_miz_restore_session, or " +
+        "just keep using the sessionId — it is restored automatically).\n\nArgs:\n  - response_format ('markdown' | 'json')\n\n" +
+        "Returns JSON: { count, sessions: [{ sessionId, sourcePath, openedAt, dirty, theatre, groupCount, unitCount }], " +
+        "restorable: [{ sessionId, sourcePath, updatedAt, dirty, theatre, groupCount }] }.",
       inputSchema: z.object({ response_format: responseFormatField }).strict(),
       outputSchema: z.object({
         count: z.number(),
@@ -335,10 +345,28 @@ export function registerMizTools(server: McpServer): void {
             unitCount: z.number(),
           })
         ),
+        restorable: z.array(
+          z.object({
+            sessionId: z.string(),
+            sourcePath: z.string().optional(),
+            updatedAt: z.string(),
+            dirty: z.boolean(),
+            theatre: z.string(),
+            groupCount: z.number(),
+          })
+        ),
       }),
       annotations: readOnly,
     },
     async ({ response_format }) => {
+      const restorable = listSnapshots().map((s) => ({
+        sessionId: s.id,
+        ...(s.sourcePath ? { sourcePath: s.sourcePath } : {}),
+        updatedAt: s.updatedAt,
+        dirty: s.dirty,
+        theatre: s.theatre,
+        groupCount: s.groupCount,
+      }));
       const sessions = listSessions().map((s) => ({
         sessionId: s.id,
         ...(s.sourcePath ? { sourcePath: s.sourcePath } : {}),
@@ -348,11 +376,24 @@ export function registerMizTools(server: McpServer): void {
         groupCount: s.document.summary.groupCount,
         unitCount: s.document.summary.unitCount,
       }));
-      const structured = { count: sessions.length, sessions };
+      const structured = { count: sessions.length, sessions, restorable };
       return render(
         response_format,
         () => {
-          if (!sessions.length) return "No open sessions. Use dcs_miz_open or dcs_miz_new to start one.";
+          const tail = restorable.length
+            ? [
+                ``,
+                `## Restorable snapshots (${restorable.length})`,
+                ...restorable.map(
+                  (r) =>
+                    `- **${r.sessionId}** (${r.theatre}) - ${r.groupCount} groups, updated ${r.updatedAt}` +
+                    `${r.dirty ? " — unsaved changes" : ""}${r.sourcePath ? ` — from ${r.sourcePath}` : ""}`
+                ),
+              ]
+            : [];
+          if (!sessions.length) {
+            return ["No open sessions. Use dcs_miz_open or dcs_miz_new to start one.", ...tail].join("\n");
+          }
           const lines = [`# Open sessions (${sessions.length})`, ``];
           for (const s of sessions) {
             lines.push(
@@ -362,7 +403,7 @@ export function registerMizTools(server: McpServer): void {
               `  - Opened: ${s.openedAt}`
             );
           }
-          return lines.join("\n");
+          return [...lines, ...tail].join("\n");
         },
         structured
       );
@@ -374,8 +415,8 @@ export function registerMizTools(server: McpServer): void {
     {
       title: "Close mission session",
       description:
-        "Close an open mission session and free its parsed data. Unsaved changes are discarded; save " +
-        "first with dcs_miz_save_as if you want to keep them.\n\nArgs:\n  - sessionId (string)\n\n" +
+        "Close a mission session (open, or only snapshotted on disk) and delete its snapshot. Unsaved " +
+        "changes are discarded; save first with dcs_miz_save_as if you want to keep them.\n\nArgs:\n  - sessionId (string)\n\n" +
         "Returns JSON: { closed, openSessions }.",
       inputSchema: z.object({ sessionId: sessionIdField }).strict(),
       outputSchema: z.object({ closed: z.boolean(), openSessions: z.array(z.string()) }),
@@ -394,6 +435,43 @@ export function registerMizTools(server: McpServer): void {
         removed ? `Closed session ${sessionId}.` : `No open session '${sessionId}'.`,
         { closed: removed, openSessions: open }
       );
+    }
+  );
+
+  server.registerTool(
+    "dcs_miz_restore_session",
+    {
+      title: "Restore mission session",
+      description:
+        "Reopen a session snapshotted by an earlier server process (see `restorable` in " +
+        "dcs_miz_list_sessions). The session keeps its id, unsaved edits, embedded resources and diff " +
+        "baseline. Any authoring tool given a snapshotted sessionId also restores it automatically.\n\n" +
+        "Args:\n  - sessionId (string)\n\nReturns JSON: { sessionId, theatre, dirty, groupCount }.",
+      inputSchema: z.object({ sessionId: sessionIdField }).strict(),
+      outputSchema: z.object({
+        sessionId: z.string(),
+        theatre: z.string(),
+        dirty: z.boolean(),
+        groupCount: z.number(),
+      }),
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ sessionId }) => {
+      try {
+        const s = restoreSession(sessionId);
+        return buildResult(
+          `Restored session ${s.id} (${s.document.theatre}, ${s.document.summary.groupCount} groups` +
+            `${s.dirty ? ", unsaved changes" : ""}).`,
+          {
+            sessionId: s.id,
+            theatre: s.document.theatre,
+            dirty: s.dirty,
+            groupCount: s.document.summary.groupCount,
+          }
+        );
+      } catch (err) {
+        return errorResult(err);
+      }
     }
   );
 }

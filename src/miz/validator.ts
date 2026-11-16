@@ -1,5 +1,7 @@
 /** Structural and semantic validation of a parsed MissionDocument. */
 import type { MissionDocument, ValidationIssue, ValidationReport } from "../types.js";
+import { countryOffers, findUnitType } from "../data/reference.js";
+import { findModUnit } from "../dcs/mods.js";
 
 /** Run read-only validation over a parsed mission. Never modifies the document. */
 export function validateMission(doc: MissionDocument): ValidationReport {
@@ -174,6 +176,80 @@ export function validateMission(doc: MissionDocument): ValidationReport {
       code: "QNH_RANGE",
       message: `QNH ${qnh} mmHg is outside the plausible range 650-850`,
     });
+  }
+
+  // Unit types the catalogue does not know. A warning, not an error: new modules
+  // and mods add types the bundled list predates. A typo, though, spawns nothing.
+  const unknownTypes = new Map<string, string>();
+  for (const group of doc.groups) {
+    for (const unit of group.units) {
+      if (unit.type && !findUnitType(unit.type) && !findModUnit(unit.type) && !unknownTypes.has(unit.type)) {
+        unknownTypes.set(unit.type, unit.name);
+      }
+    }
+  }
+  for (const [type, unit] of unknownTypes) {
+    warnings.push({
+      severity: "warning",
+      code: "UNKNOWN_UNIT_TYPE",
+      message:
+        `Unit type '${type}' (first used by '${unit}') is not in the bundled DCS catalogue or any mod installed ` +
+        `on this machine. If it is not a very new module, it is a typo and the unit will not spawn; see ` +
+        `dcs_list_unit_types and dcs_list_installed_mods.`,
+      location: `unit:${unit}`,
+    });
+  }
+
+  // Types the Mission Editor does not list for the unit's country. DCS's lists
+  // are permissive, so this flags real mismatches (an SA-10 for the USA), not
+  // realism; what happens to such a unit in the editor or sim is untested here.
+  const offMenu = new Map<string, string>();
+  for (const group of doc.groups) {
+    if (group.category === "static") continue;
+    for (const unit of group.units) {
+      const key = `${group.country}|${unit.type}`;
+      if (!offMenu.has(key) && countryOffers(group.country, unit.type) === false) offMenu.set(key, unit.name);
+    }
+  }
+  for (const [key, unit] of offMenu) {
+    const [country, type] = key.split("|");
+    warnings.push({
+      severity: "warning",
+      code: "COUNTRY_TYPE_NOT_OFFERED",
+      message:
+        `The Mission Editor does not offer '${type}' to ${country} (first: '${unit}'). Use a country that ` +
+        `operates it, or a Combined Joint Task Forces country; see dcs_country_inventory.`,
+      location: `unit:${unit}`,
+    });
+  }
+
+  // Only one unit can be the single-player aircraft; multiplayer slots are 'Client'.
+  const players = doc.groups.flatMap((g) => g.units.filter((u) => u.skill === "Player"));
+  if (players.length > 1) {
+    warnings.push({
+      severity: "warning",
+      code: "MULTIPLE_PLAYER_UNITS",
+      message:
+        `${players.length} units have skill 'Player' (${players.map((u) => u.name).slice(0, 6).join(", ")}). ` +
+        `A mission has one Player aircraft; make the others 'Client' slots.`,
+    });
+  }
+
+  // A country belongs to exactly one coalition.
+  const sideOf = new Map<string, string>();
+  for (const [side, names] of Object.entries(doc.summary.countriesByCoalition ?? {})) {
+    for (const name of names) {
+      const previous = sideOf.get(name);
+      if (previous && previous !== side) {
+        errors.push({
+          severity: "error",
+          code: "COUNTRY_ON_TWO_SIDES",
+          message: `Country '${name}' appears in both the ${previous} and ${side} coalitions.`,
+          location: `country:${name}`,
+        });
+      }
+      sideOf.set(name, side);
+    }
   }
 
   return { ok: errors.length === 0, errors, warnings };

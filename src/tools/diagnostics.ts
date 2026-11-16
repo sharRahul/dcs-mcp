@@ -13,6 +13,7 @@ import { bridgeRequest } from "../bridge/client.js";
 import { defaultLogPath, logFreshness, readLogProblems, type LogProblem } from "../dcs/log.js";
 import { BRIDGE_DEFAULT_HOST, BRIDGE_DEFAULT_PORT } from "../constants.js";
 import { buildResult, errorResult } from "./format.js";
+import { findSavedGamesDirs, installHook } from "../dcs/install.js";
 
 const hostField = z.string().default(BRIDGE_DEFAULT_HOST).describe("Bridge host");
 const portField = z.number().int().min(1).max(65535).default(BRIDGE_DEFAULT_PORT).describe("Bridge port");
@@ -188,6 +189,77 @@ export function registerDiagnosticTools(server: McpServer): void {
             renderProblems(result.problems),
           result as unknown as Record<string, unknown>
         );
+      } catch (err) {
+        return errorResult(err);
+      }
+    }
+  );
+
+  server.registerTool(
+    "dcs_install_hook",
+    {
+      title: "Install live hook",
+      description:
+        "Install the live-control hook (scripts/Hooks/dcs-mcp-hook.lua) into a DCS Saved Games " +
+        "profile, creating Scripts/Hooks if needed. Optionally also copies the in-mission telemetry " +
+        "script to Scripts/ so dcs_miz_load_scripts can embed it.\n\n" +
+        "With no savedGames it lists the candidate profiles (Saved Games/DCS, DCS.openbeta, DCS.server, " +
+        "or $DCS_SAVED_GAMES) and installs only when exactly one exists. A target that differs from the " +
+        "bundled copy (an older release, or local edits like ALLOW_EXEC) is left alone unless " +
+        "overwrite=true; a replaced file is kept as a .bak. DCS must be restarted afterwards.\n\n" +
+        "Args: savedGames?, telemetry? (default false), overwrite? (default false), dryRun? (default false)\n\n" +
+        "Returns JSON: { candidates, result?: { savedGames, files: [{ file, target, status, backup? }], " +
+        "restartRequired, notes } }.",
+      inputSchema: z
+        .object({
+          savedGames: z
+            .string()
+            .optional()
+            .describe("DCS Saved Games profile folder, e.g. C:\\Users\\me\\Saved Games\\DCS"),
+          telemetry: z.boolean().default(false).describe("Also install dcs-mcp-telemetry.lua"),
+          overwrite: z.boolean().default(false).describe("Replace a differing installed copy (backed up)"),
+          dryRun: z.boolean().default(false).describe("Report what would change without writing"),
+        })
+        .strict(),
+      outputSchema: z.object({
+        candidates: z.array(z.object({ path: z.string(), looksLikeDcs: z.boolean() })),
+        result: z
+          .object({
+            savedGames: z.string(),
+            files: z.array(
+              z.object({ file: z.string(), target: z.string(), status: z.string(), backup: z.string().optional() })
+            ),
+            restartRequired: z.boolean(),
+            notes: z.array(z.string()),
+          })
+          .optional(),
+      }),
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false },
+    },
+    async ({ savedGames, telemetry, overwrite, dryRun }) => {
+      try {
+        const candidates = findSavedGamesDirs();
+        let target = savedGames;
+        if (!target) {
+          if (candidates.length !== 1) {
+            const listing = candidates.map((c) => `- ${c.path}${c.looksLikeDcs ? "" : " (no Config/Logs)"}`);
+            return buildResult(
+              candidates.length === 0
+                ? "No DCS Saved Games folder found. Pass savedGames explicitly (or set DCS_SAVED_GAMES)."
+                : `Several DCS profiles found; pass savedGames to choose one:\n${listing.join("\n")}`,
+              { candidates }
+            );
+          }
+          target = candidates[0].path;
+        }
+        const result = await installHook({ savedGames: target, telemetry, overwrite, dryRun });
+        const lines = result.files.map(
+          (f) => `- ${f.file}: ${f.status} → ${f.target}${f.backup ? ` (previous kept at ${f.backup})` : ""}`
+        );
+        return buildResult([`# Hook install (${result.savedGames})`, ...lines, "", ...result.notes].join("\n"), {
+          candidates,
+          result: result as unknown as Record<string, unknown>,
+        } as Record<string, unknown>);
       } catch (err) {
         return errorResult(err);
       }

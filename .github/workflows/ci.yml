@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # DCS World runs on Windows only, so that is the only platform tested.
+    name: Node ${{ matrix.node }} on Windows
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      # Tests that need DCS's own Lua (luae.exe) skip themselves unless DCS_LUA is set.
+      - run: npm test
+      - name: Package contents
+        if: matrix.node == 22
+        run: npm pack --dry-run

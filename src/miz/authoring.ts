@@ -9,47 +9,103 @@
 import { asTable, luaArray, type LuaTable, type LuaValue } from "./lua.js";
 import { quoteLuaString } from "./serializer.js";
 import { nextDictId } from "./resources.js";
+import {
+  findAirport,
+  findCountry,
+  findCountryById,
+  findUnitType,
+  resolveTheatreName,
+  SLOT_AIRPLANES,
+  SLOT_HELI,
+  type Airport,
+  type FlyingType,
+} from "../data/reference.js";
 
 export type Side = "red" | "blue" | "neutrals";
 export type AirCategory = "plane" | "helicopter";
 export type GroundCategory = "vehicle" | "ship";
 
-/** Common DCS country ids, enough to author for the major factions. */
-const COUNTRY_IDS: Record<string, number> = {
-  russia: 0,
-  ukraine: 1,
-  usa: 2,
-  turkey: 3,
-  uk: 4,
-  france: 5,
-  germany: 6,
-  georgia: 9,
-  israel: 15,
-  iran: 17,
-  china: 34,
-};
-
+/**
+ * Resolve a country name (or short code) to its DCS id from the bundled list of
+ * every DCS country. An unknown name is an error: silently defaulting (the old
+ * behaviour fell back to USA) put units under the wrong flag with no warning.
+ */
 export function countryId(name: string, override?: number): number {
   if (override !== undefined) return override;
-  return COUNTRY_IDS[name.toLowerCase()] ?? 2;
+  const hit = findCountry(name);
+  if (!hit) {
+    throw new Error(
+      `Unknown country '${name}'. Use the exact DCS name (dcs_list_countries), e.g. 'USA', 'Russia', ` +
+        `'Combined Joint Task Forces Blue', or pass countryId.`
+    );
+  }
+  return hit.id;
+}
+
+/** The name DCS writes for a country: canonical when we know the id. */
+function canonicalCountryName(name: string, id: number): string {
+  return findCountryById(id)?.name ?? name;
 }
 
 function nextIndex(table: LuaTable | undefined): number {
   return luaArray(table).length + 1;
 }
 
-/** Ensure coalition[side].country array exists and return the country subtable. */
-function ensureCountry(mission: LuaTable, side: Side, country: string, id: number): LuaTable {
+/**
+ * Ensure coalition[side].country has this country and return its subtable.
+ *
+ * A country belongs to exactly one side, so asking for it on another side is an
+ * error rather than a second copy. The Mission Editor also keeps a per-side list
+ * of country ids in `mission.coalitions`; it is kept in step here so the editor's
+ * coalition screen agrees with where the units actually are.
+ */
+export function ensureCountry(mission: LuaTable, side: Side, country: string, id: number): LuaTable {
   const coalitions = (mission["coalition"] ??= {}) as LuaTable;
+  for (const other of ["red", "blue", "neutrals"] as Side[]) {
+    if (other === side) continue;
+    for (const entry of luaArray(asTable(coalitions[other])?.["country"])) {
+      if (entry["id"] === id || entry["name"] === country) {
+        throw new Error(
+          `Country '${entry["name"]}' is already on the ${other} side; a country can only belong to one ` +
+            `coalition. Use another country for ${side} (e.g. 'Combined Joint Task Forces ` +
+            `${side === "red" ? "Red" : "Blue"}').`
+        );
+      }
+    }
+  }
   const sideTable = (coalitions[side] ??= { name: side, country: {} }) as LuaTable;
   const countries = (sideTable["country"] ??= {}) as LuaTable;
 
   for (const entry of luaArray(countries)) {
-    if (entry["name"] === country) return entry;
+    if (entry["id"] === id || entry["name"] === country) return entry;
   }
-  const created: LuaTable = { id, name: country };
+  const created: LuaTable = { id, name: canonicalCountryName(country, id) };
   countries[nextIndex(countries)] = created;
+  assignCountryToSide(mission, side, id);
   return created;
+}
+
+/** Keep `mission.coalitions.<side>` (the ME's id lists) consistent, if present. */
+function assignCountryToSide(mission: LuaTable, side: Side, id: number): void {
+  const lists = asTable(mission["coalitions"]);
+  if (!lists) return;
+  for (const other of ["red", "blue", "neutrals"] as Side[]) {
+    const list = asTable(lists[other]);
+    if (!list || other === side) continue;
+    const kept = luaArray(list).map((e) => e["value"]).filter((v) => v !== id);
+    if (kept.length !== luaArray(list).length) lists[other] = toLuaList(kept as LuaValue[]);
+  }
+  const mine = (lists[side] ??= {}) as LuaTable;
+  const ids = luaArray(mine).map((e) => e["value"]);
+  if (!ids.includes(id)) mine[ids.length + 1] = id;
+}
+
+function toLuaList(values: LuaValue[]): LuaTable {
+  const out: LuaTable = {};
+  values.forEach((v, i) => {
+    out[i + 1] = v;
+  });
+  return out;
 }
 
 /**
@@ -194,6 +250,8 @@ interface UnitSpec {
   firstUnitId: number;
   /** Override the per-category spacing (metres between units). */
   spacingMetres?: number;
+  /** Explicit (forward, right) offsets from the lead, one per unit. */
+  offsets?: { forward: number; right: number }[];
 }
 
 /**
@@ -214,14 +272,22 @@ function buildUnits(groupName: string, spec: UnitSpec): LuaTable {
   const forwardY = Math.sin(heading);
 
   const units: LuaTable = {};
+  if (spec.offsets && spec.offsets.length !== spec.types.length) {
+    throw new Error(`Group '${groupName}' has ${spec.types.length} unit(s) but ${spec.offsets.length} offset(s).`);
+  }
   for (let i = 1; i <= spec.types.length; i++) {
     const back = (i - 1) * spacing;
+    // Right of the heading is the forward vector turned 90 degrees clockwise:
+    // (cos(h + 90), sin(h + 90)) = (-sin h, cos h).
+    const off = spec.offsets?.[i - 1];
+    const dx = off ? off.forward * forwardX - off.right * forwardY : -back * forwardX;
+    const dy = off ? off.forward * forwardY + off.right * forwardX : -back * forwardY;
     const unit: LuaTable = {
       name: `${groupName}-${i}`,
       unitId: spec.firstUnitId + i - 1,
       type: spec.types[i - 1],
-      x: spec.x - back * forwardX,
-      y: spec.y - back * forwardY,
+      x: spec.x + dx,
+      y: spec.y + dy,
       heading,
       skill: spec.skill ?? "High",
     };
@@ -264,6 +330,14 @@ export interface AddGroupArgs {
   composition?: UnitComposition[];
   /** Override the per-category unit spacing (metres). SAM sites want more room. */
   spacingMetres?: number;
+  /** Aircraft only: where the group starts. Defaults to in the air at x/y. */
+  start?: AircraftStart;
+  /**
+   * Explicit per-unit positions relative to the lead, in metres along the
+   * heading (`forward`) and to its right (`right`). One per unit, lead first.
+   * Overrides the default column — used for ship formations.
+   */
+  offsets?: { forward: number; right: number }[];
 }
 
 /** Expand `composition` (or the plain type/count pair) into one type per unit. */
@@ -279,20 +353,135 @@ function unitTypes(args: AddGroupArgs): string[] {
   return types;
 }
 
+/**
+ * Where an aircraft group starts.
+ *
+ * The point types and actions are the ones the Mission Editor writes (and pydcs
+ * reproduces): `TakeOffParking` / "From Parking Area" for a cold start,
+ * `TakeOffParkingHot` / "From Parking Area Hot" for hot, `TakeOff` / "From Runway".
+ * A ship start is a parking start whose point carries `linkUnit` and `helipadId`
+ * set to the ship unit's id instead of an `airdromeId`.
+ */
+export type AircraftStart =
+  | { kind: "air" }
+  | { kind: "runway"; airfield: string | number }
+  | { kind: "parking_cold" | "parking_hot"; airfield: string | number; parking?: string[] }
+  | { kind: "ship_cold" | "ship_hot"; ship: string }
+  | { kind: "farp_cold" | "farp_hot"; farp: string };
+
+const START_POINT: Record<Exclude<AircraftStart["kind"], "air">, { type: string; action: string }> = {
+  runway: { type: "TakeOff", action: "From Runway" },
+  parking_cold: { type: "TakeOffParking", action: "From Parking Area" },
+  parking_hot: { type: "TakeOffParkingHot", action: "From Parking Area Hot" },
+  ship_cold: { type: "TakeOffParking", action: "From Parking Area" },
+  ship_hot: { type: "TakeOffParkingHot", action: "From Parking Area Hot" },
+  farp_cold: { type: "TakeOffParking", action: "From Parking Area" },
+  farp_hot: { type: "TakeOffParkingHot", action: "From Parking Area Hot" },
+};
+
+/**
+ * Parking slots at an airfield already taken in this mission — by a flight that
+ * starts there (its units carry `parking_id`), or by a static object standing on
+ * the slot. Both directions matter: a flight spawned onto a slot with a parked
+ * static aircraft on it collides with it at mission start.
+ */
+export function occupiedParking(mission: LuaTable, airport: Airport): Set<string> {
+  const taken = new Set<string>();
+  const statics: { x: number; y: number }[] = [];
+  eachGroup(mission, (group, category) => {
+    if (category === "static") {
+      for (const unit of luaArray(group["units"])) statics.push({ x: Number(unit["x"]), y: Number(unit["y"]) });
+      return;
+    }
+    const first = asTable(asTable(asTable(group["route"])?.["points"])?.[1]);
+    if (first?.["airdromeId"] !== airport.id) return;
+    for (const unit of luaArray(group["units"])) {
+      if (unit["parking_id"] !== undefined) taken.add(String(unit["parking_id"]));
+    }
+  });
+  for (const slot of airport.slots) {
+    const reach = Math.max(4, slot[5] / 2);
+    if (statics.some((p) => Math.hypot(p.x - slot[2], p.y - slot[3]) < reach)) taken.add(slot[1]);
+  }
+  return taken;
+}
+
+/**
+ * Choose parking slots the aircraft physically fits, the way pydcs does for the
+ * current (v2) slot data: width, length and height must all fit, and the slot
+ * must allow the category (helicopter vs aeroplane). Slots are taken in slot-name
+ * order, so a flight parks together.
+ */
+export function chooseParking(
+  airport: Airport,
+  category: AirCategory,
+  type: string,
+  count: number,
+  taken: Set<string>,
+  requested?: string[]
+): Airport["slots"] {
+  const dims = findUnitType(type)?.entry as FlyingType | undefined;
+  if (requested && requested.length) {
+    if (requested.length !== count) {
+      throw new Error(`parking lists ${requested.length} slot(s) for a group of ${count} aircraft.`);
+    }
+    return requested.map((name) => {
+      const slot = airport.slots.find((s) => s[1] === name);
+      if (!slot) throw new Error(`No parking slot '${name}' at ${airport.name}. Use dcs_list_airfields to see them.`);
+      if (taken.has(name)) throw new Error(`Parking slot '${name}' at ${airport.name} is already used.`);
+      return slot;
+    });
+  }
+  const flag = category === "helicopter" ? SLOT_HELI : SLOT_AIRPLANES;
+  const fits = airport.slots
+    .filter((s) => !taken.has(s[1]) && (s[4] & flag) !== 0)
+    .filter(
+      (s) =>
+        !dims ||
+        dims.width === null ||
+        dims.length === null ||
+        (dims.width < s[5] && dims.length < s[6] && (dims.height ?? 0) < (s[7] || 1000))
+    )
+    .sort((a, b) => a[1].localeCompare(b[1], undefined, { numeric: true }));
+  if (fits.length < count) {
+    throw new Error(
+      `${airport.name} has ${fits.length} free parking slot(s) that fit a ${type}; ${count} needed. ` +
+        `Use fewer aircraft, another airfield, or a runway start.`
+    );
+  }
+  return fits.slice(0, count);
+}
+
+/**
+ * A starting payload: full internal fuel and the type's countermeasures, from
+ * the unit catalogue. A unit with no payload table at all gives the editor and
+ * the sim nothing to work with; the editor itself always writes one.
+ */
+function defaultPayload(type: string): LuaTable | undefined {
+  const entry = findUnitType(type)?.entry as FlyingType | undefined;
+  if (!entry || entry.fuelMax === null || entry.fuelMax === undefined) return undefined;
+  return {
+    pylons: {},
+    // Same string form setPayload writes; that is what the flown e2e mission used.
+    fuel: String(entry.fuelMax),
+    flare: entry.flare ?? 0,
+    chaff: entry.chaff ?? 0,
+    gun: 100,
+  };
+}
+
 /** Add a fixed-wing or helicopter group. Returns the created group table. */
 export function addAircraftGroup(mission: LuaTable, category: AirCategory, args: AddGroupArgs): LuaTable {
+  const start = args.start ?? { kind: "air" };
   const country = ensureCountry(mission, args.side, args.country, countryId(args.country, args.countryId));
-  const catTable = (country[category] ??= { group: {} }) as LuaTable;
-  const groups = (catTable["group"] ??= {}) as LuaTable;
   const ids = maxIds(mission);
+  const types = unitTypes(args);
 
-  const group: LuaTable = {
-    name: args.name,
-    groupId: ids.groupId + 1,
-    task: args.task ?? "CAP",
-    task_started: false,
-    units: buildUnits(args.name, {
-      types: unitTypes(args),
+  let units: LuaTable;
+  let route: LuaTable;
+  if (start.kind === "air") {
+    units = buildUnits(args.name, {
+      types,
       x: args.x,
       y: args.y,
       altitudeMetres: args.altitudeMetres ?? 6096,
@@ -301,10 +490,118 @@ export function addAircraftGroup(mission: LuaTable, category: AirCategory, args:
       category,
       firstUnitId: ids.unitId + 1,
       spacingMetres: args.spacingMetres,
-    }),
-    route: initialRoute(category, args.x, args.y, args.altitudeMetres ?? 6096),
-    x: args.x,
-    y: args.y,
+    });
+    route = initialRoute(category, args.x, args.y, args.altitudeMetres ?? 6096);
+  } else {
+    const point = START_POINT[start.kind];
+    const placements: { x: number; y: number; parking?: number; parkingId?: string }[] = [];
+    const extra: LuaTable = {};
+    if ("farp" in start) {
+      // pydcs `flight_group_from_unit`: link to the pad's unit id and park the
+      // flight in a 10 m rectangle beside it; DCS assigns the actual pads.
+      const pad = findUnit(mission, start.farp) ?? luaArray(findGroup(mission, start.farp)?.group["units"])[0];
+      if (!pad || typeof pad["unitId"] !== "number" || pad["category"] !== "Heliports") {
+        throw new Error(`No FARP or helipad named '${start.farp}' in this mission; add one with dcs_miz_add_farp.`);
+      }
+      const h = Number(pad["heading"] ?? 0);
+      for (let i = 0; i < types.length; i++) {
+        const fwd = Math.floor(i / 2) * 10;
+        const right = (i % 2) * 10;
+        placements.push({
+          x: Number(pad["x"]) - fwd * Math.cos(h) - right * Math.sin(h),
+          y: Number(pad["y"]) - fwd * Math.sin(h) + right * Math.cos(h),
+        });
+      }
+      extra["linkUnit"] = pad["unitId"];
+      extra["helipadId"] = pad["unitId"];
+    } else if ("ship" in start) {
+      const ship = findUnit(mission, start.ship);
+      if (!ship || typeof ship["unitId"] !== "number") {
+        throw new Error(`No ship unit named '${start.ship}' in this mission; add the ship first.`);
+      }
+      const shipGroup = findGroupOfUnit(mission, start.ship);
+      if (shipGroup?.category !== "ship") throw new Error(`Unit '${start.ship}' is not a ship.`);
+      for (let i = 0; i < types.length; i++) {
+        placements.push({ x: Number(ship["x"]), y: Number(ship["y"]) });
+      }
+      extra["linkUnit"] = ship["unitId"];
+      extra["helipadId"] = ship["unitId"];
+    } else {
+      const theatreName = resolveTheatreName(String(mission["theatre"] ?? ""));
+      if (!theatreName) {
+        throw new Error(
+          `Airfield starts need a known theatre; this mission's is '${String(mission["theatre"])}'.`
+        );
+      }
+      const airfieldStart = start as Extract<AircraftStart, { airfield: string | number }>;
+      const airport = findAirport(theatreName, airfieldStart.airfield);
+      extra["airdromeId"] = airport.id;
+      if (airfieldStart.kind === "runway") {
+        for (let i = 0; i < types.length; i++) placements.push({ x: airport.x, y: airport.y });
+      } else {
+        const slots = chooseParking(
+          airport,
+          category,
+          types[0],
+          types.length,
+          occupiedParking(mission, airport),
+          "parking" in airfieldStart ? airfieldStart.parking : undefined
+        );
+        for (const slot of slots) placements.push({ x: slot[2], y: slot[3], parking: slot[0], parkingId: slot[1] });
+      }
+    }
+
+    units = {};
+    placements.forEach((p, i) => {
+      const unit: LuaTable = {
+        name: `${args.name}-${i + 1}`,
+        unitId: ids.unitId + 1 + i,
+        type: types[i],
+        x: p.x,
+        y: p.y,
+        alt: 0,
+        alt_type: "BARO",
+        heading: headingRadians(args.heading),
+        skill: args.skill ?? "High",
+        speed: 0,
+      };
+      if (p.parking !== undefined) {
+        unit["parking"] = p.parking;
+        unit["parking_id"] = p.parkingId as string;
+      }
+      units[i + 1] = unit;
+    });
+    const first = placements[0];
+    const routePt = routePoint({
+      x: first.x,
+      y: first.y,
+      alt: 0,
+      speed: 0,
+      type: point.type,
+      action: point.action,
+      etaLocked: true,
+    });
+    Object.assign(routePt, extra);
+    route = { points: { 1: routePt } };
+  }
+
+  for (const unit of luaArray(units)) {
+    const payload = defaultPayload(String(unit["type"]));
+    if (payload) unit["payload"] = payload;
+  }
+
+  const catTable = (country[category] ??= { group: {} }) as LuaTable;
+  const groups = (catTable["group"] ??= {}) as LuaTable;
+  const firstUnit = asTable(units[1]);
+  const group: LuaTable = {
+    name: args.name,
+    groupId: ids.groupId + 1,
+    task: args.task ?? "CAP",
+    task_started: false,
+    units,
+    route,
+    x: Number(firstUnit?.["x"] ?? args.x),
+    y: Number(firstUnit?.["y"] ?? args.y),
   };
   groups[nextIndex(groups)] = group;
   return group;
@@ -330,6 +627,7 @@ export function addGroundGroup(mission: LuaTable, category: GroundCategory, args
       category,
       firstUnitId: ids.unitId + 1,
       spacingMetres: args.spacingMetres,
+      offsets: args.offsets,
     }),
     route: initialRoute(category, args.x, args.y),
     x: args.x,
@@ -457,6 +755,33 @@ export function findUnit(mission: LuaTable, name: string): LuaTable | undefined 
     }
   }
   return undefined;
+}
+
+/** Visit every group in the mission. */
+export function eachGroup(
+  mission: LuaTable,
+  visit: (group: LuaTable, category: string, side: Side, country: LuaTable) => void
+): void {
+  const coalitions = asTable(mission["coalition"]);
+  for (const side of ["red", "blue", "neutrals"] as Side[]) {
+    const sideTable = asTable(coalitions?.[side]);
+    for (const country of luaArray(sideTable?.["country"])) {
+      for (const category of ALL_CATEGORIES) {
+        const catTable = asTable(country[category]);
+        for (const group of luaArray(catTable?.["group"])) visit(group, category, side, country);
+      }
+    }
+  }
+}
+
+/** The group a named unit belongs to. */
+export function findGroupOfUnit(mission: LuaTable, unitName: string): FoundGroup | undefined {
+  let hit: FoundGroup | undefined;
+  eachGroup(mission, (group, category, side, country) => {
+    if (hit) return;
+    if (luaArray(group["units"]).some((u) => u["name"] === unitName)) hit = { group, category, side, country };
+  });
+  return hit;
 }
 
 export interface WaypointArgs {
@@ -1225,6 +1550,114 @@ export function addTrigger(mission: LuaTable, args: TriggerArgs, dictionary?: Lu
   };
   compileTrig(mission);
   return index;
+}
+
+/** Predicates of a trigrule this server cannot compile, if any. */
+function uncompilablePredicates(rule: LuaTable): string[] {
+  const missing: string[] = [];
+  for (const c of luaArray(rule["rules"])) {
+    if (!CONDITION_COMPILERS[String(c["predicate"])]) missing.push(String(c["predicate"]));
+  }
+  for (const a of luaArray(rule["actions"])) {
+    if (!ACTION_COMPILERS[String(a["predicate"])]) missing.push(String(a["predicate"]));
+  }
+  return missing;
+}
+
+/** Shift every `trig.<section>[k]` with k > index down by one, dropping k == index. */
+function shiftTrigSection(section: LuaTable | undefined, index: number): LuaTable | undefined {
+  if (!section) return undefined;
+  const out: LuaTable = {};
+  for (const [key, value] of Object.entries(section)) {
+    const k = Number(key);
+    if (!Number.isInteger(k)) {
+      out[key] = value;
+    } else if (k < index) {
+      out[k] = value;
+    } else if (k > index) {
+      out[k - 1] = value;
+    }
+  }
+  return out;
+}
+
+/**
+ * Remove trigger #index from both `trigrules` and the compiled `trig` tables.
+ *
+ * Every later trigger moves down one slot, and its compiled Lua names its own
+ * slot (`mission.trig.func[i]=nil`, `trig.flag[i]`), so each one must be
+ * recompiled. A later trigger that uses a predicate with no verified compiler
+ * cannot be safely renumbered — rewriting its compiled Lua from a guess is
+ * exactly what compileTrig refuses to do — so removal is refused instead, and
+ * the editor is the right tool for that mission. Removing the LAST trigger, or
+ * any trigger after which everything is compilable, is always safe.
+ */
+export function removeTrigger(mission: LuaTable, index: number): { removed: string; recompiled: number[] } {
+  const trigrules = asTable(mission["trigrules"]);
+  const rules = luaArray(trigrules);
+  if (!trigrules || index < 1 || index > rules.length) {
+    throw new Error(`No trigger #${index}; this mission has ${rules.length}.`);
+  }
+  for (let j = index + 1; j <= rules.length; j++) {
+    const missing = uncompilablePredicates(rules[j - 1]);
+    if (missing.length) {
+      throw new Error(
+        `Cannot remove trigger #${index}: trigger #${j} ('${String(rules[j - 1]["comment"] ?? "")}') uses ` +
+          `${[...new Set(missing)].join(", ")}, which this server has no verified compiler for. Removing ` +
+          `#${index} would renumber #${j} and break its compiled Lua. Remove it in the Mission Editor instead.`
+      );
+    }
+  }
+  const trig = asTable(mission["trig"]);
+  for (const key of ["custom", "customStartup", "events"]) {
+    const section = asTable(trig?.[key]);
+    const occupied = Object.keys(section ?? {})
+      .map(Number)
+      .filter((k) => Number.isInteger(k) && k > index);
+    if (occupied.length) {
+      throw new Error(
+        `Cannot remove trigger #${index}: mission.trig.${key} has entries for later triggers ` +
+          `(${occupied.join(", ")}) whose format is not verified. Remove it in the Mission Editor instead.`
+      );
+    }
+  }
+
+  const removed = String(rules[index - 1]["comment"] ?? "");
+  const next: LuaTable = {};
+  rules.filter((_, i) => i !== index - 1).forEach((r, i) => {
+    next[i + 1] = r;
+  });
+  mission["trigrules"] = next;
+  if (trig) {
+    for (const key of ["conditions", "actions", "func", "funcStartup", "flag", "custom", "customStartup", "events"]) {
+      const shifted = shiftTrigSection(asTable(trig[key]), index);
+      if (shifted) trig[key] = shifted;
+    }
+  }
+  const { compiled } = compileTrig(mission);
+  return { removed, recompiled: compiled.filter((i) => i >= index) };
+}
+
+/** Change a trigger's type and/or comment, recompiling its runtime wiring. */
+export function updateTrigger(
+  mission: LuaTable,
+  index: number,
+  changes: { type?: TriggerType; comment?: string }
+): void {
+  const rule = asTable(asTable(mission["trigrules"])?.[index]);
+  if (!rule) throw new Error(`No trigger #${index} in this mission`);
+  if (changes.type) {
+    const missing = uncompilablePredicates(rule);
+    if (missing.length) {
+      throw new Error(
+        `Trigger #${index} uses ${[...new Set(missing)].join(", ")}, which this server cannot compile; ` +
+          `changing its type would leave the compiled Lua wired for the old type.`
+      );
+    }
+    rule["predicate"] = TRIGGER_PREDICATE[changes.type];
+  }
+  if (changes.comment !== undefined) rule["comment"] = changes.comment;
+  compileTrig(mission);
 }
 
 /** Find a trigger by its Mission Editor comment. Returns the 1-based index. */

@@ -85,7 +85,9 @@ export function defaultSearchRoots(): string[] {
   const home = process.env.USERPROFILE ?? process.env.HOME ?? "";
   const saved = path.join(home, "Saved Games", "DCS");
   const savedOpenBeta = path.join(home, "Saved Games", "DCS.openbeta");
+  const explicit = process.env.DCS_SAVED_GAMES;
   return [
+    ...(explicit ? [path.join(explicit, "Missions", "LUA Scripts"), path.join(explicit, "Scripts")] : []),
     path.join(saved, "Missions", "LUA Scripts"),
     path.join(saved, "Scripts"),
     path.join(savedOpenBeta, "Missions", "LUA Scripts"),
