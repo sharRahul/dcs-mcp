@@ -1,0 +1,2719 @@
+{
+ "_source": "Hoggit DCS wiki (wiki.hoggitworld.com) raw pages; facts only (ids, parameter names/types, enums, numbers). Scripting-API documentation, not Mission-Editor or flight verified.",
+ "_revisions": {
+  "DCS Class Controller": {
+   "revid": 14797,
+   "timestamp": "2025-04-27T09:34:36Z"
+  },
+  "DCS command ActivateJammer": {
+   "revid": 14841,
+   "timestamp": "2026-09-04T04:49:09Z"
+  },
+  "DCS command DeactivateJammer": {
+   "revid": 14842,
+   "timestamp": "2026-09-04T04:51:08Z"
+  },
+  "DCS command LoadingShip": {
+   "revid": 14385,
+   "timestamp": "2022-10-28T23:04:04Z"
+  },
+  "DCS command activateACLS": {
+   "revid": 14258,
+   "timestamp": "2022-04-28T22:06:04Z"
+  },
+  "DCS command activateBeacon": {
+   "revid": 13810,
+   "timestamp": "2021-10-23T05:04:49Z"
+  },
+  "DCS command activateICLS": {
+   "revid": 14253,
+   "timestamp": "2022-04-25T07:44:43Z"
+  },
+  "DCS command activateLink4": {
+   "revid": 14257,
+   "timestamp": "2022-04-28T22:06:00Z"
+  },
+  "DCS command deactivateACLS": {
+   "revid": 14261,
+   "timestamp": "2022-04-28T22:10:25Z"
+  },
+  "DCS command deactivateBeacon": {
+   "revid": 441,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS command deactivateICLS": {
+   "revid": 14259,
+   "timestamp": "2022-04-28T22:09:12Z"
+  },
+  "DCS command deactivateLink4": {
+   "revid": 14260,
+   "timestamp": "2022-04-28T22:09:57Z"
+  },
+  "DCS command eplrs": {
+   "revid": 439,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS command script": {
+   "revid": 14671,
+   "timestamp": "2024-04-02T02:09:04Z"
+  },
+  "DCS command setCallsign": {
+   "revid": 425,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS command setFrequency": {
+   "revid": 14614,
+   "timestamp": "2024-01-12T21:49:18Z"
+  },
+  "DCS command setFrequencyForUnit": {
+   "revid": 14616,
+   "timestamp": "2024-01-12T21:56:43Z"
+  },
+  "DCS command setImmortal": {
+   "revid": 437,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS command setInvisible": {
+   "revid": 435,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS command setUnlimitedFuel": {
+   "revid": 14592,
+   "timestamp": "2023-10-20T06:33:30Z"
+  },
+  "DCS command smoke on off": {
+   "revid": 12553,
+   "timestamp": "2021-03-27T01:49:56Z"
+  },
+  "DCS command start": {
+   "revid": 14449,
+   "timestamp": "2022-12-30T00:09:30Z"
+  },
+  "DCS command stopRoute": {
+   "revid": 431,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS command stopTransmission": {
+   "revid": 14806,
+   "timestamp": "2026-02-04T14:31:41Z"
+  },
+  "DCS command switchAction": {
+   "revid": 433,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS command switchWaypoint": {
+   "revid": 429,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS command transmitMessage": {
+   "revid": 13252,
+   "timestamp": "2021-05-26T08:29:19Z"
+  },
+  "DCS enum callsigns": {
+   "revid": 14474,
+   "timestamp": "2023-03-07T07:34:39Z"
+  },
+  "DCS func pushTask": {
+   "revid": 14687,
+   "timestamp": "2024-06-05T19:02:22Z"
+  },
+  "DCS func setAltitude": {
+   "revid": 14382,
+   "timestamp": "2022-10-13T22:01:32Z"
+  },
+  "DCS func setCommand": {
+   "revid": 14179,
+   "timestamp": "2022-03-17T23:05:38Z"
+  },
+  "DCS func setOption": {
+   "revid": 14180,
+   "timestamp": "2022-03-17T23:05:51Z"
+  },
+  "DCS func setSpeed": {
+   "revid": 14383,
+   "timestamp": "2022-10-13T22:01:42Z"
+  },
+  "DCS func setTask": {
+   "revid": 14688,
+   "timestamp": "2024-06-05T19:02:33Z"
+  },
+  "DCS option ECMUsing": {
+   "revid": 557,
+   "timestamp": "2018-04-12T00:12:22Z"
+  },
+  "DCS option Evasion of arm": {
+   "revid": 14719,
+   "timestamp": "2024-07-13T01:17:05Z"
+  },
+  "DCS option ProhibitAG": {
+   "revid": 549,
+   "timestamp": "2018-04-12T00:12:22Z"
+  },
+  "DCS option alarmState": {
+   "revid": 453,
+   "timestamp": "2018-04-12T00:12:20Z"
+  },
+  "DCS option allow formation side swap": {
+   "revid": 14796,
+   "timestamp": "2025-03-20T07:21:00Z"
+  },
+  "DCS option altitudeRestrictionMax": {
+   "revid": 13875,
+   "timestamp": "2021-11-19T00:06:35Z"
+  },
+  "DCS option altitudeRestrictionMin": {
+   "revid": 13874,
+   "timestamp": "2021-11-19T00:06:12Z"
+  },
+  "DCS option disperseOnAttack": {
+   "revid": 455,
+   "timestamp": "2018-04-12T00:12:20Z"
+  },
+  "DCS option engage air weapons": {
+   "revid": 11412,
+   "timestamp": "2020-10-15T10:01:30Z"
+  },
+  "DCS option engagementRange": {
+   "revid": 14814,
+   "timestamp": "2026-06-19T00:31:22Z"
+  },
+  "DCS option flareUsing": {
+   "revid": 449,
+   "timestamp": "2018-04-12T00:12:20Z"
+  },
+  "DCS option forcedAttack": {
+   "revid": 13802,
+   "timestamp": "2021-10-21T00:24:29Z"
+  },
+  "DCS option formation": {
+   "revid": 13783,
+   "timestamp": "2021-09-22T09:06:24Z"
+  },
+  "DCS option formation interval": {
+   "revid": 14720,
+   "timestamp": "2024-07-13T01:20:02Z"
+  },
+  "DCS option jettTankIfEmpty": {
+   "revid": 13800,
+   "timestamp": "2021-10-21T00:16:19Z"
+  },
+  "DCS option missileAttack": {
+   "revid": 559,
+   "timestamp": "2018-04-12T00:12:22Z"
+  },
+  "DCS option prefer vertical": {
+   "revid": 14660,
+   "timestamp": "2024-02-23T03:55:07Z"
+  },
+  "DCS option prohibitAA": {
+   "revid": 545,
+   "timestamp": "2018-04-12T00:12:22Z"
+  },
+  "DCS option prohibitAB": {
+   "revid": 553,
+   "timestamp": "2018-04-12T00:12:22Z"
+  },
+  "DCS option prohibitJett": {
+   "revid": 547,
+   "timestamp": "2018-04-12T00:12:22Z"
+  },
+  "DCS option prohibitWPPassReport": {
+   "revid": 551,
+   "timestamp": "2018-04-12T00:12:22Z"
+  },
+  "DCS option radarUsing": {
+   "revid": 447,
+   "timestamp": "2018-04-12T00:12:20Z"
+  },
+  "DCS option radioContact": {
+   "revid": 11709,
+   "timestamp": "2020-11-05T01:44:31Z"
+  },
+  "DCS option radioEngage": {
+   "revid": 11710,
+   "timestamp": "2020-11-05T01:45:18Z"
+  },
+  "DCS option radioKill": {
+   "revid": 11712,
+   "timestamp": "2020-11-05T01:46:14Z"
+  },
+  "DCS option reactionToThreat": {
+   "revid": 14678,
+   "timestamp": "2024-04-19T20:54:49Z"
+  },
+  "DCS option restrictTargets": {
+   "revid": 13876,
+   "timestamp": "2021-11-19T00:09:40Z"
+  },
+  "DCS option roe": {
+   "revid": 443,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS option rtbOnBingo": {
+   "revid": 14680,
+   "timestamp": "2024-04-27T01:02:43Z"
+  },
+  "DCS option rtbOnOutOfAmmo": {
+   "revid": 9754,
+   "timestamp": "2019-06-19T23:24:40Z"
+  },
+  "DCS option silence": {
+   "revid": 451,
+   "timestamp": "2018-04-12T00:12:20Z"
+  },
+  "DCS task RecoveryTanker": {
+   "revid": 14404,
+   "timestamp": "2022-11-17T23:06:16Z"
+  },
+  "DCS task attackGroup": {
+   "revid": 377,
+   "timestamp": "2018-04-12T00:12:18Z"
+  },
+  "DCS task attackMapObject": {
+   "revid": 14673,
+   "timestamp": "2024-04-02T23:18:12Z"
+  },
+  "DCS task attackUnit": {
+   "revid": 14400,
+   "timestamp": "2022-11-16T23:29:03Z"
+  },
+  "DCS task awacs": {
+   "revid": 413,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS task bombing": {
+   "revid": 14618,
+   "timestamp": "2024-02-06T22:26:43Z"
+  },
+  "DCS task bombingRunway": {
+   "revid": 13822,
+   "timestamp": "2021-11-05T23:40:01Z"
+  },
+  "DCS task cargoTransportation": {
+   "revid": 565,
+   "timestamp": "2018-04-12T00:12:22Z"
+  },
+  "DCS task carpetBombing": {
+   "revid": 13821,
+   "timestamp": "2021-11-05T23:38:40Z"
+  },
+  "DCS task comboTask": {
+   "revid": 14575,
+   "timestamp": "2023-09-21T02:05:54Z"
+  },
+  "DCS task controlledTask": {
+   "revid": 14574,
+   "timestamp": "2023-09-21T02:05:42Z"
+  },
+  "DCS task disembarkFromTransport": {
+   "revid": 13915,
+   "timestamp": "2022-02-02T06:24:11Z"
+  },
+  "DCS task embarkToTransport": {
+   "revid": 13916,
+   "timestamp": "2022-02-02T06:28:14Z"
+  },
+  "DCS task embarking": {
+   "revid": 13914,
+   "timestamp": "2022-02-02T06:24:06Z"
+  },
+  "DCS task engageGroup": {
+   "revid": 409,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS task engageTargets": {
+   "revid": 14668,
+   "timestamp": "2024-03-18T22:22:31Z"
+  },
+  "DCS task engageTargetsInZone": {
+   "revid": 7808,
+   "timestamp": "2018-07-30T19:22:59Z"
+  },
+  "DCS task engageUnit": {
+   "revid": 411,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS task escort": {
+   "revid": 13805,
+   "timestamp": "2021-10-21T00:47:13Z"
+  },
+  "DCS task ewr": {
+   "revid": 417,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS task fac": {
+   "revid": 421,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS task fac AttackGroup": {
+   "revid": 403,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS task fac engageGroup": {
+   "revid": 419,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS task fireAtPoint": {
+   "revid": 14711,
+   "timestamp": "2024-07-13T01:04:58Z"
+  },
+  "DCS task follow": {
+   "revid": 13786,
+   "timestamp": "2021-09-28T00:21:48Z"
+  },
+  "DCS task followBigFormation": {
+   "revid": 597,
+   "timestamp": "2018-04-12T00:12:23Z"
+  },
+  "DCS task goToWaypoint": {
+   "revid": 583,
+   "timestamp": "2018-04-12T00:12:22Z"
+  },
+  "DCS task groundEscort": {
+   "revid": 13806,
+   "timestamp": "2021-10-21T00:47:21Z"
+  },
+  "DCS task hold": {
+   "revid": 401,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS task land": {
+   "revid": 391,
+   "timestamp": "2018-04-12T00:12:18Z"
+  },
+  "DCS task mission": {
+   "revid": 13950,
+   "timestamp": "2022-02-20T22:12:13Z"
+  },
+  "DCS task orbit": {
+   "revid": 14790,
+   "timestamp": "2025-03-20T06:59:36Z"
+  },
+  "DCS task refueling": {
+   "revid": 389,
+   "timestamp": "2018-04-12T00:12:18Z"
+  },
+  "DCS task strafing": {
+   "revid": 14591,
+   "timestamp": "2023-10-20T01:25:23Z"
+  },
+  "DCS task tanker": {
+   "revid": 415,
+   "timestamp": "2018-04-12T00:12:19Z"
+  },
+  "DCS task wrappedAction": {
+   "revid": 14573,
+   "timestamp": "2023-09-21T02:05:26Z"
+  },
+  "Template:DCS enum AI altitudeType": {
+   "revid": 683,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum AI designate list": {
+   "revid": 691,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum AI expend list": {
+   "revid": 679,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum AI orbitPattern": {
+   "revid": 681,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum AI turnMethod": {
+   "revid": 685,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum AI vehicleFormation": {
+   "revid": 687,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum AI waypointType": {
+   "revid": 689,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum Air val ECM": {
+   "revid": 717,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum Air val FlareUsing": {
+   "revid": 713,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum Air val ROE": {
+   "revid": 703,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum Air val RadarUsing": {
+   "revid": 711,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum Air val ReactionToThreat": {
+   "revid": 14676,
+   "timestamp": "2024-04-19T20:42:51Z"
+  },
+  "Template:DCS enum Air val missileAttack": {
+   "revid": 719,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum air options": {
+   "revid": 14795,
+   "timestamp": "2025-03-20T07:19:51Z"
+  },
+  "Template:DCS enum callsigns a10": {
+   "revid": 13899,
+   "timestamp": "2021-12-31T04:39:21Z"
+  },
+  "Template:DCS enum callsigns ah64": {
+   "revid": 14475,
+   "timestamp": "2023-03-07T07:36:28Z"
+  },
+  "Template:DCS enum callsigns aircraft": {
+   "revid": 697,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum callsigns awacs": {
+   "revid": 699,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum callsigns b1b": {
+   "revid": 13890,
+   "timestamp": "2021-12-31T04:30:07Z"
+  },
+  "Template:DCS enum callsigns b52": {
+   "revid": 13891,
+   "timestamp": "2021-12-31T04:30:39Z"
+  },
+  "Template:DCS enum callsigns f15e": {
+   "revid": 13892,
+   "timestamp": "2021-12-31T04:31:49Z"
+  },
+  "Template:DCS enum callsigns f16": {
+   "revid": 13897,
+   "timestamp": "2021-12-31T04:38:13Z"
+  },
+  "Template:DCS enum callsigns f18": {
+   "revid": 14312,
+   "timestamp": "2022-09-04T02:47:27Z"
+  },
+  "Template:DCS enum callsigns jtac": {
+   "revid": 693,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum callsigns tanker": {
+   "revid": 701,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum callsigns transport": {
+   "revid": 13895,
+   "timestamp": "2021-12-31T04:36:25Z"
+  },
+  "Template:DCS enum formation table": {
+   "revid": 759,
+   "timestamp": "2018-04-12T00:12:25Z"
+  },
+  "Template:DCS enum ground options": {
+   "revid": 14718,
+   "timestamp": "2024-07-13T01:16:13Z"
+  },
+  "Template:DCS enum ground val AlarmState": {
+   "revid": 715,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum ground val ROE": {
+   "revid": 14799,
+   "timestamp": "2025-04-27T09:49:39Z"
+  },
+  "Template:DCS enum naval options": {
+   "revid": 725,
+   "timestamp": "2018-04-12T00:12:24Z"
+  },
+  "Template:DCS enum naval val ROE": {
+   "revid": 14800,
+   "timestamp": "2025-04-27T09:49:46Z"
+  },
+  "Template:DCS tasking": {
+   "revid": 14579,
+   "timestamp": "2023-09-21T02:13:03Z"
+  }
+ },
+ "_warnings": [
+  "DCS command ActivateJammer: categories from |for= (vehicle)",
+  "DCS command LoadingShip: categories from |for= (ship)",
+  "DCS command setFrequency: categories from |for= (helicopter, plane, vehicle)",
+  "DCS command setFrequencyForUnit: categories from |for= (helicopter, plane)",
+  "DCS command switchWaypoint: categories from |for= (helicopter, plane)",
+  "DCS option formation: category tags ['vehicle'] contradict |for= ['helicopter', 'plane']; |for= kept"
+ ],
+ "enums": {
+  "DCS_enum_air_options": {
+   "ROE": 0,
+   "REACTION_ON_THREAT": 1,
+   "RADAR_USING": 3,
+   "FLARE_USING": 4,
+   "Formation": 5,
+   "RTB_ON_BINGO": 6,
+   "SILENCE": 7,
+   "RTB_ON_OUT_OF_AMMO": 10,
+   "ECM_USING": 13,
+   "PROHIBIT_AA": 14,
+   "PROHIBIT_JETT": 15,
+   "PROHIBIT_AB": 16,
+   "PROHIBIT_AG": 17,
+   "MISSILE_ATTACK": 18,
+   "PROHIBIT_WP_PASS_REPORT": 19,
+   "OPTION_RADIO_USAGE_CONTACT": 21,
+   "OPTION_RADIO_USAGE_ENGAGE": 22,
+   "OPTION_RADIO_USAGE_KILL": 23,
+   "JETT_TANKS_IF_EMPTY": 25,
+   "FORCED_ATTACK": 26,
+   "PREFER_VERTICAL": 32,
+   "ALLOW_FORMATION_SIDE_SWAP": 35
+  },
+  "DCS_enum_ground_options": {
+   "ROE": 0,
+   "FORMATION": 5,
+   "DISPERSE_ON_ATTACK": 8,
+   "ALARM_STATE": 9,
+   "ENGAGE_AIR_WEAPONS": 20,
+   "AC_ENGAGEMENT_RANGE_RESTRICTION": 24,
+   "Restrict AAA min": 27,
+   "Restrict Targets": 28,
+   "Restrict AAA max": 29,
+   "Formation Interval": 30,
+   "Evasion of ARM": 31
+  },
+  "DCS_enum_naval_options": {
+   "ROE": 0
+  },
+  "DCS_enum_Air_val_ROE": {
+   "WEAPON_FREE": 0,
+   "OPEN_FIRE_WEAPON_FREE": 1,
+   "OPEN_FIRE": 2,
+   "RETURN_FIRE": 3,
+   "WEAPON_HOLD": 4
+  },
+  "DCS_enum_Air_val_ReactionToThreat": {
+   "NO_REACTION": 0,
+   "PASSIVE_DEFENCE": 1,
+   "EVADE_FIRE": 2,
+   "BYPASS_AND_ESCAPE": 3,
+   "ALLOW_ABORT_MISSION": 4,
+   "AAA_EVADE_FIRE": 5
+  },
+  "DCS_enum_Air_val_RadarUsing": {
+   "NEVER": 0,
+   "FOR_ATTACK_ONLY": 1,
+   "FOR_SEARCH_IF_REQUIRED": 2,
+   "FOR_CONTINUOUS_SEARCH": 3
+  },
+  "DCS_enum_Air_val_FlareUsing": {
+   "NEVER": 0,
+   "AGAINST_FIRED_MISSILE": 1,
+   "WHEN_FLYING_IN_SAM_WEZ": 2,
+   "WHEN_FLYING_NEAR_ENEMIES": 3
+  },
+  "DCS_enum_Air_val_ECM": {
+   "NEVER_USE": 0,
+   "USE_IF_ONLY_LOCK_BY_RADAR": 1,
+   "USE_IF_DETECTED_LOCK_BY_RADAR": 2,
+   "ALWAYS_USE": 3
+  },
+  "DCS_enum_Air_val_missileAttack": {
+   "MAX_RANGE": 0,
+   "NEZ_RANGE": 1,
+   "HALF_WAY_RMAX_NEZ": 2,
+   "TARGET_THREAT_EST": 3,
+   "RANDOM_RANGE": 4
+  },
+  "DCS_enum_ground_val_AlarmState": {
+   "AUTO": 0,
+   "GREEN": 1,
+   "RED": 2
+  },
+  "DCS_enum_ground_val_ROE": {
+   "OPEN_FIRE": 2,
+   "RETURN_FIRE": 3,
+   "WEAPON_HOLD": 4
+  },
+  "DCS_enum_naval_val_ROE": {
+   "OPEN_FIRE": 2,
+   "RETURN_FIRE": 3,
+   "WEAPON_HOLD": 4
+  },
+  "DCS_enum_AI_orbitPattern": {
+   "RACE_TRACK": "Race-Track",
+   "CIRCLE": "Circle"
+  },
+  "DCS_enum_AI_turnMethod": {
+   "FLY_OVER_POINT": "Fly Over Point",
+   "FIN_POINT": "Fin Point"
+  },
+  "DCS_enum_AI_vehicleFormation": {
+   "VEE": "Vee",
+   "ECHELON_RIGHT": "EchelonR",
+   "OFF_ROAD": "Off Road",
+   "RANK": "Rank",
+   "ECHELON_LEFT": "EchelonL",
+   "ON_ROAD": "On Road",
+   "CONE": "Cone",
+   "DIAMOND": "Diamond"
+  },
+  "DCS_enum_AI_altitudeType": {
+   "RADIO": "RADIO",
+   "BARO": "BARO"
+  },
+  "DCS_enum_AI_waypointType": {
+   "TAKEOFF": "TakeOff",
+   "TAKEOFF_PARKING": "TakeOffParking",
+   "TURNING_POINT": "Turning Point",
+   "TAKEOFF_PARKING_HOT": "TakeOffParkingHot",
+   "LAND": "Land"
+  },
+  "DCS_enum_AI_expend_list": {
+   "QUARTER": "Quarter",
+   "TWO": "Two",
+   "ONE": "One",
+   "FOUR": "Four",
+   "HALF": "Half",
+   "ALL": "All"
+  },
+  "DCS_enum_AI_designate_list": {
+   "NO": "No",
+   "WP": "WP",
+   "IR_POINTER": "IR-Pointer",
+   "LASER": "Laser",
+   "AUTO": "Auto"
+  }
+ },
+ "formations": {
+  "plane": {
+   "Line Abreast Close": 65537,
+   "Trail Close": 131073,
+   "Wedge Close": 196609,
+   "Echelon Right Close": 262145,
+   "Echelon Left Close": 327681,
+   "Finger Four Close": 393217,
+   "Spread Close": 458753,
+   "Bomber Element Close": 786433,
+   "Bomber Element Height Close": 851968,
+   "Fighter Vic Close": 917505,
+   "Line Abreast Open": 65538,
+   "Trail Open": 131074,
+   "Wedge Open": 196610,
+   "Echelon Right Open": 262146,
+   "Echelon Left Open": 327682,
+   "Finger Four Open": 393218,
+   "Spread Open": 458754,
+   "Bomber Element Open": 786434,
+   "Fighter Vic Open": 917506,
+   "Line Abreast Group Close": 65539,
+   "Trail Group Close": 131075,
+   "Wedge Group Close": 196611,
+   "Echelon Right Group Close": 262147,
+   "Echelon Left Group Close": 327683,
+   "Finger Four Group Close": 393219,
+   "Spread Group Close": 458755,
+   "Bomber Element Group Close": 786435
+  },
+  "helicopter": {
+   "Column 70": 720896,
+   "Wedge 70": 8,
+   "Echelon Right 70": 589825,
+   "Echelon Left 70": 590081,
+   "Front Right 300": 655361,
+   "Front Left 300": 655617,
+   "Echelon Right 300": 589826,
+   "Echelon Left 300": 590082,
+   "Front Right 600": 655362,
+   "Front Left 600": 655618,
+   "Echelon Right 600": 589827,
+   "Echelon Left 600": 590083
+  }
+ },
+ "actions": {
+  "AWACS": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_awacs",
+   "revid": 413,
+   "kind": "task",
+   "taskType": "enroute task",
+   "categories": [
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "AWACS",
+   "params": {},
+   "required": []
+  },
+  "ActivateACLS": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_activateACLS",
+   "revid": 14258,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "ship"
+   ],
+   "since": "2.7.12",
+   "id": "ActivateACLS",
+   "params": {
+    "unitId": "number",
+    "name": "string"
+   },
+   "required": [
+    "unitId"
+   ]
+  },
+  "ActivateBeacon": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_activateBeacon",
+   "revid": 13810,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "helicopter",
+    "plane",
+    "ship",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "ActivateBeacon",
+   "params": {
+    "type": "number",
+    "system": "number",
+    "name": "string",
+    "callsign": "string",
+    "frequency": "number"
+   },
+   "required": [
+    "type",
+    "system",
+    "frequency",
+    "callsign"
+   ]
+  },
+  "ActivateICLS": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_activateICLS",
+   "revid": 14253,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "ship"
+   ],
+   "since": "2.5.2",
+   "id": "ActivateICLS",
+   "params": {
+    "type": "131584",
+    "channel": "number",
+    "unitId": "number",
+    "name": "string"
+   },
+   "required": [
+    "type",
+    "channel",
+    "unitId"
+   ]
+  },
+  "ActivateJammer": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_ActivateJammer",
+   "revid": 14841,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "vehicle"
+   ],
+   "since": "2.9.29",
+   "id": "ActivateJammer",
+   "params": {
+    "x": "number",
+    "y": "number",
+    "gpsSpoofing": "number",
+    "glonassSpoofing": "number",
+    "radioJamming": "number",
+    "jammingStart": "number",
+    "jammingEnd": "number"
+   },
+   "required": [
+    "x",
+    "y",
+    "gpsSpoofing",
+    "glonassSpoofing",
+    "radioJamming"
+   ]
+  },
+  "ActivateLink4": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_activateLink4",
+   "revid": 14257,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "ship"
+   ],
+   "since": "2.7.12",
+   "id": "ActivateLink4",
+   "params": {
+    "unitId": "number",
+    "frequency": "number",
+    "name": "string"
+   },
+   "required": [
+    "unitId",
+    "frequency"
+   ]
+  },
+  "AttackGroup": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_attackGroup",
+   "revid": 377,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "AttackGroup",
+   "params": {
+    "groupId": "Group.ID",
+    "weaponType": "number",
+    "expend": "enum AI.Task.WeaponExpend",
+    "directionEnabled": "boolean",
+    "direction": "Azimuth",
+    "altitudeEnabled": "boolean",
+    "altitude": "Distance",
+    "attackQtyLimit": "boolean",
+    "attackQty": "number"
+   },
+   "required": [
+    "groupId"
+   ]
+  },
+  "AttackMapObject": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_attackMapObject",
+   "revid": 14673,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "AttackMapObject",
+   "params": {
+    "point": "Vec2",
+    "weaponType": "number",
+    "expend": "enum AI.Task.WeaponExpend",
+    "attackQty": "number",
+    "attackQtyLimit": "boolean",
+    "direction": "Azimuth",
+    "groupAttack": "boolean"
+   },
+   "required": [
+    "point"
+   ]
+  },
+  "AttackUnit": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_attackUnit",
+   "revid": 14400,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "AttackUnit",
+   "params": {
+    "unitId": "Unit.ID",
+    "weaponType": "number",
+    "expend": "enum AI.Task.WeaponExpend",
+    "direction": "Azimuth",
+    "attackQtyLimit": "boolean",
+    "attackQty": "number",
+    "groupAttack": "boolean"
+   },
+   "required": [
+    "unitId"
+   ]
+  },
+  "Bombing": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_bombing",
+   "revid": 14618,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "Bombing",
+   "params": {
+    "point": "Vec2",
+    "weaponType": "number",
+    "expend": "enum AI.Task.WeaponExpend",
+    "attackQty": "number",
+    "attackQtyLimit": "boolean",
+    "direction": "Azimuth",
+    "groupAttack": "boolean",
+    "altitude": "number",
+    "altitudeEnabled": "boolean",
+    "attackType": "string"
+   },
+   "required": [
+    "point",
+    "attackQty"
+   ]
+  },
+  "BombingRunway": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_bombingRunway",
+   "revid": 13822,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "BombingRunway",
+   "params": {
+    "runwayId": "AirdromeId",
+    "weaponType": "number",
+    "expend": "enum AI.Task.WeaponExpend",
+    "attackQty": "number",
+    "attackQtyLimit": "boolean.",
+    "direction": "Azimuth",
+    "groupAttack": "boolean"
+   },
+   "required": [
+    "runwayId"
+   ]
+  },
+  "CargoTransportation": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_cargoTransportation",
+   "revid": 565,
+   "kind": "task",
+   "taskType": "Main Task",
+   "categories": [
+    "helicopter"
+   ],
+   "since": "1.5.3",
+   "id": "CargoTransportation",
+   "params": {},
+   "required": []
+  },
+  "CarpetBombing": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_carpetBombing",
+   "revid": 13821,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "plane"
+   ],
+   "since": "2.1",
+   "id": "CarpetBombing",
+   "params": {
+    "attackType": "string",
+    "carpetLength": "number",
+    "point": "Vec2",
+    "weaponType": "number",
+    "expend": "enum AI.Task.WeaponExpend",
+    "attackQty": "number",
+    "attackQtyLimit": "boolean",
+    "groupAttack": "boolean",
+    "altitude": "number",
+    "altitudeEnabled": "boolean"
+   },
+   "required": [
+    "point",
+    "attackQty",
+    "carpetLength",
+    "attackType"
+   ]
+  },
+  "DeactivateACLS": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_deactivateACLS",
+   "revid": 14261,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "ship"
+   ],
+   "since": "2.7.12",
+   "id": "DeactivateACLS",
+   "params": {},
+   "required": []
+  },
+  "DeactivateBeacon": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_deactivateBeacon",
+   "revid": 441,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "helicopter",
+    "plane",
+    "ship",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "DeactivateBeacon",
+   "params": {},
+   "required": []
+  },
+  "DeactivateICLS": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_deactivateICLS",
+   "revid": 14259,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "ship"
+   ],
+   "since": "2.5.2",
+   "id": "DeactivateICLS",
+   "params": {},
+   "required": []
+  },
+  "DeactivateJammer": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_DeactivateJammer",
+   "revid": 14842,
+   "kind": "command",
+   "taskType": "Command ",
+   "categories": [
+    "vehicle"
+   ],
+   "since": "1.5",
+   "id": "DeactivateJammer",
+   "params": {},
+   "required": []
+  },
+  "DeactivateLink4": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_deactivateLink4",
+   "revid": 14260,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "ship"
+   ],
+   "since": "2.7.12",
+   "id": "DeactivateLink4",
+   "params": {},
+   "required": []
+  },
+  "DisembarkFromTransport": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_disembarkFromTransport",
+   "revid": 13915,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "helicopter",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "DisembarkFromTransport",
+   "params": {
+    "x": "Vec2.x",
+    "y": "Vec2.y",
+    "zoneRadius": "distance"
+   },
+   "required": []
+  },
+  "EPLRS": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_eplrs",
+   "revid": 439,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "helicopter",
+    "plane",
+    "ship",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "EPLRS",
+   "params": {
+    "value": "boolean",
+    "groupId": "number"
+   },
+   "required": [
+    "value"
+   ]
+  },
+  "EWR": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_ewr",
+   "revid": 417,
+   "kind": "task",
+   "taskType": "enroute task",
+   "categories": [
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "EWR",
+   "params": {},
+   "required": []
+  },
+  "EmbarkToTransport": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_embarkToTransport",
+   "revid": 13916,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "EmbarkToTransport",
+   "params": {
+    "x": "Vec2.x",
+    "y": "Vec2.y",
+    "zoneRadius": "distance"
+   },
+   "required": []
+  },
+  "Embarking": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_embarking",
+   "revid": 13914,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "helicopter",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "Embarking",
+   "params": {
+    "x": "Vec2.x",
+    "y": "Vec2.y",
+    "duration": "time",
+    "groupsForEmbarking": "array of groups",
+    "distributionFlag": "boolean",
+    "distribution": "array of unitIds"
+   },
+   "required": [
+    "groupsForEmbarking"
+   ]
+  },
+  "EngageGroup": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_engageGroup",
+   "revid": 409,
+   "kind": "task",
+   "taskType": "enroute task",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "EngageGroup",
+   "params": {
+    "groupId": "Group.ID",
+    "weaponType": "number",
+    "expend": "enum AI.Task.WeaponExpend",
+    "attackQty": "number",
+    "direction": "Azimuth",
+    "attackQtyLimit": "boolean",
+    "priority": "number"
+   },
+   "required": [
+    "groupId"
+   ]
+  },
+  "EngageTargets": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_engageTargets",
+   "revid": 14668,
+   "kind": "task",
+   "taskType": "enroute task",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "EngageTargets",
+   "params": {
+    "maxDist": "Distance",
+    "maxDistEnabled": "boolean, -- required to check maxDist",
+    "targetTypes": "array of AttributeName",
+    "priority": "number"
+   },
+   "required": [
+    "targetTypes"
+   ]
+  },
+  "EngageTargetsInZone": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_engageTargetsInZone",
+   "revid": 7808,
+   "kind": "task",
+   "taskType": "enroute task",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "EngageTargetsInZone",
+   "params": {
+    "point": "Vec2",
+    "zoneRadius": "Distance",
+    "targetTypes": "array of AttributeName",
+    "priority": "number"
+   },
+   "required": [
+    "targetTypes",
+    "point",
+    "zoneRadius"
+   ]
+  },
+  "EngageUnit": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_engageUnit",
+   "revid": 411,
+   "kind": "task",
+   "taskType": "enroute task",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "EngageUnit",
+   "params": {
+    "unitId": "UnitId",
+    "weaponType": "number",
+    "expend": "enum AI.Task.WeaponExpend",
+    "attackQty": "number",
+    "direction": "Azimuth",
+    "attackQtyLimit": "boolean",
+    "groupAttack": "boolean",
+    "priority": "number"
+   },
+   "required": [
+    "unitId"
+   ]
+  },
+  "Escort": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_escort",
+   "revid": 13805,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "Escort",
+   "params": {
+    "groupId": "Group.ID",
+    "pos": "Vec3",
+    "lastWptIndexFlag": "boolean",
+    "lastWptIndex": "number",
+    "engagementDistMax": "Distance",
+    "targetTypes": "array of AttributeName"
+   },
+   "required": [
+    "groupId",
+    "pos",
+    "engagementDistMax",
+    "targetTypes"
+   ]
+  },
+  "FAC": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_fac",
+   "revid": 421,
+   "kind": "task",
+   "taskType": "Enroute task",
+   "categories": [
+    "helicopter",
+    "plane",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "FAC",
+   "params": {
+    "frequency": "number",
+    "modulation": "enum radio.modulation",
+    "callname": "number callsignId",
+    "number": "number callsignNum",
+    "priority": "number"
+   },
+   "required": []
+  },
+  "FAC_AttackGroup": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_fac_AttackGroup",
+   "revid": 403,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "helicopter",
+    "plane",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "FAC_AttackGroup",
+   "params": {
+    "groupId": "Group.ID",
+    "weaponType": "number",
+    "designation": "enum AI.Task.Designation",
+    "datalink": "boolean",
+    "frequency": "number",
+    "modulation": "enum radio.modulation",
+    "callname": "number callsignId",
+    "number": "number callsignNum"
+   },
+   "required": [
+    "groupId"
+   ]
+  },
+  "FAC_EngageGroup": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_fac_engageGroup",
+   "revid": 419,
+   "kind": "task",
+   "taskType": "Enroute task",
+   "categories": [
+    "helicopter",
+    "plane",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "FAC_EngageGroup",
+   "params": {
+    "groupId": "Group.ID",
+    "weaponType": "number",
+    "designation": "enum AI.Task.Designation",
+    "datalink": "boolean",
+    "frequency": "number",
+    "modulation": "enum radio.modulation",
+    "callname": "number callsignId",
+    "number": "number callsignNum",
+    "priority": "number"
+   },
+   "required": [
+    "groupId"
+   ]
+  },
+  "FireAtPoint": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_fireAtPoint",
+   "revid": 14711,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "ship",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "FireAtPoint",
+   "params": {
+    "point": "Vec2",
+    "radius": "Distance",
+    "expendQty": "number",
+    "expendQtyEnabled": "boolean",
+    "weaponType": "number",
+    "altitude": "number",
+    "alt_type": "number",
+    "counterbattaryRadius": "number"
+   },
+   "required": [
+    "point"
+   ]
+  },
+  "Follow": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_follow",
+   "revid": 13786,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "Follow",
+   "params": {
+    "groupId": "Group.ID",
+    "pos": "Vec3",
+    "lastWptIndexFlag": "boolean",
+    "lastWptIndex": "number"
+   },
+   "required": [
+    "groupId",
+    "pos"
+   ]
+  },
+  "FollowBigFormation": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_followBigFormation",
+   "revid": 597,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "plane"
+   ],
+   "since": "1.5.4",
+   "id": "FollowBigFormation",
+   "params": {
+    "groupId": "Group.ID",
+    "pos": "Vec3",
+    "lastWptIndexFlag": "boolean",
+    "lastWptIndex": "number"
+   },
+   "required": [
+    "groupId",
+    "pos"
+   ]
+  },
+  "GroundEscort": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_groundEscort",
+   "revid": 13806,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "helicopter"
+   ],
+   "since": "2.7.7",
+   "id": "GroundEscort",
+   "params": {
+    "groupId": "Group.ID",
+    "lastWptIndexFlag": "boolean",
+    "lastWptIndex": "number",
+    "targetTypes": "array of AttributeName",
+    "lastWptIndexFlagChangedManually": "boolean"
+   },
+   "required": [
+    "groupId",
+    "targetTypes"
+   ]
+  },
+  "Hold": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_hold",
+   "revid": 401,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "Hold",
+   "params": {},
+   "required": []
+  },
+  "Land": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_land",
+   "revid": 391,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "helicopter"
+   ],
+   "since": "1.2.4",
+   "id": "Land",
+   "params": {
+    "point": "Vec2",
+    "durationFlag": "boolean",
+    "duration": "Time"
+   },
+   "required": [
+    "point"
+   ]
+  },
+  "LoadingShip": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_LoadingShip",
+   "revid": 14385,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "ship"
+   ],
+   "since": "2.8.0",
+   "id": "LoadingShip",
+   "params": {
+    "cargo": "number",
+    "unitId": "number"
+   },
+   "required": [
+    "cargo",
+    "unitId"
+   ]
+  },
+  "Orbit": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_orbit",
+   "revid": 14790,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "Orbit",
+   "params": {
+    "pattern": "string",
+    "point": "Vec2",
+    "point2": "Vec2",
+    "speed": "Distance",
+    "altitude": "Distance",
+    "hotLegDir": "radians",
+    "legLength": "distance",
+    "width": "distance",
+    "clockWise": "boolean"
+   },
+   "required": [
+    "pattern"
+   ]
+  },
+  "RecoveryTanker": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_RecoveryTanker",
+   "revid": 14404,
+   "kind": "task",
+   "taskType": "Perform Task",
+   "categories": [
+    "plane"
+   ],
+   "since": "2.8",
+   "id": "RecoveryTanker",
+   "params": {
+    "groupId": "number",
+    "speed": "number",
+    "altitude": "number",
+    "lastWptIndexFlag": "boolean",
+    "lastWptIndex": "number"
+   },
+   "required": [
+    "groupId",
+    "speed",
+    "altitude"
+   ]
+  },
+  "Refueling": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_refueling",
+   "revid": 389,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "Refueling",
+   "params": {},
+   "required": []
+  },
+  "SMOKE_ON_OFF": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_smoke_on_off",
+   "revid": 12553,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "2.5.6",
+   "id": "SMOKE_ON_OFF",
+   "params": {
+    "value": "boolean"
+   },
+   "required": [
+    "value"
+   ]
+  },
+  "Script": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_script",
+   "revid": 14671,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "helicopter",
+    "plane",
+    "ship",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "Script",
+   "params": {
+    "command": "string"
+   },
+   "required": [
+    "command"
+   ]
+  },
+  "SetCallsign": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_setCallsign",
+   "revid": 425,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "helicopter",
+    "plane",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "SetCallsign",
+   "params": {
+    "callname": "number",
+    "number": "number"
+   },
+   "required": [
+    "callname",
+    "number"
+   ]
+  },
+  "SetFrequency": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_setFrequency",
+   "revid": 14614,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "helicopter",
+    "plane",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "SetFrequency",
+   "params": {
+    "frequency": "number",
+    "modulation": "enum radio.modulation",
+    "power": "number"
+   },
+   "required": [
+    "frequency",
+    "modulation",
+    "power"
+   ]
+  },
+  "SetFrequencyForUnit": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_setFrequencyForUnit",
+   "revid": 14616,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "2.5",
+   "id": "SetFrequencyForUnit",
+   "params": {
+    "frequency": "number",
+    "modulation": "enum radio.modulation",
+    "power": "number",
+    "unitId": "number"
+   },
+   "required": [
+    "frequency",
+    "modulation",
+    "power",
+    "unitId"
+   ]
+  },
+  "SetImmortal": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_setImmortal",
+   "revid": 437,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "helicopter",
+    "plane",
+    "ship",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "SetImmortal",
+   "params": {
+    "value": "boolean"
+   },
+   "required": [
+    "value"
+   ]
+  },
+  "SetInvisible": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_setInvisible",
+   "revid": 435,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "helicopter",
+    "plane",
+    "ship",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "SetInvisible",
+   "params": {
+    "value": "boolean"
+   },
+   "required": [
+    "value"
+   ]
+  },
+  "SetUnlimitedFuel": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_setUnlimitedFuel",
+   "revid": 14592,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "2.9.0",
+   "id": "SetUnlimitedFuel",
+   "params": {
+    "value": "boolean"
+   },
+   "required": [
+    "value"
+   ]
+  },
+  "Start": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_start",
+   "revid": 14449,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "Start",
+   "params": {},
+   "required": []
+  },
+  "StopRoute": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_stopRoute",
+   "revid": 431,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "ship",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "StopRoute",
+   "params": {
+    "value": "boolean"
+   },
+   "required": [
+    "value"
+   ]
+  },
+  "StopTransmission": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_stopTransmission",
+   "revid": 14806,
+   "kind": "command",
+   "taskType": "Command ",
+   "categories": [
+    "helicopter",
+    "plane",
+    "ship",
+    "vehicle"
+   ],
+   "since": "1.5",
+   "id": "StopTransmission",
+   "params": {},
+   "required": []
+  },
+  "Strafing": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_strafing",
+   "revid": 14591,
+   "kind": "task",
+   "taskType": "Main task",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "2.9.0",
+   "id": "Strafing",
+   "params": {
+    "point": "Vec2",
+    "weaponType": "number",
+    "expend": "enum AI.Task.WeaponExpend",
+    "attackQty": "number",
+    "attackQtyLimit": "boolean",
+    "direction": "Azimuth",
+    "directionEnabled": "boolean",
+    "groupAttack": "boolean",
+    "length": "number"
+   },
+   "required": [
+    "point",
+    "attackQty"
+   ]
+  },
+  "SwitchAction": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_switchAction",
+   "revid": 433,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "helicopter",
+    "plane",
+    "ship",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "SwitchAction",
+   "params": {
+    "actionIndex": "number"
+   },
+   "required": [
+    "actionIndex"
+   ]
+  },
+  "SwitchWaypoint": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_switchWaypoint",
+   "revid": 429,
+   "kind": "command",
+   "taskType": "Command",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "SwitchWaypoint",
+   "params": {
+    "fromWaypointIndex": "number",
+    "goToWaypointIndex": "number"
+   },
+   "required": [
+    "fromWaypointIndex",
+    "goToWaypointIndex"
+   ]
+  },
+  "Tanker": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_tanker",
+   "revid": 415,
+   "kind": "task",
+   "taskType": "enroute task",
+   "categories": [
+    "plane"
+   ],
+   "since": "1.2.4",
+   "id": "Tanker",
+   "params": {},
+   "required": []
+  },
+  "TransmitMessage": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_command_transmitMessage",
+   "revid": 13252,
+   "kind": "command",
+   "taskType": "Command ",
+   "categories": [
+    "helicopter",
+    "plane",
+    "ship",
+    "vehicle"
+   ],
+   "since": "1.5",
+   "id": "TransmitMessage",
+   "params": {
+    "duration": "number",
+    "subtitle": "string",
+    "loop": "boolean",
+    "file": "string"
+   },
+   "required": [
+    "file"
+   ]
+  },
+  "goToWaypoint": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_task_goToWaypoint",
+   "revid": 583,
+   "kind": "task",
+   "taskType": "Main Task, Command",
+   "categories": [
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "id": "goToWaypoint",
+   "params": {
+    "fromWaypointIndex": "number",
+    "goToWaypointIndex": "number"
+   },
+   "required": [
+    "fromWaypointIndex",
+    "goToWaypointIndex"
+   ]
+  },
+  "option:ECMUsing": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_ECMUsing",
+   "revid": 557,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.5.0",
+   "optionIds": {
+    "Air": 13
+   },
+   "values": {
+    "kind": "enum",
+    "values": {
+     "NEVER_USE": 0,
+     "USE_IF_ONLY_LOCK_BY_RADAR": 1,
+     "USE_IF_DETECTED_LOCK_BY_RADAR": 2,
+     "ALWAYS_USE": 3
+    }
+   }
+  },
+  "option:Evasion_of_arm": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_Evasion_of_arm",
+   "revid": 14719,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "vehicle"
+   ],
+   "since": "2.9.6",
+   "optionIds": {
+    "Ground": 31
+   },
+   "values": {
+    "kind": "boolean"
+   }
+  },
+  "option:ProhibitAG": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_ProhibitAG",
+   "revid": 549,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.5.0",
+   "optionIds": {
+    "Air": 17
+   },
+   "values": {
+    "kind": "boolean"
+   }
+  },
+  "option:alarmState": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_alarmState",
+   "revid": 453,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "ship",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "optionIds": {
+    "Ground": 9,
+    "Naval": 9
+   },
+   "values": {
+    "kind": "enum",
+    "values": {
+     "AUTO": 0,
+     "GREEN": 1,
+     "RED": 2
+    }
+   }
+  },
+  "option:allow_formation_side_swap": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_allow_formation_side_swap",
+   "revid": 14796,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "2.9.14",
+   "optionIds": {
+    "Air": 35
+   },
+   "values": {
+    "kind": "boolean"
+   }
+  },
+  "option:altitudeRestrictionMax": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_altitudeRestrictionMax",
+   "revid": 13875,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "vehicle"
+   ],
+   "since": "2.7.8",
+   "optionIds": {
+    "Ground": 29
+   },
+   "values": {
+    "kind": "number"
+   }
+  },
+  "option:altitudeRestrictionMin": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_altitudeRestrictionMin",
+   "revid": 13874,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "vehicle"
+   ],
+   "since": "2.7.8",
+   "optionIds": {
+    "Ground": 27
+   },
+   "values": {
+    "kind": "number"
+   }
+  },
+  "option:disperseOnAttack": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_disperseOnAttack",
+   "revid": 455,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "optionIds": {
+    "Ground": 8
+   },
+   "values": {
+    "kind": "number_or_false"
+   }
+  },
+  "option:engage_air_weapons": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_engage_air_weapons",
+   "revid": 11412,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "vehicle"
+   ],
+   "since": "1.5.6",
+   "optionIds": {
+    "Ground": 20
+   },
+   "values": {
+    "kind": "boolean"
+   }
+  },
+  "option:engagementRange": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_engagementRange",
+   "revid": 14814,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "vehicle"
+   ],
+   "since": "2.5.6",
+   "optionIds": {
+    "Ground": 24
+   },
+   "values": {
+    "kind": "range",
+    "min": 0,
+    "max": 100
+   }
+  },
+  "option:flareUsing": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_flareUsing",
+   "revid": 449,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "optionIds": {
+    "Air": 4
+   },
+   "values": {
+    "kind": "enum",
+    "values": {
+     "NEVER": 0,
+     "AGAINST_FIRED_MISSILE": 1,
+     "WHEN_FLYING_IN_SAM_WEZ": 2,
+     "WHEN_FLYING_NEAR_ENEMIES": 3
+    }
+   }
+  },
+  "option:forcedAttack": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_forcedAttack",
+   "revid": 13802,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "plane"
+   ],
+   "since": "2.7.7",
+   "optionIds": {
+    "Air": 26
+   },
+   "values": {
+    "kind": "boolean"
+   }
+  },
+  "option:formation": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_formation",
+   "revid": 13783,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "optionIds": {
+    "Air": 5
+   },
+   "values": {
+    "kind": "formation",
+    "values": {
+     "plane": {
+      "Line Abreast Close": 65537,
+      "Trail Close": 131073,
+      "Wedge Close": 196609,
+      "Echelon Right Close": 262145,
+      "Echelon Left Close": 327681,
+      "Finger Four Close": 393217,
+      "Spread Close": 458753,
+      "Bomber Element Close": 786433,
+      "Bomber Element Height Close": 851968,
+      "Fighter Vic Close": 917505,
+      "Line Abreast Open": 65538,
+      "Trail Open": 131074,
+      "Wedge Open": 196610,
+      "Echelon Right Open": 262146,
+      "Echelon Left Open": 327682,
+      "Finger Four Open": 393218,
+      "Spread Open": 458754,
+      "Bomber Element Open": 786434,
+      "Fighter Vic Open": 917506,
+      "Line Abreast Group Close": 65539,
+      "Trail Group Close": 131075,
+      "Wedge Group Close": 196611,
+      "Echelon Right Group Close": 262147,
+      "Echelon Left Group Close": 327683,
+      "Finger Four Group Close": 393219,
+      "Spread Group Close": 458755,
+      "Bomber Element Group Close": 786435
+     },
+     "helicopter": {
+      "Column 70": 720896,
+      "Wedge 70": 8,
+      "Echelon Right 70": 589825,
+      "Echelon Left 70": 590081,
+      "Front Right 300": 655361,
+      "Front Left 300": 655617,
+      "Echelon Right 300": 589826,
+      "Echelon Left 300": 590082,
+      "Front Right 600": 655362,
+      "Front Left 600": 655618,
+      "Echelon Right 600": 589827,
+      "Echelon Left 600": 590083
+     }
+    }
+   }
+  },
+  "option:formation_interval": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_formation_interval",
+   "revid": 14720,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "vehicle"
+   ],
+   "since": "2.9.6",
+   "optionIds": {
+    "Ground": 30
+   },
+   "values": {
+    "kind": "range",
+    "min": 0,
+    "max": 100
+   }
+  },
+  "option:jettTankIfEmpty": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_jettTankIfEmpty",
+   "revid": 13800,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "2.7.7",
+   "optionIds": {
+    "Air": 25
+   },
+   "values": {
+    "kind": "boolean"
+   }
+  },
+  "option:missileAttack": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_missileAttack",
+   "revid": 559,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.5.0",
+   "optionIds": {
+    "Air": 18
+   },
+   "values": {
+    "kind": "enum",
+    "values": {
+     "MAX_RANGE": 0,
+     "NEZ_RANGE": 1,
+     "HALF_WAY_RMAX_NEZ": 2,
+     "TARGET_THREAT_EST": 3,
+     "RANDOM_RANGE": 4
+    }
+   }
+  },
+  "option:prefer_vertical": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_prefer_vertical",
+   "revid": 14660,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter"
+   ],
+   "since": "2.9.3",
+   "optionIds": {
+    "Air": 32
+   },
+   "values": {
+    "kind": "boolean"
+   }
+  },
+  "option:prohibitAA": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_prohibitAA",
+   "revid": 545,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.5.0",
+   "optionIds": {
+    "Air": 14
+   },
+   "values": {
+    "kind": "boolean"
+   }
+  },
+  "option:prohibitAB": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_prohibitAB",
+   "revid": 553,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.5.0",
+   "optionIds": {
+    "Air": 16
+   },
+   "values": {
+    "kind": "boolean"
+   }
+  },
+  "option:prohibitJett": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_prohibitJett",
+   "revid": 547,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.5.0",
+   "optionIds": {
+    "Air": 15
+   },
+   "values": {
+    "kind": "boolean"
+   }
+  },
+  "option:prohibitWPPassReport": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_prohibitWPPassReport",
+   "revid": 551,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.5.0",
+   "optionIds": {
+    "Air": 19
+   },
+   "values": {
+    "kind": "boolean"
+   }
+  },
+  "option:radarUsing": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_radarUsing",
+   "revid": 447,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "optionIds": {
+    "Air": 3
+   },
+   "values": {
+    "kind": "enum",
+    "values": {
+     "NEVER": 0,
+     "FOR_ATTACK_ONLY": 1,
+     "FOR_SEARCH_IF_REQUIRED": 2,
+     "FOR_CONTINUOUS_SEARCH": 3
+    }
+   }
+  },
+  "option:radioContact": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_radioContact",
+   "revid": 11709,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "2.5.6",
+   "optionIds": {
+    "Air": 21
+   },
+   "values": {
+    "kind": "attributes"
+   }
+  },
+  "option:radioEngage": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_radioEngage",
+   "revid": 11710,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "2.5.6",
+   "optionIds": {
+    "Air": 22
+   },
+   "values": {
+    "kind": "attributes"
+   }
+  },
+  "option:radioKill": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_radioKill",
+   "revid": 11712,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "2.5.6",
+   "optionIds": {
+    "Air": 23
+   },
+   "values": {
+    "kind": "attributes"
+   }
+  },
+  "option:reactionToThreat": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_reactionToThreat",
+   "revid": 14678,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "optionIds": {
+    "Air": 1
+   },
+   "values": {
+    "kind": "enum",
+    "values": {
+     "NO_REACTION": 0,
+     "PASSIVE_DEFENCE": 1,
+     "EVADE_FIRE": 2,
+     "BYPASS_AND_ESCAPE": 3,
+     "ALLOW_ABORT_MISSION": 4,
+     "AAA_EVADE_FIRE": 5
+    }
+   }
+  },
+  "option:restrictTargets": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_restrictTargets",
+   "revid": 13876,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "vehicle"
+   ],
+   "since": "2.7.8",
+   "optionIds": {
+    "Ground": 28
+   },
+   "values": {
+    "kind": "enum",
+    "values": {
+     "Engage Any Target (Default)": 0,
+     "Engage Air Units Only": 1,
+     "Engage Ground Units Only": 2
+    }
+   }
+  },
+  "option:roe": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_roe",
+   "revid": 443,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane",
+    "ship",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "optionIds": {
+    "Air": 0,
+    "Ground": 0,
+    "Naval": 0
+   },
+   "values": {
+    "kind": "enum",
+    "values": {
+     "WEAPON_FREE": 0,
+     "OPEN_FIRE_WEAPON_FREE": 1,
+     "OPEN_FIRE": 2,
+     "RETURN_FIRE": 3,
+     "WEAPON_HOLD": 4
+    }
+   },
+   "valuesByDomain": {
+    "Air": {
+     "WEAPON_FREE": 0,
+     "OPEN_FIRE_WEAPON_FREE": 1,
+     "OPEN_FIRE": 2,
+     "RETURN_FIRE": 3,
+     "WEAPON_HOLD": 4
+    },
+    "Ground": {
+     "OPEN_FIRE": 2,
+     "RETURN_FIRE": 3,
+     "WEAPON_HOLD": 4
+    },
+    "Naval": {
+     "OPEN_FIRE": 2,
+     "RETURN_FIRE": 3,
+     "WEAPON_HOLD": 4
+    }
+   }
+  },
+  "option:rtbOnBingo": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_rtbOnBingo",
+   "revid": 14680,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "optionIds": {
+    "Air": 6
+   },
+   "values": {
+    "kind": "boolean"
+   }
+  },
+  "option:rtbOnOutOfAmmo": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_rtbOnOutOfAmmo",
+   "revid": 9754,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane"
+   ],
+   "since": "1.2.4",
+   "optionIds": {
+    "Air": 10
+   },
+   "values": {
+    "kind": "weapon_flag"
+   }
+  },
+  "option:silence": {
+   "page": "https://wiki.hoggitworld.com/view/DCS_option_silence",
+   "revid": 451,
+   "kind": "option",
+   "taskType": "Option",
+   "categories": [
+    "helicopter",
+    "plane",
+    "vehicle"
+   ],
+   "since": "1.2.4",
+   "optionIds": {
+    "Air": 7,
+    "Ground": 7
+   },
+   "values": {
+    "kind": "boolean"
+   }
+  }
+ },
+ "callsigns": {
+  "aircraft": {
+   "label": "Aircraft callsigns",
+   "names": {
+    "1": "Enfield",
+    "2": "Springfield",
+    "3": "Uzi",
+    "4": "Colt",
+    "5": "Dodge",
+    "6": "Ford",
+    "7": "Chevy",
+    "8": "Pontiac"
+   }
+  },
+  "a10": {
+   "label": "A-10 callsigns (A-10A, A-10C, A-10CII)",
+   "names": {
+    "9": "Hawg",
+    "10": "Boar",
+    "11": "Pig",
+    "12": "Tusk"
+   }
+  },
+  "ah64": {
+   "label": "AH-64 callsigns",
+   "names": {
+    "9": "Army Air",
+    "10": "Apache",
+    "11": "Crow",
+    "12": "Sioux",
+    "13": "Gatling",
+    "14": "Gunslinger",
+    "15": "Hammerhead",
+    "16": "Bootleg",
+    "17": "Palehorse",
+    "18": "Carnivor",
+    "19": "Saber"
+   }
+  },
+  "f16": {
+   "label": "F-16 Callsigns (F-16C b52, F-16C bl52 F-16CM)",
+   "names": {
+    "9": "Viper",
+    "10": "Venom",
+    "11": "Lobo",
+    "12": "Cowboy",
+    "13": "Python",
+    "14": "Rattler",
+    "15": "Panther",
+    "16": "Wolf",
+    "17": "Weasel",
+    "18": "Wild",
+    "19": "Ninja",
+    "20": "Jedi"
+   }
+  },
+  "f18": {
+   "label": "F-18 Callsigns (F-18C and F-18C Lot 20)",
+   "names": {
+    "9": "Hornet",
+    "10": "Squid",
+    "11": "Ragin",
+    "12": "Roman",
+    "13": "Sting",
+    "14": "Jury",
+    "15": "Joker",
+    "16": "Ram",
+    "17": "Hawk",
+    "18": "Devil",
+    "19": "Check",
+    "20": "Snake"
+   }
+  },
+  "f15e": {
+   "label": "F-15E Callsigns",
+   "names": {
+    "9": "Dude",
+    "10": "Thud",
+    "11": "Gunny",
+    "12": "Trek",
+    "13": "Sniper",
+    "14": "Sled",
+    "15": "Best",
+    "16": "Jazz",
+    "17": "Rage",
+    "18": "Tahoe"
+   }
+  },
+  "b1b": {
+   "label": "B-1B",
+   "names": {
+    "9": "Bone",
+    "10": "Dark",
+    "11": "Vader"
+   }
+  },
+  "b52": {
+   "label": "B-52 Callsigns",
+   "names": {
+    "9": "Buff",
+    "10": "Dump",
+    "11": "Kenworth"
+   }
+  },
+  "transport": {
+   "label": "Transport aircraft callsigns (C-47, C-130, C-17)",
+   "names": {
+    "9": "Heavy",
+    "10": "Trash",
+    "11": "Cargo",
+    "12": "Ascot"
+   }
+  },
+  "awacs": {
+   "label": "AWACs callsigns",
+   "names": {
+    "1": "Overlord",
+    "2": "Magic",
+    "3": "Wizard",
+    "4": "Focus",
+    "5": "Darkstar"
+   }
+  },
+  "tanker": {
+   "label": "Tanker callsigns",
+   "names": {
+    "1": "Texaco",
+    "2": "Arco",
+    "3": "Shell"
+   }
+  },
+  "jtac": {
+   "label": "JTAC callsigns",
+   "names": {
+    "1": "Axeman",
+    "2": "Darknight",
+    "3": "Warrior",
+    "4": "Pointer",
+    "5": "Eyeball",
+    "6": "Moonbeam",
+    "7": "Whiplash",
+    "8": "Finger",
+    "9": "Pinpoint",
+    "10": "Ferret",
+    "11": "Shaba",
+    "12": "Playboy",
+    "13": "Hammer",
+    "14": "Jaguar",
+    "15": "Deathstar",
+    "16": "Anvil",
+    "17": "Firefly",
+    "18": "Mantis",
+    "19": "Badger"
+   }
+  }
+ }
+}

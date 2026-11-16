@@ -156,13 +156,15 @@ pydcs 1.0.0; no new item has been opened in the Mission Editor or flown.
 | Unique names (groups/units/statics/zones) | F | `assertNamesFree`, zone check in `addTriggerZone`; refusal leaves the mission untouched. Validator already reported duplicates |
 | Radio presets / intra-flight frequency (was M) | P | src/miz/radios.ts from pydcs `panel_radio`/`radio_frequency` (88 airframes with presets). Unknown radios/channels refused. **No band data exists in pydcs: frequencies are not band-checked** |
 | Installed liveries (was M) | P | src/dcs/liveries.ts, pydcs LiveryScanner paths; installed / not_installed / unknown. Zipped liveries listed by id only |
-| Callsign families | M | unchanged: no source data |
+| Callsign families | P | src/miz/callsigns.ts: Hoggit wiki enums (generic/AWACS/tanker/type-specific) cross-checked with pydcs callnames; F-15E/AH-64D lists conflict between sources and are refused. Russian numeric callsigns accepted unvalidated |
+| Full waypoint task/command/option table | P | src/miz/actions.ts + data/hoggit.json: 58 tasks/commands and 31 options from the Hoggit wiki with params, required params, applicability, option ids/values. Scripting-API shapes; ME extra fields not reproduced |
 | F10 drawing primitives (was M) | F (format) / T | all pydcs primitives incl. oval, rectangle, arrow, freehand line, icons (9 pydcs standard icons only), line styles, list/remove/clear layer. ME rendering unverified |
 | Group clone / grow / spatial search / route replace | F (offline) | src/miz/groups.ts; clone refuses parking/ship/FARP starts and drops datalinks |
 | Cloud presets | F (offline) | src/miz/weather.ts, 30 pydcs presets with base ranges |
 | Terrain elevation offline (was live-only) | P | src/terrain/packs.ts: packs sampled from DCS `land` via the bridge, stored on disk, used offline. Bare-earth, resolution = chosen spacing, 262,144 nodes per pack. No pack has been built against a real DCS install yet |
 | Geometry helpers / point-in-zone | F | src/miz/geometry.ts; flat grid, x north / y east |
 
-Still open from this list: radio bands, callsign families, starting fuel per airframe (no
-source), the full DCS waypoint-action table, DCS-install-derived (rather than pydcs) data.
+Still open from this list: radio bands and starting fuel per airframe (neither pydcs nor the
+Hoggit wiki has them; the wiki only links an external spreadsheet for radios), and
+DCS-install-derived (rather than pydcs) data.
 

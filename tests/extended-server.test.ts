@@ -70,6 +70,15 @@ test('extended MCP tools mutate one session and survive save/reopen', { timeout:
     assert.equal(outside.available, false);
     const noPack = await call('dcs_terrain_analyze', { operation: 'elevation', theatre: 'Syria', start: { x: 0, y: 0 } });
     assert.equal(noPack.available, false); assert.match(noPack.reason, /no terrain pack/);
+    // Hoggit catalogue: waypoint actions and callsigns
+    const ground = await call('dcs_list_waypoint_actions', { category: 'vehicle', kind: 'option' });
+    assert.ok(ground.actions.some((x: any) => x.key === 'option:alarmState'));
+    await call('dcs_miz_add_waypoint_action', { sessionId, group: 'Armor', waypointIndex: 1, action: 'option:alarmState', value: 'GREEN' });
+    await call('dcs_miz_add_waypoint_action', { sessionId, group: 'Viper', waypointIndex: 1, action: 'option:radarUsing', value: 'NEVER' });
+    await fails('dcs_miz_add_waypoint_action', { sessionId, group: 'Armor', waypointIndex: 1, action: 'Orbit', params: { pattern: 'Circle' } });
+    const cs = await call('dcs_list_callsigns', { type: 'F-16C_50' });
+    assert.equal(cs.families['9'], 'Viper');
+    await call('dcs_miz_configure_flight', { sessionId, group: 'Viper', config: { callsign: { family: 'Viper', flight: 1 } } });
     // Save and reopen
     const file = join(out, 'ext.miz');
     assert.equal((await call('dcs_miz_save_as', { sessionId, outPath: file })).saved, true);
@@ -78,6 +87,7 @@ test('extended MCP tools mutate one session and survive save/reopen', { timeout:
       assert.ok(findGroup(s.mission, 'Armor2')); assert.equal(findGroup(s.mission, 'Viper')!.group.frequency, 140);
       assert.ok(findUnit(s.mission, 'Viper-1')!.Radio);
       assert.deepEqual(listDrawings(s.mission).map(d => d.name), ['Push']);
+      assert.equal((findUnit(s.mission, 'Viper-2')!.callsign as any).name, 'Viper12');
     } finally { closeSession(s.id); }
   } finally { await client.close(); }
 });

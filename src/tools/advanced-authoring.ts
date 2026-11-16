@@ -39,7 +39,7 @@ export function registerAdvancedAuthoringTools(server: McpServer) {
     try { return result({ roles: ROLES.map(role => ({ role, task: role === 'strike' ? 'CAS' : ROLE_TASK[role],
       orbitRequired: ['BARCAP', 'TARCAP', 'AWACS', 'tanker'].includes(role), targetRequired: ['strike', 'escort', 'interception'].includes(role) })),
       ...(type ? { aircraft: findUnitType(type)?.entry ?? null, payload: authoringData().aircraft[type] ?? null } : {}),
-      limitations: ['No radio-band, callsign-family, installed-livery or historical service-date database', 'Role aliases are conventions; no new DCS task identifiers', 'Offline only; DCS runtime behavior unverified'] });
+      limitations: ['No radio-band or historical service-date database; callsign families come from the Hoggit wiki enums (dcs_list_callsigns)', 'Role aliases are conventions; no new DCS task identifiers', 'Offline only; DCS runtime behavior unverified'] });
     } catch (e) { return errorResult(e); }
   });
   server.registerTool('dcs_miz_create_flight', {
@@ -57,7 +57,7 @@ export function registerAdvancedAuthoringTools(server: McpServer) {
     } catch (e) { return errorResult(e); }
   });
   server.registerTool('dcs_miz_configure_flight', {
-    description: 'Set per-unit skills, tail numbers, livery, callsign, flight MHz/modulation and fixed-wing formation. Preserves other fields. Radio bands/callsign families and installed liveries are not verified. Only one Player unit per mission. Atomic on error.',
+    description: 'Set per-unit skills, tail numbers, livery, callsign, flight MHz/modulation and fixed-wing formation. Preserves other fields. Callsign family (number or name) is checked against the Hoggit wiki lists for the type and main task (dcs_list_callsigns); liveries against installed folders. Radio bands are not verified. Only one Player unit per mission. Atomic on error.',
     inputSchema: z.object({ sessionId, group: z.string().min(1), config: flightConfigSchema }).strict(), annotations: mutation,
   }, async a => {
     try { const s = requireSession(a.sessionId); const warnings = configureFlight(s.mission, a.group, a.config); s.dirty = true; refresh(s); return result({ group: a.group, warnings }); }

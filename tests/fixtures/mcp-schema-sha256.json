@@ -10,8 +10,8 @@
   "dcs_miz_restore_session": "4ce0cfeb56a6bfb9f2f954c31fdd1e766e25061a231b21332bff1242caf2e25f",
   "dcs_miz_configure_iads": "7524afb78092eec79c9f9f4d80cb126fa76eca7600a31d39c00d2ba035bcb1be",
   "dcs_list_flight_roles": "bd0168622525965ff1eff11192eaa41276783dffbe0edf0149487f49f6981923",
-  "dcs_miz_create_flight": "52cfe0aade5eb52468e10c89abada0c3d7e48ebb971e95071f7817ad6af74795",
-  "dcs_miz_configure_flight": "04c16977dd1d7674cde6fd933ea8b9793c74cb2f08b3b0765529cca309a68d93",
+  "dcs_miz_create_flight": "445fcd62ab895ab1e34c2a5ca9fa9191a9df31bcdcdea0df601ff0b7d413de7b",
+  "dcs_miz_configure_flight": "d6d0cd919abe25a9183f43ece2ac344bc1deac2d47b03d7eb174a46d34e2eb27",
   "dcs_miz_add_waypoint_task": "eb926e7cec80d7223eacddb1a100eea6fea754520766e93038cfb19ee5602d14",
   "dcs_miz_add_airfield_landing": "d95e119737bbd12490d1bc0b549049974b31b134a709f81f0081d7ff2ddfb135",
   "dcs_miz_create_ground_plan": "163ea80407849bebae3deffc53e1bc050b18ec31d766df25cf3ec4dc81954c38",
@@ -120,5 +120,8 @@
   "dcs_list_liveries": "4465562de696bf8c1659d814329aefed522572a59107c556a961c8d6190279b8",
   "dcs_check_livery": "832f5aac233029f9970b9838a24149b6df2f51ea38b734fef01d18bf2276086e",
   "dcs_geometry": "d9efb9a9d919258c75c16bc5da9adbd30c4689e09a1671d768b6669a7e1b6956",
-  "dcs_miz_points_in_zone": "1711857095712bf4f032028483ae32a96820f0b18d83dec3f8509fd59e484b91"
+  "dcs_miz_points_in_zone": "1711857095712bf4f032028483ae32a96820f0b18d83dec3f8509fd59e484b91",
+  "dcs_list_waypoint_actions": "2c69a2d25d8913e779d2de878b56c2435e7321e8e2c4b012a7f2533c5a14528b",
+  "dcs_miz_add_waypoint_action": "73c93c6f7e912ccbddc5b3d6f6679930c53c8d5ba7ffc4c8fd06ba9bc3edf928",
+  "dcs_list_callsigns": "c031b9afaeb6135c2ed748676aa79088bb11450d890f7da0d57b7015d9291cde"
 }

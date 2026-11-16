@@ -23,7 +23,9 @@ for (const role of ROLES) test(`role ${role} authors executable task data and ro
   let type = role === 'AWACS' ? 'E-3A' : role === 'tanker' ? 'KC-135' : role === 'transport' ? 'C-130' : base.type;
   const result = createFlight(m, { ...base, type, role, orbit: ['BARCAP', 'TARCAP', 'AWACS', 'tanker'].includes(role) ? orbit : undefined,
     targetGroup: ['strike', 'interception'].includes(role) ? 'Target' : role === 'escort' ? 'Friendly' : undefined,
-    config: { tailNumbers: ['101', '102'], skills: ['Client', 'High'], frequencyMHz: 251, callsign: { family: 1, flight: 1, name: 'Enfield' } } });
+    config: { tailNumbers: ['101', '102'], skills: ['Client', 'High'], frequencyMHz: 251, callsign: { family: 1, flight: 1,
+      // Family 1 is role-dependent (Hoggit wiki callsign enums): AWACS Overlord, tanker Texaco, else Enfield.
+      name: role === 'AWACS' ? 'Overlord' : role === 'tanker' ? 'Texaco' : 'Enfield' } } });
   const back = rt(m), group = findGroup(back, 'Viper')!.group;
   assert.equal(group.task, result.mainTask);
   assert.equal(findUnit(back, 'Viper-2')!.onboard_num, '102');

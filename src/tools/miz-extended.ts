@@ -8,6 +8,8 @@ import { clearLayer, listDrawings, removeDrawing, STANDARD_LAYERS } from '../miz
 import { radioInfo, resetRadioPresets, setIntraFlightFrequency, setRadioPresets } from '../miz/radios.js';
 import { listCloudPresets, setCloudPreset } from '../miz/weather.js';
 import { lerp, pointFromBearing, pointsInZone, randomPointInCircle } from '../miz/geometry.js';
+import { addWaypointAction, listWaypointActions } from '../miz/actions.js';
+import { callsignOptions } from '../miz/callsigns.js';
 import { liveriesForType, liveryStatus, scanLiveries } from '../dcs/liveries.js';
 import { addUnitsToGroup, cloneGroup, findGroupsNear, setRoute } from '../miz/groups.js';
 import { refresh, requireSession } from '../miz/sessions.js';
@@ -123,4 +125,19 @@ export function registerMizExtendedTools(server: McpServer) {
     description: 'Test DCS x/y points against a trigger zone of the session: circle zones by radius, quad zones by their vertices.',
     inputSchema: z.object({ sessionId, zone: z.string().min(1), points: z.array(xy).min(1).max(1000) }).strict(), annotations: read,
   }, async a => inspect(a.sessionId, s => pointsInZone(s.mission, a.zone, a.points)));
+
+  const category = z.enum(['plane', 'helicopter', 'vehicle', 'ship']);
+  server.registerTool('dcs_list_waypoint_actions', {
+    description: 'Catalogue of DCS waypoint tasks, commands and options from the Hoggit DCS scripting wiki (data/hoggit.json): action key, kind, which group categories it applies to, documented params/required params or option id and allowed values, and the wiki page. Filter by category and kind. Scripting-API documentation, not ME-verified.',
+    inputSchema: z.object({ category: category.optional(), kind: z.enum(['task', 'command', 'option']).optional() }).strict(), annotations: read,
+  }, async a => { const actions = listWaypointActions(a.category, a.kind); return result({ count: actions.length, actions }); });
+  server.registerTool('dcs_miz_add_waypoint_action', {
+    description: 'Append any catalogued task, command or option (dcs_list_waypoint_actions) to a waypoint of any group (aircraft, vehicle or ship). Tasks: params as documented; commands are wrapped in WrappedAction; options take `value` (enum name or number, boolean, range...) and use the numeric option id for the group\'s domain (Air/Ground/Naval). Undocumented params, wrong categories and unknown option values are refused. groupId/unitId may be given as names. Positions are DCS x/y metres, frequencies Hz as on the wiki. Not ME-verified.',
+    inputSchema: z.object({ sessionId, group: z.string().min(1), waypointIndex: z.number().int().min(1), action: z.string().min(1),
+      params: z.record(z.string(), z.unknown()).optional(), value: z.unknown().optional() }).strict(), annotations: writes,
+  }, async a => mutate(a.sessionId, s => addWaypointAction(s.mission, a.group, a.waypointIndex, { action: a.action, params: a.params, value: a.value })));
+  server.registerTool('dcs_list_callsigns', {
+    description: 'NATO callsign families available to an aircraft type (numbers from the Hoggit wiki enums: 1-8 generic, AWACS 1-5 and tanker 1-3 by main task, 9+ type-specific only where pydcs callnames match the wiki list exactly). Use the family number or name in dcs_miz_configure_flight callsign, or SetCallsign.',
+    inputSchema: z.object({ type: z.string().min(1), task: z.string().optional().describe('Main task, e.g. AWACS or Refueling') }).strict(), annotations: read,
+  }, async a => result(callsignOptions(a.type, a.task)));
 }

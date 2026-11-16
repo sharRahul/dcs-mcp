@@ -220,7 +220,7 @@ and safe-integer bounds, 93 were equivalent. The remaining five were reviewed:
   clients should use the error status and actionable message rather than parsing
   Zod-specific error prose. No implicit arbitrary Lua fallback was added.
 
-The 102 input/output schemas (122 since 0.3.0) are locked by SHA-256 regression fixtures in
+The 102 input/output schemas (125 since 0.3.0) are locked by SHA-256 regression fixtures in
 `tests/fixtures/mcp-schema-sha256.json`, exercised through a real stdio SDK client.
 
 ### Reproduction and live status
@@ -356,7 +356,7 @@ the completed Windows Lua conversion; live DCS acceptance remains pending.
 ## Drawings, radios, groups, weather, liveries, terrain packs — 0.3.0
 
 ```bash
-npm run build && npm test          # 229 tests: 224 pass, 5 skipped (need DCS_LUA)
+npm run build && npm test          # 234 tests: 229 pass, 5 skipped (need DCS_LUA)
 node --import tsx scripts/update-schema-fixture.mjs   # only after a deliberate schema change
 ```
 
@@ -364,4 +364,10 @@ node --import tsx scripts/update-schema-fixture.mjs   # only after a deliberate 
 drives every new tool through a real stdio client, saves, and reopens the `.miz`. The terrain-pack tests use
 a synthetic stand-in for the live bridge, so they prove storage and interpolation, not DCS terrain values.
 Linux local run only; no Windows CI run, Mission Editor open or flight has been performed for these additions.
+
+`tests/hoggit.test.ts` covers the Hoggit-wiki catalogue (ids, revisions, categories, the two
+page inconsistencies the generator resolves), action building and refusal, and callsign
+cross-checking. Regenerate the catalogue with
+`python3 -I scripts/gen-hoggit-data.py --fetch <cache-dir> data/hoggit.json` (needs
+wiki.hoggitworld.com; it fetches one page at a time because the wiki answers 503 to bursts).
 

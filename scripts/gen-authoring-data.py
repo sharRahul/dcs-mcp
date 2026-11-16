@@ -65,6 +65,13 @@ for name in ("planes.py", "helicopters.py"):
                                             **({"modulations": {str(c): m for c, m in sorted(cfg["modulations"].items())}} if "modulations" in cfg else {})}
                                    for r, cfg in sorted(panel.items())}
         # The Liveries/<folder> name pydcs's LiveryScanner matches (case-insensitively) for this type.
+        # pydcs callnames: {country: [type-specific callsign names]}; used only to cross-check the
+        # Hoggit wiki's numbered callsign lists (src/miz/callsigns.ts).
+        annotated = {n.target.id: n.value for n in node.body
+                     if isinstance(n, ast.AnnAssign) and isinstance(n.target, ast.Name) and n.value is not None}
+        callnames = literal(annotated.get("callnames"))
+        if isinstance(callnames, dict) and any(callnames.values()):
+            entry["callnames"] = {k: v for k, v in callnames.items() if v}
         livery_name = literal(attrs.get("livery_name"))
         if isinstance(livery_name, str):
             entry["liveryName"] = livery_name
