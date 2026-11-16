@@ -44,33 +44,12 @@ jobs:
           name: offline-capability-proof
           path: ${{ runner.temp }}/dcs-capability-proof
 
-  lua51-acceptance:
-    name: Offline Lua 5.1 acceptance (Linux)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: sudo apt-get update && sudo apt-get install -y lua5.1
-      - run: npm ci
-      - run: npm run check
-      - run: npm run build
-      - run: npm test
-      - run: npm run verify:lua51
-        env:
-          LUA51: lua5.1
-      - run: npm run verify:design -- "${{ runner.temp }}/design-proof"
-        env:
-          LUA51: lua5.1
-      - run: lua5.1 tests/fixtures/hook-load.lua scripts/Hooks/dcs-mcp-hook.lua
-      - run: lua5.1 tests/fixtures/hook-runtime.lua scripts/Hooks/dcs-mcp-hook.lua
-      - run: npm run acceptance:generate -- "${{ runner.temp }}/live-acceptance"
-      - run: npm run acceptance:lua51 -- "${{ runner.temp }}/live-acceptance"
-        env:
-          LUA51: lua5.1
-      - uses: actions/upload-artifact@v4
+      - name: Generate live acceptance kit (offline checks only)
+        if: matrix.node == 22
+        run: npm run acceptance:generate -- "${{ runner.temp }}/live-acceptance"
+      - name: Upload live acceptance kit (DCS flight tests pending)
+        if: matrix.node == 22
+        uses: actions/upload-artifact@v4
         with:
           name: live-acceptance-kit-offline-only
           path: ${{ runner.temp }}/live-acceptance

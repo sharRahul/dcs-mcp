@@ -201,7 +201,8 @@ User approved migration to Zod 4 and raising the runtime minimum to Node 20.
 Dependencies: Zod 4.6.7, MCP SDK 1.32.2, adm-zip 0.6.1, patched transitive packages.
 Node 18 support is removed because the patched SDK HTTP adapter requires Node 20.
 The server still uses stdio; it does not expose HTTP endpoints. Windows CI now
-covers Node 20/22/24 and a separate Linux stock Lua 5.1 job.
+covers Node 20/22/24, with the ten-mission acceptance kit generated on Node 22.
+There is no Linux CI job. Stock Lua results below are local offline checks only.
 
 Reviewed all 98 pre-migration tool input schemas against SDK tools/list after
 migration. Names and fields are retained. Sixty were structurally equal ignoring
@@ -296,3 +297,17 @@ with redistribution permission. Record live evidence using the generated kit and
 update this document with observed results, never presumed behavior.
 
 GitHub CI status will be recorded below after the actual PR workflow completes.
+
+
+### CI correction and Windows-only workflow
+
+The first PR workflow run [43868581786](https://github.com/sharRahul/dcs-mcp/actions/runs/43868581786)
+failed the new schema-hash test because diagnostic log-path help text embedded the
+host home directory. The description now names the resolution rule without a
+machine-specific path. Reviewed schema hashes were updated for that description;
+the full schema assertion remains enabled. Runtime log-path resolution is unchanged.
+
+At the user's request CI runs only on Windows. The Linux stock-Lua job was removed;
+Node 22 on Windows generates and uploads the complete offline-checked acceptance
+kit. Local stock Lua 5.1 checks are explicitly mock/format evidence. Actual DCS
+execution remains the manual Windows acceptance stage.

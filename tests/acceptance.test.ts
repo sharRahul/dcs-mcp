@@ -56,7 +56,7 @@ test('archive metadata, Windows aliases and bounded input reject malformed reque
 });
 test('patched SDK and Zod 4 discover acceptance tools, validate defaults and recover after invalid calls', async () => {
  const client = new Client({ name: 'acceptance-contract', version: '1' });
- const transport = new StdioClientTransport({ command: process.execPath, args: ['--import', 'tsx', 'src/index.ts'], env: { ...process.env, DCS_MCP_STATE_DIR: 'off' } as Record<string,string>, stderr: 'ignore' });
+ const transport = new StdioClientTransport({ command: process.execPath, args: ['--import', 'tsx', 'src/index.ts'], env: { ...process.env, DCS_MCP_STATE_DIR: 'off', DCS_BRIDGE_HOST: '127.0.0.1', DCS_BRIDGE_PORT: '8899' } as Record<string,string>, stderr: 'ignore' });
  await client.connect(transport);
  try {
   const tools = (await client.listTools()).tools;

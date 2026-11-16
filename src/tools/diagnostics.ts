@@ -20,7 +20,7 @@ const portField = z.number().int().min(1).max(65535).default(BRIDGE_DEFAULT_PORT
 const logPathField = z
   .string()
   .optional()
-  .describe(`Path to dcs.log (default: ${defaultLogPath()})`);
+  .describe("Path to dcs.log (default resolves from DCS_SAVED_GAMES or the user Saved Games/DCS profile)");
 
 const readOnly = {
   readOnlyHint: true,
