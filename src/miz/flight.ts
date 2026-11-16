@@ -3,7 +3,9 @@
  */
 import { z } from 'zod';
 import { authoringData } from '../data/authoring.js';
-import { countries, countryOffers, findUnitType, type FlyingType } from '../data/reference.js';
+import { countries, countryOffers, findCountryById, findUnitType, type FlyingType } from '../data/reference.js';
+import { liveryStatus } from '../dcs/liveries.js';
+import { resolveFamily } from './callsigns.js';
 import { asTable, luaArray, type LuaTable } from './lua.js';
 import { addAircraftGroup, addWaypoint, eachGroup, findGroup, findUnit, setPayload, type AddGroupArgs, type AirCategory } from './authoring.js';
 
@@ -34,7 +36,9 @@ export type WaypointTask = z.input<typeof taskSchema>;
 export const FORMATIONS = { trail: 131073, wedge: 196609, echelon_right: 262145, echelon_left: 327681, finger_four: 393217, spread_four: 458753 } as const;
 export const flightConfigSchema = z.object({
   frequencyMHz: z.number().positive().max(400).optional(), modulation: z.union([z.literal(0), z.literal(1)]).optional(),
-  callsign: z.union([z.number().int().positive(), z.object({ family: z.number().int().positive(), flight: z.number().int().min(1).max(9), name: z.string().min(1) }).strict()]).optional(),
+  callsign: z.union([z.number().int().positive().describe('Russian-style numeric callsign; unit i gets number + i'),
+    z.object({ family: z.union([z.number().int().positive(), z.string().min(1)]).describe('Family number or name (dcs_list_callsigns)'),
+      flight: z.number().int().min(1).max(9), name: z.string().min(1).optional().describe('Optional; must match the family') }).strict()]).optional(),
   tailNumbers: z.array(z.string().regex(/^\d{1,3}$/)).min(1).max(16).optional(), livery: z.string().min(1).max(200).optional(),
   skills: z.array(z.enum(['Average', 'Good', 'High', 'Excellent', 'Random', 'Player', 'Client'])).min(1).max(16).optional(),
   formation: z.enum(['trail', 'wedge', 'echelon_right', 'echelon_left', 'finger_four', 'spread_four']).optional(),
@@ -144,12 +148,20 @@ export function configureFlight(mission: LuaTable, name: string, input: z.input<
   if (config.frequencyMHz !== undefined) group.frequency = config.frequencyMHz;
   if (config.modulation !== undefined) group.modulation = config.modulation;
   if (config.frequencyMHz !== undefined || config.modulation !== undefined) group.communication = true;
+  let callsign: number | { family: number; flight: number; name: string } | undefined;
+  if (typeof config.callsign === 'number') callsign = config.callsign;
+  else if (config.callsign) {
+    const resolved = resolveFamily(String(units[0]?.type), String(group.task ?? ''), config.callsign.family);
+    if (config.callsign.name && config.callsign.name.replace(/\s+/g, '').toLowerCase() !== resolved.name.toLowerCase())
+      throw new Error(`Callsign name '${config.callsign.name}' does not match family ${resolved.family} (${resolved.name})`);
+    callsign = { ...resolved, flight: config.callsign.flight };
+  }
   units.forEach((u, i) => {
     if (config.skills) u.skill = config.skills[i];
     if (config.tailNumbers) u.onboard_num = config.tailNumbers[i];
     if (config.livery) u.livery_id = config.livery;
-    if (config.callsign !== undefined) u.callsign = typeof config.callsign === 'number' ? config.callsign + i :
-      { 1: config.callsign.family, 2: config.callsign.flight, 3: i + 1, name: `${config.callsign.name}${config.callsign.flight}${i + 1}` };
+    if (callsign !== undefined) u.callsign = typeof callsign === 'number' ? callsign + i :
+      { 1: callsign.family, 2: callsign.flight, 3: i + 1, name: `${callsign.name}${callsign.flight}${i + 1}` };
   });
   if (config.formation) {
     if (found.category !== 'plane') throw new Error('These formation presets are fixed-wing only');
@@ -158,9 +170,16 @@ export function configureFlight(mission: LuaTable, name: string, input: z.input<
     appendWaypointTask(copy, name, 1, { kind: 'option', option: 'formation', value: FORMATIONS[config.formation] });
     Object.assign(group, requireFlight(copy, name).group);
   }
-  if (config.livery) warnings.push('Livery id stored; installed livery availability is not known offline');
+  if (config.livery) {
+    const country = findCountryById(Number(found.country.id))?.name;
+    const check = liveryStatus(String(units[0]?.type), config.livery, country);
+    warnings.push(check.status === 'installed'
+      ? (check.reason ? `livery_country_restricted: ${check.reason}` : 'Livery found in an installed Liveries folder')
+      : check.status === 'not_installed' ? `livery_not_installed: ${check.reason}; the id was stored anyway`
+      : `Livery id stored; installation unknown (${check.reason})`);
+  }
   if (config.frequencyMHz !== undefined) warnings.push('Frequency stored in MHz; aircraft-specific radio bands are not in the bundled data');
-  if (config.callsign !== undefined) warnings.push('Callsign stored; aircraft/country-specific callsign family availability is not in the bundled data');
+  if (callsign !== undefined && typeof callsign !== 'number') warnings.push(`Callsign ${callsign.name} ${callsign.flight}-1 (family ${callsign.family}) checked against the Hoggit wiki callsign lists; not ME-verified`);
   Object.assign(found.group, group);
   return warnings;
 }

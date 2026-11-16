@@ -13,7 +13,7 @@ import { findAirport } from '../src/data/reference.js';
 import { readWarehouses } from '../src/miz/logistics.js';
 
 test('advanced MCP tools validate, preserve state on failure, and round-trip a complete offline authoring session', { timeout: 60000 }, async () => {
-  const transport = new StdioClientTransport({ command: process.execPath, args: ['--import', 'tsx', 'src/index.ts'], env: { ...process.env, DCS_MCP_STATE_DIR: 'off' } as Record<string, string>, stderr: 'ignore' });
+  const transport = new StdioClientTransport({ command: process.execPath, args: ['--import', 'tsx', 'src/index.ts'], env: { ...process.env, DCS_MCP_STATE_DIR: 'off', DCS_MCP_TERRAIN_DIR: mkdtempSync(join(tmpdir(), 'dcs-no-packs-')) } as Record<string, string>, stderr: 'ignore' });
   const client = new Client({ name: 'advanced-contract-test', version: '0' });
   const dir = mkdtempSync(join(tmpdir(), 'dcs-advanced-mcp-'));
   await client.connect(transport);

@@ -56,9 +56,28 @@ Those orbit coordinates are an example, not a terrain-cleared route.
 `dcs_miz_configure_flight` sets per-unit skills/tail numbers, livery, callsign,
 group frequency (MHz), AM/FM modulation and fixed-wing formation. Only one Player
 unit is allowed; Client is multiplayer. Callsigns accept either a numeric DCS
-callsign or `{family, flight, name}`; aircraft/country-specific families are not
-validated. Installed liveries and per-aircraft radio bands are unknown and warnings
-say so. Arrays must contain exactly one entry per aircraft. Unknown fields remain.
+callsign or `{family, flight, name?}` where family is a number or a name. Families
+come from the Hoggit wiki callsign enums: 1-8 generic, AWACS 1-5 and tanker 1-3 by main
+task, 9+ type-specific only where pydcs `callnames` for the type is the same list
+(F-16, F/A-18, A-10, B-1B, B-52). F-15E and AH-64D lists disagree between the two
+sources, so their type-specific numbers are refused (`dcs_list_callsigns` says why).
+Installed liveries are checked; per-aircraft radio bands are unknown and warnings say so.
+
+`dcs_miz_add_waypoint_action` appends any task, command or option catalogued from the
+Hoggit DCS scripting wiki (`data/hoggit.json`, `scripts/gen-hoggit-data.py`) to any group's
+waypoint: documented params only, required params enforced, enum params (expend,
+pattern, designation, modulation) checked, options by numeric id for the group's
+Air/Ground/Naval domain with their documented values. The wiki describes the scripting
+API; the Mission Editor may write extra fields, and none of these has been ME-verified.
+
+The catalogue is cross-checked against the Mission Editor's own Advanced Actions menus
+from ED's DCS User Manual (`data/me-manual-actions.json`, `scripts/gen-me-manual-actions.py`,
+PDF created 2022-07-27, sha256 recorded). Labels link to catalogue entries only by literal
+name match; renamed editor entries ("Search Then Engage", "Chaff - Flare Using", "RTB on
+Bingo Fuel", ...) stay unmapped. An action missing from the menu for that group type is
+allowed with a warning; a ship/vehicle action the manual lists but the wiki does not
+(ship Attack Group) is allowed and says so. The manual has no per-airframe fuel defaults or
+radio bands either: its payload screen gives fuel as a percentage of the type's maximum. Arrays must contain exactly one entry per aircraft. Unknown fields remain.
 
 `dcs_miz_add_waypoint_task` appends to a 1-based ComboTask without replacing existing
 actions. Typed tasks cover Orbit (including duration), EngageTargets or a zone,

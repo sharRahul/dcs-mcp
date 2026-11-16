@@ -6,4 +6,5 @@ dist/
 .env
 .DS_Store
 /docs/evidence/
+__pycache__/
 .gitignore

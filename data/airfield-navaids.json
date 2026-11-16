@@ -1,0 +1,4129 @@
+{
+ "_source": "DimOn 'Aerodrome Data and Frequencies' kneeboards (Dima Kozyrev, updated 01 February 2026; freeware, unlimited distribution), DAY table pages, by OCR. Rows kept only where the OCR'd ATC frequencies match exactly one pydcs airfield; each value passes its own format/colour check. Not ME- or flight-verified.",
+ "_images_sha256": {
+  "04_AD_Day_Afghanistan_01.png": "9f3f4308de2f5fe832551693f8979a7e341890b05950ced7dc4341a0f9597c38",
+  "04_AD_Day_Afghanistan_02.png": "e603938be3c83da34c54aaca4f3543d8b39580315d80008e8ea447c6bf2392c3",
+  "04_AD_Day_Caucasus_01.png": "e0a712f817ed2a791d5d193094796e7f7806c24f1937f79e7335da231a8ba421",
+  "04_AD_Day_Cold_War_Germany_01.png": "9f3c63ddd9430e24a099ea0e99ecb877c3659bbdd98a74e622dde17ee9d299a2",
+  "04_AD_Day_Cold_War_Germany_02.png": "24781edd57ce3312fb5f3c20406566f0b407f6c3c72342a03c5e9e48964fda6b",
+  "04_AD_Day_Cold_War_Germany_03.png": "d93160233869b3be14bf80974803cfd1713e08985c62002e67f16a9770b32251",
+  "04_AD_Day_Cold_War_Germany_04.png": "f38cd580a20cb07db8df563f8c4d32089e39b5c19996fd8aa809b60d5f4f5bbe",
+  "04_AD_Day_Cold_War_Germany_05.png": "6c6588e35f4c4db7ec32b40f57474dc967e173e8c4cae50ef7f56bc6a49d0496",
+  "04_AD_Day_Cold_War_Germany_06.png": "edec2e0736f0c5c4e5e80f999a43dfe4c625f9839914b8cf00b8b35e04a8058d",
+  "04_AD_Day_Cold_War_Germany_07.png": "cddcee8cbabdebc1b7091c0a1a8571e3bf8d075ca3a32c11898c4a3d96b05ec1",
+  "04_AD_Day_Kola_01.png": "dc4164e43a7fb710c78839ab764a5eb26011fe43671902b124df10942f8d15da",
+  "04_AD_Day_Kola_02.png": "388acc1289b67f6c45dfc5e0f79eef4f84a0bece61d1bce0d25c65a1ab48b102",
+  "04_AD_Day_Kola_03.png": "e7f6c18d28ae72b1f312e74d01eba6ac6f7a241202c15fff357aafe415bee51d",
+  "04_AD_Day_Nevada_01.png": "33e0b14309e3bce64dd8a8222aa3ab9239f4200645575beb0ed6306ce9d59ea6",
+  "04_AD_Day_Normandy_01.png": "9c3f89cf767da2c367e7fb0478089a68bf7827062da5a8c5a8b82c43246aba51",
+  "04_AD_Day_Normandy_02.png": "f783c08028571895a884832c652888ea8c05a57bc93bd1ed02254475a068df34",
+  "04_AD_Day_Normandy_03.png": "3ab6f3fe0e21ef8f407af68300abcb0dcf46ac55238cf02d69080287a44b2fd7",
+  "04_AD_Day_Normandy_04.png": "a11084fcbd6c69ff951bf7b3faa2a9a9e93f84000763de6b9abe1715b9c3372f",
+  "04_AD_Day_Persian_Gulf_01.png": "e80ff0859f44ca0d605e7ba33942c4c73c8b858105f26fa446dc95d77d185a75",
+  "04_AD_Day_Persian_Gulf_02.png": "d59516f768ca4ac03c7cc9148533d9c5efad7855671ef64d373799a9dfcd26a4",
+  "04_AD_Day_Sinai_01.png": "aaa8003e1d670bdcbbab15c72eed1b930ea876bcf1d48d42d1013f9d9fceb0f1",
+  "04_AD_Day_Sinai_02.png": "d1d867f2601feb2149234a05e3f086e873528b979ae5ce4d49a16769dca798a3",
+  "04_AD_Day_Sinai_03.png": "3b229b56c09f1fedd18549ecb0ceec8197e958af23ae45a47bf6322cba34d32b",
+  "04_AD_Day_Sinai_04.png": "39c0b15b4c8de5fdfc190f9886f56712301d59d5de257bd5c01097e5a0145f4e",
+  "04_AD_Day_South_Atlantic_01.png": "1e7647adc877ccb423a5e216dcf5fa52ca7da33c3a518352414350e069b5d86d",
+  "04_AD_Day_South_Atlantic_02.png": "804bd9f5d6d50f070ffb9416a76689affe8e6e60d5704a44b711f35339ee19d9",
+  "04_AD_Day_South_Atlantic_03.png": "4072e95e1f324b7ffd9af1040a50d328a30a3b75f27269ea9cafe29f582aad76",
+  "04_AD_Day_Syria_01.png": "0a79a67f5d1094dd9e535b674cdf12cf0c28201532659f5a3727e8cede045cfa",
+  "04_AD_Day_Syria_02.png": "8d0f350d1e794e8c4e6790739ab12f32d8f08326adc4f7b3f99f6871a8d5e72f",
+  "04_AD_Day_Syria_03.png": "231a321febdd1c4b5d35c5f1eb386f97a40b4763fda007105fd1cea6f065394b",
+  "04_AD_Day_Syria_04.png": "0086c7ac372db6da0e2826b2c621f4b19cc011392da268b9e73e6a785cb7d8af",
+  "04_AD_Day_The_Channel_01.png": "93250514f3987c9e9899b2e596f0b37053ce0f0cda944548a57260777fd02f3f"
+ },
+ "_inputs": "DAY table pages (04_AD_Day_<theatre>_NN.png) of the 01 February 2026 release, from a user-provided copy; Iraq and Marianas WWII are skipped (no pydcs ATC data to gate them).",
+ "_report": {
+  "Afghanistan": {
+   "rows": 20,
+   "accepted": 20,
+   "rejected": []
+  },
+  "Caucasus": {
+   "rows": 17,
+   "accepted": 15,
+   "rejected": [
+    "Kutaisi airstrip HELIPORT: ATC block not read cleanly ('CLOSED,NO ATC,' / 'UNMARKED')",
+    "Kutaisi West: ATC block not read cleanly ('CLOSED,NO ATC,' / 'UNMARKED')"
+   ]
+  },
+  "GermanyCW": {
+   "rows": 111,
+   "accepted": 108,
+   "rejected": [
+    "Holzdorf ETSH: ATC block not read cleanly ('118.20 4.225' / '250.95 539.35')",
+    "Tempelhof EDDI West Berlin/US: ATC block not read cleanly ('119.50 4.850' / '253.75 542.15')",
+    "Verden-Scharnhorst/R EDwv: ATC block not read cleanly ('127.70 4.175' / '250.85 539.25')"
+   ]
+  },
+  "Kola": {
+   "rows": 35,
+   "accepted": 31,
+   "rejected": [
+    "Arvidsjaur ESNX: ATC block not read cleanly ('NO ATC' / '')",
+    "Hosio Road924 ROADBASE: ATC block not read cleanly ('NO ATC' / '')",
+    "y1 Road 9523 / Rovaniemi y3 Route E4 / Antnas: ATC block not read cleanly ('n1 Road 80' / '043°-223°')",
+    "y2 Road 374 / Vidsel y4 Road 78 / Pudasjarvi: ATC block not read cleanly ('' / '122°-302° n3 F')"
+   ]
+  },
+  "Nevada": {
+   "rows": 13,
+   "accepted": 5,
+   "rejected": [
+    "Beatty KBTY: ATC block not read cleanly ('NO ATC' / '')",
+    ": ATC block not read cleanly ('' / '250.15 38.80')",
+    "Jean: ATC block not read cleanly ('NO ATC' / '')",
+    "Mellan airstrip: ATC block not read cleanly ('CLOSED, NO ATC,' / 'UNMARKED, BUMPY')",
+    "Mesquite 67L: ATC block not read cleanly ('NO ATC' / '')",
+    "Mina: ATC block not read cleanly ('NO ATC' / '')",
+    "Tonopah KTPH: ATC block not read cleanly ('NO ATC' / '')",
+    "Yucca airstrip: ATC block not read cleanly ('CLOSED, NO ATC,' / 'UNMARKED')"
+   ]
+  },
+  "Normandy": {
+   "rows": 82,
+   "accepted": 77,
+   "rejected": [
+    "Alderney EGJA: ATC block not read cleanly ('122.05 53.775' / '254.20 42.40')",
+    "Heathrow: ATC block not read cleanly ('CLOSED, NO ATC' / '')",
+    ": ATC block not read cleanly ('' / '253.50 41.90')",
+    "Brucheville A-16: ATC block not read cleanly ('120.85 5 4.725' / '252.65 541.05')",
+    ": ATC block not read cleanly ('25' / '252.00 40.45')"
+   ]
+  },
+  "PersianGulf": {
+   "rows": 29,
+   "accepted": 25,
+   "rejected": [
+    "Lar oISL: ATC matches ['Lar'] but the name does not single one out",
+    "Quasoura Qusahwira Air Base: ATC block not read cleanly ('CLOSED, NO ATC' / '')",
+    "Tunb Island AFB oIGI: ATC block not read cleanly ('NO ATC' / '')",
+    "Tunb Kochak 0ITK: ATC block not read cleanly ('NO ATC' / '')"
+   ]
+  },
+  "SinaiMap": {
+   "rows": 52,
+   "accepted": 48,
+   "rejected": [
+    "As Salihiyah HE39: ATC block not read cleanly ('119.35 4.575' / '251.65 540.05')",
+    "RWY 16R-34L:: ATC block not read cleanly ('' / '')",
+    ": ATC block not read cleanly ('' / '250.65 39.05')",
+    "Rafic Hariri Intl OLBA: ATC block not read cleanly ('NO ATC' / '')"
+   ]
+  },
+  "Falklands": {
+   "rows": 29,
+   "accepted": 18,
+   "rejected": [
+    "Gull Point: ATC 126.5/4.45/234.5/39.5 differs from every pydcs airfield",
+    "Almirante Schroeders ScDw: ATC 118.25/4.0/229.0/38.6 differs from every pydcs airfield",
+    "Cullen AR-0001: ATC block not read cleanly ('CLOSED,NO ATC' / '')",
+    "Hipico Flying Club: ATC 131.5/4.5/235.0/39.6 differs from every pydcs airfield",
+    "091-1800-2710 61: ATC block not read cleanly ('37' / '')",
+    "096°-1300-276° 31: ATC block not read cleanly ('' / '')",
+    "061-1700-2410 45: ATC block not read cleanly ('' / '')",
+    "002°-2200-182°112: ATC block not read cleanly ('97' / '')",
+    "098°-2000-278° 24: ATC block not read cleanly ('56' / '')",
+    "013-2000-193° 74: ATC block not read cleanly ('80' / '')",
+    "102°-2000-282° 40: ATC block not read cleanly ('78' / '')"
+   ]
+  },
+  "Syria": {
+   "rows": 65,
+   "accepted": 42,
+   "rejected": [
+    "Al-Dumayr 0s61: ATC 120.3/5.45/253.35/41.8 differs from every pydcs airfield",
+    "At Tanf HELIPORT: ATC 121.1/5.225/252.9/41.35 differs from every pydcs airfield",
+    "Beirut-Rafic Hariri OLBA: ATC 118.9/5.375/253.2/41.65 differs from every pydcs airfield",
+    "Damascus osDI: ATC 118.5/5.4/253.25/41.7 differs from every pydcs airfield",
+    "H3 IQ-0018: ATC 122.0/5.025/252.5/40.95 differs from every pydcs airfield",
+    "H3 Northwest IQ-0020: ATC 122.1/5.05/252.55/41.0 differs from every pydcs airfield",
+    "H3 Southwest IQ-0021: ATC 122.4/5.075/252.6/41.05 differs from every pydcs airfield",
+    "H4 0JHR: ATC matches ['H4'] but the name does not single one out",
+    "Herzliya LLHZ: ATC 122.2/5.3/253.05/41.5 differs from every pydcs airfield",
+    "Kharab Ishk HELIPORT: ATC 122.2/5.15/252.75/41.2 differs from every pydcs airfield",
+    "King Abdullah Il 0JKA: ATC 118.4/5.275/253.0/41.45 differs from every pydcs airfield",
+    "Marj as Sultan South HELIPORT: ATC 122.9/5.425/253.3/41.75 differs from every pydcs airfield",
+    "Marka 0JAM: ATC 118.1/5.325/253.1/41.55 differs from every pydcs airfield",
+    "Naqoura HELIPORT: ATC 122.0/5.0/252.45/40.9 differs from every pydcs airfield",
+    "Nicosia LcNC: ATC block not read cleanly ('CLOSED,NO ATC,' / 'UN BUFFER ZONE')",
+    ": ATC block not read cleanly ('' / '250.80 39.25')",
+    "Prince Hassan 0JPH: ATC 122.6/5.25/252.95/41.4 differs from every pydcs airfield",
+    "Raj al Issa East: ATC block not read cleanly ('CLOSED, NO ATC,' / 'UNMARKED')",
+    "Raj al lssa West: ATC block not read cleanly ('CLOSED, NO ATC,' / 'UNMARKED')",
+    "Ruwayshid IQ-0040: ATC 122.1/5.1/252.65/41.1 differs from every pydcs airfield",
+    "Sanliurfa LTcS: ATC 118.4/5.125/252.7/41.15 differs from every pydcs airfield",
+    "Tal Siman HELIPORT: ATC 121.9/5.2/252.85/41.3 differs from every pydcs airfield",
+    "Tha'lah 0S60: ATC 118.0/5.175/252.8/41.25 differs from every pydcs airfield"
+   ]
+  },
+  "TheChannel": {
+   "rows": 11,
+   "accepted": 11,
+   "rejected": []
+  }
+ },
+ "theatres": {
+  "Afghanistan": {
+   "1": {
+    "dimonName": "Herat OAHR",
+    "sourcePage": "04_AD_Day_Afghanistan_01.png",
+    "icao": "OAHR",
+    "elevation": {
+     "ft": 3297,
+     "m": 1005
+    },
+    "vorMHz": [
+     116.2
+    ]
+   },
+   "2": {
+    "dimonName": "Farah OAFR",
+    "sourcePage": "04_AD_Day_Afghanistan_01.png",
+    "icao": "OAFR",
+    "elevation": {
+     "ft": 2241,
+     "m": 683
+    }
+   },
+   "3": {
+    "dimonName": "Shindand OASD",
+    "sourcePage": "04_AD_Day_Afghanistan_02.png",
+    "icao": "OASD",
+    "elevation": {
+     "ft": 3783,
+     "m": 1153
+    },
+    "tacan": [
+     "48X"
+    ]
+   },
+   "4": {
+    "dimonName": "Maymana Zahiraddin OAMN",
+    "sourcePage": "04_AD_Day_Afghanistan_01.png",
+    "icao": "OAMN",
+    "elevation": {
+     "ft": 2766,
+     "m": 843
+    }
+   },
+   "5": {
+    "dimonName": "Chaghcharan oAcc",
+    "sourcePage": "04_AD_Day_Afghanistan_01.png",
+    "elevation": {
+     "ft": 7454,
+     "m": 2272
+    }
+   },
+   "6": {
+    "dimonName": "Qalai Naw OAQN",
+    "sourcePage": "04_AD_Day_Afghanistan_01.png",
+    "icao": "OAQN",
+    "elevation": {
+     "ft": 2976,
+     "m": 907
+    }
+   },
+   "8": {
+    "dimonName": "Bost OABT",
+    "sourcePage": "04_AD_Day_Afghanistan_01.png",
+    "icao": "OABT",
+    "elevation": {
+     "ft": 2556,
+     "m": 779
+    }
+   },
+   "10": {
+    "dimonName": "Camp Bastion oAzI",
+    "sourcePage": "04_AD_Day_Afghanistan_01.png",
+    "elevation": {
+     "ft": 2908,
+     "m": 886
+    },
+    "tacan": [
+     "98X"
+    ],
+    "ndbKHz": [
+     423
+    ]
+   },
+   "12": {
+    "dimonName": "Nimroz 0ANZ",
+    "sourcePage": "04_AD_Day_Afghanistan_01.png",
+    "elevation": {
+     "ft": 1585,
+     "m": 483
+    }
+   },
+   "14": {
+    "dimonName": "Shindand HELIPORT",
+    "sourcePage": "04_AD_Day_Afghanistan_02.png",
+    "elevation": {
+     "ft": 3812,
+     "m": 1162
+    }
+   },
+   "15": {
+    "dimonName": "Kandahar HELIPORT",
+    "sourcePage": "04_AD_Day_Afghanistan_01.png",
+    "elevation": {
+     "ft": 3337,
+     "m": 1017
+    }
+   },
+   "16": {
+    "dimonName": "Bagram oAIX",
+    "sourcePage": "04_AD_Day_Afghanistan_01.png",
+    "elevation": {
+     "ft": 4895,
+     "m": 1492
+    },
+    "tacan": [
+     "74X"
+    ],
+    "vorMHz": [
+     112.7
+    ]
+   },
+   "17": {
+    "dimonName": "Kabul 0AKB",
+    "sourcePage": "04_AD_Day_Afghanistan_01.png",
+    "elevation": {
+     "ft": 5869,
+     "m": 1789
+    },
+    "tacan": [
+     "65X"
+    ],
+    "vorMHz": [
+     112.0
+    ]
+   },
+   "18": {
+    "dimonName": "Bamyan 0ABN",
+    "sourcePage": "04_AD_Day_Afghanistan_01.png",
+    "elevation": {
+     "ft": 8468,
+     "m": 2581
+    }
+   },
+   "19": {
+    "dimonName": "Jalalabad 0AJL",
+    "sourcePage": "04_AD_Day_Afghanistan_01.png",
+    "elevation": {
+     "ft": 1841,
+     "m": 561
+    }
+   },
+   "20": {
+    "dimonName": "Gardez 0AGZ",
+    "sourcePage": "04_AD_Day_Afghanistan_01.png",
+    "elevation": {
+     "ft": 7831,
+     "m": 2387
+    }
+   },
+   "21": {
+    "dimonName": "Ghazni 0AGN HELIPORT",
+    "sourcePage": "04_AD_Day_Afghanistan_01.png",
+    "elevation": {
+     "ft": 7136,
+     "m": 2175
+    }
+   },
+   "22": {
+    "dimonName": "Sharana 0ASA",
+    "sourcePage": "04_AD_Day_Afghanistan_02.png",
+    "elevation": {
+     "ft": 7406,
+     "m": 2257
+    }
+   },
+   "23": {
+    "dimonName": "FOB Salerno 0ASL HELIPORT",
+    "sourcePage": "04_AD_Day_Afghanistan_01.png",
+    "elevation": {
+     "ft": 3830,
+     "m": 1167
+    }
+   },
+   "24": {
+    "dimonName": "Urgoon HELIPORT",
+    "sourcePage": "04_AD_Day_Afghanistan_02.png",
+    "elevation": {
+     "ft": 7497,
+     "m": 2285
+    }
+   }
+  },
+  "Caucasus": {
+   "13": {
+    "dimonName": "Krasnodar-Center URKL",
+    "sourcePage": "04_AD_Day_Caucasus_01.png",
+    "icao": "URKL",
+    "elevation": {
+     "ft": 98,
+     "m": 30
+    }
+   },
+   "14": {
+    "dimonName": "Novorossiysk URKN",
+    "sourcePage": "04_AD_Day_Caucasus_01.png",
+    "icao": "URKN",
+    "elevation": {
+     "ft": 131,
+     "m": 40
+    }
+   },
+   "15": {
+    "dimonName": "Krymsk URKW",
+    "sourcePage": "04_AD_Day_Caucasus_01.png",
+    "icao": "URKW",
+    "elevation": {
+     "ft": 66,
+     "m": 20
+    }
+   },
+   "16": {
+    "dimonName": "Maykop-Khanskaya URKH",
+    "sourcePage": "04_AD_Day_Caucasus_01.png",
+    "icao": "URKH",
+    "elevation": {
+     "ft": 591,
+     "m": 180
+    }
+   },
+   "17": {
+    "dimonName": "Gelendzhik URKG",
+    "sourcePage": "04_AD_Day_Caucasus_01.png",
+    "icao": "URKG",
+    "elevation": {
+     "ft": 72,
+     "m": 22
+    },
+    "vorMHz": [
+     114.3
+    ],
+    "ndbKHz": [
+     1000
+    ]
+   },
+   "19": {
+    "dimonName": "Krasnodar-Pashkovsky URKK",
+    "sourcePage": "04_AD_Day_Caucasus_01.png",
+    "icao": "URKK",
+    "elevation": {
+     "ft": 112,
+     "m": 34
+    },
+    "vorMHz": [
+     115.8
+    ]
+   },
+   "20": {
+    "dimonName": "Sukhumi-Babushara UGss",
+    "sourcePage": "04_AD_Day_Caucasus_01.png",
+    "elevation": {
+     "ft": 43,
+     "m": 13
+    }
+   },
+   "22": {
+    "dimonName": "Batumi UGSB",
+    "sourcePage": "04_AD_Day_Caucasus_01.png",
+    "icao": "UGSB",
+    "elevation": {
+     "ft": 33,
+     "m": 10
+    },
+    "tacan": [
+     "16X"
+    ],
+    "ndbKHz": [
+     430
+    ],
+    "ilsMHz": [
+     110.3
+    ]
+   },
+   "23": {
+    "dimonName": "Senaki-Kolkhi UGKS",
+    "sourcePage": "04_AD_Day_Caucasus_01.png",
+    "icao": "UGKS",
+    "elevation": {
+     "ft": 43,
+     "m": 13
+    },
+    "tacan": [
+     "31X"
+    ],
+    "ilsMHz": [
+     108.9
+    ]
+   },
+   "24": {
+    "dimonName": "Kobuleti UG5X Ozurgeti",
+    "sourcePage": "04_AD_Day_Caucasus_01.png",
+    "icao": "UG5X",
+    "elevation": {
+     "ft": 59,
+     "m": 18
+    },
+    "tacan": [
+     "67X"
+    ],
+    "ilsMHz": [
+     111.5
+    ]
+   },
+   "28": {
+    "dimonName": "Mozdok XRMF",
+    "sourcePage": "04_AD_Day_Caucasus_01.png",
+    "icao": "XRMF",
+    "elevation": {
+     "ft": 507,
+     "m": 155
+    }
+   },
+   "29": {
+    "dimonName": "Tbilisi-Lochini UGTB",
+    "sourcePage": "04_AD_Day_Caucasus_01.png",
+    "icao": "UGTB",
+    "elevation": {
+     "ft": 1574,
+     "m": 480
+    },
+    "tacan": [
+     "25X"
+    ],
+    "vorMHz": [
+     113.7
+    ],
+    "ilsMHz": [
+     110.3
+    ]
+   },
+   "30": {
+    "dimonName": "Soganlug UG24",
+    "sourcePage": "04_AD_Day_Caucasus_01.png",
+    "icao": "UG24",
+    "elevation": {
+     "ft": 1500,
+     "m": 458
+    },
+    "tacan": [
+     "25X"
+    ]
+   },
+   "31": {
+    "dimonName": "Vaziani UG27",
+    "sourcePage": "04_AD_Day_Caucasus_01.png",
+    "icao": "UG27",
+    "elevation": {
+     "ft": 1524,
+     "m": 465
+    },
+    "tacan": [
+     "22X"
+    ]
+   },
+   "32": {
+    "dimonName": "Beslan URMO",
+    "sourcePage": "04_AD_Day_Caucasus_01.png",
+    "icao": "URMO",
+    "elevation": {
+     "ft": 1722,
+     "m": 525
+    },
+    "ilsMHz": [
+     110.5
+    ]
+   }
+  },
+  "Falklands": {
+   "1": {
+    "dimonName": "Port Stanley SFAL",
+    "sourcePage": "04_AD_Day_South_Atlantic_01.png",
+    "icao": "SFAL",
+    "vorMHz": [
+     113.3
+    ]
+   },
+   "2": {
+    "dimonName": "Mount Pleasant EGYP",
+    "sourcePage": "04_AD_Day_South_Atlantic_01.png",
+    "icao": "EGYP",
+    "elevation": {
+     "ft": 222,
+     "m": 68
+    },
+    "vorMHz": [
+     114.7
+    ],
+    "ilsMHz": [
+     111.9
+    ]
+   },
+   "3": {
+    "dimonName": "San Carlos FOB",
+    "sourcePage": "04_AD_Day_South_Atlantic_01.png",
+    "elevation": {
+     "ft": 68,
+     "m": 21
+    }
+   },
+   "6": {
+    "dimonName": "Rio Grande SAwE",
+    "sourcePage": "04_AD_Day_South_Atlantic_02.png",
+    "vorMHz": [
+     117.3
+    ],
+    "ilsMHz": [
+     109.5
+    ]
+   },
+   "7": {
+    "dimonName": "Ushuaia SAWH",
+    "sourcePage": "04_AD_Day_South_Atlantic_02.png",
+    "icao": "SAWH",
+    "vorMHz": [
+     113.7
+    ],
+    "ilsMHz": [
+     111.3
+    ]
+   },
+   "9": {
+    "dimonName": "Punta Arenas sccI",
+    "sourcePage": "04_AD_Day_South_Atlantic_01.png",
+    "elevation": {
+     "ft": 112,
+     "m": 34
+    },
+    "vorMHz": [
+     114.1
+    ],
+    "ndbKHz": [
+     270
+    ],
+    "ilsMHz": [
+     109.9
+    ]
+   },
+   "10": {
+    "dimonName": "Pampa Guanaco scBI",
+    "sourcePage": "04_AD_Day_South_Atlantic_01.png",
+    "elevation": {
+     "ft": 520,
+     "m": 159
+    }
+   },
+   "11": {
+    "dimonName": "San Julian SAwJ",
+    "sourcePage": "04_AD_Day_South_Atlantic_02.png",
+    "elevation": {
+     "ft": 144,
+     "m": 44
+    },
+    "vorMHz": [
+     117.7
+    ]
+   },
+   "12": {
+    "dimonName": "Puerto Williams scGz",
+    "sourcePage": "04_AD_Day_South_Atlantic_01.png",
+    "elevation": {
+     "ft": 85,
+     "m": 26
+    },
+    "vorMHz": [
+     114.9
+    ]
+   },
+   "13": {
+    "dimonName": "Puerto Natales ScNT",
+    "sourcePage": "04_AD_Day_South_Atlantic_01.png",
+    "elevation": {
+     "ft": 217,
+     "m": 67
+    },
+    "vorMHz": [
+     115.9
+    ]
+   },
+   "14": {
+    "dimonName": "El Calafate SAwC",
+    "sourcePage": "04_AD_Day_South_Atlantic_01.png",
+    "elevation": {
+     "ft": 667,
+     "m": 204
+    },
+    "vorMHz": [
+     114.7
+    ],
+    "ilsMHz": [
+     108.9
+    ]
+   },
+   "15": {
+    "dimonName": "Puerto Santa Cruz SAwU",
+    "sourcePage": "04_AD_Day_South_Atlantic_01.png",
+    "elevation": {
+     "ft": 364,
+     "m": 111
+    }
+   },
+   "16": {
+    "dimonName": "Comandante Luis Piedrabuena",
+    "sourcePage": "04_AD_Day_South_Atlantic_01.png"
+   },
+   "17": {
+    "dimonName": "Tolhuin SAWL",
+    "sourcePage": "04_AD_Day_South_Atlantic_02.png",
+    "icao": "SAWL",
+    "elevation": {
+     "ft": 355,
+     "m": 109
+    }
+   },
+   "20": {
+    "dimonName": "Rio Turbio SAwT",
+    "sourcePage": "04_AD_Day_South_Atlantic_02.png",
+    "elevation": {
+     "ft": 896,
+     "m": 274
+    },
+    "ndbKHz": [
+     205
+    ]
+   },
+   "21": {
+    "dimonName": "Rio Chico HELIPORT",
+    "sourcePage": "04_AD_Day_South_Atlantic_02.png"
+   },
+   "23": {
+    "dimonName": "Franco Bianco scsB",
+    "sourcePage": "04_AD_Day_South_Atlantic_01.png",
+    "elevation": {
+     "ft": 105,
+     "m": 32
+    }
+   },
+   "27": {
+    "dimonName": "O'Higgins scoH",
+    "sourcePage": "04_AD_Day_South_Atlantic_01.png",
+    "elevation": {
+     "ft": 900,
+     "m": 275
+    }
+   }
+  },
+  "GermanyCW": {
+   "1": {
+    "dimonName": "Wittstock ETxx",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "elevation": {
+     "ft": 226,
+     "m": 69
+    }
+   },
+   "2": {
+    "dimonName": "Altes Lager Juterbog",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "elevation": {
+     "ft": 312,
+     "m": 95
+    }
+   },
+   "3": {
+    "dimonName": "Barth EDBH",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "icao": "EDBH"
+   },
+   "4": {
+    "dimonName": "Zerbst EDUZ",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_07.png",
+    "icao": "EDUZ",
+    "elevation": {
+     "ft": 250,
+     "m": 76
+    }
+   },
+   "5": {
+    "dimonName": "Bremen EDDW",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "icao": "EDDW",
+    "elevation": {
+     "ft": 41,
+     "m": 12
+    },
+    "vorMHz": [
+     117.45
+    ],
+    "ilsMHz": [
+     110.3,
+     110.9
+    ]
+   },
+   "6": {
+    "dimonName": "Briest ETBB",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "icao": "ETBB",
+    "elevation": {
+     "ft": 115,
+     "m": 35
+    }
+   },
+   "7": {
+    "dimonName": "Buckeburg ETHB HELIPORT",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "icao": "ETHB",
+    "elevation": {
+     "ft": 193,
+     "m": 59
+    }
+   },
+   "8": {
+    "dimonName": "Celle EDCL",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "icao": "EDCL",
+    "elevation": {
+     "ft": 126,
+     "m": 38
+    }
+   },
+   "9": {
+    "dimonName": "Cochstedt EDBC",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png",
+    "icao": "EDBC",
+    "elevation": {
+     "ft": 569,
+     "m": 173
+    }
+   },
+   "10": {
+    "dimonName": "Damgarten",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png"
+   },
+   "11": {
+    "dimonName": "Fassberg ETHS",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png",
+    "icao": "ETHS",
+    "elevation": {
+     "ft": 254,
+     "m": 77
+    },
+    "vorMHz": [
+     110.0
+    ]
+   },
+   "12": {
+    "dimonName": "Finow EDAK",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png",
+    "icao": "EDAK",
+    "elevation": {
+     "ft": 111,
+     "m": 34
+    }
+   },
+   "13": {
+    "dimonName": "Garz EDAH",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png",
+    "icao": "EDAH",
+    "elevation": {
+     "ft": 66,
+     "m": 20
+    }
+   },
+   "14": {
+    "dimonName": "GatowWestBerlin/UK",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png",
+    "elevation": {
+     "ft": 136,
+     "m": 42
+    },
+    "vorMHz": [
+     113.3
+    ],
+    "ilsMHz": [
+     108.9
+    ]
+   },
+   "15": {
+    "dimonName": "Templin EDUT",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "icao": "EDUT",
+    "elevation": {
+     "ft": 242,
+     "m": 74
+    }
+   },
+   "16": {
+    "dimonName": "Gutersloh EDUo",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png",
+    "elevation": {
+     "ft": 213,
+     "m": 65
+    },
+    "tacan": [
+     "108X"
+    ],
+    "ndbKHz": [
+     412
+    ],
+    "ilsMHz": [
+     110.7
+    ]
+   },
+   "17": {
+    "dimonName": "Hamburg EDDH",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png",
+    "icao": "EDDH",
+    "elevation": {
+     "ft": 73,
+     "m": 22
+    },
+    "vorMHz": [
+     115.8
+    ],
+    "ilsMHz": [
+     110.5,
+     111.5,
+     109.9
+    ]
+   },
+   "18": {
+    "dimonName": "Hamburg Finkenwerder EDHI",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png",
+    "icao": "EDHI",
+    "ilsMHz": [
+     108.5,
+     110.7
+    ]
+   },
+   "19": {
+    "dimonName": "Hannover EDDv",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png",
+    "elevation": {
+     "ft": 168,
+     "m": 51
+    },
+    "ilsMHz": [
+     109.5,
+     108.7
+    ]
+   },
+   "20": {
+    "dimonName": "Laage ETNL",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_04.png",
+    "icao": "ETNL",
+    "elevation": {
+     "ft": 115,
+     "m": 35
+    }
+   },
+   "21": {
+    "dimonName": "Larz EDAX",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_04.png",
+    "icao": "EDAX",
+    "elevation": {
+     "ft": 210,
+     "m": 64
+    }
+   },
+   "22": {
+    "dimonName": "Mahlwinkel cs14",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_04.png",
+    "elevation": {
+     "ft": 162,
+     "m": 49
+    }
+   },
+   "23": {
+    "dimonName": "Neubrandenburg EDBN",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_04.png",
+    "icao": "EDBN",
+    "elevation": {
+     "ft": 177,
+     "m": 54
+    }
+   },
+   "24": {
+    "dimonName": "Neuruppin DE-0259",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_04.png",
+    "elevation": {
+     "ft": 148,
+     "m": 45
+    }
+   },
+   "25": {
+    "dimonName": "Peenemunde EDcP",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png"
+   },
+   "26": {
+    "dimonName": "Schonefeld ETBs",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "elevation": {
+     "ft": 152,
+     "m": 46
+    },
+    "ilsMHz": [
+     110.3,
+     110.7
+    ]
+   },
+   "27": {
+    "dimonName": "Stendal EDov",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "elevation": {
+     "ft": 122,
+     "m": 37
+    }
+   },
+   "28": {
+    "dimonName": "Tegel EDDT West Berlin/FR",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "icao": "EDDT",
+    "elevation": {
+     "ft": 116,
+     "m": 35
+    },
+    "tacan": [
+     "70X"
+    ],
+    "vorMHz": [
+     112.3
+    ],
+    "ilsMHz": [
+     108.5,
+     109.3
+    ]
+   },
+   "30": {
+    "dimonName": "Tutow EDUW",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "icao": "EDUW"
+   },
+   "31": {
+    "dimonName": "Werneuchen",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "elevation": {
+     "ft": 259,
+     "m": 79
+    }
+   },
+   "32": {
+    "dimonName": "Wunstorf ETNW",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_07.png",
+    "icao": "ETNW",
+    "elevation": {
+     "ft": 165,
+     "m": 50
+    },
+    "tacan": [
+     "116X"
+    ],
+    "ilsMHz": [
+     109.7
+    ]
+   },
+   "33": {
+    "dimonName": "Bornholm EKRN",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "icao": "EKRN",
+    "elevation": {
+     "ft": 49,
+     "m": 15
+    },
+    "ilsMHz": [
+     110.3
+    ]
+   },
+   "34": {
+    "dimonName": "Brand EDUC",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "icao": "EDUC",
+    "elevation": {
+     "ft": 164,
+     "m": 50
+    }
+   },
+   "35": {
+    "dimonName": "Brandis EDBN",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "icao": "EDBN",
+    "elevation": {
+     "ft": 509,
+     "m": 155
+    }
+   },
+   "36": {
+    "dimonName": "Chojna",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png",
+    "elevation": {
+     "ft": 176,
+     "m": 54
+    }
+   },
+   "37": {
+    "dimonName": "Cologne EDDK",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png",
+    "icao": "EDDK",
+    "elevation": {
+     "ft": 242,
+     "m": 74
+    },
+    "vorMHz": [
+     112.15
+    ],
+    "ilsMHz": [
+     110.9,
+     111.1
+    ]
+   },
+   "38": {
+    "dimonName": "Dusseldorf EDDL",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png",
+    "icao": "EDDL",
+    "elevation": {
+     "ft": 121,
+     "m": 37
+    },
+    "vorMHz": [
+     115.15
+    ],
+    "ilsMHz": [
+     111.5,
+     109.9
+    ]
+   },
+   "39": {
+    "dimonName": "Falkenberg EDUF",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png",
+    "icao": "EDUF",
+    "elevation": {
+     "ft": 285,
+     "m": 87
+    }
+   },
+   "40": {
+    "dimonName": "Heidelberg/R EDIE HELIPORT",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png",
+    "icao": "EDIE",
+    "elevation": {
+     "ft": 346,
+     "m": 106
+    }
+   },
+   "41": {
+    "dimonName": "Kastrup EKCH",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png",
+    "icao": "EKCH",
+    "tacan": [
+     "72X"
+    ],
+    "vorMHz": [
+     112.5
+    ],
+    "ndbKHz": [
+     340
+    ],
+    "ilsMHz": [
+     108.9
+    ]
+   },
+   "42": {
+    "dimonName": "Kiel EDHK",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png",
+    "icao": "EDHK",
+    "elevation": {
+     "ft": 58,
+     "m": 18
+    },
+    "ilsMHz": [
+     109.5
+    ]
+   },
+   "43": {
+    "dimonName": "LandstuhI/R EDIP HELIPORT",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_04.png",
+    "icao": "EDIP",
+    "elevation": {
+     "ft": 1182,
+     "m": 360
+    }
+   },
+   "44": {
+    "dimonName": "Mainz Finthen/R EDFZ",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_04.png",
+    "icao": "EDFZ",
+    "elevation": {
+     "ft": 722,
+     "m": 220
+    },
+    "ndbKHz": [
+     470
+    ]
+   },
+   "45": {
+    "dimonName": "Sturup ESMsMalmo",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "elevation": {
+     "ft": 217,
+     "m": 66
+    },
+    "vorMHz": [
+     113.0
+    ],
+    "ilsMHz": [
+     111.9,
+     108.1
+    ]
+   },
+   "46": {
+    "dimonName": "Marxwalde ETwN Neuhardenberg",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_04.png",
+    "elevation": {
+     "ft": 49,
+     "m": 15
+    }
+   },
+   "47": {
+    "dimonName": "Nordholz ETMN",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_04.png",
+    "icao": "ETMN",
+    "elevation": {
+     "ft": 39,
+     "m": 12
+    },
+    "ndbKHz": [
+     372
+    ],
+    "ilsMHz": [
+     111.9
+    ]
+   },
+   "48": {
+    "dimonName": "Norvenich ETNN",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_04.png",
+    "icao": "ETNN",
+    "tacan": [
+     "77X"
+    ],
+    "vorMHz": [
+     116.2
+    ]
+   },
+   "49": {
+    "dimonName": "Oranienburg/R",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "elevation": {
+     "ft": 108,
+     "m": 33
+    }
+   },
+   "50": {
+    "dimonName": "Szczecin-Goleniow EPsc",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "elevation": {
+     "ft": 98,
+     "m": 30
+    }
+   },
+   "52": {
+    "dimonName": "Adelsheim HIGHWAY STRIP",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "elevation": {
+     "ft": 1199,
+     "m": 366
+    }
+   },
+   "79": {
+    "dimonName": "Revinge HIGHWAY STRIP",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "elevation": {
+     "ft": 58,
+     "m": 18
+    }
+   },
+   "80": {
+    "dimonName": "Gross Mohrdorf 01/914",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png"
+   },
+   "81": {
+    "dimonName": "Lubeck EDHL",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_04.png",
+    "icao": "EDHL",
+    "elevation": {
+     "ft": 75,
+     "m": 23
+    }
+   },
+   "82": {
+    "dimonName": "[  Kothen",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_04.png",
+    "elevation": {
+     "ft": 284,
+     "m": 87
+    }
+   },
+   "83": {
+    "dimonName": "Dessau EDAD",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png",
+    "icao": "EDAD",
+    "elevation": {
+     "ft": 195,
+     "m": 60
+    }
+   },
+   "84": {
+    "dimonName": "Parchim ED0P",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "icao": "ED0P",
+    "elevation": {
+     "ft": 171,
+     "m": 52
+    }
+   },
+   "86": {
+    "dimonName": "Uetersen/R EDHE",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "icao": "EDHE",
+    "vorMHz": [
+     116.35
+    ]
+   },
+   "87": {
+    "dimonName": "Tagra HIGHWAY STRIP",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "elevation": {
+     "ft": 115,
+     "m": 35
+    }
+   },
+   "101": {
+    "dimonName": "Sperenberg DE-0009",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "elevation": {
+     "ft": 186,
+     "m": 57
+    }
+   },
+   "102": {
+    "dimonName": "Uelzen/R EDvU",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "elevation": {
+     "ft": 253,
+     "m": 77
+    }
+   },
+   "103": {
+    "dimonName": "Dedelow EDBD",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png",
+    "icao": "EDBD",
+    "elevation": {
+     "ft": 176,
+     "m": 54
+    }
+   },
+   "104": {
+    "dimonName": "Kammermark/R DE-0269",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png",
+    "elevation": {
+     "ft": 287,
+     "m": 87
+    }
+   },
+   "106": {
+    "dimonName": "Weser Wumme/R EDWM",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "icao": "EDWM",
+    "elevation": {
+     "ft": 82,
+     "m": 25
+    }
+   },
+   "107": {
+    "dimonName": "Braunschweig EDVE",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "icao": "EDVE",
+    "elevation": {
+     "ft": 273,
+     "m": 83
+    },
+    "ilsMHz": [
+     111.1
+    ]
+   },
+   "109": {
+    "dimonName": "Waren Vielist/R ED0W",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "icao": "ED0W",
+    "elevation": {
+     "ft": 267,
+     "m": 81
+    }
+   },
+   "110": {
+    "dimonName": "Bienenfarm/R",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "elevation": {
+     "ft": 98,
+     "m": 30
+    }
+   },
+   "111": {
+    "dimonName": "Pinnow EDBP",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "icao": "EDBP",
+    "elevation": {
+     "ft": 149,
+     "m": 45
+    }
+   },
+   "113": {
+    "dimonName": "Glindbruchkippe/R EDVP",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png",
+    "icao": "EDVP",
+    "elevation": {
+     "ft": 159,
+     "m": 48
+    }
+   },
+   "114": {
+    "dimonName": "Ummern/R",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "elevation": {
+     "ft": 219,
+     "m": 67
+    }
+   },
+   "115": {
+    "dimonName": "Hildesheim/R",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png",
+    "elevation": {
+     "ft": 322,
+     "m": 98
+    }
+   },
+   "117": {
+    "dimonName": "Rinteln/R",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "elevation": {
+     "ft": 174,
+     "m": 53
+    }
+   },
+   "123": {
+    "dimonName": "Airracing Koblenz",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "elevation": {
+     "ft": 1056,
+     "m": 322
+    }
+   },
+   "125": {
+    "dimonName": "Perwenitz HIGHWAY STRIP",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "elevation": {
+     "ft": 135,
+     "m": 41
+    }
+   },
+   "131": {
+    "dimonName": "Sittensen HIGHWAY STRIP",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "elevation": {
+     "ft": 125,
+     "m": 38
+    }
+   },
+   "135": {
+    "dimonName": "Sprendlingen HIGHWAY STRIP",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "elevation": {
+     "ft": 420,
+     "m": 128
+    }
+   },
+   "136": {
+    "dimonName": "Thurland HIGHWAY STRIP",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "elevation": {
+     "ft": 282,
+     "m": 86
+    }
+   },
+   "137": {
+    "dimonName": "Zollschen HIGHWAY STRIP",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_07.png"
+   },
+   "140": {
+    "dimonName": "Hasselfelde/R DE-0343",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png",
+    "elevation": {
+     "ft": 1619,
+     "m": 493
+    }
+   },
+   "141": {
+    "dimonName": "Grosse Wiese/R",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png",
+    "elevation": {
+     "ft": 278,
+     "m": 85
+    }
+   },
+   "154": {
+    "dimonName": "Fritzlar ETHF",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png",
+    "icao": "ETHF",
+    "elevation": {
+     "ft": 552,
+     "m": 168
+    },
+    "ndbKHz": [
+     468
+    ]
+   },
+   "155": {
+    "dimonName": "Hahn EDFH",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png",
+    "icao": "EDFH",
+    "elevation": {
+     "ft": 1621,
+     "m": 494
+    },
+    "vorMHz": [
+     113.0
+    ],
+    "ilsMHz": [
+     109.3,
+     111.3
+    ]
+   },
+   "157": {
+    "dimonName": "Allstedt",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "elevation": {
+     "ft": 937,
+     "m": 286
+    },
+    "ndbKHz": [
+     419
+    ]
+   },
+   "158": {
+    "dimonName": "Zweibrucken EDRZ",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_07.png",
+    "icao": "EDRZ",
+    "elevation": {
+     "ft": 1083,
+     "m": 330
+    },
+    "tacan": [
+     "48X"
+    ],
+    "ilsMHz": [
+     111.1
+    ]
+   },
+   "159": {
+    "dimonName": "Giebelstadt EDQG",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png",
+    "icao": "EDQG",
+    "elevation": {
+     "ft": 953,
+     "m": 290
+    },
+    "tacan": [
+     "47X"
+    ],
+    "ndbKHz": [
+     507
+    ]
+   },
+   "160": {
+    "dimonName": "SchWeinfurt/R EDOA HELIPORT",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "icao": "EDOA",
+    "elevation": {
+     "ft": 753,
+     "m": 230
+    },
+    "ndbKHz": [
+     363
+    ]
+   },
+   "161": {
+    "dimonName": "Haina EDGE",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png",
+    "icao": "EDGE",
+    "elevation": {
+     "ft": 1018,
+     "m": 310
+    }
+   },
+   "162": {
+    "dimonName": "Spangdahlem ETAD",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "icao": "ETAD",
+    "elevation": {
+     "ft": 984,
+     "m": 300
+    },
+    "ilsMHz": [
+     108.1
+    ]
+   },
+   "163": {
+    "dimonName": "Frankfurt EDDF",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png",
+    "icao": "EDDF",
+    "elevation": {
+     "ft": 328,
+     "m": 100
+    },
+    "tacan": [
+     "89X"
+    ],
+    "vorMHz": [
+     114.2
+    ],
+    "ilsMHz": [
+     110.7,
+     110.1
+    ]
+   },
+   "164": {
+    "dimonName": "Bindersleben EDDE",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "icao": "EDDE",
+    "elevation": {
+     "ft": 1014,
+     "m": 309
+    },
+    "ilsMHz": [
+     109.9
+    ]
+   },
+   "165": {
+    "dimonName": "Ramstein ETAR",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "icao": "ETAR",
+    "elevation": {
+     "ft": 805,
+     "m": 245
+    },
+    "ilsMHz": [
+     111.5
+    ]
+   },
+   "166": {
+    "dimonName": "Fulda EDEX HELIPORT",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png",
+    "icao": "EDEX",
+    "elevation": {
+     "ft": 937,
+     "m": 286
+    },
+    "ndbKHz": [
+     441
+    ]
+   },
+   "168": {
+    "dimonName": "Mendig ETHM",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_04.png",
+    "icao": "ETHM",
+    "elevation": {
+     "ft": 601,
+     "m": 183
+    },
+    "ndbKHz": [
+     331
+    ]
+   },
+   "169": {
+    "dimonName": "Merseburg EDAM",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_04.png",
+    "icao": "EDAM",
+    "elevation": {
+     "ft": 340,
+     "m": 104
+    }
+   },
+   "170": {
+    "dimonName": "Wiesbaden",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "elevation": {
+     "ft": 454,
+     "m": 138
+    },
+    "tacan": [
+     "88X"
+    ],
+    "ndbKHz": [
+     399
+    ]
+   },
+   "171": {
+    "dimonName": "Schkeuditz ETLS Leipzig Halle",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "icao": "ETLS",
+    "elevation": {
+     "ft": 421,
+     "m": 128
+    },
+    "ilsMHz": [
+     110.3
+    ]
+   },
+   "200": {
+    "dimonName": "Bitburg EDRB",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "icao": "EDRB",
+    "elevation": {
+     "ft": 1211,
+     "m": 369
+    },
+    "tacan": [
+     "56X"
+    ],
+    "ilsMHz": [
+     111.9
+    ]
+   },
+   "201": {
+    "dimonName": "Airracing Lubeck",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png"
+   },
+   "204": {
+    "dimonName": "Airracing Frankfurt",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "elevation": {
+     "ft": 279,
+     "m": 85
+    }
+   },
+   "235": {
+    "dimonName": "Buchel ETSB",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_01.png",
+    "icao": "ETSB",
+    "elevation": {
+     "ft": 1509,
+     "m": 460
+    },
+    "tacan": [
+     "118X"
+    ]
+   },
+   "236": {
+    "dimonName": "Leipzig Mockau ETLM",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_04.png",
+    "icao": "ETLM",
+    "elevation": {
+     "ft": 415,
+     "m": 127
+    },
+    "vorMHz": [
+     117.2
+    ]
+   },
+   "243": {
+    "dimonName": "Gelnhausen/R EDFG",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_02.png",
+    "icao": "EDFG",
+    "elevation": {
+     "ft": 417,
+     "m": 127
+    }
+   },
+   "244": {
+    "dimonName": "Herrenteich/R EDEH",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png",
+    "icao": "EDEH",
+    "elevation": {
+     "ft": 305,
+     "m": 93
+    }
+   },
+   "245": {
+    "dimonName": "Hockenheim/R",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_03.png",
+    "elevation": {
+     "ft": 323,
+     "m": 98
+    }
+   },
+   "246": {
+    "dimonName": "Langenselbold/R EDTJ",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_04.png",
+    "icao": "EDTJ",
+    "elevation": {
+     "ft": 410,
+     "m": 125
+    }
+   },
+   "247": {
+    "dimonName": "Walldorf/R EDGX",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "icao": "EDGX",
+    "elevation": {
+     "ft": 363,
+     "m": 111
+    }
+   },
+   "248": {
+    "dimonName": "Ober-Morlen/R",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "elevation": {
+     "ft": 716,
+     "m": 218
+    }
+   },
+   "249": {
+    "dimonName": "Pottschutthohe/R EDRP",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_05.png",
+    "icao": "EDRP",
+    "elevation": {
+     "ft": 1099,
+     "m": 335
+    }
+   },
+   "250": {
+    "dimonName": "Worms/R EDFV",
+    "sourcePage": "04_AD_Day_Cold_War_Germany_06.png",
+    "icao": "EDFV",
+    "elevation": {
+     "ft": 277,
+     "m": 84
+    }
+   }
+  },
+  "Kola": {
+   "1": {
+    "dimonName": "Banak ENNA Lakselv",
+    "sourcePage": "04_AD_Day_Kola_01.png",
+    "icao": "ENNA",
+    "tacan": [
+     "47X"
+    ],
+    "vorMHz": [
+     114.4
+    ],
+    "ilsMHz": [
+     108.3
+    ]
+   },
+   "2": {
+    "dimonName": "Rovaniemi EFRo",
+    "sourcePage": "04_AD_Day_Kola_02.png",
+    "elevation": {
+     "ft": 637,
+     "m": 194
+    },
+    "vorMHz": [
+     117.7
+    ],
+    "ilsMHz": [
+     111.7
+    ]
+   },
+   "3": {
+    "dimonName": "Kemi Tornio EFKE",
+    "sourcePage": "04_AD_Day_Kola_01.png",
+    "icao": "EFKE",
+    "elevation": {
+     "ft": 47,
+     "m": 14
+    }
+   },
+   "4": {
+    "dimonName": "Vuojarvi ROAD BASE",
+    "sourcePage": "04_AD_Day_Kola_02.png",
+    "icao": "ROAD",
+    "elevation": {
+     "ft": 736,
+     "m": 224
+    }
+   },
+   "5": {
+    "dimonName": "Kiruna EsNQ",
+    "sourcePage": "04_AD_Day_Kola_02.png",
+    "elevation": {
+     "ft": 1504,
+     "m": 458
+    },
+    "vorMHz": [
+     115.2
+    ],
+    "ndbKHz": [
+     360
+    ],
+    "ilsMHz": [
+     110.3
+    ]
+   },
+   "6": {
+    "dimonName": "Severomorsk-3 XLMV",
+    "sourcePage": "04_AD_Day_Kola_02.png",
+    "icao": "XLMV",
+    "elevation": {
+     "ft": 570,
+     "m": 174
+    }
+   },
+   "7": {
+    "dimonName": "Bodo ENB0",
+    "sourcePage": "04_AD_Day_Kola_01.png",
+    "icao": "ENB0",
+    "elevation": {
+     "ft": 42,
+     "m": 13
+    },
+    "tacan": [
+     "45X"
+    ],
+    "vorMHz": [
+     117.55
+    ],
+    "ndbKHz": [
+     320
+    ],
+    "ilsMHz": [
+     110.3,
+     108.7
+    ]
+   },
+   "8": {
+    "dimonName": "Severomorsk-1 ULAK",
+    "sourcePage": "04_AD_Day_Kola_02.png",
+    "icao": "ULAK",
+    "elevation": {
+     "ft": 272,
+     "m": 83
+    }
+   },
+   "9": {
+    "dimonName": "Olenya UOLE",
+    "sourcePage": "04_AD_Day_Kola_02.png",
+    "icao": "UOLE",
+    "elevation": {
+     "ft": 726,
+     "m": 221
+    }
+   },
+   "10": {
+    "dimonName": "Monchegorsk UMoE",
+    "sourcePage": "04_AD_Day_Kola_02.png",
+    "elevation": {
+     "ft": 570,
+     "m": 174
+    }
+   },
+   "11": {
+    "dimonName": "Jokkmokk EsNJ",
+    "sourcePage": "04_AD_Day_Kola_01.png",
+    "elevation": {
+     "ft": 895,
+     "m": 273
+    }
+   },
+   "12": {
+    "dimonName": "Murmansk International ULMM",
+    "sourcePage": "04_AD_Day_Kola_02.png",
+    "icao": "ULMM",
+    "elevation": {
+     "ft": 262,
+     "m": 80
+    },
+    "ilsMHz": [
+     110.3,
+     108.5
+    ]
+   },
+   "13": {
+    "dimonName": "Kalixfors EsUK",
+    "sourcePage": "04_AD_Day_Kola_01.png"
+   },
+   "14": {
+    "dimonName": "Kirkenes ENKR",
+    "sourcePage": "04_AD_Day_Kola_02.png",
+    "icao": "ENKR",
+    "elevation": {
+     "ft": 282,
+     "m": 86
+    },
+    "vorMHz": [
+     112.0
+    ],
+    "ilsMHz": [
+     110.3
+    ]
+   },
+   "15": {
+    "dimonName": "Kallax ESPA Lulea",
+    "sourcePage": "04_AD_Day_Kola_01.png",
+    "icao": "ESPA",
+    "ilsMHz": [
+     110.3,
+     109.9
+    ]
+   },
+   "16": {
+    "dimonName": "Kuusamo EFKs",
+    "sourcePage": "04_AD_Day_Kola_02.png",
+    "elevation": {
+     "ft": 867,
+     "m": 264
+    },
+    "ilsMHz": [
+     110.3
+    ]
+   },
+   "17": {
+    "dimonName": "Vidsel ESPE",
+    "sourcePage": "04_AD_Day_Kola_02.png",
+    "icao": "ESPE",
+    "elevation": {
+     "ft": 594,
+     "m": 181
+    },
+    "ilsMHz": [
+     109.5
+    ]
+   },
+   "18": {
+    "dimonName": "Ivalo EFIV",
+    "sourcePage": "04_AD_Day_Kola_01.png",
+    "icao": "EFIV",
+    "elevation": {
+     "ft": 479,
+     "m": 146
+    }
+   },
+   "19": {
+    "dimonName": "Alakurtti RU59",
+    "sourcePage": "04_AD_Day_Kola_01.png",
+    "icao": "RU59",
+    "elevation": {
+     "ft": 548,
+     "m": 167
+    }
+   },
+   "20": {
+    "dimonName": "Andoya ENAN",
+    "sourcePage": "04_AD_Day_Kola_01.png",
+    "icao": "ENAN",
+    "tacan": [
+     "28X"
+    ],
+    "vorMHz": [
+     112.2
+    ]
+   },
+   "21": {
+    "dimonName": "Bardufoss ENDU",
+    "sourcePage": "04_AD_Day_Kola_01.png",
+    "icao": "ENDU",
+    "elevation": {
+     "ft": 243,
+     "m": 74
+    },
+    "vorMHz": [
+     114.2
+    ],
+    "ilsMHz": [
+     108.7
+    ]
+   },
+   "22": {
+    "dimonName": "Kittila EFKT",
+    "sourcePage": "04_AD_Day_Kola_02.png",
+    "icao": "EFKT",
+    "elevation": {
+     "ft": 646,
+     "m": 197
+    },
+    "ilsMHz": [
+     111.9
+    ]
+   },
+   "24": {
+    "dimonName": "AIta ENAT",
+    "sourcePage": "04_AD_Day_Kola_01.png",
+    "icao": "ENAT",
+    "vorMHz": [
+     117.4
+    ],
+    "ilsMHz": [
+     108.9
+    ]
+   },
+   "25": {
+    "dimonName": "Evenes ENEvHarstad/Narvik",
+    "sourcePage": "04_AD_Day_Kola_01.png",
+    "elevation": {
+     "ft": 86,
+     "m": 26
+    },
+    "tacan": [
+     "73X"
+    ],
+    "vorMHz": [
+     117.35
+    ],
+    "ilsMHz": [
+     108.9
+    ]
+   },
+   "26": {
+    "dimonName": "Enontekio EFET",
+    "sourcePage": "04_AD_Day_Kola_01.png",
+    "icao": "EFET",
+    "elevation": {
+     "ft": 1004,
+     "m": 306
+    },
+    "ilsMHz": [
+     111.3
+    ]
+   },
+   "27": {
+    "dimonName": "$ Sodankyla EFso",
+    "sourcePage": "04_AD_Day_Kola_02.png",
+    "elevation": {
+     "ft": 597,
+     "m": 182
+    }
+   },
+   "28": {
+    "dimonName": "Kilpyavr XLMW",
+    "sourcePage": "04_AD_Day_Kola_01.png",
+    "icao": "XLMW",
+    "elevation": {
+     "ft": 305,
+     "m": 93
+    }
+   },
+   "29": {
+    "dimonName": "Luostari Pechenga XLML",
+    "sourcePage": "04_AD_Day_Kola_02.png",
+    "icao": "XLML",
+    "elevation": {
+     "ft": 249,
+     "m": 76
+    }
+   },
+   "30": {
+    "dimonName": "Koshka Yavr XLMY",
+    "sourcePage": "04_AD_Day_Kola_02.png",
+    "icao": "XLMY",
+    "elevation": {
+     "ft": 471,
+     "m": 144
+    }
+   },
+   "32": {
+    "dimonName": "Kalevala ULPK",
+    "sourcePage": "04_AD_Day_Kola_01.png",
+    "icao": "ULPK",
+    "elevation": {
+     "ft": 400,
+     "m": 122
+    }
+   },
+   "35": {
+    "dimonName": "Hemavan EsUT",
+    "sourcePage": "04_AD_Day_Kola_01.png",
+    "elevation": {
+     "ft": 1503,
+     "m": 458
+    }
+   }
+  },
+  "Nevada": {
+   "1": {
+    "dimonName": "Creech KINS",
+    "sourcePage": "04_AD_Day_Nevada_01.png",
+    "icao": "KINS",
+    "elevation": {
+     "ft": 3126,
+     "m": 954
+    },
+    "tacan": [
+     "87X"
+    ],
+    "ilsMHz": [
+     108.7
+    ]
+   },
+   "3": {
+    "dimonName": "McCarran International KLAs",
+    "sourcePage": "04_AD_Day_Nevada_01.png",
+    "elevation": {
+     "ft": 2178,
+     "m": 664
+    },
+    "tacan": [
+     "116X"
+    ],
+    "vorMHz": [
+     116.9
+    ],
+    "ilsMHz": [
+     110.3
+    ]
+   },
+   "4": {
+    "dimonName": "Nellis KLSV",
+    "sourcePage": "04_AD_Day_Nevada_01.png",
+    "icao": "KLSV",
+    "elevation": {
+     "ft": 1849,
+     "m": 564
+    },
+    "tacan": [
+     "12X"
+    ],
+    "ilsMHz": [
+     109.1
+    ]
+   },
+   "6": {
+    "dimonName": "Boulder City KBvU",
+    "sourcePage": "04_AD_Day_Nevada_01.png",
+    "elevation": {
+     "ft": 2205,
+     "m": 672
+    },
+    "tacan": [
+     "114X"
+    ],
+    "vorMHz": [
+     116.7
+    ]
+   },
+   "18": {
+    "dimonName": "Tonopah Test Range KTNX",
+    "sourcePage": "04_AD_Day_Nevada_01.png",
+    "icao": "KTNX",
+    "elevation": {
+     "ft": 5535,
+     "m": 1687
+    },
+    "tacan": [
+     "77X"
+    ],
+    "vorMHz": [
+     113.0
+    ],
+    "ilsMHz": [
+     108.3,
+     111.7
+    ]
+   }
+  },
+  "Normandy": {
+   "1": {
+    "dimonName": "Saint Pierre du Mont A-1",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 103,
+     "m": 31
+    }
+   },
+   "3": {
+    "dimonName": "Cretteville A-14",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 95,
+     "m": 29
+    }
+   },
+   "4": {
+    "dimonName": "Maupertus A-15",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 441,
+     "m": 134
+    }
+   },
+   "7": {
+    "dimonName": "Cricqueville-en-Bessin A-2",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 81,
+     "m": 25
+    }
+   },
+   "8": {
+    "dimonName": "Lessay A-20",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 66,
+     "m": 20
+    }
+   },
+   "9": {
+    "dimonName": "Sainte-Laurent-sur-Mer A-21",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 62,
+     "m": 19
+    }
+   },
+   "10": {
+    "dimonName": "Biniville A-24",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 107,
+     "m": 32
+    }
+   },
+   "12": {
+    "dimonName": "Deux Jumeaux A-4",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 124,
+     "m": 38
+    }
+   },
+   "13": {
+    "dimonName": "Chippelle A-5",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 125,
+     "m": 38
+    }
+   },
+   "14": {
+    "dimonName": "Beuzeville A-6",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 114,
+     "m": 35
+    }
+   },
+   "15": {
+    "dimonName": "Azeville A-7",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 75,
+     "m": 23
+    }
+   },
+   "16": {
+    "dimonName": "Picauville A-8",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 73,
+     "m": 22
+    }
+   },
+   "17": {
+    "dimonName": "Le Molay A-9",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 105,
+     "m": 32
+    }
+   },
+   "18": {
+    "dimonName": "Longues-sur-Mer B-11",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 225,
+     "m": 69
+    }
+   },
+   "19": {
+    "dimonName": "Carpiquet B-17",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 187,
+     "m": 57
+    }
+   },
+   "20": {
+    "dimonName": "Bazenville B-2",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 200,
+     "m": 61
+    }
+   },
+   "21": {
+    "dimonName": "Sainte-Croix-sur-Mer B-3",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 160,
+     "m": 49
+    }
+   },
+   "22": {
+    "dimonName": "Beny-sur-Mer B-4",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 199,
+     "m": 61
+    }
+   },
+   "24": {
+    "dimonName": "Sommervieu B-8",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 187,
+     "m": 57
+    }
+   },
+   "25": {
+    "dimonName": "Lantheuil B-9",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 175,
+     "m": 53
+    }
+   },
+   "26": {
+    "dimonName": "Evreux",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 423,
+     "m": 129
+    }
+   },
+   "27": {
+    "dimonName": "Chailey",
+    "sourcePage": "04_AD_Day_Normandy_01.png",
+    "elevation": {
+     "ft": 95,
+     "m": 29
+    }
+   },
+   "28": {
+    "dimonName": "Needs Oar Point",
+    "sourcePage": "04_AD_Day_Normandy_02.png"
+   },
+   "29": {
+    "dimonName": "Funtington",
+    "sourcePage": "04_AD_Day_Normandy_01.png",
+    "elevation": {
+     "ft": 125,
+     "m": 38
+    }
+   },
+   "30": {
+    "dimonName": "Tangmere",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 48,
+     "m": 15
+    }
+   },
+   "31": {
+    "dimonName": "Ford",
+    "sourcePage": "04_AD_Day_Normandy_01.png"
+   },
+   "32": {
+    "dimonName": "Argentan",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 610,
+     "m": 186
+    }
+   },
+   "33": {
+    "dimonName": "Goulet",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 617,
+     "m": 188
+    }
+   },
+   "34": {
+    "dimonName": "Barville",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 463,
+     "m": 141
+    }
+   },
+   "35": {
+    "dimonName": "Essay",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 513,
+     "m": 156
+    }
+   },
+   "36": {
+    "dimonName": "Hauterive",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 495,
+     "m": 151
+    }
+   },
+   "37": {
+    "dimonName": "Lymington",
+    "sourcePage": "04_AD_Day_Normandy_01.png"
+   },
+   "38": {
+    "dimonName": "Vrigny",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 591,
+     "m": 180
+    }
+   },
+   "40": {
+    "dimonName": "Conches",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 541,
+     "m": 165
+    }
+   },
+   "41": {
+    "dimonName": "West Malling",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 305,
+     "m": 93
+    }
+   },
+   "42": {
+    "dimonName": "Villacoublay",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 558,
+     "m": 170
+    }
+   },
+   "43": {
+    "dimonName": "Kenley",
+    "sourcePage": "04_AD_Day_Normandy_01.png",
+    "elevation": {
+     "ft": 561,
+     "m": 171
+    }
+   },
+   "44": {
+    "dimonName": "Beauvais-Tille",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 331,
+     "m": 101
+    }
+   },
+   "45": {
+    "dimonName": "Cormeilles-en-Vexin",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 312,
+     "m": 95
+    }
+   },
+   "46": {
+    "dimonName": "Creil",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 269,
+     "m": 82
+    }
+   },
+   "48": {
+    "dimonName": "Lonrai",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 515,
+     "m": 157
+    }
+   },
+   "49": {
+    "dimonName": "Dinan-Trelivan",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 377,
+     "m": 115
+    }
+   },
+   "51": {
+    "dimonName": "Fecamp-Benouville",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 295,
+     "m": 90
+    }
+   },
+   "52": {
+    "dimonName": "Farnborough",
+    "sourcePage": "04_AD_Day_Normandy_01.png",
+    "elevation": {
+     "ft": 246,
+     "m": 75
+    }
+   },
+   "53": {
+    "dimonName": "Friston",
+    "sourcePage": "04_AD_Day_Normandy_01.png",
+    "elevation": {
+     "ft": 309,
+     "m": 94
+    }
+   },
+   "54": {
+    "dimonName": "Deanland",
+    "sourcePage": "04_AD_Day_Normandy_01.png"
+   },
+   "55": {
+    "dimonName": "Triqueville",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 405,
+     "m": 124
+    }
+   },
+   "57": {
+    "dimonName": "Orly",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 272,
+     "m": 83
+    }
+   },
+   "58": {
+    "dimonName": "Stoney Cross",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 384,
+     "m": 117
+    }
+   },
+   "59": {
+    "dimonName": "Amiens-Glisy",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 234,
+     "m": 71
+    }
+   },
+   "60": {
+    "dimonName": "Ronai",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 860,
+     "m": 262
+    }
+   },
+   "61": {
+    "dimonName": "Rouen-Boos",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 500,
+     "m": 152
+    }
+   },
+   "62": {
+    "dimonName": "Deauville",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 460,
+     "m": 140
+    }
+   },
+   "63": {
+    "dimonName": "Saint-Aubin",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 328,
+     "m": 100
+    }
+   },
+   "64": {
+    "dimonName": "Flers",
+    "sourcePage": "04_AD_Day_Normandy_03.png",
+    "elevation": {
+     "ft": 662,
+     "m": 202
+    }
+   },
+   "65": {
+    "dimonName": "Avranches Le Val-Saint-Pere",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 50,
+     "m": 15
+    }
+   },
+   "66": {
+    "dimonName": "Gravesend",
+    "sourcePage": "04_AD_Day_Normandy_01.png",
+    "elevation": {
+     "ft": 178,
+     "m": 54
+    }
+   },
+   "68": {
+    "dimonName": "Broglie",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 595,
+     "m": 181
+    }
+   },
+   "69": {
+    "dimonName": "Bernay Saint Martin",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 513,
+     "m": 156
+    }
+   },
+   "70": {
+    "dimonName": "Saint-Andre-de-lEure",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 498,
+     "m": 152
+    }
+   },
+   "72": {
+    "dimonName": "Manston EGMH",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "icao": "EGMH",
+    "elevation": {
+     "ft": 157,
+     "m": 48
+    }
+   },
+   "73": {
+    "dimonName": "Detling",
+    "sourcePage": "04_AD_Day_Normandy_01.png",
+    "elevation": {
+     "ft": 558,
+     "m": 170
+    }
+   },
+   "74": {
+    "dimonName": "Lympne",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 225,
+     "m": 68
+    }
+   },
+   "76": {
+    "dimonName": "Saint-Omer Wizernes LFQN",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "icao": "LFQN",
+    "elevation": {
+     "ft": 213,
+     "m": 65
+    }
+   },
+   "77": {
+    "dimonName": "Merville Calonne LFQT",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "icao": "LFQT",
+    "elevation": {
+     "ft": 131,
+     "m": 40
+    }
+   },
+   "78": {
+    "dimonName": "High Halden",
+    "sourcePage": "04_AD_Day_Normandy_01.png",
+    "elevation": {
+     "ft": 111,
+     "m": 34
+    }
+   },
+   "79": {
+    "dimonName": "Dunkirk-Mardyck",
+    "sourcePage": "04_AD_Day_Normandy_03.png"
+   },
+   "80": {
+    "dimonName": "Lashenden ex.Headcorn",
+    "sourcePage": "04_AD_Day_Normandy_01.png",
+    "elevation": {
+     "ft": 66,
+     "m": 20
+    }
+   },
+   "81": {
+    "dimonName": "Eastchurch",
+    "sourcePage": "04_AD_Day_Normandy_01.png",
+    "elevation": {
+     "ft": 34,
+     "m": 10
+    }
+   },
+   "82": {
+    "dimonName": "Hawkinge",
+    "sourcePage": "04_AD_Day_Normandy_01.png",
+    "elevation": {
+     "ft": 543,
+     "m": 166
+    }
+   },
+   "83": {
+    "dimonName": "Guernsey",
+    "sourcePage": "04_AD_Day_Normandy_01.png",
+    "elevation": {
+     "ft": 259,
+     "m": 79
+    }
+   },
+   "84": {
+    "dimonName": "Jersey",
+    "sourcePage": "04_AD_Day_Normandy_01.png",
+    "elevation": {
+     "ft": 248,
+     "m": 76
+    }
+   },
+   "86": {
+    "dimonName": "Headcorn",
+    "sourcePage": "04_AD_Day_Normandy_01.png",
+    "elevation": {
+     "ft": 110,
+     "m": 33
+    }
+   },
+   "87": {
+    "dimonName": "Saint-Pol-Bryas",
+    "sourcePage": "04_AD_Day_Normandy_04.png",
+    "elevation": {
+     "ft": 451,
+     "m": 137
+    }
+   },
+   "88": {
+    "dimonName": "Northolt",
+    "sourcePage": "04_AD_Day_Normandy_02.png",
+    "elevation": {
+     "ft": 131,
+     "m": 40
+    }
+   },
+   "89": {
+    "dimonName": "Holmsley South",
+    "sourcePage": "04_AD_Day_Normandy_01.png",
+    "elevation": {
+     "ft": 197,
+     "m": 60
+    }
+   },
+   "90": {
+    "dimonName": "Bembridge",
+    "sourcePage": "04_AD_Day_Normandy_01.png",
+    "elevation": {
+     "ft": 82,
+     "m": 25
+    }
+   }
+  },
+  "PersianGulf": {
+   "1": {
+    "dimonName": "Abu MusaIsland oIBA",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png"
+   },
+   "2": {
+    "dimonName": "Bandar Abbas Intl oIKB",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "tacan": [
+     "78X"
+    ],
+    "vorMHz": [
+     117.2
+    ],
+    "ndbKHz": [
+     250
+    ],
+    "ilsMHz": [
+     109.9
+    ]
+   },
+   "3": {
+    "dimonName": "Bandar Lengeh oIBL",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "elevation": {
+     "ft": 82,
+     "m": 25
+    },
+    "vorMHz": [
+     114.8
+    ],
+    "ndbKHz": [
+     408
+    ]
+   },
+   "4": {
+    "dimonName": "AI Dhafra AFB OMAM",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "icao": "OMAM",
+    "tacan": [
+     "96X"
+    ],
+    "vorMHz": [
+     114.9
+    ]
+   },
+   "5": {
+    "dimonName": "Dubai Intl OMDB",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "icao": "OMDB",
+    "ilsMHz": [
+     110.1,
+     110.9
+    ]
+   },
+   "6": {
+    "dimonName": "AlMaktoum Intl oMDw",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "elevation": {
+     "ft": 125,
+     "m": 39
+    }
+   },
+   "7": {
+    "dimonName": "Fujairah Intl OMFJ",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "icao": "OMFJ",
+    "vorMHz": [
+     113.8
+    ],
+    "ilsMHz": [
+     111.5
+    ]
+   },
+   "9": {
+    "dimonName": "Havadarya oIKP",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "tacan": [
+     "47X"
+    ],
+    "ilsMHz": [
+     108.9
+    ]
+   },
+   "10": {
+    "dimonName": "Khasab 00KB",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "elevation": {
+     "ft": 102,
+     "m": 31
+    },
+    "ilsMHz": [
+     110.3
+    ]
+   },
+   "12": {
+    "dimonName": "AI Minhad AFB OMDM",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "icao": "OMDM",
+    "elevation": {
+     "ft": 190,
+     "m": 58
+    },
+    "tacan": [
+     "99X"
+    ],
+    "ilsMHz": [
+     110.7
+    ]
+   },
+   "13": {
+    "dimonName": "Qeshm Island 0IKQ",
+    "sourcePage": "04_AD_Day_Persian_Gulf_02.png",
+    "vorMHz": [
+     117.1
+    ],
+    "ndbKHz": [
+     233
+    ]
+   },
+   "14": {
+    "dimonName": "Sharjah Intl OMSJ",
+    "sourcePage": "04_AD_Day_Persian_Gulf_02.png",
+    "icao": "OMSJ",
+    "elevation": {
+     "ft": 98,
+     "m": 30
+    }
+   },
+   "15": {
+    "dimonName": "Sirri Island oIBS",
+    "sourcePage": "04_AD_Day_Persian_Gulf_02.png",
+    "vorMHz": [
+     113.75
+    ],
+    "ndbKHz": [
+     300
+    ]
+   },
+   "17": {
+    "dimonName": "Sir Abu Nuayr MSN",
+    "sourcePage": "04_AD_Day_Persian_Gulf_02.png"
+   },
+   "18": {
+    "dimonName": "Kerman oIKK",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "elevation": {
+     "ft": 5745,
+     "m": 1751
+    },
+    "tacan": [
+     "97X"
+    ],
+    "vorMHz": [
+     112.0
+    ]
+   },
+   "19": {
+    "dimonName": "Shiraz Intl oIsS",
+    "sourcePage": "04_AD_Day_Persian_Gulf_02.png",
+    "elevation": {
+     "ft": 4879,
+     "m": 1488
+    },
+    "tacan": [
+     "94X"
+    ],
+    "vorMHz": [
+     117.8
+    ],
+    "ndbKHz": [
+     205
+    ],
+    "ilsMHz": [
+     108.5
+    ]
+   },
+   "20": {
+    "dimonName": "Sas Al Nakheel OMNK",
+    "sourcePage": "04_AD_Day_Persian_Gulf_02.png",
+    "icao": "OMNK"
+   },
+   "21": {
+    "dimonName": "Bandar-e-Jask oIzJ",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "vorMHz": [
+     116.3
+    ]
+   },
+   "22": {
+    "dimonName": "Abu Dhabi Intl OMAA",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "icao": "OMAA",
+    "elevation": {
+     "ft": 92,
+     "m": 28
+    },
+    "vorMHz": [
+     114.25
+    ]
+   },
+   "23": {
+    "dimonName": "Al-Bateen OMAD",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "icao": "OMAD",
+    "vorMHz": [
+     114.0
+    ]
+   },
+   "24": {
+    "dimonName": "Kish Intl 0IBK",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "elevation": {
+     "ft": 115,
+     "m": 35
+    },
+    "vorMHz": [
+     117.4
+    ]
+   },
+   "25": {
+    "dimonName": "AI Ain IntI OMAL",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "icao": "OMAL",
+    "elevation": {
+     "ft": 814,
+     "m": 249
+    },
+    "vorMHz": [
+     112.6
+    ]
+   },
+   "26": {
+    "dimonName": "Lavan Island oIBv",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "elevation": {
+     "ft": 75,
+     "m": 23
+    },
+    "vorMHz": [
+     116.85
+    ],
+    "ndbKHz": [
+     310
+    ]
+   },
+   "28": {
+    "dimonName": "Ras Al Khaimah Intl OMRK",
+    "sourcePage": "04_AD_Day_Persian_Gulf_02.png",
+    "icao": "OMRK",
+    "elevation": {
+     "ft": 72,
+     "m": 22
+    },
+    "vorMHz": [
+     113.6
+    ]
+   },
+   "29": {
+    "dimonName": "Liwa AFB 0MLW",
+    "sourcePage": "04_AD_Day_Persian_Gulf_01.png",
+    "elevation": {
+     "ft": 400,
+     "m": 122
+    },
+    "tacan": [
+     "121X"
+    ],
+    "vorMHz": [
+     117.4
+    ]
+   }
+  },
+  "SinaiMap": {
+   "1": {
+    "dimonName": "Difarsuwar Airfield",
+    "sourcePage": "04_AD_Day_Sinai_02.png"
+   },
+   "2": {
+    "dimonName": "Abu Suwayr HE35",
+    "sourcePage": "04_AD_Day_Sinai_01.png",
+    "icao": "HE35"
+   },
+   "4": {
+    "dimonName": "Al Ismailiyah HE44",
+    "sourcePage": "04_AD_Day_Sinai_01.png",
+    "icao": "HE44",
+    "ilsMHz": [
+     110.3
+    ]
+   },
+   "5": {
+    "dimonName": "Melez HE36",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "icao": "HE36",
+    "elevation": {
+     "ft": 1004,
+     "m": 306
+    },
+    "vorMHz": [
+     115.65
+    ]
+   },
+   "6": {
+    "dimonName": "Fayed",
+    "sourcePage": "04_AD_Day_Sinai_02.png"
+   },
+   "8": {
+    "dimonName": "Nevatim LLNV",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "icao": "LLNV",
+    "elevation": {
+     "ft": 1318,
+     "m": 402
+    },
+    "ilsMHz": [
+     111.5
+    ]
+   },
+   "9": {
+    "dimonName": "Ramon Airbase LLRM",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "icao": "LLRM",
+    "elevation": {
+     "ft": 2031,
+     "m": 619
+    },
+    "tacan": [
+     "105X"
+    ],
+    "vorMHz": [
+     115.8
+    ],
+    "ilsMHz": [
+     110.7
+    ]
+   },
+   "10": {
+    "dimonName": "Ovda LL0V",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "icao": "LL0V",
+    "elevation": {
+     "ft": 1438,
+     "m": 438
+    },
+    "tacan": [
+     "88X"
+    ],
+    "vorMHz": [
+     114.1
+    ],
+    "ilsMHz": [
+     109.7
+    ]
+   },
+   "11": {
+    "dimonName": "Kibrit Air Base HE34",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "icao": "HE34",
+    "tacan": [
+     "55X"
+    ]
+   },
+   "12": {
+    "dimonName": "Kedem",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "elevation": {
+     "ft": 640,
+     "m": 195
+    }
+   },
+   "13": {
+    "dimonName": "Wadi al Jandali HEcP",
+    "sourcePage": "04_AD_Day_Sinai_04.png",
+    "elevation": {
+     "ft": 756,
+     "m": 230
+    },
+    "ilsMHz": [
+     109.7
+    ]
+   },
+   "14": {
+    "dimonName": "Al Mansurah HE32",
+    "sourcePage": "04_AD_Day_Sinai_01.png",
+    "icao": "HE32"
+   },
+   "15": {
+    "dimonName": "AzZaqaziq",
+    "sourcePage": "04_AD_Day_Sinai_01.png"
+   },
+   "16": {
+    "dimonName": "Bilbeis Air Base HE37",
+    "sourcePage": "04_AD_Day_Sinai_01.png",
+    "icao": "HE37",
+    "elevation": {
+     "ft": 92,
+     "m": 28
+    },
+    "ilsMHz": [
+     108.3
+    ]
+   },
+   "17": {
+    "dimonName": "Cairo International Airport HEcA",
+    "sourcePage": "04_AD_Day_Sinai_02.png",
+    "elevation": {
+     "ft": 394,
+     "m": 120
+    },
+    "tacan": [
+     "110X"
+    ],
+    "vorMHz": [
+     112.5,
+     115.2
+    ],
+    "ilsMHz": [
+     110.9,
+     110.3,
+     109.9,
+     109.5,
+     108.9,
+     108.7
+    ]
+   },
+   "18": {
+    "dimonName": "Cairo West HEcw",
+    "sourcePage": "04_AD_Day_Sinai_02.png",
+    "elevation": {
+     "ft": 440,
+     "m": 134
+    },
+    "tacan": [
+     "114X"
+    ],
+    "ilsMHz": [
+     111.5
+    ]
+   },
+   "19": {
+    "dimonName": "Inshas Airbase HE12",
+    "sourcePage": "04_AD_Day_Sinai_02.png",
+    "icao": "HE12",
+    "elevation": {
+     "ft": 155,
+     "m": 47
+    }
+   },
+   "22": {
+    "dimonName": "Sde Dov LLSD",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "icao": "LLSD"
+   },
+   "23": {
+    "dimonName": "Tel Nof LLEK",
+    "sourcePage": "04_AD_Day_Sinai_04.png",
+    "icao": "LLEK",
+    "ilsMHz": [
+     109.1
+    ]
+   },
+   "25": {
+    "dimonName": "St Catherine HESC",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "icao": "HESC",
+    "elevation": {
+     "ft": 4256,
+     "m": 1297
+    }
+   },
+   "26": {
+    "dimonName": "Abu Rudeis HE29",
+    "sourcePage": "04_AD_Day_Sinai_01.png",
+    "icao": "HE29",
+    "elevation": {
+     "ft": 40,
+     "m": 12
+    }
+   },
+   "27": {
+    "dimonName": "Baluza HE22",
+    "sourcePage": "04_AD_Day_Sinai_01.png",
+    "icao": "HE22"
+   },
+   "28": {
+    "dimonName": "Bir Hasanah",
+    "sourcePage": "04_AD_Day_Sinai_01.png",
+    "elevation": {
+     "ft": 1225,
+     "m": 373
+    }
+   },
+   "29": {
+    "dimonName": "El Arish HEAR RWY 16L-34R:",
+    "sourcePage": "04_AD_Day_Sinai_02.png",
+    "icao": "HEAR",
+    "elevation": {
+     "ft": 232,
+     "m": 71
+    },
+    "vorMHz": [
+     113.6
+    ]
+   },
+   "30": {
+    "dimonName": "EI Gora HEGR",
+    "sourcePage": "04_AD_Day_Sinai_02.png",
+    "icao": "HEGR",
+    "elevation": {
+     "ft": 423,
+     "m": 129
+    }
+   },
+   "31": {
+    "dimonName": "Al Khatatbah HELIPORT",
+    "sourcePage": "04_AD_Day_Sinai_01.png",
+    "elevation": {
+     "ft": 46,
+     "m": 14
+    }
+   },
+   "32": {
+    "dimonName": "Al Rahmaniyah Air Base HEoP",
+    "sourcePage": "04_AD_Day_Sinai_01.png"
+   },
+   "34": {
+    "dimonName": "Birma Air Base HE16",
+    "sourcePage": "04_AD_Day_Sinai_01.png",
+    "icao": "HE16"
+   },
+   "35": {
+    "dimonName": "Borg El Arab Intl HEBA",
+    "sourcePage": "04_AD_Day_Sinai_01.png",
+    "icao": "HEBA",
+    "elevation": {
+     "ft": 85,
+     "m": 26
+    },
+    "vorMHz": [
+     115.9
+    ],
+    "ilsMHz": [
+     111.3
+    ]
+   },
+   "36": {
+    "dimonName": "EI Minya HEMN",
+    "sourcePage": "04_AD_Day_Sinai_02.png",
+    "icao": "HEMN",
+    "elevation": {
+     "ft": 125,
+     "m": 38
+    }
+   },
+   "37": {
+    "dimonName": "Gebel El Basur Air Base HE28",
+    "sourcePage": "04_AD_Day_Sinai_02.png",
+    "icao": "HE28"
+   },
+   "38": {
+    "dimonName": "Hurghada Intl HEGN",
+    "sourcePage": "04_AD_Day_Sinai_02.png",
+    "icao": "HEGN",
+    "elevation": {
+     "ft": 43,
+     "m": 13
+    },
+    "vorMHz": [
+     116.5
+    ],
+    "ilsMHz": [
+     110.3
+    ]
+   },
+   "39": {
+    "dimonName": "JiyanklisAirBase HEGs",
+    "sourcePage": "04_AD_Day_Sinai_02.png"
+   },
+   "40": {
+    "dimonName": "Kom Awshim HE30",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "icao": "HE30"
+   },
+   "41": {
+    "dimonName": "Ramon IntI LLER",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "icao": "LLER",
+    "elevation": {
+     "ft": 226,
+     "m": 69
+    },
+    "vorMHz": [
+     113.85
+    ],
+    "ilsMHz": [
+     110.5
+    ]
+   },
+   "42": {
+    "dimonName": "Sharm EI Sheikh Intl HESH",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "icao": "HESH",
+    "elevation": {
+     "ft": 98,
+     "m": 30
+    },
+    "vorMHz": [
+     114.2
+    ],
+    "ndbKHz": [
+     335
+    ],
+    "ilsMHz": [
+     109.5
+    ]
+   },
+   "43": {
+    "dimonName": "Wadi Abu Rish HE38",
+    "sourcePage": "04_AD_Day_Sinai_04.png",
+    "icao": "HE38",
+    "elevation": {
+     "ft": 945,
+     "m": 288
+    }
+   },
+   "44": {
+    "dimonName": "Al Bahr al Ahmar HE26",
+    "sourcePage": "04_AD_Day_Sinai_01.png",
+    "icao": "HE26",
+    "elevation": {
+     "ft": 1165,
+     "m": 355
+    }
+   },
+   "45": {
+    "dimonName": "Quwaysina HE42",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "icao": "HE42",
+    "elevation": {
+     "ft": 33,
+     "m": 10
+    }
+   },
+   "47": {
+    "dimonName": "Tabuk 0ETB",
+    "sourcePage": "04_AD_Day_Sinai_04.png",
+    "elevation": {
+     "ft": 2543,
+     "m": 775
+    },
+    "tacan": [
+     "104X"
+    ],
+    "vorMHz": [
+     115.7
+    ],
+    "ilsMHz": [
+     109.5
+    ]
+   },
+   "48": {
+    "dimonName": "Damascus Intl osDI",
+    "sourcePage": "04_AD_Day_Sinai_02.png",
+    "elevation": {
+     "ft": 2006,
+     "m": 611
+    },
+    "vorMHz": [
+     116.0
+    ],
+    "ilsMHz": [
+     109.9,
+     111.1
+    ]
+   },
+   "49": {
+    "dimonName": "Mezzeh Air Base 0s67",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "elevation": {
+     "ft": 2392,
+     "m": 729
+    },
+    "ndbKHz": [
+     358
+    ]
+   },
+   "50": {
+    "dimonName": "Ramat David LLRD",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "icao": "LLRD",
+    "elevation": {
+     "ft": 100,
+     "m": 31
+    },
+    "tacan": [
+     "84X"
+    ],
+    "vorMHz": [
+     113.7
+    ]
+   },
+   "51": {
+    "dimonName": "Megiddo LLMG",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "icao": "LLMG",
+    "elevation": {
+     "ft": 133,
+     "m": 40
+    }
+   },
+   "52": {
+    "dimonName": "Ein Shamer LLES",
+    "sourcePage": "04_AD_Day_Sinai_02.png",
+    "icao": "LLES"
+   },
+   "53": {
+    "dimonName": "Taba Intl HETB",
+    "sourcePage": "04_AD_Day_Sinai_04.png",
+    "icao": "HETB",
+    "elevation": {
+     "ft": 2326,
+     "m": 709
+    },
+    "vorMHz": [
+     114.5
+    ],
+    "ndbKHz": [
+     316
+    ]
+   },
+   "54": {
+    "dimonName": "King Feisal Air Base J0-0002",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "elevation": {
+     "ft": 2859,
+     "m": 872
+    }
+   },
+   "55": {
+    "dimonName": "Khalkhalah Air Base 0s69",
+    "sourcePage": "04_AD_Day_Sinai_03.png",
+    "elevation": {
+     "ft": 2346,
+     "m": 715
+    }
+   }
+  },
+  "Syria": {
+   "1": {
+    "dimonName": "Abu al-Duhur os57",
+    "sourcePage": "04_AD_Day_Syria_01.png",
+    "elevation": {
+     "ft": 820,
+     "m": 250
+    }
+   },
+   "2": {
+    "dimonName": "Adana Sakirpasa LTAF",
+    "sourcePage": "04_AD_Day_Syria_01.png",
+    "icao": "LTAF",
+    "vorMHz": [
+     112.7
+    ],
+    "ilsMHz": [
+     108.7
+    ]
+   },
+   "3": {
+    "dimonName": "Al Qusayr 0s70",
+    "sourcePage": "04_AD_Day_Syria_01.png"
+   },
+   "4": {
+    "dimonName": "An Nasiriyah 0s64",
+    "sourcePage": "04_AD_Day_Syria_01.png",
+    "elevation": {
+     "ft": 2750,
+     "m": 839
+    }
+   },
+   "10": {
+    "dimonName": "Eyn Shemer LLES",
+    "sourcePage": "04_AD_Day_Syria_01.png",
+    "icao": "LLES",
+    "elevation": {
+     "ft": 110,
+     "m": 34
+    },
+    "vorMHz": [
+     112.4
+    ]
+   },
+   "11": {
+    "dimonName": "Gaziantep LTAJ",
+    "sourcePage": "04_AD_Day_Syria_01.png",
+    "icao": "LTAJ",
+    "elevation": {
+     "ft": 2290,
+     "m": 698
+    },
+    "vorMHz": [
+     116.7
+    ],
+    "ndbKHz": [
+     432
+    ],
+    "ilsMHz": [
+     109.1
+    ]
+   },
+   "13": {
+    "dimonName": "Haifa LLHA",
+    "sourcePage": "04_AD_Day_Syria_02.png",
+    "icao": "LLHA"
+   },
+   "14": {
+    "dimonName": "Hama 0s58",
+    "sourcePage": "04_AD_Day_Syria_02.png",
+    "elevation": {
+     "ft": 984,
+     "m": 300
+    }
+   },
+   "15": {
+    "dimonName": "Hatay LTDA",
+    "sourcePage": "04_AD_Day_Syria_02.png",
+    "icao": "LTDA",
+    "elevation": {
+     "ft": 253,
+     "m": 78
+    },
+    "vorMHz": [
+     112.05
+    ],
+    "ndbKHz": [
+     336
+    ],
+    "ilsMHz": [
+     108.9
+    ]
+   },
+   "17": {
+    "dimonName": "Jirah 0s62",
+    "sourcePage": "04_AD_Day_Syria_02.png",
+    "elevation": {
+     "ft": 1173,
+     "m": 358
+    }
+   },
+   "18": {
+    "dimonName": "Khalkhalah 0s69",
+    "sourcePage": "04_AD_Day_Syria_02.png",
+    "elevation": {
+     "ft": 2323,
+     "m": 708
+    }
+   },
+   "19": {
+    "dimonName": "King Hussein Air College oJMF",
+    "sourcePage": "04_AD_Day_Syria_02.png",
+    "elevation": {
+     "ft": 2205,
+     "m": 672
+    }
+   },
+   "20": {
+    "dimonName": "Kiryat Shmona LLKs",
+    "sourcePage": "04_AD_Day_Syria_02.png",
+    "elevation": {
+     "ft": 373,
+     "m": 114
+    }
+   },
+   "21": {
+    "dimonName": "Bassel Al-Assad osLK",
+    "sourcePage": "04_AD_Day_Syria_01.png",
+    "elevation": {
+     "ft": 94,
+     "m": 29
+    },
+    "vorMHz": [
+     114.8
+    ],
+    "ndbKHz": [
+     414
+    ],
+    "ilsMHz": [
+     109.1
+    ]
+   },
+   "22": {
+    "dimonName": "Marj as Sultan North HELIPORT",
+    "sourcePage": "04_AD_Day_Syria_02.png",
+    "elevation": {
+     "ft": 2008,
+     "m": 612
+    }
+   },
+   "23": {
+    "dimonName": "Marj Ruhayyil 0s63",
+    "sourcePage": "04_AD_Day_Syria_02.png",
+    "elevation": {
+     "ft": 2161,
+     "m": 659
+    },
+    "ndbKHz": [
+     264
+    ]
+   },
+   "24": {
+    "dimonName": "Megiddo LLMG",
+    "sourcePage": "04_AD_Day_Syria_03.png",
+    "icao": "LLMG",
+    "elevation": {
+     "ft": 180,
+     "m": 55
+    }
+   },
+   "25": {
+    "dimonName": "Mezzeh 0s67",
+    "sourcePage": "04_AD_Day_Syria_03.png",
+    "elevation": {
+     "ft": 2387,
+     "m": 728
+    },
+    "ndbKHz": [
+     358
+    ]
+   },
+   "26": {
+    "dimonName": "Minakh 0s71",
+    "sourcePage": "04_AD_Day_Syria_03.png",
+    "elevation": {
+     "ft": 1614,
+     "m": 492
+    }
+   },
+   "27": {
+    "dimonName": "Aleppo 0sAP",
+    "sourcePage": "04_AD_Day_Syria_01.png",
+    "elevation": {
+     "ft": 1254,
+     "m": 383
+    },
+    "vorMHz": [
+     114.5
+    ],
+    "ndbKHz": [
+     396
+    ]
+   },
+   "28": {
+    "dimonName": "Palmyra 0sPR",
+    "sourcePage": "04_AD_Day_Syria_03.png",
+    "elevation": {
+     "ft": 1325,
+     "m": 404
+    },
+    "ndbKHz": [
+     337
+    ]
+   },
+   "29": {
+    "dimonName": "Qabr as Sitt HELIPORT",
+    "sourcePage": "04_AD_Day_Syria_03.png",
+    "elevation": {
+     "ft": 2135,
+     "m": 651
+    }
+   },
+   "30": {
+    "dimonName": "Ramat David LLRD",
+    "sourcePage": "04_AD_Day_Syria_03.png",
+    "icao": "LLRD",
+    "elevation": {
+     "ft": 146,
+     "m": 45
+    },
+    "tacan": [
+     "84X"
+    ],
+    "vorMHz": [
+     113.7
+    ],
+    "ndbKHz": [
+     368
+    ],
+    "ilsMHz": [
+     111.1
+    ]
+   },
+   "31": {
+    "dimonName": "Kuweires 0s66",
+    "sourcePage": "04_AD_Day_Syria_02.png",
+    "elevation": {
+     "ft": 1201,
+     "m": 366
+    }
+   },
+   "32": {
+    "dimonName": "Rayak OLRA",
+    "sourcePage": "04_AD_Day_Syria_03.png",
+    "icao": "OLRA",
+    "elevation": {
+     "ft": 3035,
+     "m": 925
+    }
+   },
+   "33": {
+    "dimonName": "Rene Mouawad 0LKA",
+    "sourcePage": "04_AD_Day_Syria_03.png",
+    "ndbKHz": [
+     450
+    ]
+   },
+   "34": {
+    "dimonName": "Rosh Pina LLIB",
+    "sourcePage": "04_AD_Day_Syria_03.png",
+    "icao": "LLIB",
+    "elevation": {
+     "ft": 914,
+     "m": 279
+    },
+    "vorMHz": [
+     115.3
+    ]
+   },
+   "35": {
+    "dimonName": "Sayqal 0s68",
+    "sourcePage": "04_AD_Day_Syria_04.png",
+    "elevation": {
+     "ft": 2274,
+     "m": 694
+    }
+   },
+   "36": {
+    "dimonName": "Shayrat 0s65",
+    "sourcePage": "04_AD_Day_Syria_04.png",
+    "elevation": {
+     "ft": 2638,
+     "m": 804
+    }
+   },
+   "37": {
+    "dimonName": "Tabqa 0s59",
+    "sourcePage": "04_AD_Day_Syria_04.png",
+    "elevation": {
+     "ft": 1099,
+     "m": 335
+    }
+   },
+   "38": {
+    "dimonName": "Taftanaz HELIPORT",
+    "sourcePage": "04_AD_Day_Syria_04.png",
+    "elevation": {
+     "ft": 1020,
+     "m": 311
+    }
+   },
+   "39": {
+    "dimonName": "Tiyas 0s72",
+    "sourcePage": "04_AD_Day_Syria_04.png",
+    "elevation": {
+     "ft": 1798,
+     "m": 548
+    }
+   },
+   "40": {
+    "dimonName": "Wujah Al Hajar Z190",
+    "sourcePage": "04_AD_Day_Syria_04.png",
+    "elevation": {
+     "ft": 641,
+     "m": 196
+    },
+    "vorMHz": [
+     116.2
+    ]
+   },
+   "41": {
+    "dimonName": "Gazipasa LTFG",
+    "sourcePage": "04_AD_Day_Syria_01.png",
+    "icao": "LTFG",
+    "elevation": {
+     "ft": 130,
+     "m": 40
+    },
+    "vorMHz": [
+     114.2
+    ],
+    "ndbKHz": [
+     316
+    ],
+    "ilsMHz": [
+     108.5
+    ]
+   },
+   "42": {
+    "dimonName": "Deir ez-Zor oSDZ",
+    "sourcePage": "04_AD_Day_Syria_01.png",
+    "elevation": {
+     "ft": 713,
+     "m": 218
+    },
+    "vorMHz": [
+     117.0
+    ],
+    "ndbKHz": [
+     295
+    ]
+   },
+   "44": {
+    "dimonName": "Akrotiri LcRA",
+    "sourcePage": "04_AD_Day_Syria_01.png",
+    "elevation": {
+     "ft": 69,
+     "m": 21
+    },
+    "tacan": [
+     "107X"
+    ],
+    "ndbKHz": [
+     365
+    ],
+    "ilsMHz": [
+     109.7
+    ]
+   },
+   "45": {
+    "dimonName": "Kingsfield LCRE",
+    "sourcePage": "04_AD_Day_Syria_02.png",
+    "icao": "LCRE",
+    "elevation": {
+     "ft": 276,
+     "m": 85
+    },
+    "ndbKHz": [
+     343
+    ]
+   },
+   "46": {
+    "dimonName": "Paphos LCPH",
+    "sourcePage": "04_AD_Day_Syria_03.png",
+    "icao": "LCPH",
+    "elevation": {
+     "ft": 40,
+     "m": 13
+    },
+    "vorMHz": [
+     117.9
+    ],
+    "ilsMHz": [
+     108.9
+    ]
+   },
+   "47": {
+    "dimonName": "Larnaca LcRE",
+    "sourcePage": "04_AD_Day_Syria_02.png",
+    "vorMHz": [
+     112.8
+    ],
+    "ndbKHz": [
+     432
+    ],
+    "ilsMHz": [
+     110.3
+    ]
+   },
+   "49": {
+    "dimonName": "Ercan LcEN",
+    "sourcePage": "04_AD_Day_Syria_01.png",
+    "elevation": {
+     "ft": 312,
+     "m": 95
+    },
+    "vorMHz": [
+     117.0
+    ],
+    "ilsMHz": [
+     108.3
+    ]
+   },
+   "220": {
+    "dimonName": "Tel Nof LLEK",
+    "sourcePage": "04_AD_Day_Syria_04.png",
+    "icao": "LLEK",
+    "elevation": {
+     "ft": 212,
+     "m": 65
+    },
+    "ilsMHz": [
+     109.1
+    ]
+   },
+   "221": {
+    "dimonName": "Ben Gurion",
+    "sourcePage": "04_AD_Day_Syria_01.png",
+    "elevation": {
+     "ft": 134,
+     "m": 41
+    },
+    "vorMHz": [
+     113.5
+    ],
+    "ilsMHz": [
+     109.7,
+     110.9,
+     108.7,
+     110.3,
+     111.9
+    ]
+   }
+  },
+  "TheChannel": {
+   "2": {
+    "dimonName": "Merville Calonne",
+    "sourcePage": "04_AD_Day_The_Channel_01.png",
+    "elevation": {
+     "ft": 52,
+     "m": 16
+    }
+   },
+   "3": {
+    "dimonName": "Saint Omer Longuenesse",
+    "sourcePage": "04_AD_Day_The_Channel_01.png",
+    "elevation": {
+     "ft": 220,
+     "m": 67
+    }
+   },
+   "4": {
+    "dimonName": "Dunkirk Mardyck",
+    "sourcePage": "04_AD_Day_The_Channel_01.png"
+   },
+   "5": {
+    "dimonName": "Manston",
+    "sourcePage": "04_AD_Day_The_Channel_01.png",
+    "elevation": {
+     "ft": 161,
+     "m": 50
+    }
+   },
+   "6": {
+    "dimonName": "Hawkinge",
+    "sourcePage": "04_AD_Day_The_Channel_01.png",
+    "elevation": {
+     "ft": 525,
+     "m": 160
+    }
+   },
+   "7": {
+    "dimonName": "Lympne",
+    "sourcePage": "04_AD_Day_The_Channel_01.png",
+    "elevation": {
+     "ft": 351,
+     "m": 107
+    }
+   },
+   "8": {
+    "dimonName": "Detling",
+    "sourcePage": "04_AD_Day_The_Channel_01.png",
+    "elevation": {
+     "ft": 623,
+     "m": 190
+    }
+   },
+   "10": {
+    "dimonName": "Eastchurch",
+    "sourcePage": "04_AD_Day_The_Channel_01.png",
+    "elevation": {
+     "ft": 40,
+     "m": 13
+    }
+   },
+   "12": {
+    "dimonName": "High Halden",
+    "sourcePage": "04_AD_Day_The_Channel_01.png",
+    "elevation": {
+     "ft": 105,
+     "m": 32
+    }
+   },
+   "13": {
+    "dimonName": "Headcorn",
+    "sourcePage": "04_AD_Day_The_Channel_01.png",
+    "elevation": {
+     "ft": 115,
+     "m": 35
+    }
+   },
+   "14": {
+    "dimonName": "Biggin Hill",
+    "sourcePage": "04_AD_Day_The_Channel_01.png",
+    "elevation": {
+     "ft": 553,
+     "m": 169
+    }
+   }
+  }
+ }
+}

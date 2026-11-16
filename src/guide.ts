@@ -13,7 +13,7 @@ Workflow: dcs_bridge_status first to decide live vs offline. Offline: dcs_miz_ne
 
 High-level authoring: dcs_scenario_validate/generate accept a client-supplied structured specification; optional seed is deterministic. dcs_campaign_generate produces mission sessions plus a transition manifest, not a .cmp. dcs_miz_direct_mission compiles condition/dependency/world-event driven radio scripts and shot plans; missing audio means subtitles/placeholders, never playable radio. Built-in dialogue is fictional, not authenticated procedure. See dcs_miz_trigger_capabilities for the exact supported compiler surface. dcs_miz_mission_report recomputes current state after edits.
 
-Advanced tools: dcs_list_flight_roles -> dcs_miz_create_flight/configure_flight/add_waypoint_task; dcs_miz_create_ground_plan; dcs_miz_configure_iads; dcs_miz_list_warehouses/edit_warehouse. New capabilities are offline-tested, not DCS-verified. dcs_terrain_analyze and dcs_miz_move_ground_on_terrain need an explicit sourced elevation grid or source=live with the matching running theatre; no bundled elevation data or flat fallback. Sensor visibility is sampled geometry, not radar detection.
+Advanced tools: dcs_list_flight_roles -> dcs_miz_create_flight/configure_flight/add_waypoint_task; dcs_miz_create_ground_plan; dcs_miz_configure_iads; dcs_miz_list_warehouses/edit_warehouse. New capabilities are offline-tested, not DCS-verified. dcs_terrain_analyze and dcs_miz_move_ground_on_terrain need an explicit sourced elevation grid, an installed terrain pack (dcs_terrain_build_pack samples DCS's own terrain once while a mission runs) or source=live with the matching running theatre; no bundled elevation data or flat fallback. Sensor visibility is sampled geometry, not radar detection.
 
 Conventions that are easy to get wrong:
 - Map axes: x = NORTH metres, y = EAST metres. Generic placement tools also accept lat/lon and convert offline. Terrain grids, candidates, advanced tasks and orbits use DCS x/y metres.
@@ -108,9 +108,13 @@ export const CONVENTIONS_GUIDE = `# DCS-MCP conventions
 ## Advanced authoring and terrain availability
 - Use \`dcs_list_flight_roles\` for role mappings and per-aircraft pylon CLSIDs; templates never invent weapons.
 - BARCAP/TARCAP use CAP, DEAD uses SEAD, group strike uses CAS; transport/reconnaissance do not configure cargo/cameras.
-- \`dcs_miz_configure_flight\` validates per-unit arrays and one Player unit. Radio bands, callsign families and installed liveries are unknown.
+- \`dcs_miz_configure_flight\` validates per-unit arrays and one Player unit and checks the livery against installed Liveries folders (installed/not_installed/unknown). Callsign families (number or name) are checked per type and main task: \`dcs_list_callsigns\`. Radio bands are unknown.
+- \`dcs_airfield_radio\` gives an airfield's ATC radios (HF/VHF low/VHF high/UHF MHz) and runway designators from pydcs's DCS export. Runway headings are designator x 10. Where available it adds ICAO, elevation, TACAN, VOR, NDB and ILS frequencies from DimOn's kneeboards (OCR, kept only where the row's ATC matches pydcs); an empty list means not extracted, not absent, and ILS frequencies are not tied to a runway.
+- Waypoint actions: \`dcs_list_waypoint_actions\` catalogues every task, command and option on the Hoggit DCS scripting wiki; \`dcs_miz_add_waypoint_action\` appends any of them to any group's waypoint with documented params only, option ids per Air/Ground/Naval domain and validated values. Frequencies there are Hz, positions DCS x/y. Wiki = scripting-API docs, not ME-verified. Each action is cross-checked against ED's DCS User Manual (2022) editor menus: actions it does not list come back with a warning, and ship/vehicle actions the manual lists are allowed even where the wiki omits them.
+- Radios: \`dcs_list_radios\` (pydcs panel_radio), \`dcs_miz_set_radio_presets\`, \`dcs_miz_reset_radio_presets\`, \`dcs_miz_set_intra_flight_frequency\`. Unknown radios/channels are refused; frequencies are NOT band-checked.
 - \`dcs_miz_add_waypoint_task\` uses 1-based points; orbit altitude is MSL and speed is m/s. Frequency is MHz; SetFrequency emits Hz.
-- \`dcs_terrain_analyze\` needs a sourced offline grid or a matching live theatre. Missing data returns available:false.
+- \`dcs_terrain_analyze\` needs a sourced offline grid, an installed terrain pack, or a matching live theatre. Missing data (or a point outside every pack) returns available:false.
+  Packs (\`dcs_terrain_build_pack/list_packs/remove_pack\`) are bare-earth samples of DCS's height field at the chosen spacing; buildings and trees are not in them.
   Suitability with unknown surface is indeterminate, not suitable. LOS/radar-range estimates are sampled bare-earth geometry.
 - \`dcs_miz_move_ground_on_terrain\` checks every unit footprint before committing; no suitable candidate leaves the group unchanged.
 - \`dcs_miz_add_threat_ring\` draws caller-supplied ranges on standard F10 layers; it does not infer weapon performance.
@@ -124,7 +128,10 @@ export const CONVENTIONS_GUIDE = `# DCS-MCP conventions
 ## Structured design, assets and cinematic direction
 - \`dcs_miz_configure_mission\` edits date/time/static weather, countries, briefings, bullseyes and forced options atomically.
 - \`dcs_miz_assign_country\` moves an entire country and its groups. Review coalition-specific references and warehouse ownership.
-- \`dcs_miz_add_drawing\` writes standard-layer lines, polygons, circles and text. Vertices are absolute DCS x/y, stored relative to origin.
+- \`dcs_miz_add_drawing\` writes standard-layer lines (segment/segments/freehand), free polygons, circles, ovals, rectangles, arrows, oblong corridors, text and the pydcs standard icons, with pydcs line styles. Vertices are absolute DCS x/y, stored relative to origin. Shapes follow pydcs field names; only circle/line/polygon/text existed before and none is ME-verified.
+  Manage them with \`dcs_miz_list_drawings\`, \`dcs_miz_remove_drawing\`, \`dcs_miz_clear_drawing_layer\`.
+- Groups: \`dcs_miz_clone_group\` (fresh ids, whole route offset; refuses parking/ship/FARP starts, drops datalinks), \`dcs_miz_add_units_to_group\`, \`dcs_miz_find_groups_near\`, \`dcs_miz_set_route\` (keeps point 1). Group, unit and zone names must be unique; duplicates are refused.
+- \`dcs_list_cloud_presets\` / \`dcs_miz_set_cloud_preset\` apply the editor's cloud presets with their base range. \`dcs_geometry\` and \`dcs_miz_points_in_zone\` are flat-grid helpers (x north, y east).
 - \`dcs_miz_embed_asset/list_assets/remove_asset\` manage media and kneeboards while preserving unrelated archive entries.
 - \`dcs_miz_add_goal\` writes goals and compiled results; \`dcs_miz_replace_trigger\` replaces a stable trigger index without inventing predicates.
 - Unit activation is group-scoped: \`dcs_miz_add_unit_activation\` refuses multi-unit groups for independent-unit requests.

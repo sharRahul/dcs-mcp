@@ -229,7 +229,7 @@ function headingRadians(degrees: number | undefined): number {
  * Spacing between units in a group, per category, in metres. Ground spacing is
  * what the Mission Editor's own convoys use.
  */
-const FORMATION_SPACING: Record<string, number> = {
+export const FORMATION_SPACING: Record<string, number> = {
   plane: 60,
   helicopter: 60,
   vehicle: 20,
@@ -456,7 +456,7 @@ export function chooseParking(
  * the unit catalogue. A unit with no payload table at all gives the editor and
  * the sim nothing to work with; the editor itself always writes one.
  */
-function defaultPayload(type: string): LuaTable | undefined {
+export function defaultPayload(type: string): LuaTable | undefined {
   const entry = findUnitType(type)?.entry as FlyingType | undefined;
   if (!entry || entry.fuelMax === null || entry.fuelMax === undefined) return undefined;
   return {
@@ -473,9 +473,9 @@ function defaultPayload(type: string): LuaTable | undefined {
 export function addAircraftGroup(mission: LuaTable, category: AirCategory, args: AddGroupArgs): LuaTable {
   const start = args.start ?? { kind: "air" };
   if (!Number.isInteger(args.count) || args.count < 1 || args.count > 16) throw new Error("Aircraft count must be 1..16");
-  if (findGroup(mission, args.name)) throw new Error(`Group '${args.name}' already exists`);
   const ids = maxIds(mission);
   const types = unitTypes(args);
+  assertNamesFree(mission, args.name, types.map((_, i) => `${args.name}-${i + 1}`));
 
   let units: LuaTable;
   let route: LuaTable;
@@ -616,6 +616,8 @@ export function addAircraftGroup(mission: LuaTable, category: AirCategory, args:
 
 /** Add a ground-vehicle or ship group. Returns the created group table. */
 export function addGroundGroup(mission: LuaTable, category: GroundCategory, args: AddGroupArgs): LuaTable {
+  // Check names before ensureCountry so a refusal leaves the mission untouched.
+  assertNamesFree(mission, args.name, unitTypes(args).map((_, i) => `${args.name}-${i + 1}`));
   const country = ensureCountry(mission, args.side, args.country, countryId(args.country, args.countryId));
   const catTable = (country[category] ??= { group: {} }) as LuaTable;
   const groups = (catTable["group"] ??= {}) as LuaTable;
@@ -668,6 +670,8 @@ export function maxZoneId(mission: LuaTable): number {
 export function addTriggerZone(mission: LuaTable, args: AddZoneArgs): LuaTable {
   const triggers = (mission["triggers"] ??= { zones: {} }) as LuaTable;
   const zones = (triggers["zones"] ??= {}) as LuaTable;
+  // Triggers resolve zones by name; a duplicate would make that lookup ambiguous.
+  if (luaArray(zones).some((z) => z["name"] === args.name)) throw new Error(`A trigger zone named '${args.name}' already exists`);
   const zone: LuaTable = {
     name: args.name,
     zoneId: maxZoneId(mission) + 1,
@@ -726,6 +730,17 @@ export interface FoundGroup {
   category: string;
   side: Side;
   country: LuaTable;
+}
+
+/** Refuse a group/unit name already used anywhere in the mission (groups and statics alike). */
+export function assertNamesFree(mission: LuaTable, groupName: string | undefined, unitNames: string[] = []): void {
+  if (groupName !== undefined && findGroup(mission, groupName)) throw new Error(`Group '${groupName}' already exists`);
+  const seen = new Set<string>();
+  for (const name of unitNames) {
+    if (seen.has(name)) throw new Error(`Unit name '${name}' is used twice in the same request`);
+    seen.add(name);
+    if (findUnit(mission, name)) throw new Error(`A unit named '${name}' already exists`);
+  }
 }
 
 /** Locate a group by name across every coalition/country/category. */

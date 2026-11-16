@@ -220,7 +220,7 @@ and safe-integer bounds, 93 were equivalent. The remaining five were reviewed:
   clients should use the error status and actionable message rather than parsing
   Zod-specific error prose. No implicit arbitrary Lua fallback was added.
 
-The final 102 input/output schemas are locked by SHA-256 regression fixtures in
+The 102 input/output schemas (126 since 0.3.0) are locked by SHA-256 regression fixtures in
 `tests/fixtures/mcp-schema-sha256.json`, exercised through a real stdio SDK client.
 
 ### Reproduction and live status
@@ -352,3 +352,30 @@ hook-load/runtime harnesses, advanced/design mocked runtime checks and ten-missi
 Lua compilation all passed. The `windows-lua51-offline-proof` artifact is available
 on that run. This supersedes the earlier Windows-only Node matrix evidence with
 the completed Windows Lua conversion; live DCS acceptance remains pending.
+
+## Drawings, radios, groups, weather, liveries, terrain packs — 0.3.0
+
+```bash
+npm run build && npm test          # 237 tests: 232 pass, 5 skipped (need DCS_LUA)
+node --import tsx scripts/update-schema-fixture.mjs   # only after a deliberate schema change
+```
+
+`tests/gap.test.ts` covers each module with serialize -> reparse round trips; `tests/extended-server.test.ts`
+drives every new tool through a real stdio client, saves, and reopens the `.miz`. The terrain-pack tests use
+a synthetic stand-in for the live bridge, so they prove storage and interpolation, not DCS terrain values.
+Linux local run only; no Windows CI run, Mission Editor open or flight has been performed for these additions.
+
+`tests/hoggit.test.ts` covers the Hoggit-wiki catalogue (ids, revisions, categories, the two
+page inconsistencies the generator resolves), action building and refusal, and callsign
+cross-checking. Regenerate the catalogue with
+`python3 -I scripts/gen-hoggit-data.py --fetch <cache-dir> data/hoggit.json` (needs
+wiki.hoggitworld.com; it fetches one page at a time because the wiki answers 503 to bursts).
+
+Airfield navaids (`data/airfield-navaids.json`) are OCR of DimOn's kneeboard images. The
+generator keeps a row only when its OCR'd ATC frequencies equal pydcs's for that airfield, and
+each value must pass its own range/format/colour check (`tests/hoggit.test.ts` re-asserts the
+ranges). Every extracted value on Caucasus p1, Syria p1 and Persian Gulf p1 was compared by eye
+with the page image: no wrong values; coverage is partial (some VOR/NDB/ILS/TACAN cells are not
+extracted). Regenerate with a rapidocr virtualenv:
+`ocrenv/bin/python -I scripts/gen-airfield-navaids.py <png-dir> data/airfield-radio.json data/airfield-navaids.json`.
+

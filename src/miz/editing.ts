@@ -452,7 +452,9 @@ function staticCategory(type: string): { category: string; shape?: string; rate?
  * `country.static`, with a single empty route point at its position.
  */
 export function addStatic(mission: LuaTable, args: AddStaticArgs): LuaTable {
-  if (allNames(mission).groups.has(args.name)) throw new Error(`A group named '${args.name}' already exists`);
+  const names = allNames(mission);
+  if (names.groups.has(args.name)) throw new Error(`A group named '${args.name}' already exists`);
+  if (names.units.has(args.name)) throw new Error(`A unit named '${args.name}' already exists`);
   const meta = staticCategory(args.type);
   if (args.massKg !== undefined && !meta.canCargo) {
     throw new Error(`'${args.type}' is not a cargo static; massKg only applies to cargo.`);
