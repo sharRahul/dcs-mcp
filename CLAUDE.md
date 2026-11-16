@@ -402,7 +402,7 @@ no adjacent ERROR line.
 
 ## Advanced authoring additions (offline only)
 
-- Read docs/AUTHORING.md, CAPABILITY_GAP_ANALYSIS.md and VERIFICATION.md for scope/evidence.
+- Read docs/authoring.md, capability_gap_analysis.md and verification.md for scope/evidence.
 - src/miz/flight.ts: strict role templates and typed tasks; aliases never invent DCS main tasks.
 - src/terrain/: explicit sourced grids or structured live bridge. Missing data is unavailable,
   unknown surface is indeterminate. Never add a flat fallback or call geometry authoritative radar.
@@ -421,7 +421,7 @@ no adjacent ERROR line.
 
 ## Mission design, scenarios and director (Phases 4–6)
 
-- Read docs/MISSION_DESIGN.md for native contracts and limits; no comparison/site information belongs in repo docs.
+- Read docs/mission_design.md for native contracts and limits; no comparison/site information belongs in repo docs.
 - src/scenario/engine.ts independently validates structured specifications. Never silently replace units or invent terrain/loadouts.
 - The scenario report/spec are generation snapshots; miz/report.ts recomputes current state after edits.
 - Goal definitions need BOTH goals and result tables. Conditions reuse the existing oracle-backed trigger compiler.

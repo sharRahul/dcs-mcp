@@ -230,6 +230,6 @@ delays, success/failure arbitration in both trigger orders, scoring and counter
 rearming. A test counter is added after generation solely for this runtime harness;
 the embedded scenario report remains the original generation snapshot.
 
-See [PHASE_4_6_VERIFICATION.md](PHASE_4_6_VERIFICATION.md) for observed results and
+See [verification.md](verification.md) for observed results and
 DCS acceptance still needed. No new DCS predicate has been guessed, and no new
 capability is claimed as Mission Editor opened, DCS flown, or live verified.

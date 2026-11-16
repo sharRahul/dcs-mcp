@@ -55,7 +55,7 @@ T = implemented but insufficient runtime verification. Offline tests do not impl
 plus `npm pack --dry-run` on 22. This environment is Linux; local checks cannot
 claim a Windows CI or Mission Editor run. No lint script exists; build is the
 strict TypeScript check. Final changes and reproducible checks are recorded in
-VERIFICATION.md and AUTHORING.md.
+verification.md and authoring.md.
 
 ## Changes implemented in this checkout
 
@@ -84,7 +84,7 @@ retained as prior project evidence, not a test performed during this assessment.
 | Naval routes and tasks | Existing formation/air-wing tools plus typed surface Hold/FireAtPoint/GoToWaypoint | inventory/dressing/operations tests; moving carrier recovery/deck slots not implemented |
 | Logistics editing/preservation | miz/logistics.ts, sessions.ts; stock/fuel/restrictions/defaults, existing suppliers, persistence | logistics.test.ts and MCP save/reopen; new stock wsTypes/supplier links unsupported |
 | Existing-mission diagnostics | advanced-validation.ts checks known raw refs, ids, payload and parking; existing trigger/log protections retained | flight.test.ts includes EPLRS/unknown-task preservation; no rewriting of opaque tasks |
-| Reproducible artifact/CI | verify-capabilities.mjs, verify-lua51.mjs, Windows workflow adds typecheck and artifact | VERIFICATION.md; Linux checks do not establish Windows CI success |
+| Reproducible artifact/CI | verify-capabilities.mjs, verify-lua51.mjs, Windows workflow adds typecheck and artifact | verification.md; Linux checks do not establish Windows CI success |
 
 ## Remaining DCS-MCP work
 
@@ -119,5 +119,29 @@ Implementation: src/miz/configuration.ts, drawings.ts, assets.ts, scoring.ts,
 director.ts, report.ts, trigger-schema.ts; src/scenario/engine.ts and
 src/tools/mission-design.ts. Tests: design.test.ts, scenario.test.ts and
 design-server.test.ts; stock Lua harness: scripts/lua51/design-runtime.lua.
-See MISSION_DESIGN.md and PHASE_4_6_VERIFICATION.md for exact support and limitations.
+See mission_design.md and verification.md for exact support and limitations.
 No trigger oracle mappings or existing DCS verification claims were promoted.
+
+
+## Bridge, acceptance, security and API additions (Phases 7–11)
+
+| Capability | Status | Implementation and evidence |
+|---|---|---|
+| Runtime group/unit state, user flags, objective flag inspection | Offline protocol tested; DCS pending | src/tools/runtime.ts, src/bridge/client.ts, hook handlers.runtime; tests/fixtures/hook-runtime.lua |
+| Lifecycle, safe running-mission swap, load errors | Partial; cold-menu launch unavailable | hook status/loadmission callbacks; tests/fixtures/hook-load.lua; no cold-menu network-host fallback |
+| Event monitoring | Bounded telemetry ring; DCS pending | scripts/dcs-mcp-telemetry.lua, hook runtime cursor; 256 retained events, 200 per query |
+| Bridge recovery and resource limits | Implemented; mocked transport tested | 4 MiB requests, 8 MiB client responses, timeouts, 32 pending hook clients, partial writes; tests/bridge.test.ts |
+| Safe saves and archive policy | Implemented; regression tested | src/security/files.ts, archive-policy.ts, src/miz/archive.ts; tests/acceptance.test.ts plus existing archive/session tests |
+| Dependency remediation and public schemas | Zod 4 migration implemented | 102 schema hashes, SDK client calls, existing contract tests; single verification.md records reviewed differences |
+| Offline acceptance and ten reproducible missions | Implemented; live pending | src/acceptance/{cases,package,checks}.ts, tests/acceptance.test.ts, scripts/verify-acceptance-lua.mjs |
+| Log/evidence collection and operator results | Implemented; synthetic regression tested | src/acceptance/collect.ts; source preservation, bounded reads, hashes, identity/outcome correlation; no screenshot interpretation |
+| MCP acceptance jobs and discovery | Implemented | src/tools/acceptance.ts, catalogue.ts; one generation job at a time, bounded process-local history, status polling |
+| Windows flight acceptance package | Ready for operator execution | docs/testing/live-acceptance (six documents); generated manifest lists exact units, geometry, tasks, triggers, frequencies, procedures and limitations |
+
+Remaining work: execute every live matrix variant in DCS; import a native positive
+warehouse inventory donor for stock exhaustion; collect genuine Mission Editor
+save/reopen preservation evidence; verify JTAC designation, moving carrier deck
+operations, AI routing and terrain. Full authoritative sensor/terrain models,
+period-compatible equipment datasets, native .cmp campaigns, pickup/rescue logic,
+and the complete Mission Editor predicate/action catalogue remain incomplete.
+Do not mark these items closed based on offline tests.
