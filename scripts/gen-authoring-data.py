@@ -96,7 +96,17 @@ for node in tree("cloud_presets.py").body:
                     cloud_presets[kw["name"]] = {"member": member, "uiName": kw.get("ui_name"), "description": kw.get("description"),
                                                  "minBase": kw.get("min_base"), "maxBase": kw.get("max_base")}
 
+# task.py MainTask subclasses: internal_name -> numeric id. DCS UnitPayloads files name their
+# tasks with these bare identifiers (pydcs FlyingType._UnitPayloadGlobals).
+main_tasks = {}
+for node in tree("task.py").body:
+    if isinstance(node, ast.ClassDef) and any(getattr(b, "id", None) == "MainTask" for b in node.bases):
+        attrs = assignments(node)
+        internal, task_id, label = literal(attrs.get("internal_name")), literal(attrs.get("id")), literal(attrs.get("name"))
+        if isinstance(internal, str) and isinstance(task_id, int):
+            main_tasks[internal] = {"id": task_id, "name": label}
+
 payload = {"_source": "pydcs 1.0.0, LGPL-3.0-or-later; generated as data, not DCS-verified",
-           "_sha256": sources, "aircraft": aircraft, "ships": ships, "cloudPresets": cloud_presets}
+           "_sha256": sources, "aircraft": aircraft, "ships": ships, "cloudPresets": cloud_presets, "mainTasks": main_tasks}
 pathlib.Path(sys.argv[2]).write_text(json.dumps(payload, separators=(",", ":")) + "\n")
 print(f"aircraft={len(aircraft)} ships={len(ships)} radios={sum(1 for a in aircraft.values() if 'panelRadio' in a)} cloudPresets={len(cloud_presets)}")

@@ -314,13 +314,16 @@ export function registerMizAuthoringTools(server: McpServer): void {
           skill: a.skill,
           composition,
           spacingMetres: a.spacingMetres ?? template?.spacingMetres,
+          // Imported templates carry the source mission's exact layout.
+          offsets: template?.offsets && !a.composition ? template.offsets : undefined,
         });
         s.dirty = true;
         refresh(s);
         const unitCount = Object.keys((group["units"] ?? {}) as Record<string, unknown>).length;
         const note = template
           ? ` Site template ${template.id} (provenance: ${template.provenance}` +
-            `${template.provenance === "catalogue" ? " — types exist in DCS; this layout is not yet flown or ME-verified" : ""}).` +
+            `${template.provenance === "catalogue" ? " — types exist in DCS; this layout is not yet flown or ME-verified" : ""}` +
+            `${template.provenance === "imported" ? ` — copied from ${template.source?.file}; not flown by this project` : ""}).` +
             (() => {
               const off = [...new Set(template.composition.map((c) => c.type))].filter(
                 (t) => countryOffers(a.country, t) === false

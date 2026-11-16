@@ -17,7 +17,7 @@ import {
 } from "../data/reference.js";
 import { searchUnitTypes } from "../miz/editing.js";
 import { latLonToXY, xyToLatLon } from "../miz/projection.js";
-import { SITE_TEMPLATES } from "../miz/templates.js";
+import { allSiteTemplates } from "../miz/templates.js";
 import { countryInventory, type InventoryRow } from "../miz/inventory.js";
 import { installedMods, modRoots } from "../dcs/mods.js";
 import { buildResult, errorResult, render, responseFormatField } from "./format.js";
@@ -223,8 +223,8 @@ export function registerReferenceTools(server: McpServer): void {
         "Air-defence site templates for dcs_miz_add_ground_group's `site` argument: the unit mix that makes " +
         "a site actually engage (radars + launchers in ONE group). Each states its provenance: 'engaged' " +
         "(fought in a live sortie), 'me-saved' (copied from a Mission-Editor mission), 'loaded' (flown and " +
-        "registered with Skynet, never engaged), or 'catalogue' (types exist in DCS; this exact layout not " +
-        "yet flown).\n\nReturns JSON: { templates: [{ id, description, provenance, composition, spacingMetres, skynetRole }] }.",
+        "registered with Skynet, never engaged), 'catalogue' (types exist in DCS; this exact layout not " +
+        "yet flown), or 'imported' (copied with its exact layout from a mission you supplied via dcs_import_site_template).\n\nReturns JSON: { templates: [{ id, description, provenance, composition, spacingMetres, skynetRole }] }.",
       inputSchema: z.object({ response_format: responseFormatField }).strict(),
       outputSchema: z.object({ templates: z.array(z.record(z.string(), z.unknown())) }),
       annotations: readOnly,
@@ -233,12 +233,12 @@ export function registerReferenceTools(server: McpServer): void {
       render(
         a.response_format,
         () =>
-          SITE_TEMPLATES.map(
+          allSiteTemplates().map(
             (t) =>
               `- **${t.id}** [${t.provenance}] ${t.description}\n  ` +
               t.composition.map((c) => `${c.count}× \`${c.type}\``).join(", ")
           ).join("\n"),
-        { templates: SITE_TEMPLATES as unknown as Record<string, unknown>[] }
+        { templates: allSiteTemplates() as unknown as Record<string, unknown>[] }
       )
   );
 

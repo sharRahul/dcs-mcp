@@ -71,6 +71,10 @@ The server sends MCP `instructions` with the conventions that matter most (axes,
 
 **Waypoint actions and callsigns (offline, from the Hoggit DCS wiki):** `dcs_list_waypoint_actions`, `dcs_miz_add_waypoint_action` (every documented task, command and option, any group category), `dcs_list_callsigns`, `dcs_airfield_radio` (ATC radios and runway designators from pydcs)
 
+**Inspect and edit (offline):** `dcs_miz_get_route`, `dcs_miz_get_group`, `dcs_miz_get_unit`, `dcs_miz_modify_waypoint_task`, `dcs_miz_remove_waypoint_task`, `dcs_miz_set_waypoint_task_enabled`, `dcs_miz_modify_unit`, `dcs_miz_list_goals`, `dcs_miz_get_goal`, `dcs_miz_modify_goal`, `dcs_miz_remove_goal`, `dcs_miz_add_quad_zone`, `dcs_miz_set_airbase_coalition`
+
+**Templates and loadouts from your own files:** `dcs_import_site_template` / `dcs_remove_site_template` (a site's exact layout from a mission you supply), `dcs_list_loadouts` / `dcs_miz_apply_loadout` (the DCS payload library on this machine, read as data)
+
 **Terrain packs:** `dcs_terrain_build_pack` (samples DCS's own terrain once, with a mission running), `dcs_terrain_list_packs`, `dcs_terrain_remove_pack` — afterwards `dcs_terrain_analyze` works offline inside the pack's coverage
 
 **Inspect (offline):** `dcs_miz_open`, `dcs_miz_get_summary`, `dcs_miz_list_groups`, `dcs_miz_list_triggers`, `dcs_miz_list_zones`, `dcs_miz_get_weather`, `dcs_miz_get_briefing`, `dcs_miz_validate`, `dcs_miz_list_sessions`, `dcs_miz_restore_session`, `dcs_miz_close`

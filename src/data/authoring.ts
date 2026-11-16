@@ -6,6 +6,7 @@ interface AuthoringData {
   aircraft: Record<string, { pylons: Record<string, string[]>; radioFrequency?: number; liveryName?: string;
     panelRadio?: Record<string, { channels: Record<string, number> }> }>;
   ships: Record<string, { parking: number }>;
+  mainTasks: Record<string, { id: number; name: string }>;
   cloudPresets: Record<string, { member: string; uiName: string; description: string; minBase: number; maxBase: number }>;
 }
 let cached: AuthoringData | undefined;

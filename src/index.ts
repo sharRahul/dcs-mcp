@@ -29,6 +29,7 @@ import { registerAcceptanceTools } from "./tools/acceptance.js";
 import { registerRuntimeTools } from "./tools/runtime.js";
 import { registerBridgeTools } from "./tools/bridge.js";
 import { registerMizExtendedTools } from "./tools/miz-extended.js";
+import { registerMizInspectEditTools } from "./tools/miz-inspect-edit.js";
 import { registerDiagnosticTools } from "./tools/diagnostics.js";
 import { registerPrompts, registerResources } from "./tools/resources.js";
 import { enableSessionPersistence } from "./miz/sessions.js";
@@ -51,6 +52,7 @@ function createServer() {
   registerMizEditingTools(server);
   registerMizDressingTools(server);
   registerMizExtendedTools(server);
+  registerMizInspectEditTools(server);
   registerReferenceTools(server);
   registerBridgeTools(server);
   registerRuntimeTools(server);

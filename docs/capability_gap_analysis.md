@@ -165,6 +165,11 @@ pydcs 1.0.0; no new item has been opened in the Mission Editor or flown.
 | Geometry helpers / point-in-zone | F | src/miz/geometry.ts; flat grid, x north / y east |
 
 | Airfield ATC radios / runways | P | src/data/airfield-radio.ts + data/airfield-radio.json from pydcs's airport export: 4 ATC radios (where pydcs has them) and runway designators for all 771 airfields. Navaids (TACAN/VOR/NDB/ILS), ICAO and elevation for 400 of them from DimOn's kneeboards by OCR, ATC-gated against pydcs (src: scripts/gen-airfield-navaids.py). Magvar absent |
+| Route/task inspection and editing | F (offline) | src/miz/route-edit.ts: get route/group/unit; modify/remove/enable waypoint tasks through the catalogue |
+| Per-unit edits / goal management | F (offline) | src/miz/units.ts, src/miz/goals.ts (pydcs goals.py result indexing) |
+| Quad zones / airbase ownership | F (offline) | src/miz/zones.ts (pydcs TriggerZoneQuadPoint); warehouse coalition |
+| SA-5, Rapier and other sites | P | No built-in template (no ME-saved source). src/miz/site-import.ts imports any site from a user-supplied mission (provenance `imported`) |
+| Payload-library loadouts | P | src/dcs/payloads.ts reads the user's DCS UnitPayloads as data; unknown without a DCS install |
 
 Still open from this list: radio bands and starting fuel per airframe (neither pydcs nor the
 Hoggit wiki has them; the wiki only links an external spreadsheet for radios), and

@@ -488,3 +488,21 @@ no adjacent ERROR line.
   108.10-111.95 odd tenth). 400 airfields; recall is partial by design. Spot-checked against the page images for
   Caucasus, Syria p1 and Persian Gulf p1 with no wrong values. Never relax the ATC gate to raise coverage.
 
+## Inspect/edit, goals, quad zones, imported templates, payload library (0.4.0) — offline only
+
+- `src/miz/route-edit.ts`: task modify identifies the stored task as a catalogue entry (task id / WrappedAction
+  command / Option by numeric id per domain), re-validates through `buildWaypointAction`, and keeps stored fields
+  the catalogue does not document. Unidentifiable tasks (ControlledTask etc.) are refused for modify; remove works.
+- `src/miz/goals.ts`: a side's k-th goal (goal-index order) is result index k (pydcs goals.py). Remove/modify
+  rebuild that side's actions/func in pydcs's exact format and REFUSE if an existing entry is not in that format.
+- `src/miz/zones.ts`: quad zones = pydcs TriggerZoneQuadPoint (type 2, absolute `verticies`, radius 0), exactly 4
+  vertices, no crossing/zero-area quads.
+- `src/miz/site-import.ts`: provenance `imported` (new, weaker than `me-saved`): types, order and exact offsets from a
+  user-supplied .miz; relative unit headings are not kept and the result says so. An import can never shadow a
+  built-in id. Stored under DCS_MCP_TEMPLATE_DIR / the user data folder. Do not promote an imported template.
+- `src/dcs/payloads.ts` + `lua.ts parseLuaDataFile`: UnitPayloads files read as DATA; the only bare identifiers
+  allowed are pydcs main-task names (`mainTasks` in data/authoring.json). Never widen that whitelist to execute
+  anything. No directories found = `unknown`. Library CLSIDs absent from the pydcs catalogue are warnings.
+- ED's manual documents user templates at Saved Games/DCS/MissionEditor/templates.lua but not its format; it is not
+  parsed. Radio bands and per-airframe starting fuel remain unsourced.
+
