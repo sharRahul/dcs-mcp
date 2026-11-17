@@ -27,14 +27,24 @@ test("fuel limits: every aircraft has a maximum, percent converts, validator fla
   const m = newMissionTable("Caucasus", 43200);
   addAircraftGroup(m, "plane", { ...hog("Viper", "F-16C_50") });
   setPayload(m, "Viper-1", { fuel: max / 2 });
-  assert.throws(() => setPayload(m, "Viper-1", { fuel: max + 1 }), /within the aircraft limit/);
+  // Writing fuel far above the tank is still refused; a rounding overshoot is not, because
+  // the editor itself saves fuel a fraction over fuel_max.
+  assert.throws(() => setPayload(m, "Viper-1", { fuel: max * 2 }), /above the aircraft's catalogued maximum/);
+  setPayload(m, "Viper-1", { fuel: max + 0.4 });
+  setPayload(m, "Viper-1", { fuel: max / 2 });
   (asTable(findUnit(m, "Viper-2")!.payload)!).fuel = "lots";
   const r = fuelReport(m);
   assert.equal(r.find((u) => u.unit === "Viper-1")!.percent, 50);
   assert.equal(r.find((u) => u.unit === "Viper-2")!.issue, "not a number");
   assert.ok(codes(m).includes("FUEL_NOT_NUMERIC"));
+  // In an EXISTING mission the same value is catalogue staleness, not an error: the
+  // validator was calibrated against 184 editor-saved missions, which carry
+  // countermeasure counts above pydcs's and rounded fuel a hair over fuel_max.
   (asTable(findUnit(m, "Viper-2")!.payload)!).fuel = String(max * 2);
-  assert.ok(codes(m).includes("PAYLOAD_LIMIT"));
+  const issues = validateAuthoring(m).filter((i) => i.code === "PAYLOAD_LIMIT");
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0].severity, "warning");
+  assert.match(issues[0].message, /catalogue staleness/);
 });
 
 test("radio bands are applied only where documented, and enforced there", () => {

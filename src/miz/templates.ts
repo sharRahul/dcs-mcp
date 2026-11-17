@@ -15,6 +15,10 @@
  *   - "catalogue": every type id exists in the DCS unit catalogue and the mix is
  *                  the system's standard battery, but this exact group has not
  *                  yet been flown or opened in the Mission Editor by this project.
+ *                  Such a template may still cite in `source` the mission its mix and
+ *                  per-unit offsets were copied from (e.g. a third-party ME-saved test
+ *                  mission). That is where the layout comes from; it is NOT evidence
+ *                  that this project flew it.
  *   - "imported":  copied (types, order and exact per-unit offsets) from a mission the
  *                  user supplied via dcs_import_site_template; this project has not flown
  *                  it, and cannot prove the file was saved by the Mission Editor.
@@ -35,9 +39,9 @@ export interface SiteTemplate {
   spacingMetres: number;
   /** Skynet classifies sites by group-name prefix; this is the conventional one. */
   skynetRole: "sam" | "ewr";
-  /** Imported templates only: exact per-unit offsets from the lead (metres along / right of its heading). */
+  /** Exact per-unit offsets from the lead (metres along / right of its heading), when the layout was copied from a mission. */
   offsets?: { forward: number; right: number }[];
-  /** Imported templates only: where the layout came from. */
+  /** Where the layout was copied from, for imported templates and for built-ins copied from a mission. */
   source?: { file: string; sha256: string; group: string; theatre: string; importedAt: string };
 }
 
@@ -160,6 +164,62 @@ export const SITE_TEMPLATES: SiteTemplate[] = [
     ],
     spacingMetres: 80,
     skynetRole: "sam",
+  },
+  {
+    id: "SA-5",
+    description:
+      "S-200 Angara/Vega: P-14 'Tall King' search radar (RLS_19J6), 5N62V 'Square Pair' track radar and an S-200 launcher. " +
+      "Mix and per-unit offsets copied from the SAM-SA-5 group of Skynet-IADS 3.3.0's own unit-test mission (Mission-Editor-saved by " +
+      "its authors, not flown by this project). One launcher, as in that mission: pass composition to add more.",
+    provenance: "catalogue",
+    composition: [
+      { type: "RLS_19J6", count: 1 },
+      { type: "RPC_5N62V", count: 1 },
+      { type: "S-200_Launcher", count: 1 },
+    ],
+    // Straight line behind the search radar, exactly as the source mission has it.
+    offsets: [
+      { forward: 0, right: 0 },
+      { forward: -40, right: 0 },
+      { forward: -80, right: 0 },
+    ],
+    spacingMetres: 40,
+    skynetRole: "sam",
+    source: {
+      file: "skynet-unit-tests.miz",
+      sha256: "eeed90b3c43a1bda5faf4b9f220f137c07c36e245560372473f16f1ae18b2731",
+      group: "SAM-SA-5",
+      theatre: "PersianGulf",
+      importedAt: "2026-11-17",
+    },
+  },
+  {
+    id: "Rapier",
+    description:
+      "Rapier FSA: Blindfire tracking radar, launcher and optical tracker unit. Mix and per-unit offsets copied from the " +
+      "BLUE-SAM-RAPIER group of Skynet-IADS 3.3.0's own unit-test mission (Mission-Editor-saved by its authors, not flown by " +
+      "this project). Skynet needs the Blindfire radar in the group for the site to engage.",
+    provenance: "catalogue",
+    composition: [
+      { type: "rapier_fsa_blindfire_radar", count: 1 },
+      { type: "rapier_fsa_launcher", count: 1 },
+      { type: "rapier_fsa_optical_tracker_unit", count: 1 },
+    ],
+    // The source layout spreads to the lead's right rather than behind it.
+    offsets: [
+      { forward: 0, right: 0 },
+      { forward: 0, right: -36 },
+      { forward: 1.9, right: -80.8 },
+    ],
+    spacingMetres: 36,
+    skynetRole: "sam",
+    source: {
+      file: "skynet-unit-tests.miz",
+      sha256: "eeed90b3c43a1bda5faf4b9f220f137c07c36e245560372473f16f1ae18b2731",
+      group: "BLUE-SAM-RAPIER",
+      theatre: "PersianGulf",
+      importedAt: "2026-11-17",
+    },
   },
   {
     id: "EWR-55G6",

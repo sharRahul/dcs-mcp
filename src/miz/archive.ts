@@ -38,6 +38,21 @@ export async function readMizArchive(filePath: string): Promise<MizArchive> {
   const bytes = await readFile(filePath);
   const digest = createHash("sha256").update(bytes).digest("hex");
 
+  // A `.miz` is a ZIP. Downloaded missions are quite often a RAR or 7z renamed to .miz
+  // (seven of them in one folder of community missions here), and DCS cannot open those
+  // either — so say which it is instead of "bad signature".
+  const magic = bytes.subarray(0, 6);
+  const renamed = magic.subarray(0, 4).toString("binary") === "Rar!" ? "a RAR archive"
+    : magic.subarray(0, 6).toString("hex") === "377abcaf271c" ? "a 7-Zip archive"
+    : magic.subarray(0, 2).toString("hex") === "1f8b" ? "a gzip file"
+    : undefined;
+  if (renamed) {
+    throw new ArchivePolicyError(
+      `${filePath} is ${renamed}, not a .miz: a .miz is a ZIP archive. It was probably renamed after download — ` +
+        `extract it and use the real .miz inside. DCS cannot open it either.`
+    );
+  }
+
   let zip: AdmZip;
   try {
     zip = new AdmZip(bytes);

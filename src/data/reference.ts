@@ -111,6 +111,26 @@ export interface Theatre {
   airports: Airport[];
 }
 
+/**
+ * Airfields that do not come from the bundled catalogue — today, airfields sampled from a
+ * running DCS into an airbase pack, which is the only source for a theatre pydcs never
+ * exported (Iraq, Marianas WWII).
+ *
+ * It is registered rather than imported so this module keeps knowing nothing about the
+ * filesystem layout of packs, and so a theatre's airfields stay bundled-only unless the
+ * user actually sampled one. A pack airfield carries `slotsUnverified`, which parking
+ * choice reads as "slot dimensions unknown" instead of inventing them.
+ */
+export interface ExtraAirportSource {
+  /** Theatre ids (as DCS writes them in a .miz) this source has airfields for. */
+  theatres(): string[];
+  airports(theatre: string): (Airport & { slotsUnverified?: boolean; source?: string })[];
+}
+let extraAirports: ExtraAirportSource | undefined;
+export function registerAirportSource(source: ExtraAirportSource | undefined): void {
+  extraAirports = source;
+}
+
 function load<T>(file: string): T {
   return JSON.parse(readFileSync(packagePath("data", file), "utf8")) as T;
 }
@@ -234,9 +254,40 @@ export function suggestUnitTypes(type: string, limit = 5): string[] {
   return hits.slice(0, limit);
 }
 
+/**
+ * Every airfield known for a theatre: the bundled catalogue plus any registered extra
+ * source (airbase packs sampled from DCS). A bundled airfield always wins on id, so a
+ * sample can never quietly replace pydcs's data.
+ */
+export function theatreAirports(theatreName: string): {
+  theatre: string;
+  airports: (Airport & { slotsUnverified?: boolean; source?: string })[];
+  source: "bundled" | "pack" | "bundled+pack";
+} {
+  const id = resolveTheatreName(theatreName);
+  const bundled = id ? theatres()[id]?.airports ?? [] : [];
+  const extraTheatres = extraAirports?.theatres() ?? [];
+  const extraId = id ?? extraTheatres.find((t) => normalize(t) === normalize(theatreName));
+  const extra = extraId ? extraAirports?.airports(extraId) ?? [] : [];
+  if (!bundled.length && !extra.length) {
+    const known = [...new Set([...Object.keys(theatres()), ...extraTheatres])].join(", ");
+    throw new Error(
+      `Unknown theatre '${theatreName}'. Supported: ${known}.` +
+        (extraTheatres.length ? "" : " A theatre with no bundled data needs an airbase pack sampled from a running mission (dcs_airbase_build_pack).")
+    );
+  }
+  const seen = new Set(bundled.map((a) => a.id));
+  const airports = [...bundled, ...extra.filter((a) => !seen.has(a.id))];
+  return {
+    theatre: extraId ?? id ?? theatreName,
+    airports,
+    source: bundled.length && extra.length ? "bundled+pack" : bundled.length ? "bundled" : "pack",
+  };
+}
+
 /** Find an airfield on a theatre by id or by name (case/spacing-insensitive, unique prefix ok). */
 export function findAirport(theatreName: string, ref: string | number): Airport {
-  const t = theatre(theatreName);
+  const t = theatreAirports(theatreName);
   if (typeof ref === "number" || /^\d+$/.test(String(ref))) {
     const id = Number(ref);
     const hit = t.airports.find((a) => a.id === id);

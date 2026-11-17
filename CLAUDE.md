@@ -551,3 +551,91 @@ no adjacent ERROR line.
 - `tests/compat.test.ts`: every theatre (parking start), every aircraft/vehicle/ship/static type, every site template,
   drawing kind and catalogued option; runs `me-open.lua` when LUA51/DCS_LUA is set.
 
+
+---
+
+## Reading the DCS install, live airbase/terrain sampling, validator calibration (0.6.0)
+
+The bundled catalogue is pinned to pydcs, so it is as old as that pin. These close the gap
+without ever guessing: everything here is either ED's own file read as TEXT, or DCS's own
+answer over the bridge.
+
+- `src/dcs/install-info.ts`: install root from `DCS_INSTALL_DIR`, else the `Command line:
+  "<root>/bin/DCS.exe"` line dcs.log writes at startup (the only record of a non-default
+  install path this server can read), else Program Files. Build/date/modules from
+  `autoupdate.cfg`; terrains from `Mods/terrains/*/entry.lua`. `coverageReport()` =
+  terrains with no bundled data + type ids the install declares (`scanModFolder` over
+  CoreMods) that `findUnitType` does not know. pydcs states NO DCS build anywhere, so a
+  numeric "data older than DCS" comparison is impossible — report coverage, never a guess.
+  Tool: `dcs_install_report`.
+- `src/dcs/terrain-files.ts`: `Mods/terrains/<t>/radio.lua` and `beacons.lua` scanned as
+  TEXT (they `dofile` and use bare constants, so `lua.ts` cannot take them). ATC per band in
+  MHz (file holds Hz) and TACAN channel / ILS-VOR-NDB MHz / position / lat-lon per beacon.
+  First-party and current to the installed build, and the ONLY source for Iraq and
+  Marianas WWII. Beacons join to a bundled airfield through the beacon ids pydcs already
+  lists, then by ED's own `airfield<N>` grouping (pydcs's per-airfield list is often short
+  an ILS pair) — never by proximity. `airfieldRadio` gained `installBeacons`; it outranks
+  the OCR'd kneeboards. `airfield<N>` is NOT the mission-file `airdromeId`.
+- `src/dcs/airbase-packs.ts` + hook `airbases`: `world.getAirbases()` / `getID` /
+  `getRunways` / `getParking` sampled from a running mission into an offline pack, which
+  `registerAirportSource` feeds to `theatreAirports`/`findAirport`, so an unbundled theatre
+  becomes usable offline. A live parking answer has NO slot size or category flags and does
+  not say which index `parking_id` holds: those are written as 0/`Term_Index_0` and
+  `chooseParking` reads 0,0,0 as UNKNOWN (accept) instead of failing against invented
+  dimensions. A bundled airfield always wins on id. A pack carries no projection, so
+  lat/lon <-> x/y stays unavailable for those theatres.
+- New hook commands, all mission-env and all Lua-5.1 tested: `roads`
+  (`getClosestPointOnRoads` / `findPathOnRoads`, roads AND railroads), `los`
+  (`isVisible` + `getIP`), `clearspot` (surface + neighbour slope + `world.searchObjects`
+  SCENERY clearance), `airbases`. Tools: `dcs_terrain_roads`, `dcs_terrain_visibility`,
+  `dcs_terrain_clear_spot`. Geometry and object search — never described as detection.
+- `tests/fixtures/hook-load.lua` now COMPILES each injected snippet with `loadstring` and
+  runs it under `setfenv` against stubs of `land`/`world`/`coord`/`Airbase`/`coalition`, and
+  prints `DOSTRING_STATE`. A typo inside a `string.format`'d snippet used to be invisible
+  until someone flew. Keep `SNIPPET_FAILURES 0`.
+- `data/me-icons.json` (`scripts/gen-me-icons.py`): the editor's own picker list from
+  `MissionEditor/data/NewMap/images/draw/icons.lua`, 53 icons. `ICON_FILES` = those labels
+  plus pydcs's nine `StandardIcon` names (pydcs wins a collision). ME-saved missions carry
+  `["primitiveType"] = "Icon"` with a bare `["file"] = "P91000006.png"` and a `scale`, which
+  is the format evidence for icon drawings. Needs an install to regenerate: CI cannot.
+- Site templates: SA-5 and Rapier are built in, mix and per-unit offsets copied from
+  Skynet-IADS 3.3.0's own unit-test mission (`source` + sha256 on the template). Provenance
+  stays `catalogue`: a cited source mission is where a layout came from, NOT evidence that
+  this project flew or opened it.
+- `src/miz/trains.ts`: captured from an ME-saved train — `country.vehicle.group`,
+  `task = "Ground Nothing"`, units of type `Train` (a STATIC type in pydcs) with
+  `wagons = {}`, route points `type`/`action` `"On Railroads"`. Every ME train here had an
+  empty `wagons`, so it is always written empty; a non-empty one is not established. No
+  offline railway graph exists: rail-snapped points come from `dcs_terrain_roads`.
+- `src/miz/transport.ts`: `Embarking` (+ `durationFlag`/`onStartMission`, which Hoggit does
+  not document) and `EmbarkToTransport` field-for-field from ME-saved missions;
+  `DisembarkFromTransport` is Hoggit-only. The three must agree on ids and coordinates.
+  `appendTaskTable` in `actions.ts` is the shared low-level appender (not `flight.ts`'s
+  typed `appendWaypointTask`).
+- `src/miz/raw.ts`: get/set any mission field by path. `create` is required for a new key,
+  every write is serialize+reparse or rolled back, and `__proto__`/`constructor`/`prototype`
+  are refused in paths AND in written object keys while lookups read own properties only
+  (a client-supplied path reaching `Object.prototype` would pollute the whole process).
+
+### The validator is calibrated against 184 ME-saved missions — keep it that way
+
+Run `DCS_NATIVE_MIZ_DIR=<a missions folder> npm test` (or the sweep in the 0.6.0 session)
+before changing any severity. The corpus reported 400+ ERRORs that were all OURS:
+
+- pydcs countermeasure counts are STALE (an F/A-18C with 90 flares where pydcs says 60) and
+  the editor ROUNDS fuel (CH-47F 3055 vs `fuel_max` 3054.592). `payloadOverCatalogue` reports
+  those as `PAYLOAD_LIMIT` warnings with a rounding tolerance; `validatePayload` keeps
+  structural faults as errors and refuses over-max FUEL only when WRITING
+  (`enforceCatalogueFuel`). Never refuse a payload DCS flies.
+- `DUP_UNIT_NAME`, `PARKING_SLOT_MISSING` (pydcs predates ED's airfield reworks),
+  `PARKING_CONFLICT`, `TASK_REFERENCE_MISSING`, `TRIGGER_*_MISSING`, `GOAL_REFERENCE_MISSING`
+  all occur in files DCS opens and flies: WARNINGS, with messages that say so.
+- `Train` in a vehicle group is not a category mistake (`EDITOR_VEHICLE_STATICS`).
+- An ERROR now means DCS or the editor cannot handle the file. 184/184 report none.
+- Nine community "missions" in that corpus are RAR files renamed `.miz`; `archive.ts` names
+  the real format instead of reporting a bad ZIP signature.
+
+To verify in DCS next: a parking start at an airfield that came from an airbase pack (Iraq
+or Marianas WWII) spawning on the ramp; a train opening in the ME and running on its rails;
+a troop lift actually loading and unloading; an editor icon drawing shown on the F10 map;
+`clearspot`/`roads`/`los` answers compared against what the ME shows.

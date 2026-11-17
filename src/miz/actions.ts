@@ -197,13 +197,16 @@ export function buildWaypointAction(mission: LuaTable, found: FoundGroup, req: A
 }
 
 /** Append to waypoint `index` (1-based) of a group's route as the next ComboTask entry. */
-export function addWaypointAction(mission: LuaTable, groupName: string, index: number, req: ActionRequest) {
-  const found = findGroup(mission, groupName);
-  if (!found) throw new Error(`No group named '${groupName}' in this mission`);
+/**
+ * Append one already-built task table to a waypoint's ComboTask, the way the editor
+ * stores them (1-based `tasks`, each with enabled/auto/number). Exported so a composite
+ * feature (troop transport, for one) can write a task the catalogue cannot express
+ * without duplicating this bookkeeping.
+ */
+export function appendTaskTable(group: LuaTable, index: number, task: LuaTable): number {
   if (!Number.isInteger(index) || index < 1) throw new Error('waypointIndex is 1-based');
-  const wp = asTable(asTable(asTable(found.group.route)?.points)?.[index]);
-  if (!wp) throw new Error(`Waypoint ${index} does not exist (route has ${luaArray(asTable(found.group.route)?.points).length})`);
-  const { task, warnings, page } = buildWaypointAction(mission, found, req);
+  const wp = asTable(asTable(asTable(group.route)?.points)?.[index]);
+  if (!wp) throw new Error(`Waypoint ${index} does not exist (route has ${luaArray(asTable(group.route)?.points).length})`);
   const combo = asTable(wp.task);
   if (combo && combo.id !== 'ComboTask') throw new Error('Existing non-ComboTask waypoint task cannot be safely appended');
   const tasks = asTable(asTable(combo?.params)?.tasks) ?? {};
@@ -211,5 +214,13 @@ export function addWaypointAction(mission: LuaTable, groupName: string, index: n
   tasks[next] = { ...task, enabled: true, auto: false, number: next };
   if (!combo) wp.task = { id: 'ComboTask', params: { tasks } };
   else { const params = (combo.params ??= {}) as LuaTable; params.tasks = tasks; }
+  return next;
+}
+
+export function addWaypointAction(mission: LuaTable, groupName: string, index: number, req: ActionRequest) {
+  const found = findGroup(mission, groupName);
+  if (!found) throw new Error(`No group named '${groupName}' in this mission`);
+  const { task, warnings, page } = buildWaypointAction(mission, found, req);
+  const next = appendTaskTable(found.group, index, task as LuaTable);
   return { group: groupName, waypointIndex: index, taskIndex: next, action: req.action, source: page, warnings };
 }

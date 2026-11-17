@@ -101,7 +101,9 @@ test('deleting a goal target is diagnosed without rewriting score definitions', 
   const m = newMissionTable('Caucasus', 43200); addAircraftGroup(m, 'plane', plane);
   addGoal(m, { side: 'blue', comment: 'Goal target', score: 10, conditions: [{ kind: 'group_dead', group: 'Hornet' }] });
   removeGroup(m, [], 'Hornet', true);
-  assert.ok(validateMission(buildMissionDocument(m, {}, 'test'), m).errors.some(e => e.code === 'GOAL_REFERENCE_MISSING'));
+  // DCS loads a mission whose goal points at a deleted group; that goal simply can never
+  // be met, so it is reported as a warning.
+  assert.ok(validateMission(buildMissionDocument(m, {}, 'test'), m).warnings.some(e => e.code === 'GOAL_REFERENCE_MISSING'));
 });
 
 test('removed newly embedded resources never reappear after snapshot restoration', async () => {

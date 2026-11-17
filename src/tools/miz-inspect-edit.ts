@@ -14,6 +14,9 @@ import { importSiteTemplate, removeImportedTemplate } from '../miz/site-import.j
 import { SITE_TEMPLATES } from '../miz/templates.js';
 import { loadoutsFor, scanPayloads } from '../dcs/payloads.js';
 import { applyLoadout } from '../miz/loadouts.js';
+import { makeTroopTransport, troopTransportSchema } from '../miz/transport.js';
+import { addTrain, trainSchema } from '../miz/trains.js';
+import { getMissionValue, setMissionValue } from '../miz/raw.js';
 import { requireSession, refresh } from '../miz/sessions.js';
 import { errorResult } from './format.js';
 import { destructive, inspect, mutate, read, result, sessionId, writes } from './miz-extended.js';
@@ -22,6 +25,23 @@ const xy = z.object({ x: z.number().finite(), y: z.number().finite() }).strict()
 const taskRef = { sessionId, group: z.string().min(1), waypointIndex: z.number().int().min(1), taskNumber: z.number().int().min(1) };
 
 export function registerMizInspectEditTools(server: McpServer) {
+  server.registerTool('dcs_miz_add_train', {
+    description: "Add a train: a ground (vehicle) group of 'Train' units whose route points use the editor's own \"On Railroads\" type and action, with task 'Ground Nothing' and the empty `wagons` table the editor writes. The group shape and unit fields are copied from a Mission-Editor-saved mission, so this is the editor's format and not a guess; what a NON-empty wagons table looks like is not established here, so wagons is always written empty. The path must already run along the railway — this server has no offline railway graph; get rail-snapped points from a running mission with dcs_terrain_roads kind=railroads. Speed is km/h (stored as m/s). 'Train' is a static type in the pydcs catalogue but a vehicle-group unit in the editor's files. Not flown or opened in the Mission Editor by this project.",
+    inputSchema: z.object({ sessionId, ...trainSchema.shape }).strict(), annotations: writes,
+  }, async a => mutate(a.sessionId, s => addTrain(s.mission, a)));
+  server.registerTool('dcs_miz_make_troop_transport', {
+    description: "Wire a helicopter (or vehicle) group to lift a ground group: Embarking on the transport's pickup waypoint (naming the troop group and distributing it over the transport's units), EmbarkToTransport on the troops' waypoint with the same pickup point and a wait radius, and DisembarkFromTransport on the transport's drop waypoint. The three tasks have to agree on group ids and coordinates or nothing happens at all — no error, the helicopter just lands and leaves. Embarking/EmbarkToTransport are written in the exact field layout Mission-Editor-saved missions use (including durationFlag and onStartMission, which the Hoggit docs omit); DisembarkFromTransport is Hoggit-documented only. Not flown by this project. Make sure the pickup and drop points are landable (dcs_terrain_clear_spot or dcs_check_terrain).",
+    inputSchema: z.object({ sessionId, ...troopTransportSchema.shape }).strict(), annotations: writes,
+  }, async a => mutate(a.sessionId, s => makeTroopTransport(s.mission, a)));
+  server.registerTool('dcs_miz_get_value', {
+    description: "Read any value in the session's mission table by path, e.g. coalition.blue.country[1].plane.group[1].name, trig.func[3] or [\"forcedOptions\"]. Returns the scalar, or for a table its keys and size (expand=true returns the whole subtree). Use it to inspect a field no tool models; it reads the parsed mission only, never other archive entries.",
+    inputSchema: z.object({ sessionId, path: z.string().min(1).max(512), expand: z.boolean().default(false) }).strict(), annotations: read,
+  }, async a => inspect(a.sessionId, s => ({ ...getMissionValue(s.mission, a.path, a.expand) })));
+  server.registerTool('dcs_miz_set_value', {
+    description: "Write any value in the session's mission table by path (the escape hatch for fields no tool models). value is JSON: a scalar, or an object/array that becomes a Lua table with 1-based array keys. Adding a key that does not exist is refused unless create=true, so a mistyped path cannot silently add a field DCS ignores; remove=true deletes a key. After the write the mission is serialized and reparsed, and the write is rolled back if that fails. This is your assertion about the file format, not this server's: nothing here knows whether DCS honours the field, so run dcs_miz_validate before saving.",
+    inputSchema: z.object({ sessionId, path: z.string().min(1).max(512), value: z.unknown().optional(),
+      create: z.boolean().default(false), remove: z.boolean().default(false) }).strict(), annotations: writes,
+  }, async a => mutate(a.sessionId, s => setMissionValue(s.mission, { path: a.path, value: a.value, create: a.create, remove: a.remove })));
   server.registerTool('dcs_miz_get_route', {
     description: 'Every waypoint of a group (position, altitude, speed, type/action, ETA lock, airfield/ship link) with its tasks, each identified against the waypoint-action catalogue (key, kind, enabled, params). Use the task numbers with modify/remove/enable.',
     inputSchema: z.object({ sessionId, group: z.string().min(1) }).strict(), annotations: read,

@@ -25,7 +25,7 @@
   "dcs_miz_configure_mission": "292210348edf386052c6708d559c219d5ad941ec8cc8594899a16aeae2623698",
   "dcs_miz_assign_country": "00e7b111047c1b06d89dfcffc988770d3943261eff1b220e8f78c0fb79231521",
   "dcs_miz_add_reference_point": "1f386b48f8cc37ee5daf9ce3c0e97da6d9eac74ccfd53941ea4854677dbea895",
-  "dcs_miz_add_drawing": "678c37c80cbabfb4dfd7e9c92add38c04fb7ffd47eb24a8b3fb1273fa0fb5721",
+  "dcs_miz_add_drawing": "5db8b2ba85e6a2e033c4ecfa36dd9e3183b946e33f6cec52c236b73864b2cba7",
   "dcs_miz_embed_asset": "164a79d2f506e165d0fd304022cd6484edbf483941747b94c2658f6a2296f2c6",
   "dcs_miz_list_assets": "aab2f258699337328371a3aaacae1d7eb58bff0a942dab23ef7940ba13d2335d",
   "dcs_miz_remove_asset": "b8c4875b94653b72f247d506fce637216bb7a976f768ad9a92d7136d71fcc907",
@@ -147,5 +147,18 @@
   "dcs_data_provenance": "73177f815899beece715cd2cfd833c6d0521c26d10e2ffe6bb47a57cff1d3404",
   "dcs_import_warehouse_donor": "6ef27bdbefcdf6d0e0c1be117faba9a4baf807f6d761e70f97a3106b2fb0cdaa",
   "dcs_list_warehouse_donors": "73177f815899beece715cd2cfd833c6d0521c26d10e2ffe6bb47a57cff1d3404",
-  "dcs_miz_add_warehouse_stock": "a4e0658792c3d1080891df090d41e873c1dcaea0bdbbb14deb3b2f2d2e661c3d"
+  "dcs_miz_add_warehouse_stock": "a4e0658792c3d1080891df090d41e873c1dcaea0bdbbb14deb3b2f2d2e661c3d",
+  "dcs_terrain_roads": "a984cb661ee059f19fc76a52286ab8e0cd23f0c0012b80e295b543770e437358",
+  "dcs_terrain_clear_spot": "a154960df7e0d6fe4cf012f5f12fba744f63b69ce4e6044c5b38dc2487d1b6df",
+  "dcs_terrain_visibility": "5e2a2f1bfd726ed8b2fc0e4862445519f17f677d869826b99e999444cd416f4f",
+  "dcs_airbase_build_pack": "d26530dedeefbee4a22ebb3a8cdd69a90da7624bd2905f0895e5911ed9c92a77",
+  "dcs_list_airbase_packs": "284e168c217eb1c24e98951d473507f5d2dc8ccb805eebed8ffb9da6545645e1",
+  "dcs_remove_airbase_pack": "1db52351dd037b0b33471aa56c28bb08c7146f09adccf80aa72716b82389aec5",
+  "dcs_list_map_icons": "11d3deb1d8c75c9f20020148693673b7450cc54d035cc1db32e35ca66adfc61e",
+  "dcs_miz_add_train": "49a51c8163208d58b2a507ed128a9279ff64ff619fa529d55beb4ba819d64dac",
+  "dcs_miz_make_troop_transport": "849899df8212d0c2b94929d353467dd899f1fbc998a5186af1e727515359dbfc",
+  "dcs_miz_get_value": "67503d05529dcbeec0f7f502738ffe9e15321a5ef152858a3df39145414bffbb",
+  "dcs_miz_set_value": "340e250e206d42cd618cfa052fff01e1f00d3d67242f2b2877aca19e7e496475",
+  "dcs_install_report": "73177f815899beece715cd2cfd833c6d0521c26d10e2ffe6bb47a57cff1d3404",
+  "dcs_theatre_data": "202323501d268d72ee05196944c5d76bc0ba4b47a5b66f30d1eeeef9da43afc1"
 }

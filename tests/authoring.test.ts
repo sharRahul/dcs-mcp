@@ -351,14 +351,16 @@ test("validation flags dangling ids in triggers an existing mission already had"
 
   const s = await openSession(path);
   const report = validateMission(s.document);
-  assert.equal(report.ok, false);
 
-  const group = report.errors.find((e) => e.code === "TRIGGER_GROUP_MISSING");
-  assert.ok(group, `expected TRIGGER_GROUP_MISSING, got ${JSON.stringify(report.errors)}`);
+  // A dangling id is a trigger that can never fire, not a mission that fails to open:
+  // editor-saved missions contain them (a group deleted after the trigger was written)
+  // and DCS runs those files, so they are warnings.
+  const group = report.warnings.find((e) => e.code === "TRIGGER_GROUP_MISSING");
+  assert.ok(group, `expected TRIGGER_GROUP_MISSING, got ${JSON.stringify(report.warnings)}`);
   assert.match(group!.message, /'99'/);
   assert.match(group!.message, /spawn reserves/);
-  assert.ok(report.errors.some((e) => e.code === "TRIGGER_ZONE_MISSING" && /'7'/.test(e.message)));
-  assert.ok(report.errors.some((e) => e.code === "TRIGGER_UNIT_MISSING" && /'42'/.test(e.message)));
+  assert.ok(report.warnings.some((e) => e.code === "TRIGGER_ZONE_MISSING" && /'7'/.test(e.message)));
+  assert.ok(report.warnings.some((e) => e.code === "TRIGGER_UNIT_MISSING" && /'42'/.test(e.message)));
 
   // It also has no compiled runtime entry, so it would not fire if flown.
   assert.ok(report.warnings.some((w) => w.code === "TRIGGER_NOT_COMPILED"));

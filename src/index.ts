@@ -34,6 +34,7 @@ import { registerDataQualityTools } from "./tools/data-quality.js";
 import { registerDiagnosticTools } from "./tools/diagnostics.js";
 import { registerPrompts, registerResources } from "./tools/resources.js";
 import { enableSessionPersistence } from "./miz/sessions.js";
+import { enableAirbasePacks } from "./dcs/airbase-packs.js";
 import { findSavedGamesDirs, installHook } from "./dcs/install.js";
 import { SERVER_INSTRUCTIONS } from "./guide.js";
 import { PACKAGE_VERSION } from "./paths.js";
@@ -108,6 +109,9 @@ async function main(): Promise<void> {
     return;
   }
   const stateDir = enableSessionPersistence();
+  // Airfields sampled from a running DCS (airbase packs) become visible to the airfield
+  // lookup, which is what makes a theatre pydcs never exported usable offline.
+  enableAirbasePacks();
   const { server } = createServer();
   await server.connect(new GuardedStdioTransport());
   console.error(

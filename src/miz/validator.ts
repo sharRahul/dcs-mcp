@@ -58,10 +58,15 @@ export function validateMission(doc: MissionDocument, mission?: LuaTable): Valid
 
     for (const unit of group.units) {
       if (unitNames.has(unit.name)) {
-        errors.push({
-          severity: "error",
+        // The editor itself saves duplicate unit names (65 of them across the 193
+        // ME-saved missions this was calibrated against), so DCS accepts them. They
+        // still break every lookup that goes by name, here and in mission scripts.
+        warnings.push({
+          severity: "warning",
           code: "DUP_UNIT_NAME",
-          message: `Duplicate unit name '${unit.name}'`,
+          message:
+            `Duplicate unit name '${unit.name}'. DCS accepts it (the Mission Editor saves duplicates), ` +
+            `but every name-based lookup — this server's tools and Unit.getByName in scripts — can only find one of them.`,
           location: `unit:${unit.name}`,
         });
       }
@@ -133,10 +138,15 @@ export function validateMission(doc: MissionDocument, mission?: LuaTable): Valid
   ) => {
     for (const ref of refs) {
       if (known.has(ref)) continue;
-      errors.push({
-        severity: "error",
+      // A dangling reference is a trigger that can never fire, not a mission that fails
+      // to load: ME-saved missions contain them (a group deleted after the trigger was
+      // written), and DCS opens and runs those files.
+      warnings.push({
+        severity: "warning",
         code,
-        message: `${label} references ${kind} '${ref}', which does not exist in this mission`,
+        message:
+          `${label} references ${kind} '${ref}', which does not exist in this mission. ` +
+          `DCS still loads the mission; that condition or action simply never matches.`,
         location: `trigger:${index}`,
       });
     }

@@ -96,10 +96,18 @@ test('payload validates fuel, countermeasures, pylons and stores before changing
   const clsid = authoringData().aircraft['F-16C_50'].pylons['3'][0];
   setPayload(m, 'Viper-1', { fuel: 1000, pylons: [{ pylon: 3, CLSID: clsid }] });
   const before = serializeLuaAssignment('mission', m);
-  for (const bad of [{ fuel: 3250 }, { fuel: NaN }, { flare: 61 }, { gun: 101 },
+  for (const bad of [{ fuel: 6000 }, { fuel: NaN }, { fuel: -1 }, { gun: 101 },
     { pylons: [{ pylon: 3, CLSID: 'FABRICATED' }] }, { pylons: [{ pylon: 3, CLSID: clsid }, { pylon: 3, CLSID: clsid }] }]) {
     assert.throws(() => setPayload(m, 'Viper-1', bad)); assert.equal(serializeLuaAssignment('mission', m), before);
   }
+  // A countermeasure count above the pydcs catalogue is NOT refused: editor-saved
+  // missions carry an F-16C with 90 flares where the catalogue says 60, so refusing it
+  // would reject a payload DCS flies. The validator reports it as staleness instead.
+  setPayload(m, 'Viper-1', { flare: 90 });
+  const stale = validateMission(buildMissionDocument(m, {}, 'test'), m);
+  assert.ok(stale.warnings.some(i => i.code === 'PAYLOAD_LIMIT' && /flare/.test(i.message)));
+  assert.ok(!stale.errors.some(i => i.code === 'PAYLOAD_LIMIT'));
+  setPayload(m, 'Viper-1', { fuel: 1000, pylons: [{ pylon: 3, CLSID: clsid }] });
   assert.equal(asTable(asTable(findUnit(rt(m), 'Viper-1')!.payload)?.pylons)?.[3] && true, true);
 });
 
@@ -130,8 +138,12 @@ test('raw validator detects parking and task references, fuel and category error
   const group = findGroup(m, 'Viper')!.group;
   asTable(asTable(asTable(group.route)?.points)?.[1])!.task = { id: 'ComboTask', params: { tasks: { 1: { id: 'AttackGroup', params: { groupId: 9999 } } } } };
   const before = serializeLuaAssignment('mission', m);
-  const codes = validateMission(buildMissionDocument(m, {}, 'test'), m).errors.map(e => e.code);
+  const report = validateMission(buildMissionDocument(m, {}, 'test'), m);
+  // All three occur in editor-saved missions that DCS loads and flies, so they are
+  // reported as warnings; the validator must still find every one of them.
+  const codes = report.warnings.map(e => e.code);
   for (const code of ['PARKING_CONFLICT', 'PAYLOAD_LIMIT', 'TASK_REFERENCE_MISSING']) assert.ok(codes.includes(code), code);
+  assert.deepEqual(report.errors.map(e => e.code).filter(c => ['PARKING_CONFLICT', 'PAYLOAD_LIMIT', 'TASK_REFERENCE_MISSING'].includes(c)), []);
   assert.equal(serializeLuaAssignment('mission', m), before);
 });
 
@@ -142,6 +154,6 @@ test('validator leaves unknown and EPLRS network ids opaque', () => {
     1: { id: 'WrappedAction', params: { action: { id: 'EPLRS', params: { groupId: 9999, value: true } } } },
     2: { id: 'FutureTask', params: { groupId: 8888, unitId: 7777 } },
   } } };
-  const codes = validateMission(buildMissionDocument(m, {}, 'test'), m).errors.map(e => e.code);
-  assert.ok(!codes.includes('TASK_REFERENCE_MISSING'));
+  const checked = validateMission(buildMissionDocument(m, {}, 'test'), m);
+  assert.ok(![...checked.errors, ...checked.warnings].some(e => e.code === 'TASK_REFERENCE_MISSING'));
 });

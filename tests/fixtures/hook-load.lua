@@ -40,19 +40,144 @@ io.open = function(path, mode)
   return originalOpen(path, mode)
 end
 local loadMissionCalls = {}
+
+-- --- mission scripting environment stub ------------------------------------
+--
+-- The hook ships Lua into the mission state as a STRING built with
+-- string.format, so a syntax error or a bad API call in one of those snippets
+-- is invisible to a parse of the hook file and only shows up in a flown
+-- mission. So the dostring_in stub COMPILES each snippet with loadstring (the
+-- Lua 5.1 API DCS has) and runs it against stubs of the DCS mission API. Flat
+-- terrain, one scenery object and two airbases are enough to exercise every
+-- branch the structured commands take.
+
+local SCENERY_AT = { x = 50, y = 0 }
+
+local function fakeAirbase(id, name, x, y)
+  return {
+    getPoint = function() return { x = x, y = 20, z = y } end,
+    getID = function() return id end,
+    getName = function() return name end,
+    getCallsign = function() return name:upper() end,
+    getCoalition = function() return 2 end,
+    getDesc = function() return { displayName = name .. " Intl", category = 0 } end,
+    getRunways = function() return { { Name = "09-27", course = 1.57, length = 3000, width = 45, position = { x = x, y = 20, z = y } } } end,
+    getParking = function()
+      return {
+        { Term_Index = 10, Term_Index_0 = 10, Term_Type = 104, TO_AC = true, fDistToRW = 900,
+          vTerminalPos = { x = x + 100, y = 20, z = y + 50 } },
+        { Term_Index = 11, Term_Index_0 = 11, Term_Type = 40, TO_AC = false, fDistToRW = 1200,
+          vTerminalPos = { x = x + 120, y = 20, z = y + 70 } },
+      }
+    end,
+  }
+end
+
+local function missionEnvironment()
+  local E = {}
+  for _, k in ipairs({ "string", "table", "math", "os", "tostring", "tonumber", "type", "pcall",
+                       "ipairs", "pairs", "select", "error", "assert", "unpack", "print",
+                       "setmetatable", "getmetatable", "rawget", "next", "loadstring", "require" }) do
+    E[k] = _G[k]
+  end
+  E._G = E
+  E.land = {
+    -- Flat ground at 100 m; everything east of y = 5000 is water, so the
+    -- surface filter in clearspot and land have something to reject.
+    getHeight = function(p) return 100 end,
+    getSurfaceType = function(p) if p.y and p.y > 5000 then return 3 else return 1 end end,
+    isVisible = function(a, b) return b.x < 2000 end,
+    getIP = function(a, dir, len) return { x = a.x + dir.x * (len / 2), y = a.y + dir.y * (len / 2), z = a.z + dir.z * (len / 2) } end,
+    getClosestPointOnRoads = function(kind, x, y) return x + 25, y - 10 end,
+    findPathOnRoads = function(kind, x1, y1, x2, y2) return { { x = x1, y = y1 }, { x = x2, y = y2 } } end,
+  }
+  E.coord = {
+    LOtoLL = function(p) return 33.5 + (p.x or 0) / 100000, 42.5 + (p.z or 0) / 100000 end,
+    LLtoLO = function(lat, lon, alt) return { x = lat * 1000, y = alt or 0, z = lon * 1000 } end,
+  }
+  E.Object = { Category = { UNIT = 1, WEAPON = 2, STATIC = 3, BASE = 4, SCENERY = 5 } }
+  E.world = {
+    VolumeType = { SEGMENT = 0, BOX = 1, SPHERE = 2, PYRAMID = 3 },
+    getAirbases = function() return { fakeAirbase(12, "Alpha", 0, 0), fakeAirbase(13, "Bravo", 1000, 1000) } end,
+    searchObjects = function(category, volume, handler)
+      handler({ getPoint = function() return { x = SCENERY_AT.x, y = 100, z = SCENERY_AT.y } end,
+                getTypeName = function() return "Hangar" end })
+      return true
+    end,
+  }
+  E.Airbase = { getByName = function(n) return fakeAirbase(12, n, 0, 0) end }
+  E.env = { mission = { theatre = "Iraq", date = { Year = 2026, Month = 11, Day = 17 } }, info = function() end }
+  E.timer = { getTime = function() return 42 end, getAbsTime = function() return 43200 end, getTime0 = function() return 0 end }
+  local function fakeUnit(name)
+    return {
+      getName = function() return name end,
+      getTypeName = function() return "M-1 Abrams" end,
+      getPoint = function() return { x = 10, y = 100, z = 20 } end,
+      getPosition = function() return { x = { x = 1, y = 0, z = 0 }, p = { x = 10, y = 100, z = 20 } } end,
+      isActive = function() return true end,
+      getLife = function() return 3 end,
+      getCoalition = function() return 2 end,
+    }
+  end
+  E.coalition = {
+    side = { RED = 1, BLUE = 2, NEUTRAL = 0 },
+    getGroups = function(side)
+      if side ~= 2 then return {} end
+      return { { getName = function() return "Armour-1" end, getUnits = function() return { fakeUnit("Armour-1-1") } end,
+                 getSize = function() return 1 end, getCoalition = function() return 2 end } }
+    end,
+    getPlayers = function() return {} end,
+  }
+  E.trigger = { action = {}, misc = { getUserFlag = function() return 0 end } }
+  E.Unit = { getByName = function(n) return fakeUnit(n) end }
+  E.Group = { getByName = function(n) return nil end }
+  return E
+end
+
+local snippetFailures = {}
+
 net = {
   json2lua = function(s)
-    -- Only the shapes the tests send; enough to exercise dispatch.
+    -- Only the shapes the tests send; enough to exercise dispatch. The
+    -- structured commands get fixed arguments per command so their snippets
+    -- are actually compiled and run against the stubs above.
     local cmd = s:match('"cmd"%s*:%s*"([^"]+)"')
     if not cmd then return nil end
     local path = s:match('"path"%s*:%s*"([^"]+)"')
-    return { cmd = cmd, args = { path = path } }
+    local args = { path = path }
+    if cmd == "airbases" then args = { from = 1, limit = 2 }
+    elseif cmd == "roads" then args = { kind = "roads", points = { { x = 1000, y = 2000 } } }
+    elseif cmd == "los" then args = { pairs = { { from = { x = 0, y = 0 }, to = { x = 3000, y = 0 } } } }
+    elseif cmd == "clearspot" then args = { centre = { x = 0, y = 0 }, radius = 300, spacing = 100, clearance = 20 }
+    elseif cmd == "land" then args = { points = { { x = 0, y = 0 }, { x = 0, y = 6000 } } }
+    end
+    return { cmd = cmd, args = args }
   end,
   dostring_in = function(state, code)
     -- DCS 2.9.31: only the "server" state holds the scripting globals; the
     -- hook's scripting-state resolver must find it there, not in "mission".
     if code == "return type(timer) .. ',' .. type(coalition)" then
       return state == "server" and "table,table" or "nil,nil"
+    end
+    if code:find("enc", 1, true) then
+      -- Which state the snippet was sent to is the thing to assert on: on DCS
+      -- 2.9.31 the scripting globals live in "server", and a snippet sent to
+      -- "mission" lands in the trigger state where `timer` is nil.
+      print("DOSTRING_STATE " .. tostring(state))
+      local chunk, err = loadstring(code, "snippet")
+      if not chunk then
+        snippetFailures[#snippetFailures + 1] = tostring(err)
+        print("SNIPPET_SYNTAX_FAIL " .. tostring(err))
+        return '{"ok":false,"error":"snippet syntax"}'
+      end
+      setfenv(chunk, missionEnvironment())
+      local okRun, out = pcall(chunk)
+      if not okRun then
+        snippetFailures[#snippetFailures + 1] = tostring(out)
+        print("SNIPPET_RUNTIME_FAIL " .. tostring(out))
+        return '{"ok":false,"error":"snippet runtime"}'
+      end
+      return out
     end
     return '{"ok":true,"data":{"state":"' .. state .. '"}}'
   end,
@@ -153,6 +278,53 @@ userCallbacks.onSimulationFrame()
 local coldReply = sent[#sent] or ""
 print("COLD_MENU_REFUSED " .. tostring(coldReply:find('"ok":false', 1, true) ~= nil and coldReply:find("no mission is running", 1, true) ~= nil))
 print("COLD_MENU_NO_LOAD " .. tostring(#loadMissionCalls == callsBefore))
+
+-- --- structured mission-environment commands -------------------------------
+--
+-- Each of these builds Lua as a string and ships it into the mission state, so
+-- running them here compiles and executes those snippets against the API stubs.
+-- That is the only place a typo in them is caught before someone flies.
+
+userCallbacks.onSimulationStart() -- back to a running mission
+
+local function callSim(request)
+  local before = #sent
+  queuedRequest = request
+  userCallbacks.onSimulationFrame()
+  if #sent == before then return nil end
+  return sent[#sent]
+end
+
+local structured = {}
+for _, cmd in ipairs({ "land", "airbases", "roads", "los", "clearspot" }) do
+  local reply = callSim('{"cmd":"' .. cmd .. '"}') or ""
+  structured[cmd] = reply
+  print("STRUCTURED " .. cmd .. " " .. tostring(reply:find('"ok":true', 1, true) ~= nil))
+end
+
+-- The airbase sample must carry what an offline airbase pack needs: id, name,
+-- position in map metres, lat/lon, runways and parking spots.
+local ab = structured.airbases or ""
+print("AIRBASES_FIELDS " .. tostring(
+  ab:find('"id":12', 1, true) ~= nil and ab:find('"theatre":"Iraq"', 1, true) ~= nil and
+  ab:find('"lat":', 1, true) ~= nil and ab:find('"termType":104', 1, true) ~= nil and
+  ab:find('"runways"', 1, true) ~= nil))
+
+-- Roads snap to the road graph and report how far the point moved.
+print("ROADS_SNAPPED " .. tostring((structured.roads or ""):find('"roadX":1025', 1, true) ~= nil))
+
+-- Line of sight: the stub blocks anything past x = 2000, so this pair is
+-- blocked and must come back with the intersection point.
+local los = structured.los or ""
+print("LOS_BLOCKED " .. tostring(los:find('"visible":false', 1, true) ~= nil and los:find('"blockedAt"', 1, true) ~= nil))
+
+-- The one stubbed scenery object sits 50 m east of the centre, so with a 20 m
+-- clearance the centre node itself must survive and the node next to the
+-- object must not.
+local clear = structured.clearspot or ""
+print("CLEARSPOT_FOUND " .. tostring(clear:find('"spots"', 1, true) ~= nil and clear:find('"sceneryObjects":1', 1, true) ~= nil))
+
+print("SNIPPET_FAILURES " .. #snippetFailures)
 
 for i, s in ipairs(sent) do print("REPLY " .. i .. " " .. s:gsub("%s+$", "")) end
 print("DONE")

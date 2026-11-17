@@ -807,6 +807,272 @@ function handlers.probe()
 end
 MISSION_ENV_COMMANDS.probe = true
 
+--[[
+  Every airbase of the RUNNING theatre as DCS itself reports it: id, name, callsign,
+  category, owning coalition, position (map metres and lat/lon), runways and parking spots.
+
+  This is the only way to get airfield ids, coordinates and parking for a theatre the
+  bundled (pydcs-derived) catalogue has never heard of — Iraq, Marianas WWII — because
+  that data lives in the terrain's binary files, not in any Lua the server can read. The
+  client turns one or more of these answers into an offline "airbase pack".
+
+  Paged on purpose: a full theatre with parking is megabytes, and one response must not
+  stall a simulation frame. Args: { from = 1, limit = 8, parking = true, runways = true }
+--]]
+function handlers.airbases(args)
+  args = args or {}
+  local from = math.max(1, math.floor(tonumber(args.from) or 1))
+  local limit = math.max(1, math.min(math.floor(tonumber(args.limit) or 8), 20))
+  local wantParking = args.parking ~= false
+  local wantRunways = args.runways ~= false
+  return runIn("mission", string.format([[
+    local cats = { [0] = "AIRDROME", [1] = "HELIPAD", [2] = "SHIP" }
+    local all = world.getAirbases() or {}
+    local from, limit = %d, %d
+    local out, spots = {}, 0
+    for idx = from, math.min(#all, from + limit - 1) do
+      local ab = all[idx]
+      if ab then
+        local okp, entry = pcall(function()
+          local p = ab:getPoint()
+          local desc = ab:getDesc() or {}
+          local ll = { coord.LOtoLL(p) }
+          local e = { index = idx, id = ab:getID(), name = ab:getName(),
+            callsign = ab:getCallsign(), displayName = desc.displayName,
+            category = cats[desc.category] or tostring(desc.category),
+            coalition = ab:getCoalition(),
+            x = p.x, y = p.z, alt = p.y, lat = ll[1], lon = ll[2] }
+          if %s then
+            local okr, rws = pcall(function() return ab:getRunways() end)
+            if okr and type(rws) == "table" then
+              e.runways = {}
+              for _, r in ipairs(rws) do
+                e.runways[#e.runways + 1] = { name = r.Name or r.name, course = r.course,
+                  length = r.length, width = r.width,
+                  x = r.position and r.position.x, y = r.position and r.position.z }
+              end
+            end
+          end
+          if %s then
+            local okq, park = pcall(function() return ab:getParking(false) end)
+            if okq and type(park) == "table" then
+              e.parking = {}
+              for _, s in ipairs(park) do
+                if #e.parking >= 400 or spots >= 2000 then break end
+                e.parking[#e.parking + 1] = { term = s.Term_Index, term0 = s.Term_Index_0,
+                  termType = s.Term_Type, toAC = s.TO_AC, distRW = s.fDistToRW,
+                  x = s.vTerminalPos and s.vTerminalPos.x, y = s.vTerminalPos and s.vTerminalPos.z,
+                  alt = s.vTerminalPos and s.vTerminalPos.y }
+                spots = spots + 1
+              end
+            end
+          end
+          return e
+        end)
+        if okp then out[#out + 1] = entry end
+      end
+    end
+    local theatre = nil
+    if env and env.mission then theatre = env.mission.theatre end
+    return '{"ok":true,"data":' .. enc({ theatre = theatre, total = #all, from = from,
+      returned = #out, parkingSpots = spots, airbases = out }) .. '}'
+  ]], from, limit, wantRunways and "true" or "false", wantParking and "true" or "false"))
+end
+MISSION_ENV_COMMANDS.airbases = true
+
+--[[
+  Roads and railways, from DCS's own road graph.
+
+  `land.getClosestPointOnRoads(kind, x, y)` snaps a point to the nearest road/railway
+  node, and `land.findPathOnRoads(kind, x1, y1, x2, y2)` returns the route between two
+  points along it. There is no offline equivalent: the road graph is terrain data the
+  server cannot read, so this is the only honest answer to "put this convoy on a road".
+
+  Args: { kind = "roads"|"railroads", points = [{x,y}, ...] }     -> snapped points
+         { kind = ..., from = {x,y}, to = {x,y} }                 -> path along the graph
+--]]
+function handlers.roads(args)
+  args = args or {}
+  local kind = tostring(args.kind or "roads")
+  if kind ~= "roads" and kind ~= "railroads" then return fail("roads: kind must be 'roads' or 'railroads'") end
+  if args.from and args.to then
+    local x1, y1 = tonumber(args.from.x), tonumber(args.from.y)
+    local x2, y2 = tonumber(args.to.x), tonumber(args.to.y)
+    if not (x1 and y1 and x2 and y2) then return fail("roads: from/to need numeric x and y") end
+    return runIn("mission", string.format([[
+      local path = land.findPathOnRoads(%q, %.3f, %.3f, %.3f, %.3f)
+      local out = {}
+      if type(path) == "table" then
+        for i, p in ipairs(path) do
+          if i > 1000 then break end
+          out[#out + 1] = { x = p.x, y = p.y, surface = land.getSurfaceType({ x = p.x, y = p.y }) }
+        end
+      end
+      return '{"ok":true,"data":' .. enc({ kind = %q, found = #out > 0, count = #out, path = out }) .. '}'
+    ]], kind, x1, y1, x2, y2, kind))
+  end
+  local points = args.points
+  if type(points) ~= "table" then return fail("roads: give either points (to snap) or from and to (for a path)") end
+  local parts = {}
+  for i, p in ipairs(points) do
+    local x, y = tonumber(p.x), tonumber(p.y)
+    if not x or not y then return fail("roads: point " .. i .. " has a non-numeric x or y") end
+    parts[#parts + 1] = string.format("{x=%.3f,y=%.3f}", x, y)
+    if #parts >= 200 then break end
+  end
+  if #parts == 0 then return fail("roads: no points given") end
+  return runIn("mission", string.format([[
+    local pts = { %s }
+    local out = {}
+    for i, p in ipairs(pts) do
+      local rx, ry = land.getClosestPointOnRoads(%q, p.x, p.y)
+      if rx and ry then
+        local dx, dy = rx - p.x, ry - p.y
+        out[i] = { x = p.x, y = p.y, roadX = rx, roadY = ry,
+          distance = math.sqrt(dx * dx + dy * dy),
+          surface = land.getSurfaceType({ x = rx, y = ry }), height = land.getHeight({ x = rx, y = ry }) }
+      else
+        out[i] = { x = p.x, y = p.y, roadX = nil, roadY = nil }
+      end
+    end
+    return '{"ok":true,"data":' .. enc({ kind = %q, count = #out, points = out }) .. '}'
+  ]], table.concat(parts, ","), kind, kind))
+end
+MISSION_ENV_COMMANDS.roads = true
+
+--[[
+  Line of sight and terrain profile between point pairs (land.isVisible / land.getIP).
+
+  This is DCS's own terrain intersection against the loaded theatre: bare earth plus
+  whatever the engine includes in its height field. It is NOT a radar or sensor model —
+  no RCS, no propagation, no clutter — and must never be reported as detection.
+
+  Args: { pairs = [ { from = {x,y,alt}, to = {x,y,alt} }, ... ] }
+--]]
+function handlers.los(args)
+  args = args or {}
+  local list = args.pairs
+  if type(list) ~= "table" then return fail("los: expected args.pairs as a list of {from,to}") end
+  local parts = {}
+  for i, pair in ipairs(list) do
+    local f, t = pair.from, pair.to
+    if type(f) ~= "table" or type(t) ~= "table" then return fail("los: pair " .. i .. " needs from and to") end
+    local fx, fy, ft = tonumber(f.x), tonumber(f.y), tonumber(f.alt)
+    local tx, ty, tt = tonumber(t.x), tonumber(t.y), tonumber(t.alt)
+    if not (fx and fy and tx and ty) then return fail("los: pair " .. i .. " has a non-numeric x or y") end
+    parts[#parts + 1] = string.format("{fx=%.3f,fy=%.3f,fa=%s,tx=%.3f,ty=%.3f,ta=%s}",
+      fx, fy, ft and string.format("%.3f", ft) or "nil", tx, ty, tt and string.format("%.3f", tt) or "nil")
+    if #parts >= 100 then break end
+  end
+  if #parts == 0 then return fail("los: no pairs given") end
+  return runIn("mission", string.format([[
+    local pairs_ = { %s }
+    local out = {}
+    for i, p in ipairs(pairs_) do
+      local fromAlt = p.fa or (land.getHeight({ x = p.fx, y = p.fy }) + 2)
+      local toAlt = p.ta or (land.getHeight({ x = p.tx, y = p.ty }) + 2)
+      local a = { x = p.fx, y = fromAlt, z = p.fy }
+      local b = { x = p.tx, y = toAlt, z = p.ty }
+      local dx, dy, dz = b.x - a.x, b.y - a.y, b.z - a.z
+      local len = math.sqrt(dx * dx + dy * dy + dz * dz)
+      local visible = land.isVisible(a, b)
+      local entry = { from = { x = p.fx, y = p.fy, alt = fromAlt }, to = { x = p.tx, y = p.ty, alt = toAlt },
+        distance = len, visible = visible }
+      if not visible and len > 0 then
+        local dir = { x = dx / len, y = dy / len, z = dz / len }
+        local ip = land.getIP(a, dir, len)
+        if ip then
+          entry.blockedAt = { x = ip.x, y = ip.z, alt = ip.y }
+          local bx, bz = ip.x - a.x, ip.z - a.z
+          entry.blockedAtMetres = math.sqrt(bx * bx + bz * bz)
+        end
+      end
+      out[i] = entry
+    end
+    return '{"ok":true,"data":' .. enc({ count = #out, pairs = out,
+      note = "DCS terrain intersection (land.isVisible/getIP). Geometry only: not a sensor or radar model." }) .. '}'
+  ]], table.concat(parts, ",")))
+end
+MISSION_ENV_COMMANDS.los = true
+
+--[[
+  Open ground: grid-sample an area for spots that are land, flat enough, and clear of
+  scenery objects (buildings, trees DCS models as objects).
+
+  Surfaces come from land.getSurfaceType, slope from land.getHeight of the neighbours,
+  and obstructions from world.searchObjects(Object.Category.SCENERY, box). An object DCS
+  does not model as a scenery object (some vegetation) is invisible to this, so a clear
+  spot is "nothing found", not a guarantee.
+
+  Args: { centre = {x,y}, radius = <m>, spacing = <m>, clearance = <m>,
+          maxSlopeDegrees = <deg>, limit = <n> }
+--]]
+function handlers.clearspot(args)
+  args = args or {}
+  local c = args.centre or args.center
+  local cx, cy = tonumber(c and c.x), tonumber(c and c.y)
+  if not (cx and cy) then return fail("clearspot: centre needs numeric x and y") end
+  local radius = math.min(math.max(tonumber(args.radius) or 1000, 50), 20000)
+  local spacing = math.min(math.max(tonumber(args.spacing) or 100, 10), 2000)
+  local clearance = math.min(math.max(tonumber(args.clearance) or 30, 1), 500)
+  local maxSlope = math.min(math.max(tonumber(args.maxSlopeDegrees) or 10, 0.5), 60)
+  local limit = math.min(math.max(math.floor(tonumber(args.limit) or 10), 1), 100)
+  local side = math.floor((2 * radius) / spacing) + 1
+  if side * side > 4096 then return fail("clearspot: radius/spacing would sample " .. (side * side) .. " nodes; raise spacing or shrink radius (4096 max)") end
+  return runIn("mission", string.format([[
+    local cx, cy, radius, spacing = %.3f, %.3f, %.3f, %.3f
+    local clearance, maxSlope, limit = %.3f, %.3f, %d
+    local objects = {}
+    local vol = { id = world.VolumeType.BOX, params = { min = { x = cx - radius, y = land.getHeight({x=cx,y=cy}) - 500, z = cy - radius },
+                                                        max = { x = cx + radius, y = land.getHeight({x=cx,y=cy}) + 2000, z = cy + radius } } }
+    local okSearch = pcall(world.searchObjects, Object.Category.SCENERY, vol, function(obj)
+      if #objects >= 2000 then return false end
+      local okp, p = pcall(function() return obj:getPoint() end)
+      if okp and p then objects[#objects + 1] = { x = p.x, y = p.z } end
+      return true
+    end)
+    local candidates = {}
+    local steps = math.floor(radius / spacing)
+    for i = -steps, steps do
+      for j = -steps, steps do
+        local x, y = cx + i * spacing, cy + j * spacing
+        local dx, dy = x - cx, y - cy
+        if dx * dx + dy * dy <= radius * radius then
+          local surface = land.getSurfaceType({ x = x, y = y })
+          if surface == 1 or surface == 4 or surface == 5 then
+            local h = land.getHeight({ x = x, y = y })
+            local probe = spacing / 2
+            local hx = land.getHeight({ x = x + probe, y = y })
+            local hy = land.getHeight({ x = x, y = y + probe })
+            local slope = math.deg(math.atan(math.max(math.abs(hx - h), math.abs(hy - h)) / probe))
+            if slope <= maxSlope then
+              local nearest = nil
+              for _, o in ipairs(objects) do
+                local ox, oy = o.x - x, o.y - y
+                local d = math.sqrt(ox * ox + oy * oy)
+                if not nearest or d < nearest then nearest = d end
+              end
+              if not nearest or nearest >= clearance then
+                candidates[#candidates + 1] = { x = x, y = y, height = h, surface = surface,
+                  slopeDegrees = slope, nearestObjectMetres = nearest,
+                  distanceFromCentre = math.sqrt(dx * dx + dy * dy) }
+              end
+            end
+          end
+        end
+      end
+    end
+    table.sort(candidates, function(a, b) return a.distanceFromCentre < b.distanceFromCentre end)
+    local out = {}
+    for i = 1, math.min(#candidates, limit) do out[i] = candidates[i] end
+    return '{"ok":true,"data":' .. enc({ centre = { x = cx, y = cy }, radius = radius, spacing = spacing,
+      clearance = clearance, maxSlopeDegrees = maxSlope, sceneryObjects = #objects,
+      searched = okSearch, found = #candidates, returned = #out, spots = out,
+      note = "Land/slope from land.getSurfaceType+getHeight; obstructions from world.searchObjects(SCENERY). Objects DCS does not model as scenery are not seen." }) .. '}'
+  ]], cx, cy, radius, spacing, clearance, maxSlope, limit))
+end
+MISSION_ENV_COMMANDS.clearspot = true
+
 local callbacks = {}
 
 function callbacks.onSimulationStart()

@@ -15,6 +15,10 @@ High-level authoring: dcs_scenario_validate/generate accept a client-supplied st
 
 Advanced tools: dcs_list_flight_roles -> dcs_miz_create_flight/configure_flight/add_waypoint_task; dcs_miz_create_ground_plan; dcs_miz_configure_iads; dcs_miz_list_warehouses/edit_warehouse. New capabilities are offline-tested, not DCS-verified. dcs_terrain_analyze and dcs_miz_move_ground_on_terrain need an explicit sourced elevation grid, an installed terrain pack (dcs_terrain_build_pack samples DCS's own terrain once while a mission runs) or source=live with the matching running theatre; no bundled elevation data or flat fallback. Sensor visibility is sampled geometry, not radar detection.
 
+Your DCS install is read as data where it helps: dcs_install_report gives the build, the installed terrains and where they outrun the bundled (pydcs) catalogue; dcs_theatre_data reads ED's own radio.lua/beacons.lua for ATC frequencies and TACAN/ILS/VOR/NDB on ANY installed terrain, including ones pydcs never had (Iraq, Marianas WWII). Those terrains still have no airfield ids, coordinates or parking until you sample them from a running mission with dcs_airbase_build_pack; a sampled slot's size and category flags are unknown, so parking choice stops checking fit for it.
+
+Live-only terrain helpers (need a mission running): dcs_terrain_roads snaps points to DCS's road or railway graph (or routes along it), dcs_terrain_clear_spot finds flat land clear of scenery objects, dcs_terrain_visibility is DCS's own terrain intersection — geometry, never a sensor model. There is no offline equivalent of any of them.
+
 Conventions that are easy to get wrong:
 - Map axes: x = NORTH metres, y = EAST metres. Generic placement tools also accept lat/lon and convert offline. Terrain grids, candidates, advanced tasks and orbits use DCS x/y metres.
 - Headings are DEGREES in this API (stored as radians in the file).
@@ -26,6 +30,7 @@ Conventions that are easy to get wrong:
 - Never trust a ground coordinate you did not check: dcs_check_terrain (live) says land or water.
 - A flight only spawns at an airfield its side owns, or at a ship/FARP that has a warehouse entry. Adding an airfield/ship/FARP start claims a neutral airfield for the flight's side and creates a missing ship/FARP entry; an enemy-owned airfield is reported, never flipped (dcs_miz_set_airbase_coalition).
 - Removing something a trigger references is refused unless force=true (the trigger would never fire).
+- Validation severity is calibrated against 184 Mission-Editor-saved missions, which report zero ERRORs: an ERROR means DCS or the editor cannot handle the file. Things the editor itself saves — duplicate unit names, dangling trigger/task/goal ids, two aircraft on one parking spot, countermeasure counts above the pydcs catalogue — are WARNINGS. Read them; do not treat them as a broken mission.
 - Sessions are snapshotted to disk; after a server restart use dcs_miz_list_sessions and dcs_miz_restore_session.
 
 Full reference: resource dcs://guide/conventions.`;
@@ -102,6 +107,12 @@ export const CONVENTIONS_GUIDE = `# DCS-MCP conventions
 - \`dcs_load_mission\` swaps the mission on an already-running session; it cannot start one from the
   main menu. Fly any mission first, then load. Loading is asynchronous: poll status, then read the log.
 
+## Trains, troop transport and raw fields
+- \`dcs_miz_add_train\`: a ground group of 'Train' units with the editor's own "On Railroads" route points and an empty \`wagons\` table, captured from an ME-saved mission. The path must already run along the railway — there is no offline railway graph; get rail-snapped points from \`dcs_terrain_roads\` kind=railroads while a mission runs.
+- \`dcs_miz_make_troop_transport\` wires all three tasks at once: Embarking on the transport's pickup waypoint, EmbarkToTransport on the troops' waypoint, DisembarkFromTransport on the drop waypoint. They must agree on group ids and coordinates or nothing happens — no error, the helicopter just lands and leaves. Embarking/EmbarkToTransport are the editor's own field layout; DisembarkFromTransport is Hoggit-documented only. Not flown here.
+- \`dcs_miz_get_value\` / \`dcs_miz_set_value\` read and write any field of the session's mission table by path (\`coalition.blue.country[1].plane.group[1].name\`). Adding a key needs create=true, removing takes remove=true, and every write is serialized and reparsed or rolled back. A raw write is your assertion about the file format, not this server's: validate before saving.
+- \`dcs_list_map_icons\` lists every icon the Mission Editor's own picker offers (53 of them, read from the install) plus pydcs's nine names; \`dcs_miz_add_drawing\` kind=icon takes any of those labels and refuses anything else.
+
 ## Terrain
 - A ground unit placed on water does not error — it just sits inert. Check placements with
   \`dcs_check_terrain\` (needs a running mission), or take coordinates from an ME-saved mission.
@@ -111,8 +122,11 @@ export const CONVENTIONS_GUIDE = `# DCS-MCP conventions
 - BARCAP/TARCAP use CAP, DEAD uses SEAD, group strike uses CAS; transport/reconnaissance do not configure cargo/cameras.
 - \`dcs_miz_configure_flight\` validates per-unit arrays and one Player unit and checks the livery against installed Liveries folders (installed/not_installed/unknown). Callsign families (number or name) are checked per type and main task: \`dcs_list_callsigns\`. Radio bands are unknown.
 - \`dcs_airfield_radio\` gives an airfield's ATC radios (HF/VHF low/VHF high/UHF MHz) and runway designators from pydcs's DCS export. Runway headings are designator x 10. Where available it adds ICAO, elevation, TACAN, VOR, NDB and ILS frequencies from DimOn's kneeboards (OCR, kept only where the row's ATC matches pydcs); an empty list means not extracted, not absent, and ILS frequencies are not tied to a runway.
+- \`installBeacons\` in that same answer is ED's OWN beacon data for the installed build (Mods/terrains/<theatre>/beacons.lua, matched on the beacon ids pydcs lists for the airfield): TACAN channels, ILS/VOR/NDB frequencies, positions and lat/lon. Prefer it over the OCR'd kneeboard rows. null means no readable DCS install was found — unknown, not absent.
+- \`dcs_theatre_data\` gives the same ED data for a whole installed terrain, keyed by ED's airfield<N> index. That index is NOT the mission-file airdromeId; for a terrain the bundled catalogue lacks, ids/coordinates/parking come from \`dcs_airbase_build_pack\` (sampled from a running mission, stored offline, listed by \`dcs_list_airbase_packs\`).
+- \`dcs_install_report\` says which build is installed, which terrains it has, and which unit type ids it declares that the bundled catalogue has no entry for. The bundled data is pinned to pydcs, which states no DCS build, so this is coverage drift — not a version comparison.
 - Inspect and edit what is there: \`dcs_miz_get_route\` (waypoints + tasks identified against the catalogue), \`dcs_miz_get_group\`, \`dcs_miz_get_unit\`; \`dcs_miz_modify_waypoint_task\` / \`dcs_miz_remove_waypoint_task\` / \`dcs_miz_set_waypoint_task_enabled\` by task number (modify refuses tasks not in the catalogue and keeps undocumented stored fields); \`dcs_miz_modify_unit\`; \`dcs_miz_list_goals\` / \`get_goal\` / \`modify_goal\` / \`remove_goal\`; \`dcs_miz_add_quad_zone\`; \`dcs_miz_set_airbase_coalition\`.
-- Site templates from your own missions: \`dcs_import_site_template\` copies a ground group's types and exact layout from a .miz you supply (provenance 'imported', not flown by this project); then use it as \`site\`. Use this for systems with no built-in template (e.g. SA-5, Rapier) from an editor-saved mission.
+- Site templates from your own missions: \`dcs_import_site_template\` copies a ground group's types and exact layout from a .miz you supply (provenance 'imported', not flown by this project); then use it as \`site\`. Use it for systems with no built-in template; SA-5 and Rapier now ARE built in (mix and offsets copied from Skynet's own ME-saved unit-test mission, flown by nobody here).
 - Loadouts: \`dcs_list_loadouts\` / \`dcs_miz_apply_loadout\` read the DCS payload library on THIS machine as data; 'unknown' when no DCS folders are found. Radio bands and per-airframe starting fuel are still not in any bundled source.
 - Fuel: \`dcs_aircraft_fuel\` gives each type's internal maximum (pydcs fuel_max); \`dcs_miz_set_payload\` takes fuel in kg or fuelPercent of that maximum; \`dcs_miz_fuel_report\` audits a mission. Default starting fuel per airframe is not sourced.
 - Radio bands are enforced ONLY where documented (\`dcs_list_radios\` shows band per radio; today the A-10C). Elsewhere frequencies are not band-checked and results say so. The validator checks preset structure, values, modulation and documented bands.

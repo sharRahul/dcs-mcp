@@ -479,3 +479,41 @@ rotated, edit its tasks, set airbase ownership). Offline only; the payload tests
 - `tests/compat.test.ts`: all 12 theatres with parking starts, all 170 aircraft, 361 vehicle, 57 ship and every
   non-heliport static type, all site templates, drawing kinds and catalogued options; editor fix-ups in the CI Lua job.
 
+## Install-derived data, live sampling and validator calibration — 2026-11-17 (0.6.0)
+
+Offline work on a machine with DCS 2.9.31.29434 installed (`H:/DCS World/...`) and 193
+community/editor-saved missions under `Saved Games/DCS/Missions`. `npm run build` and
+`npm test` pass (270 pass, 0 fail, 8 skipped — the skips need DCS_LUA/PYDCS_SRC or a
+running sim). Nothing in this section is simulator-verified.
+
+**Verified against real data on this machine (not against the simulator):**
+
+- ED's own `Mods/terrains/<t>/radio.lua` and `beacons.lua` parse for all 12 installed
+  terrains, including the two with no bundled data (Iraq: 20 airfields, 43 beacons;
+  Marianas WWII). Spot-check: Incirlik reports TACAN channel 21 "DAN" and ILS 109.3 MHz,
+  which match the airfield's published values.
+- `dcs_install_report` reads build `2.9.31.29434` and install date from `autoupdate.cfg`,
+  finds the non-default install root from the `Command line:` entry in dcs.log, and names
+  Iraq and Marianas WWII as installed-without-bundled-data plus 5 declared type ids the
+  pinned catalogue lacks.
+- `data/me-icons.json` holds 53 icons, the full Mission-Editor picker list. ME-saved
+  missions in the corpus confirm the drawing format it feeds (`primitiveType = "Icon"`,
+  bare `file = "P91000006.png"`, `scale`).
+- The hook (including the four new mission-environment commands) loads and runs under
+  DCS's own `luae.exe`, and every injected snippet now compiles and executes against
+  stubbed DCS APIs in `tests/fixtures/hook-load.lua` (`SNIPPET_FAILURES 0`).
+
+**Validator calibration.** 184 of the 193 missions opened (the other nine are RAR archives
+renamed `.miz`, which DCS cannot open either). Before this change the validator reported
+400+ ERRORs on them; every one was a false positive from stale pydcs data or from treating
+editor-tolerated sloppiness as fatal. After recalibration the corpus reports **zero ERRORs**,
+with warnings: AIRCRAFT_TASK_UNSUPPORTED 691, PAYLOAD_NOT_CATALOGUED 502, UNKNOWN_UNIT_TYPE
+267, PAYLOAD_LIMIT 265, COUNTRY_TYPE_NOT_OFFERED 135, PARKING_SLOT_MISSING 86,
+DUP_UNIT_NAME 65, GROUP_NO_START_TIME 30, TASK_REFERENCE_MISSING 4, TRIGGER_GROUP_MISSING 2,
+AIRFIELD_REFERENCE_UNKNOWN 1, PARKING_CONFLICT 1, GOAL_REFERENCE_MISSING 1.
+
+**Still pending in DCS:** an airbase pack built from a running mission and a parking start
+at an airfield that came from it; a train opening in the Mission Editor and running on its
+rails; a troop lift loading and unloading; an icon drawing on the F10 map; `roads`,
+`clearspot` and `los` answers compared with what the editor shows. No existing SAM-template
+provenance or DCS-runtime claim was promoted by this work.

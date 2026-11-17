@@ -4,7 +4,8 @@
  */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { clearLayer, listDrawings, removeDrawing, STANDARD_LAYERS } from '../miz/drawings.js';
+import { clearLayer, ICON_FILES, listDrawings, removeDrawing, STANDARD_LAYERS } from '../miz/drawings.js';
+import { meIcons } from '../data/me-icons.js';
 import { radioInfo, resetRadioPresets, setIntraFlightFrequency, setRadioPresets } from '../miz/radios.js';
 import { listCloudPresets, setCloudPreset } from '../miz/weather.js';
 import { lerp, pointFromBearing, pointsInZone, randomPointInCircle } from '../miz/geometry.js';
@@ -36,6 +37,18 @@ export function registerMizExtendedTools(server: McpServer) {
     description: 'List F10 map drawings (name, layer, primitive type/mode, origin). Optionally filter to one standard layer.',
     inputSchema: z.object({ sessionId, layer: layer.optional() }).strict(), annotations: read,
   }, async a => inspect(a.sessionId, s => { const drawings = listDrawings(s.mission, a.layer); return { count: drawings.length, drawings }; }));
+  server.registerTool('dcs_list_map_icons', {
+    description: "Every F10 map icon that can be used by dcs_miz_add_drawing kind=icon: the Mission Editor's own picker list (label -> image file, read from the install by scripts/gen-me-icons.py and bundled as data/me-icons.json) plus pydcs's nine StandardIcon names. The file name is what the mission file's drawing `file` field holds, confirmed against Mission-Editor-saved missions. Unknown names are refused rather than written as a guessed file.",
+    inputSchema: z.object({ query: z.string().min(1).optional().describe('Case-insensitive filter on the label.') }).strict(), annotations: read,
+  }, async a => {
+    const data = (() => { try { return meIcons(); } catch { return undefined; } })();
+    const q = a.query?.toLowerCase();
+    const icons = Object.entries(ICON_FILES)
+      .filter(([name]) => !q || name.toLowerCase().includes(q))
+      .sort(([a1], [b1]) => a1.localeCompare(b1))
+      .map(([name, file]) => ({ name, file, source: name in (data?.icons ?? {}) ? 'mission editor' : 'pydcs StandardIcon' }));
+    return result({ count: icons.length, editorIcons: data?.count ?? 0, dcsVersion: data?._dcsVersion ?? null, icons });
+  });
   server.registerTool('dcs_miz_remove_drawing', {
     description: 'Remove one F10 drawing by layer and name. Other drawings and drawing options are kept.',
     inputSchema: z.object({ sessionId, layer, name: z.string().min(1) }).strict(), annotations: destructive,

@@ -3,6 +3,8 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { fuelInfo, fuelReport, listFuel } from '../miz/fuel.js';
 import { provenanceReport } from '../data/provenance.js';
+import { coverageReport, installInfo } from '../dcs/install-info.js';
+import { installAirfieldData } from '../dcs/terrain-files.js';
 import { addStockFromDonor, importDonor, listDonors, loadDonor } from '../miz/warehouse-donor.js';
 import { errorResult } from './format.js';
 import { inspect, mutate, read, result, sessionId } from './miz-extended.js';
@@ -20,6 +22,19 @@ export function registerDataQualityTools(server: McpServer) {
     description: 'Where every bundled dataset comes from: generator script, upstream source and licence, how its inputs are pinned (sha256 / wiki revision ids), the file sha256, the regeneration command and what it has and has not been verified against.',
     inputSchema: z.object({}).strict(), annotations: read,
   }, async () => { try { return result(provenanceReport()); } catch (e) { return errorResult(e); } });
+  server.registerTool('dcs_install_report', {
+    description: "The DCS install on this machine, read from its own files (never executed): root folder and how it was found (DCS_INSTALL_DIR, the path DCS logged at startup, or a default location), build string and install date from autoupdate.cfg, the module list, the installed terrains, and where the install disagrees with this server's bundled catalogue — terrains with no bundled airfield/projection data (e.g. Iraq, Marianas WWII) and unit type ids the install declares that the catalogue has no entry for. The bundled data is pinned to pydcs, which states no DCS build, so this reports coverage drift, not a version comparison.",
+    inputSchema: z.object({}).strict(), annotations: read,
+  }, async () => {
+    try {
+      const info = installInfo(process.env, true);
+      return result({ install: info, coverage: coverageReport() });
+    } catch (e) { return errorResult(e); }
+  });
+  server.registerTool('dcs_theatre_data', {
+    description: "Airfield ATC radios and navigation beacons for ONE installed terrain, read from ED's own Mods/terrains/<theatre>/radio.lua and beacons.lua as text (never executed): per airfield the HF/VHF-low/VHF-high/UHF frequencies in MHz with modulation and callsign, and every beacon (TACAN channel, ILS/VOR/NDB MHz, position in DCS x/y metres plus lat/lon, bearing as ED states it). This is first-party data current to the installed build and the only source for a terrain pydcs never had (Iraq, Marianas WWII); each file's sha256 is reported. Airfields are keyed by ED's airfield<N> index, which is NOT the mission-file airdromeId — for a terrain with no bundled data, ids, coordinates and parking still need a live airbase sample.",
+    inputSchema: z.object({ theatre: z.string().min(1) }).strict(), annotations: read,
+  }, async a => { try { return result(installAirfieldData(a.theatre)); } catch (e) { return errorResult(e); } });
   server.registerTool('dcs_import_warehouse_donor', {
     description: "Harvest wsType-bearing aircraft and weapon stock entries from a mission YOU supply (ideally saved by the Mission Editor) into a named donor, stored with the file's sha256. The file is only read. Donors let dcs_miz_add_warehouse_stock add NEW stock by copying real entries; nothing is fabricated.",
     inputSchema: z.object({ file: z.string().min(1), id: z.string().min(1).max(48), overwrite: z.boolean().default(false) }).strict(),

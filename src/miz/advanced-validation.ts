@@ -1,10 +1,17 @@
 /** Read-only checks on raw data omitted by the compact canonical document. */
-import { eachGroup, validatePayload, type PayloadArgs } from './authoring.js';
+import { eachGroup, payloadOverCatalogue, validatePayload, type PayloadArgs } from './authoring.js';
 import { asTable, luaArray, type LuaTable, type LuaValue } from './lua.js';
 import { findAirport, findUnitType, type FlyingType } from '../data/reference.js';
 import type { ValidationIssue } from '../types.js';
 import { authoringData } from '../data/authoring.js';
 import { radioBand } from '../data/radio-bands.js';
+/**
+ * Catalogued STATIC types the Mission Editor saves inside a ground (vehicle) group.
+ * Evidence: a train in an ME-saved mission is `country.vehicle.group` whose units are
+ * type 'Train' (with a `wagons` table), while pydcs lists 'Train' as a static.
+ */
+const EDITOR_VEHICLE_STATICS = new Set(['Train']);
+
 export function validateAuthoring(mission: LuaTable): ValidationIssue[] {
   const issues: ValidationIssue[] = [], parking = new Map<string, string>();
   const groupIds = new Set<number>(), unitIds = new Set<number>();
@@ -33,7 +40,11 @@ export function validateAuthoring(mission: LuaTable): ValidationIssue[] {
       issue('GROUP_NO_START_TIME', `Group '${group.name}' has no start_time; the Mission Editor's auto-briefing fails on it (set 0 for mission start)`, `group:${group.name}`, 'warning');
     for (const unit of luaArray(group.units)) {
       const hit = findUnitType(String(unit.type)), location = `unit:${unit.name}`;
-      if (hit && category !== 'static' && hit.category !== category) issue('UNIT_CATEGORY_MISMATCH', `${unit.type} is ${hit.category}, not ${category}`, location);
+      // The editor places some catalogued STATIC types in a ground group: a train is
+      // `country.vehicle.group` with units of type 'Train' (captured from an ME-saved
+      // mission). Those are not category mistakes, so they are not reported as such.
+      if (hit && category !== 'static' && hit.category !== category && !(category === 'vehicle' && EDITOR_VEHICLE_STATICS.has(String(unit.type))))
+        issue('UNIT_CATEGORY_MISMATCH', `${unit.type} is ${hit.category}, not ${category}`, location);
       if (!['plane', 'helicopter'].includes(category)) continue;
       const reference = hit?.entry as FlyingType | undefined;
       if (reference?.tasks?.length && group.task && !reference.tasks.includes(String(group.task)))
@@ -47,7 +58,14 @@ export function validateAuthoring(mission: LuaTable): ValidationIssue[] {
           issue('FUEL_NOT_NUMERIC', `Internal fuel '${payload.fuel}' is not a number`, location);
           delete args.fuel;
         }
-        try { validatePayload(unit, args); } catch (error) { issue('PAYLOAD_LIMIT', (error as Error).message, location); }
+        try { validatePayload(unit, args, { enforceCatalogueFuel: false }); } catch (error) { issue('PAYLOAD_INVALID', (error as Error).message, location); }
+        // Over the CATALOGUE's limit is not the same as over the aircraft's limit: the
+        // counts come from pydcs, and ME-saved missions exceed them (an F/A-18C with 90
+        // flares where pydcs says 60, a Chinook whose rounded fuel is 0.4 kg over
+        // fuel_max). Reported, never treated as a broken mission.
+        for (const over of payloadOverCatalogue(unit, args))
+          issue('PAYLOAD_LIMIT', `${over.key} is ${over.value}, above the bundled (pydcs) limit of ${over.limit} for ${unit.type}. ` +
+            'The installed DCS may allow more; this is catalogue staleness, not a mission fault.', location, 'warning');
         const stores = Object.entries(asTable(payload.pylons) ?? {}).map(([key, value]) => ({ pylon: Number(key), CLSID: String(asTable(value)?.CLSID ?? '') }));
         try { validatePayload(unit, { pylons: stores }); } catch (error) { issue('PAYLOAD_NOT_CATALOGUED', (error as Error).message, location, 'warning'); }
       }
@@ -70,11 +88,15 @@ export function validateAuthoring(mission: LuaTable): ValidationIssue[] {
       const first = asTable(asTable(asTable(group.route)?.points)?.[1]);
       if (unit.parking_id !== undefined && first?.airdromeId !== undefined) {
         const key = `${first.airdromeId}:${unit.parking_id}`;
-        if (parking.has(key)) issue('PARKING_CONFLICT', `${unit.name} and ${parking.get(key)} use parking ${key}`, location);
+        if (parking.has(key)) issue('PARKING_CONFLICT', `${unit.name} and ${parking.get(key)} use parking ${key}. ` +
+          'DCS loads it (ME-saved missions do this), but the second aircraft may fail to spawn.', location, 'warning');
         parking.set(key, String(unit.name));
         try {
           const airport = findAirport(String(mission.theatre), Number(first.airdromeId));
-          if (!airport.slots.some(s => s[1] === String(unit.parking_id))) issue('PARKING_SLOT_MISSING', `No parking '${unit.parking_id}' at ${airport.name}`, location);
+          if (!airport.slots.some(s => s[1] === String(unit.parking_id)))
+            issue('PARKING_SLOT_MISSING', `No parking '${unit.parking_id}' at ${airport.name} in the bundled (pydcs) slot list. ` +
+              'ED has reworked airfields since that export, so the slot may well exist in your DCS; sample the airfield with ' +
+              'dcs_airbase_build_pack to check against the running game.', location, 'warning');
         } catch (error) { issue('AIRFIELD_REFERENCE_UNKNOWN', (error as Error).message, location, 'warning'); }
       }
     }
@@ -97,7 +119,9 @@ export function validateAuthoring(mission: LuaTable): ValidationIssue[] {
       }
       const reference = key && params?.[key];
       if (key && typeof reference === 'number' && reference > 0 && !(key === 'groupId' ? groupIds : unitIds).has(reference))
-        issue('TASK_REFERENCE_MISSING', `${group.name} ${id} task references missing ${key} ${reference}`, `group:${group.name}`);
+        issue('TASK_REFERENCE_MISSING', `${group.name} ${id} task references missing ${key} ${reference} ` +
+          '(the target was probably deleted after the task was written). DCS loads the mission; the task does nothing.',
+          `group:${group.name}`, 'warning');
       for (const child of Object.values(table)) if (asTable(child)) visit(child, depth + 1);
     }
     for (const wp of luaArray(asTable(group.route)?.points)) {
@@ -110,7 +134,9 @@ export function validateAuthoring(mission: LuaTable): ValidationIssue[] {
     if (!['c_group_dead', 'c_group_life_less', 'c_part_of_group_in_zone', 'c_unit_dead', 'c_unit_in_zone', 'c_unit_out_zone', 'c_part_of_coalition_in_zone'].includes(String(rule.predicate))) continue;
     for (const [field, known] of [['group', groupIds], ['unit', unitIds], ['zone', zoneIds]] as const) {
       const ref = rule[field];
-      if (typeof ref === 'number' && !known.has(ref)) issue('GOAL_REFERENCE_MISSING', `Goal '${goal.comment}' references missing ${field} ${ref}`, 'goals');
+      if (typeof ref === 'number' && !known.has(ref))
+        issue('GOAL_REFERENCE_MISSING', `Goal '${goal.comment}' references missing ${field} ${ref}; that goal can never be met. ` +
+          'DCS still loads the mission.', 'goals', 'warning');
     }
   }
   return issues;

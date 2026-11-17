@@ -72,12 +72,13 @@ test(
       }
     }
 
-    assert.equal(replies.length, 9, `expected 9 replies, got:\n${output}`);
+    assert.equal(replies.length, 14, `expected 14 replies, got:\n${output}`);
     assert.match(replies[0], /^\{"ok":true,"data":\{"pong":true/, "ping did not answer");
     assert.match(replies[1], /^\{"ok":true,/, "mission query did not answer");
     // Mission-env commands go to the state that actually holds `timer`
     // ("server" on DCS 2.9.31), not to a hardcoded "mission".
-    assert.match(replies[1], /"state":"server"/, "mission query did not reach the scripting state");
+    assert.match(output, /DOSTRING_STATE server/, "mission query did not reach the scripting state");
+    assert.doesNotMatch(output, /DOSTRING_STATE mission/, "a snippet was sent to the trigger state");
     assert.match(output, /mission scripting environment is net\.dostring_in state 'server'/);
     assert.match(replies[2], /"ok":false.*Unknown command/, "unknown command not rejected");
     // Raw Lua execution stays gated even when it is asked for directly.
@@ -105,6 +106,21 @@ test(
     assert.match(output, /COLD_MENU_NO_LOAD true/, `cold-menu loadmission still called net.load_mission:\n${output}`);
     // ...but the bridge must still answer non-mission commands in the menus.
     assert.match(output, /GUI_PING_ANSWERED true/, `ping did not answer from the GUI tick:\n${output}`);
+
+    // The structured mission-environment commands build Lua as strings and ship
+    // it into the mission state, so the harness compiles and RUNS each snippet
+    // against stubs of the DCS API. A typo or a wrong call there is otherwise
+    // invisible until someone flies.
+    assert.match(output, /SNIPPET_FAILURES 0/, `a snippet failed to compile or ran into an error:\n${output}`);
+    for (const cmd of ["land", "airbases", "roads", "los", "clearspot"]) {
+      assert.match(output, new RegExp(`STRUCTURED ${cmd} true`), `${cmd} did not answer ok:\n${output}`);
+    }
+    // An airbase sample must carry everything an offline airbase pack needs for
+    // a theatre the bundled catalogue does not have (ids, position, parking).
+    assert.match(output, /AIRBASES_FIELDS true/, `the airbase sample is missing pack fields:\n${output}`);
+    assert.match(output, /ROADS_SNAPPED true/, `roads did not snap to the road graph:\n${output}`);
+    assert.match(output, /LOS_BLOCKED true/, `line of sight did not report the blocking point:\n${output}`);
+    assert.match(output, /CLEARSPOT_FOUND true/, `clearspot found no open ground on flat stub terrain:\n${output}`);
   }
 );
 
@@ -121,12 +137,13 @@ test("every Lua snippet the hook injects into DCS is syntactically valid", () =>
   assert.ok(snippets.length >= 8, `expected the hook's injected snippets, found ${snippets.length}`);
 
   for (const [i, body] of snippets.entries()) {
-    // Fill in the string.format placeholders with representative literals.
+    // Fill in the string.format placeholders with representative literals,
+    // including width/precision forms such as %.3f and %-10s.
     const filled = body
-      .replace(/%q/g, '"sample"')
-      .replace(/%d/g, "1")
-      .replace(/%f/g, "1.0")
-      .replace(/%s/g, "sample");
+      .replace(/%[-+ #0-9.]*q/g, '"sample"')
+      .replace(/%[-+ #0-9.]*[di]/g, "1")
+      .replace(/%[-+ #0-9.]*[fge]/g, "1.0")
+      .replace(/%[-+ #0-9.]*s/g, "sample");
     parseLua(filled, `${HOOK} snippet #${i}`);
   }
 });

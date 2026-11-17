@@ -1,6 +1,6 @@
 {
   "name": "dcs-mcp-server",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "mcpName": "io.github.sharRahul/dcs-mcp",
   "description": "Model Context Protocol server for DCS World: offline .miz mission authoring and inspection, plus a live-control bridge into a running sim",
   "type": "module",

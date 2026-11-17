@@ -6,17 +6,31 @@
 import { z } from 'zod';
 import { xySchema } from './configuration.js';
 import { asTable, type LuaTable } from './lua.js';
+import { meIcons } from '../data/me-icons.js';
 
 export const STANDARD_LAYERS = ['Red', 'Blue', 'Neutral', 'Common', 'Author'] as const;
 /** pydcs drawing.py LineStyle values. */
 export const LINE_STYLES = ['solid', 'dot', 'dash', 'cross', 'square', 'triangle', 'wirefence', 'dot2', 'solid2',
   'dotdash', 'strongpoint', 'boundry1', 'boundry2', 'boundry3', 'boundry4', 'boundry5'] as const;
-/** pydcs icon.py StandardIcon — the only icon files we have evidence for. */
+/** pydcs icon.py StandardIcon: the nine names pydcs knows, kept so existing calls still work. */
 export const STANDARD_ICONS = {
   Mechanized: 'P91000001.png', MechanizedInfantryWithFightingVehicle: 'P91000002.png', Recce: 'P91000003.png',
   MechanizedInfantry: 'P91000004.png', Logistics: 'P91000005.png', MechanizedArtillery: 'P91000006.png',
   MechanizedRocketArtillery: 'P91000007.png', AirDefense: 'P91000009.png', SearchRadar: 'P91000010.png',
 } as const;
+
+/**
+ * Every icon the Mission Editor's own picker offers, by the editor's label
+ * (data/me-icons.json, from the install's icons.lua), plus pydcs's nine names. A pydcs
+ * name wins a collision so nothing that worked before changes meaning. Unknown names are
+ * refused: the icon file must be one the editor itself lists, never a guessed file name.
+ */
+export const ICON_FILES: Record<string, string> = (() => {
+  const all: Record<string, string> = {};
+  try { Object.assign(all, meIcons().icons); } catch { /* catalogue unreadable: pydcs names still work */ }
+  return { ...all, ...STANDARD_ICONS };
+})();
+const ICON_NAMES = Object.keys(ICON_FILES).sort() as [string, ...string[]];
 /** pydcs polygon.py Arrow.get_default_arrow_points: the arrow outline relative to its origin. */
 const ARROW_POINTS = [[976.01054900139, 0], [976.01054900139, 5205.3895946741], [2602.694797337, 5205.3895946741],
   [0, 7808.0843920111], [-2602.694797337, 5205.3895946741], [-976.01054900139, 5205.3895946741],
@@ -42,7 +56,7 @@ export const drawingSchema = z.discriminatedUnion('kind', [
     resolution: z.number().int().min(4).max(90).default(20) }).strict()
     .describe('A stadium shape (e.g. a corridor) from origin to end; written as a free polygon like pydcs add_oblong.'),
   z.object({ ...common, kind: z.literal('text'), text: z.string().min(1).max(10000), fontSize: z.number().int().min(6).max(144).default(14), angle }).strict(),
-  z.object({ ...common, kind: z.literal('icon'), icon: z.enum(Object.keys(STANDARD_ICONS) as [keyof typeof STANDARD_ICONS]),
+  z.object({ ...common, kind: z.literal('icon'), icon: z.enum(ICON_NAMES).describe("Icon name: a Mission Editor picker label (e.g. 'Air Defence SAM', 'Warship') or a pydcs StandardIcon name. dcs_list_map_icons lists them."),
     scale: z.number().positive().max(10).default(1), angle: z.number().int().min(-360).max(360).default(0) }).strict(),
 ]);
 
@@ -87,7 +101,7 @@ export function addDrawing(mission: LuaTable, input: z.input<typeof drawingSchem
         borderThickness: a.thickness, fillColorString: a.fill, angle: a.angle });
       break;
     case 'icon':
-      Object.assign(object, { primitiveType: 'Icon', file: STANDARD_ICONS[a.icon], scale: a.scale, angle: a.angle });
+      Object.assign(object, { primitiveType: 'Icon', file: ICON_FILES[a.icon], scale: a.scale, angle: a.angle });
       break;
     case 'circle': polygon('circle', { radius: a.radiusMetres }); break;
     case 'oval': polygon('oval', { r1: a.radius1Metres, r2: a.radius2Metres, angle: a.angle }); break;

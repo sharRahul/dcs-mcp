@@ -221,7 +221,7 @@ function initialRoute(category: string, x: number, y: number, altitudeMetres?: n
  * through is not a rounding error — a heading of 90 becomes 90 radians, which
  * wraps to roughly 117 degrees and points the unit somewhere arbitrary.
  */
-function headingRadians(degrees: number | undefined): number {
+export function headingRadians(degrees: number | undefined): number {
   const deg = ((degrees ?? 0) % 360 + 360) % 360;
   return (deg * Math.PI) / 180;
 }
@@ -429,9 +429,14 @@ export function chooseParking(
 ): Airport["slots"] {
   const dims = findUnitType(type)?.entry as FlyingType | undefined;
   const flag = category === "helicopter" ? SLOT_HELI : SLOT_AIRPLANES;
-  const fitsSlot = (s: Airport["slots"][number]) => (s[4] & flag) !== 0 &&
+  // A slot sampled from a running DCS (an airbase pack, the only source for a theatre
+  // pydcs never exported) carries no flags and no dimensions: `world.getAirbases()` does
+  // not report them. Zeroes therefore mean UNKNOWN, and an unknown slot is accepted
+  // rather than failed against invented dimensions — the editor and the sim decide.
+  const unknownSlot = (s: Airport["slots"][number]) => s[4] === 0 && s[5] === 0 && s[6] === 0;
+  const fitsSlot = (s: Airport["slots"][number]) => unknownSlot(s) || ((s[4] & flag) !== 0 &&
     (!dims || ((dims.width === null || dims.width < s[5]) &&
-    (dims.length === null || dims.length < s[6]) && (dims.height === null || dims.height < (s[7] || 1000))));
+    (dims.length === null || dims.length < s[6]) && (dims.height === null || dims.height < (s[7] || 1000)))));
   if (requested && requested.length) {
     if (new Set(requested).size !== requested.length) throw new Error("Duplicate requested parking slots");
     if (requested.length !== count) {
@@ -1830,14 +1835,47 @@ export function missionSection(mission: LuaTable, key: string): LuaValue | undef
 }
 
 /** Validate known physical limits without executing Lua or assuming mod capabilities. */
-export function validatePayload(unit: LuaTable, args: PayloadArgs): void {
+/**
+ * Payload values above the BUNDLED limit, which is not the same as above the aircraft's.
+ * The counts are pydcs's, and the installed DCS has moved on: ME-saved missions carry an
+ * F/A-18C with 90 flares where pydcs says 60, and the editor rounds internal fuel, which
+ * can land a hair over `fuel_max` (a CH-47F at 3055 against 3054.592). So fuel gets a
+ * rounding tolerance and the rest is reported, not refused — a refusal here would make
+ * this server reject missions DCS flies.
+ */
+export function payloadOverCatalogue(unit: LuaTable, args: PayloadArgs): { key: string; value: number; limit: number }[] {
+  const data = findUnitType(String(unit.type))?.entry as FlyingType | undefined;
+  const out: { key: string; value: number; limit: number }[] = [];
+  for (const [key, limit, tolerance] of [["fuel", data?.fuelMax, 1], ["chaff", data?.chaff, 0], ["flare", data?.flare, 0]] as const) {
+    const value = args[key as "fuel" | "chaff" | "flare"];
+    if (value === undefined || limit == null || !Number.isFinite(value)) continue;
+    if (value > limit + Math.max(tolerance, limit * 0.001)) out.push({ key, value, limit });
+  }
+  return out;
+}
+
+/**
+ * @param options.enforceCatalogueFuel refuse internal fuel above the catalogued maximum
+ *   (plus a rounding tolerance). True when WRITING a payload — tank capacity is physical
+ *   and well pinned, so a value far above it is a mistake worth refusing. False when
+ *   CHECKING an existing mission, where the same value is reported as catalogue staleness
+ *   instead: nothing this server does should reject a mission DCS flies.
+ */
+export function validatePayload(unit: LuaTable, args: PayloadArgs, options: { enforceCatalogueFuel?: boolean } = {}): void {
   const ref = findUnitType(String(unit.type));
   if (ref && !["plane", "helicopter"].includes(ref.category)) throw new Error("Payload requires an aircraft");
-  const data = ref?.entry as FlyingType | undefined;
-  for (const [key, limit] of [["fuel", data?.fuelMax], ["chaff", data?.chaff], ["flare", data?.flare], ["gun", 100]] as const) {
+  // Structural faults. Countermeasure counts above the pydcs catalogue are NOT faults
+  // (the editor saves an F/A-18C with 90 flares where pydcs says 60) — payloadOverCatalogue
+  // reports those. `gun` is a percentage, so 0..100 is the format itself.
+  for (const key of ["fuel", "chaff", "flare", "gun"] as const) {
     const value = args[key];
-    if (value !== undefined && (!Number.isFinite(value) || value < 0 || (limit != null && value > limit)))
-      throw new Error(`${key} must be non-negative and within the aircraft limit (${limit ?? "unknown"})`);
+    if (value === undefined) continue;
+    if (!Number.isFinite(value) || value < 0) throw new Error(`${key} must be a non-negative number`);
+    if (key === "gun" && value > 100) throw new Error("gun is a percentage of the magazine: 0..100");
+  }
+  if (options.enforceCatalogueFuel !== false) {
+    const over = payloadOverCatalogue(unit, args).find(o => o.key === "fuel");
+    if (over) throw new Error(`fuel ${over.value} is above the aircraft's catalogued maximum of ${over.limit} kg for ${String(unit.type)}`);
   }
   const seen = new Set<number>();
   const pylons = authoringData().aircraft[String(unit.type)]?.pylons;

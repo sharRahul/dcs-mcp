@@ -130,7 +130,9 @@ test("validator flags duplicate names", async () => {
   // Inject a duplicate unit name.
   session.document.groups[0].units[1].name = "Colt 1-1";
   const report = validateMission(session.document);
-  assert.equal(report.ok, false);
-  assert.ok(report.errors.some((e) => e.code === "DUP_UNIT_NAME"));
+  // The Mission Editor saves duplicate unit names (65 of them across the 184 ME-saved
+  // missions this was calibrated against), so DCS accepts them: a warning, not an error.
+  assert.ok(report.warnings.some((e) => e.code === "DUP_UNIT_NAME"));
+  assert.ok(!report.errors.some((e) => e.code === "DUP_UNIT_NAME"));
   closeSession(session.id);
 });
