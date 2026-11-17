@@ -106,7 +106,11 @@ test('deleting a waypoint leaves opaque task data intact and validation catches 
   appendSurfaceTask(m, 'Navy', 1, { kind: 'go_to_waypoint', destination: 2 });
   removeWaypoint(m, 'Navy', 2);
   const back = rt(m), report = validateMission(buildMissionDocument(back, {}, 'test'), back);
-  assert.ok(report.errors.some(e => e.code === 'TASK_WAYPOINT_MISSING'));
+  // A warning, not an error: missions DCS ships carry dangling waypoint
+  // references (195 across the installed set) and fly, so the file is valid
+  // even though the jump will do nothing.
+  assert.ok(report.warnings.some(e => e.code === 'TASK_WAYPOINT_MISSING'));
+  assert.ok(!report.errors.some(e => e.code === 'TASK_WAYPOINT_MISSING'));
   const wp = luaArray(asTable(findGroup(back, 'Navy')!.group.route)?.points)[0];
   assert.equal(asTable(luaArray(asTable(asTable(wp.task)?.params)?.tasks)[0].params)!.nWaypointIndx, 2);
 });

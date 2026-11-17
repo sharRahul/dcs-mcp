@@ -22,7 +22,11 @@ export function validateAuthoring(mission: LuaTable): ValidationIssue[] {
       groupIds.add(group.groupId);
     }
     for (const unit of luaArray(group.units)) if (typeof unit.unitId === 'number') {
-      if (unitIds.has(unit.unitId)) issue('DUP_UNIT_ID', `Duplicate unit id ${unit.unitId}`, `unit:${unit.name}`);
+      // ED's own shipped missions contain duplicate unit ids (120 of them across
+      // the installed campaign and instant-action missions) and DCS flies them,
+      // so this cannot be an error by this validator's own definition.
+      if (unitIds.has(unit.unitId)) issue('DUP_UNIT_ID', `Duplicate unit id ${unit.unitId}. Missions DCS ships do this and still fly; ` +
+        'triggers and tasks that reference the id resolve to whichever unit DCS finds first.', `unit:${unit.name}`, 'warning');
       unitIds.add(unit.unitId);
     }
   });
@@ -114,7 +118,12 @@ export function validateAuthoring(mission: LuaTable): ValidationIssue[] {
         for (const field of ['fromWaypointIndex', id === 'GoToWaypoint' ? 'nWaypointIndx' : 'goToWaypointIndex']) {
           const destination = params?.[field];
           if (typeof destination === 'number' && !asTable(points?.[destination]))
-            issue('TASK_WAYPOINT_MISSING', `${group.name} ${id} references missing waypoint ${destination}`, `group:${group.name}`);
+            // Also present in missions DCS ships (195 occurrences), typically
+            // after waypoints were deleted from a route whose task still names
+            // them. The mission loads and flies; the jump does nothing.
+            issue('TASK_WAYPOINT_MISSING', `${group.name} ${id} references missing waypoint ${destination}. ` +
+              'Missions DCS ships do this too (the waypoint was probably deleted after the task was written); ' +
+              'the mission loads and the jump has no effect.', `group:${group.name}`, 'warning');
         }
       }
       const reference = key && params?.[key];

@@ -517,3 +517,91 @@ at an airfield that came from it; a train opening in the Mission Editor and runn
 rails; a troop lift loading and unloading; an icon drawing on the F10 map; `roads`,
 `clearspot` and `los` answers compared with what the editor shows. No existing SAM-template
 provenance or DCS-runtime claim was promoted by this work.
+
+---
+
+## 2026-11-17 (0.6.1) — mission-corpus sweep: triggers, campaigns, compounds
+
+Offline. Two reproducible sweeps over every Mission-Editor-saved mission on this machine: the
+user's `GS Missions`, `Evangelic Missions` and `Rodz88 Missions` folders, the rest of
+`Saved Games/DCS/Missions`, and every mission DCS ships under `Mods/aircraft`, `Mods/campaigns`
+and `Mods/terrains`. Folders this project writes into are excluded from both, so the corpus is
+independent of our own output.
+
+### Trigger compiler against DCS's own output
+
+`node --import tsx scripts/sweep-triggers.ts <folders>`
+
+| | |
+|---|---|
+| missions read | 3024 |
+| trigrules seen | 39025 |
+| recompiled by us | 29023 |
+| left untouched (no compiler) | 10002 |
+| compiled strings compared | 58046 |
+| **identical to what DCS wrote** | **55842 (96.2%)** |
+
+The 3.8% that differ are all one thing: the editor writes two forms for a handful of actions
+given rules whose fields are identical — `a_out_text_delay` / `a_out_sound` with and without
+their trailing delay, `a_radio_transmission` with 11 or 12 arguments, `a_explosion_marker` with
+3 or 4. We emit the corpus-majority form. No mismatch involves an argument in the wrong position
+or a value we invented.
+
+Oracle fixture: **66 predicates, 41 whole triggers, all four trigger types** (was 45 / 36 / one
+type after the last regeneration). Added and byte-matched: 10 conditions
+(`c_group_alive`, `c_unit_damaged`, `c_all_of_group_in_zone`, `c_part_of_group_out_zone`,
+`c_unit_in_zone_unit`, `c_unit_altitude_higher`, `c_unit_altitude_higher_AGL`,
+`c_unit_altitude_lower`, `c_missile_in_zone`, `c_bomb_in_zone`), 11 actions (`a_explosion_unit`,
+`a_explosion_marker`, `a_explosion_marker_unit`, `a_signal_flare_unit`, `a_out_picture_s`,
+`a_mark_to_all`, `a_add_radio_item_for_coalition`, `a_set_ATC_silent_mode`, `a_shelling_zone`,
+`a_zone_increment_resize`, `a_ai_task`) and the `or` condition separator.
+
+**Correction to a previous claim.** This file and CLAUDE.md both stated that `a_out_text_delay_g`
+takes four arguments with no `start_delay`. It takes five in the great majority of editor-saved
+missions; the four-argument form exists but is the minority. `message_to_group` therefore accepts
+`delaySeconds` now. The earlier statement came from a narrower sample.
+
+### Validator against the same corpus
+
+`node --import tsx scripts/sweep-validator.ts <folders>`
+
+| | |
+|---|---|
+| missions validated | 3023 |
+| unreadable (RAR renamed `.miz`, or an oversized embedded track) | 17 |
+| **ERRORs** | **0** |
+
+Two codes were demoted after they fired on missions DCS itself ships and flies:
+`TASK_WAYPOINT_MISSING` (195 occurrences, a task naming a waypoint that was later deleted) and
+`DUP_UNIT_ID` (120). Both are warnings whose messages say that DCS's own missions do this.
+
+Warning tally over the full corpus: AIRCRAFT_TASK_UNSUPPORTED 11553, PAYLOAD_NOT_CATALOGUED 4273,
+PAYLOAD_LIMIT 3858, UNKNOWN_UNIT_TYPE 3446, AIRFIELD_REFERENCE_UNKNOWN 1125,
+PARKING_SLOT_MISSING 890, COUNTRY_TYPE_NOT_OFFERED 704, PARKING_CONFLICT 250, DUP_UNIT_NAME 246,
+TASK_WAYPOINT_MISSING 195, TASK_REFERENCE_MISSING 132, DUP_UNIT_ID 120, TRIGGER_GROUP_MISSING 11,
+RADIO_UNKNOWN 10, RADIO_UNKNOWN_CHANNEL 10, GOAL_REFERENCE_MISSING 7, GROUP_NO_START_TIME 1. The
+large counts are the pinned pydcs catalogue being older than the installed DCS, not mission faults.
+
+### Campaign files
+
+All **64** `.cmp` files DCS ships parse as data, validate with **zero findings**, and round-trip
+through our own table builder with identical stages and intervals. `stepCampaign` reproduces ED's
+`chooseNextMission` on them. The format and the rules are ED's own installed Lua read as text, so
+they are first-party; nothing written by this project has been RUN by DCS as a campaign.
+
+### Compound footprints
+
+Clustering 5101 statics across the three user folders at 60 m single linkage found 233 clusters,
+130 of them distinct, from 4 to 69 objects (a HESCO-walled Scud site, sandbagged outposts,
+revetment lines, vehicle parks). One was imported and placed in a fresh mission: offsets
+round-tripped to 0.000000 m and all 17 objects kept their individual headings. Provenance stays
+`imported` — measured from a user-supplied file, never flown, never opened in the Mission Editor,
+and never shipped with this server.
+
+### Still unverified in DCS
+
+A written `.cmp` played through two stages and branching on score; an imported compound opened in
+the Mission Editor; a reactive spawn firing in flight on zone entry and on group-dead; `big_smoke`
+at each preset; an `a_ai_task` push moving an AI group; `a_mark_to_all` on the F10 map;
+`a_out_picture_s` displaying; `dynSpawnTemplate = true` producing a usable dynamic slot (not
+claimed anywhere).

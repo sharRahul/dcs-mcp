@@ -10,6 +10,7 @@ import { luaArray, type LuaTable } from "./lua.js";
 import { findModUnit } from "../dcs/mods.js";
 import { addAircraftGroup, addGroundGroup, chooseParking, countryId, ensureCountry, maxIds, occupiedParking, type Side } from "./authoring.js";
 import { addStatic } from "./editing.js";
+import type { SceneTemplate } from "./scene-import.js";
 import {
   countryOffers,
   findAirport,
@@ -392,6 +393,72 @@ export function addTargetArea(mission: LuaTable, args: AddTargetAreaArgs): AddTa
     objects.push(name);
   });
   return { objects, radiusMetres: Math.ceil(radius + t.spacingMetres) };
+}
+
+// ---------------------------------------------------------------------------
+// Imported compound footprints
+// ---------------------------------------------------------------------------
+
+export interface AddSceneArgs {
+  side: Side;
+  country: string;
+  countryId?: number;
+  name: string;
+  x: number;
+  y: number;
+  /** Degrees. Every object's offset AND its own heading rotate with this. */
+  heading?: number;
+  /** Also add a trigger zone named `name` covering the footprint. */
+  zone?: boolean;
+  /** Place every object as a wreck, whatever the source had. */
+  dead?: boolean;
+}
+
+/**
+ * Place an imported compound footprint (see `scene-import.ts`).
+ *
+ * Unlike `addTargetArea`, nothing here is arranged: each object goes exactly
+ * where the source mission had it relative to the compound's own frame, keeping
+ * its individual heading offset. That is the whole point of importing one - a
+ * walled outpost whose HESCO sections follow the perimeter does not survive
+ * being re-laid on a grid.
+ */
+export function addSceneTemplate(
+  mission: LuaTable,
+  template: SceneTemplate,
+  args: AddSceneArgs
+): { objects: string[]; radiusMetres: number; template: string; provenance: string; notes: string[] } {
+  const heading = args.heading ?? 0;
+  const objects: string[] = [];
+  template.objects.forEach((object, i) => {
+    const p = offset(args.x, args.y, heading, object.forward, object.right);
+    const name = `${args.name}-${i + 1}`;
+    addStatic(mission, {
+      side: args.side,
+      country: args.country,
+      countryId: args.countryId,
+      name,
+      type: object.type,
+      ...p,
+      // The source's own turn, carried round with the frame.
+      heading: (heading + object.headingOffset) % 360,
+      dead: args.dead ?? object.dead,
+    });
+    objects.push(name);
+  });
+  return {
+    objects,
+    radiusMetres: template.radiusMetres,
+    template: template.id,
+    provenance: template.provenance,
+    notes: [
+      `Layout measured from ${template.source.file} (sha256 ${template.source.sha256.slice(0, 12)}), ` +
+        `group${template.source.groups.length === 1 ? "" : "s"} ${template.source.groups.join(", ")}.`,
+      "Each object keeps its own heading offset from the source, so the compound reads the same at any facing.",
+      "Provenance 'imported': not flown, and not opened in the Mission Editor by this project.",
+      "Terrain is not checked here: run dcs_check_terrain (live) before trusting the ground under it.",
+    ],
+  };
 }
 
 // ---------------------------------------------------------------------------

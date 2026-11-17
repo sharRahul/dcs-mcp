@@ -31,6 +31,7 @@ import { registerBridgeTools } from "./tools/bridge.js";
 import { registerMizExtendedTools } from "./tools/miz-extended.js";
 import { registerMizInspectEditTools } from "./tools/miz-inspect-edit.js";
 import { registerDataQualityTools } from "./tools/data-quality.js";
+import { registerCampaignSceneTools } from "./tools/campaign-scene.js";
 import { registerDiagnosticTools } from "./tools/diagnostics.js";
 import { registerPrompts, registerResources } from "./tools/resources.js";
 import { enableSessionPersistence } from "./miz/sessions.js";
@@ -56,6 +57,7 @@ function createServer() {
   registerMizExtendedTools(server);
   registerMizInspectEditTools(server);
   registerDataQualityTools(server);
+  registerCampaignSceneTools(server);
   registerReferenceTools(server);
   registerBridgeTools(server);
   registerRuntimeTools(server);

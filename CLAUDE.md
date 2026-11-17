@@ -18,7 +18,9 @@ Driven by any MCP client (Claude, Codex, OpenCode). TypeScript, stdio transport,
   `position.ts` (x/y-or-lat/lon input). `src/guide.ts` is what CLIENTS see (server instructions +
   `dcs://guide/conventions`) — they never see this file, so put client-facing rules there too.
 - `src/dcs/install.ts` — hook installer (`dcs_install_hook`, `dcs-mcp-server install-hook`).
-- Version comes from package.json only (`src/paths.ts`); bump it there and in `server.json`.
+- Version comes from package.json only (`src/paths.ts`); bump it there, in `server.json` and in
+  `package-lock.json`. **PATCH bumps only** (0.6.x) until ATC lands in the MCP — the minor digit is
+  reserved for that release, however large a change is otherwise.
 - `src/bridge/client.ts` — TCP JSON client for the live hook.
 - `scripts/Hooks/dcs-mcp-hook.lua` — live control hook. `scripts/Export.lua` — telemetry only.
 
@@ -131,12 +133,17 @@ space. `trig.flag[i] = true` for every compiled index.
 ### Ground truth, not guesswork
 Predicate signatures are DCS-internal and version-sensitive, so they are **captured, never
 invented**. `tests/fixtures/trig-oracle.json` pairs each `trigrules` spec with the exact
-Lua the Mission Editor compiled for it (29 predicates, 19 whole triggers covering all four
+Lua the Mission Editor compiled for it (66 predicates, 41 whole triggers covering all four
 types). Regenerate it after a DCS version bump:
 
 ```
-npx tsx tests/build-trig-oracle.ts "<Saved Games/DCS/Missions>" tests/fixtures/trig-oracle.json
+npx tsx tests/build-trig-oracle.ts "<Saved Games/DCS/Missions>" "<DCS>/Mods/aircraft" \
+  "<DCS>/Mods/campaigns" tests/fixtures/trig-oracle.json
 ```
+
+Several folders are allowed (the out path is last). Include ED's own campaign missions: a user's
+folder is almost entirely `triggerOnce`, and the other three types' wiring would stop being
+checked. Folders this project writes into are skipped automatically.
 
 **Adding a predicate:** add it to the oracle's supported set, regenerate, confirm a record
 appears, then write the builder in `conditionRule`/`actionRule` and the compiler in
@@ -251,8 +258,10 @@ Conditions and actions are listed in `authoring.ts`. Note two traps, both ground
 - `c_start_wait_for_user` is named like a condition but DCS stores it in a trigrule's
   `actions` array. The oracle records a `role` per predicate for this reason — never infer
   it from the `c_`/`a_` prefix.
-- `a_out_text_delay_g` (per-group message) takes 4 args with NO `start_delay`, unlike every
-  other text action. `a_radio_transmission` stores MHz in the rule and emits Hz.
+- `a_out_text_delay_g` (per-group message) DOES take a `start_delay`, like the other text
+  actions — the old claim here that it takes 4 args came from too narrow a sample; see the
+  0.6.1 section on optional arguments. `a_radio_transmission` stores MHz in the rule and emits Hz,
+  and its argument count varies (8/10/11) with the fields the rule carries.
 
 ## Unit geometry
 
@@ -617,7 +626,7 @@ answer over the bridge.
   are refused in paths AND in written object keys while lookups read own properties only
   (a client-supplied path reaching `Object.prototype` would pollute the whole process).
 
-### The validator is calibrated against 184 ME-saved missions — keep it that way
+### The validator is calibrated against the ME-saved corpus — keep it that way
 
 Run `DCS_NATIVE_MIZ_DIR=<a missions folder> npm test` (or the sweep in the 0.6.0 session)
 before changing any severity. The corpus reported 400+ ERRORs that were all OURS:
@@ -631,7 +640,8 @@ before changing any severity. The corpus reported 400+ ERRORs that were all OURS
   `PARKING_CONFLICT`, `TASK_REFERENCE_MISSING`, `TRIGGER_*_MISSING`, `GOAL_REFERENCE_MISSING`
   all occur in files DCS opens and flies: WARNINGS, with messages that say so.
 - `Train` in a vehicle group is not a category mistake (`EDITOR_VEHICLE_STATICS`).
-- An ERROR now means DCS or the editor cannot handle the file. 184/184 report none.
+- An ERROR now means DCS or the editor cannot handle the file. The corpus reports none;
+  it has since grown to 3023 missions (see the 0.6.1 section) and still reports none.
 - Nine community "missions" in that corpus are RAR files renamed `.miz`; `archive.ts` names
   the real format instead of reporting a bad ZIP signature.
 
@@ -639,3 +649,151 @@ To verify in DCS next: a parking start at an airfield that came from an airbase 
 or Marianas WWII) spawning on the ramp; a train opening in the ME and running on its rails;
 a troop lift actually loading and unloading; an editor icon drawing shown on the F10 map;
 `clearspot`/`roads`/`los` answers compared against what the ME shows.
+
+---
+
+## Mining the mission corpus: triggers, campaigns, compounds, reactive spawns (0.6.1)
+
+Everything in this section came out of a sweep of every Mission-Editor-saved mission on this
+machine — the user's three mission folders, the rest of `Saved Games/DCS/Missions`, and every
+mission DCS ships under `Mods/aircraft`, `Mods/campaigns` and `Mods/terrains`. Two scripts
+reproduce it and both must stay clean:
+
+```
+node --import tsx scripts/sweep-triggers.ts  "<missions folder>" ["<more>" ...]
+node --import tsx scripts/sweep-validator.ts "<missions folder>" ["<more>" ...]
+```
+
+`sweep-triggers` recompiles every trigger and diffs against the Lua DCS wrote. Last run:
+**3024 missions, 39025 trigrules, 29023 recompiled, 55842 of 58046 compiled strings identical
+(96.2%)**. `sweep-validator`: **3023 missions, zero ERRORs**.
+
+### The trigger surface roughly doubled, all of it oracle-backed
+
+`tests/fixtures/trig-oracle.json` now holds **66 predicates and 41 whole triggers covering all
+four types** (was 45 and 36). New conditions: `c_group_alive`, `c_unit_damaged`,
+`c_all_of_group_in_zone`, `c_part_of_group_out_zone`, `c_unit_in_zone_unit`,
+`c_unit_altitude_higher`, `c_unit_altitude_higher_AGL`, `c_unit_altitude_lower`,
+`c_missile_in_zone`, `c_bomb_in_zone`. New actions: `a_explosion_unit`, `a_explosion_marker`,
+`a_explosion_marker_unit`, `a_signal_flare_unit`, `a_out_picture_s`, `a_mark_to_all`,
+`a_add_radio_item_for_coalition`, `a_set_ATC_silent_mode`, `a_shelling_zone`,
+`a_zone_increment_resize`, `a_ai_task`.
+
+- **`or` is a separator, not a predicate.** A bare `{ predicate = "or" }` entry in a trigrule's
+  `rules` array makes the compiled chunk join with ` or ` instead of ` and `, so the editor's OR
+  condition group comes out as `A and B or C and D`. `joinConditions` does this; an `or` with
+  nothing on both sides is refused rather than compiled to broken Lua. It has no standalone Lua,
+  so the oracle builder deliberately records no per-predicate case for it.
+- **`c_unit_in_zone_unit`'s middle argument is a real zoneId**, checked against `triggers.zones`
+  in every mission that uses it — it is the editor's moving zone (the zone gives the size,
+  `zoneunit` carries it), not a radius.
+- **The weapon selector of `c_missile_in_zone` / `c_bomb_in_zone` is four numbers the editor
+  joins with dots** (`"4.4.11.125"`). What they mean is documented nowhere this project can read,
+  so they are passed through and never generated. An older single-integer form exists; it has no
+  oracle record, so it is refused and the existing compiled entry is preserved.
+- **`a_ai_task`'s spec is `ai_task = {groupId, taskNumber}`** — the editor's AI TASK PUSH, which
+  fires a group's n-th stored task. 215 uses in the corpus, the second most common action.
+
+### Optional arguments: what the field decides and what it does not
+
+The oracle's tie-break was wrong twice before the sweep settled it. Three different things are
+going on and they must not be conflated:
+
+1. **Field-driven.** `a_radio_transmission` stops after `start_delay` (8 args) unless the rule
+   carries `mic_effects`/`squelch_effects` (10) and then `text` (11). `a_explosion_marker` and
+   `a_explosion_marker_unit` add their `name` argument only when the rule has one.
+2. **Always written.** The trailing `start_delay` of `a_out_text_delay(_s/_g/_u/_c)`,
+   `a_out_sound(_s/_g)` and `a_end_mission` is emitted whether or not the rule carries the field:
+   `a_out_text_delay` is 4-arg 3208+2635+... times against 3-arg 516+508, `a_out_sound` 2-arg
+   against 1-arg by the same margin. **This corrects the old claim that `a_out_text_delay_g`
+   takes no delay** — it does, and `message_to_group` now accepts `delaySeconds`.
+3. **Not derivable at all.** `a_radio_transmission` appears with 11 AND 12 arguments, and
+   `a_explosion_marker` with 3 AND 4, for specs whose fields are identical. That is a DCS version
+   difference. The oracle records the corpus-majority shape plus every other shape seen for the
+   same field set as `alternatives`, and `tests/trig.test.ts` accepts any of them by SHAPE for
+   those predicates (exact string match everywhere else). Never "fix" a compiler to chase the
+   longer form: it cannot be produced from the rule.
+
+Smaller ground truths from the same sweep: a marker's `color` defaults to `"0"` when the field is
+absent; a flare's `bearing` keeps its stored type (`"0"` as a string, `90` as a number) and so
+does `c_start_wait_for_user`'s `flag_back` — forcing either to a number silently replaced a real
+`"0"` with 999.
+
+`tests/build-trig-oracle.ts` now takes SEVERAL folders (out path last) and skips folders this
+project writes into (`EXCLUDED`): an oracle built from our own output would only prove the
+compiler agrees with itself. It also takes trigger types in rotation, because a user's folder is
+almost all `triggerOnce` and would otherwise crowd out the `triggerStart` / `triggerFront` /
+`triggerContinious` cases whose wiring differs.
+
+### Campaign files (`src/dcs/campaign.ts`) — first-party format, offline only
+
+A `.cmp` is a plain Lua chunk assigning `campaign = {...}`; DCS loads it with `loadfile` +
+`setfenv`. Parsed as data, never executed. The format AND the progression rules come from ED's own
+installed code read as text: `MissionEditor/modules/me_campaign.lua` (`loadCampaign`, locale
+fallback `name_<LOCALE>` then `name_EN` then `name`, `checkCampaignIntegrity`, `createNewGame`,
+`chooseNextMission`) and `me_campaign_editor.lua` (`saveCampaign` via `serialize_simple2`,
+`getNecessaryUnits`, `getTypePlayerUnit`, and the editor's defaults `interval = {0, 100}` and
+`skipScore = 100`).
+
+- Progression: `result > 50` or skipped goes to stage + 1 (past the last stage wins); `== 50`
+  repeats the stage; `< 50` goes to stage - 1 (below 1 loses). In the new stage every mission whose
+  `interval[1] <= result <= interval[2]` is a candidate and **DCS picks one at random**, so
+  `stepCampaign` returns all of them instead of choosing.
+- `createNewGame` opens with a random mission among those whose `interval[2] == 100`, else logs and
+  takes mission 1. A stage with a score gap stops the campaign (`error: no mission chosen`), which
+  is why `validateCampaign` walks 0..100 per stage and reports the gap as an ERROR.
+- `necessaryUnits[type] = type` for the type of the first unit with `skill == "Player"`, planes
+  before helicopters — ED's own derivation.
+- Mission files are NOT copied. DCS resolves `directory .. file`, recomputing `fullpath` on load,
+  so the `.cmp` must sit beside its missions; `checkCampaignFiles` reports the missing ones.
+- All 64 campaigns DCS ships parse with zero findings and round-trip through our own builder.
+  Nothing written here has been RUN by DCS as a campaign.
+
+### Compound footprints (`src/miz/scene-import.ts`)
+
+The built-in `TARGET_TEMPLATES` grids are our convention: the right objects in the wrong shape. A
+real compound in an editor-saved mission has a perimeter (HESCO sections, sandbags, revetments)
+and objects at individual headings. So they are measured instead: statics are clustered by single
+linkage at `linkMetres` (60 m default), the frame is the cluster's MODAL heading, and every object
+keeps its exact forward/right offset AND its own heading offset. `addSceneTemplate` rotates all of
+it together.
+
+Provenance is `imported`, the same weak tier as `site-import.ts`. **Nothing here ships as a
+built-in**: a footprint belongs to whoever built the mission it came from, so imported templates
+stay in the user's own template folder (`scene-*.json` beside the site templates).
+`distinctHeadings` in a scan result tells you whether the source turned its objects individually —
+1 means it was laid on a grid and is no better than our own.
+
+### Reactive missions (`src/miz/reactive.ts`)
+
+What community "dynamic" missions actually are, read off the corpus: `a_activate_group` is the most
+used action anywhere in it (441 uses), fired at late-activated groups (477 of them) by zone and
+`c_group_dead` conditions, with `a_ai_task` pushing stored tasks and `c_random_less` providing the
+variety. `addReactiveSpawn` writes exactly that. A delay costs a flag: DCS has no delay on
+`a_activate_group`, so the condition sets a flag and a second trigger fires on `c_time_since_flag`.
+
+`dynSpawnTemplate` is a real group field (ED's Dynamic Slots) and the editor writes it on every
+flying group, but **every mission in the corpus carries it `false`**. `setDynamicSpawnTemplate`
+writes the boolean and claims nothing else; the reactive path is the tested one.
+
+### Effect statics
+
+`big_smoke` is the only effect object DCS offers — ED's own `Scripts/Database/db_countries.lua`
+has `default_Effects = make_unit_list{ "big_smoke" }` with `smoky_marker`, `smoking_line` and
+`dust_smoke` commented out. It is absent from the pinned pydcs catalogue, so `EFFECT_STATICS` in
+`editing.ts` names it explicitly; `effectPreset` 1-8 is what editor-saved missions carry, and the
+editor's own preset table (`udb.tblPresets`, which holds the labels and the default) is in no file
+this project can read, so a preset is required rather than defaulted and the labels are not named.
+`effectCourse` comes from `me_static.lua`. Statics also gained `livery_id` (aircraft and ships
+only) and the group-level `hiddenOnPlanner` / `hiddenOnMFD`.
+
+### Validator: two more severities were ours, not DCS's
+
+`TASK_WAYPOINT_MISSING` (195 occurrences) and `DUP_UNIT_ID` (120) fire on missions **DCS itself
+ships**, which fly. Both are now warnings whose messages say so. The rule stands: run
+`scripts/sweep-validator.ts` before changing any severity, and keep the ERROR list empty.
+
+To verify in DCS next: a written `.cmp` actually played through two stages and branching on score;
+an imported compound opened in the ME and sitting where it was placed; a reactive spawn firing in
+flight (zone entry and group-dead); `big_smoke` with each preset; an `a_ai_task` push moving an AI
+group; `a_mark_to_all` showing on the F10 map; `a_out_picture_s` displaying.

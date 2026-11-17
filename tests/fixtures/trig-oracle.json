@@ -5,10 +5,10 @@
       "predicate": "a_activate_group",
       "role": "action",
       "spec": {
-        "group": 2,
+        "group": 93,
         "predicate": "a_activate_group"
       },
-      "lua": "a_activate_group(2)"
+      "lua": "a_activate_group(93)"
     },
     {
       "predicate": "a_add_radio_item",
@@ -18,29 +18,62 @@
         "radiotext": "DictKey_ActionRadioText_902",
         "flag": 7,
         "KeyDict_radiotext": "DictKey_ActionRadioText_902",
-        "predicate": "a_add_radio_item"
+        "predicate": "a_add_radio_item",
+        "ai_task": {
+          "1": "",
+          "2": ""
+        }
       },
       "lua": "a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_902\"), 7, 0)"
+    },
+    {
+      "predicate": "a_add_radio_item_for_coalition",
+      "role": "action",
+      "spec": {
+        "coalitionlist": "blue",
+        "predicate": "a_add_radio_item_for_coalition",
+        "value": 1,
+        "KeyDict_radiotext": "DictKey_ActionRadioText_2336",
+        "radiotext": "DictKey_ActionRadioText_2336",
+        "flag": "5"
+      },
+      "lua": "a_add_radio_item_for_coalition(\"blue\", getValueDictByKey(\"DictKey_ActionRadioText_2336\"), \"5\", 1)"
     },
     {
       "predicate": "a_add_radio_item_for_group",
       "role": "action",
       "spec": {
-        "flag": 8,
+        "group": 3009,
+        "radiotext": "DictKey_ActionRadioText_2353",
+        "flag": "5",
+        "KeyDict_radiotext": "DictKey_ActionRadioText_2353",
         "predicate": "a_add_radio_item_for_group",
-        "value": 1,
-        "group": 165,
-        "KeyDict_radiotext": "DictKey_ActionRadioText_1076",
-        "radiotext": "DictKey_ActionRadioText_1076"
+        "value": 2
       },
-      "lua": "a_add_radio_item_for_group(165, getValueDictByKey(\"DictKey_ActionRadioText_1076\"), 8, 1)"
+      "lua": "a_add_radio_item_for_group(3009, getValueDictByKey(\"DictKey_ActionRadioText_2353\"), \"5\", 2)"
+    },
+    {
+      "predicate": "a_ai_task",
+      "role": "action",
+      "spec": {
+        "predicate": "a_ai_task",
+        "ai_task": {
+          "1": 93,
+          "2": 1
+        }
+      },
+      "lua": "a_ai_task(93, 1)"
     },
     {
       "predicate": "a_clear_flag",
       "role": "action",
       "spec": {
         "flag": 8,
-        "predicate": "a_clear_flag"
+        "predicate": "a_clear_flag",
+        "ai_task": {
+          "1": "",
+          "2": ""
+        }
       },
       "lua": "a_clear_flag(8)"
     },
@@ -48,10 +81,10 @@
       "predicate": "a_deactivate_group",
       "role": "action",
       "spec": {
-        "group": 219,
+        "group": 326,
         "predicate": "a_deactivate_group"
       },
-      "lua": "a_deactivate_group(219)"
+      "lua": "a_deactivate_group(326)"
     },
     {
       "predicate": "a_do_script",
@@ -60,7 +93,29 @@
         "text": "GRPC.load()",
         "predicate": "a_do_script"
       },
-      "lua": "a_do_script(\"GRPC.load()\")"
+      "lua": "a_do_script(\"GRPC.load()\")",
+      "alternatives": [
+        "a_do_script(\"if Unit.getByName('MIG-21') then \\\nlocal weight = {1000, 1500, 2000}\\\nlocal choice = math.random(#weight)\\\ntrigger.action.setUnitInternalCargo('MIG-21', weight[choice])\\\nend\\\n\\\nif Unit.getByName('MIG-19') then \\\nlocal weight = {1000, 1500, 2000}\\\nlocal choice = math.random(#weight)\\\ntrigger.action.setUnitInternalCargo('MIG-19', weight[choice])\\\nend\\\n\\\nif Unit.getByName('MIG-23') then \\\nlocal weight = {1000, 1500, 2000}\\\nlocal choice = math.random(#weight)\\\ntrigger.action.setUnitInternalCargo('MIG-23', weight[choice])\\\nend\")",
+        "a_do_script(\"local cappers = {\\\"MIG-21\\\", \\\"MIG-23\\\", \\\"MIG-19\\\", \\\"MIG-29\\\", \\\"MIG-15\\\", \\\"SU-27\\\"}\\\nlocal capSelect = cappers[math.random(1,#cappers)]\\\nlocal choice = Group.getByName(capSelect)\\\nchoice:activate()\")",
+        "a_do_script(\"Kill = {}\\\nfunction Kill:onEvent(event)\\\n    if event.id == world.event.S_EVENT_KILL and event.initiator:getPlayerName() and event.target:getName() then\\\n                trigger.action.outText(event.target:getName()..\\\" killed by \\\"..event.initiator:getPlayerName(),5,false)\\\n                trigger.action.outText(event.initiator:getPlayerName()..\\\": Good kill, good kill! \\\",5,false)        \\\n                trigger.action.outSound(\\\"l10n/DEFAULT/Good Kill.ogg\\\")  \\\n                trigger.action.setUserFlag('Splash', 1)\\\n                end\\\n                end\\\nworld.addEventHandler(Kill)\\\n\\\n\\\nEject = {}\\\nfunction Eject:onEvent(event)\\\n    if event.id == world.event.S_EVENT_EJECTION and event.initiator:getName() then\\\n                trigger.action.outText(event.initiator:getName()..\\\" has ejected!! \\\",5,false)        \\\n                trigger.action.outSound(\\\"l10n/DEFAULT/ELT.ogg\\\", 2)    \\\n                end\\\n                end\\\nworld.addEventHandler(Eject)\")",
+        "a_do_script(\"\\\n-- CONFIG\\\nlocal POOL = { \\\"MIG-21\\\", \\\"MIG-23\\\", \\\"MIG-31\\\", \\\"MIG-29\\\", \\\"MIRAGE-F1\\\", \\\"SU-27\\\" }\\\nlocal RESPAWN_DELAY  = 20   -- seconds after a group is destroyed\\\nlocal CHECK_INTERVAL = 5    -- how often to check if current group is dead\\\nlocal ALLOW_REUSE    = true -- true = keep reusing names forever; false = use each once then stop\\\n\\\n-- STATE\\\nlocal currentName = nil\\\nlocal available   = {}\\\n\\\n-- helpers\\\nlocal function refill()\\\n  available = {}\\\n  for i=1,#POOL do available[#available+1] = POOL[i] end\\\nend\\\n\\\nlocal function pickName()\\\n  if #available == 0 then\\\n    if not ALLOW_REUSE then\\\n      trigger.action.outText(\\\"No more REDFOR groups available.\\\", 10)\\\n      return nil\\\n    end\\\n    refill()\\\n  end\\\n  local idx = math.random(1, #available)\\\n  local name = available[idx]\\\n  table.remove(available, idx)\\\n  return name\\\nend\\\n\\\nlocal function aliveCount(grp)\\\n  if not grp or not grp:isExist() then return 0 end\\\n  local units, alive = grp:getUnits(), 0\\\n  for i=1,#units do\\\n    local u = units[i]\\\n    if u and u:isExist() and u:getLife() > 0 then alive = alive + 1 end\\\n  end\\\n  return alive\\\nend\\\n\\\nlocal function monitorCurrent()\\\n  if not currentName then return end\\\n  local grp = Group.getByName(currentName)\\\n  if aliveCount(grp) <= 0 then\\\n    trigger.action.outText(currentName..\\\" destroyed. New CAP in \\\"..RESPAWN_DELAY..\\\"s.\\\", 10)\\\n    currentName = nil\\\n    timer.scheduleFunction(function()\\\n      local name = pickName(); if not name then return end\\\n      local g = Group.getByName(name)\\\n      if g then\\\n        trigger.action.activateGroup(g)\\\n        currentName = name\\\n        trigger.action.outText(\\\"Activated REDFOR: \\\"..currentName, 10)\\\n        timer.scheduleFunction(monitorCurrent, nil, timer.getTime() + CHECK_INTERVAL)\\\n      end\\\n    end, nil, timer.getTime() + RESPAWN_DELAY)\\\n  else\\\n    timer.scheduleFunction(monitorCurrent, nil, timer.getTime() + CHECK_INTERVAL)\\\n  end\\\nend\\\n\\\nlocal function startRandomCAP()\\\n  refill()\\\n  local name = pickName(); if not name then return end\\\n  local grp = Group.getByName(name)\\\n  if grp then\\\n    trigger.action.activateGroup(grp)  -- groups must be Late Activated in ME\\\n    currentName = name\\\n    trigger.action.outText(\\\"Activated REDFOR: \\\"..currentName, 10)\\\n    timer.scheduleFunction(monitorCurrent, nil, timer.getTime() + CHECK_INTERVAL)\\\n  else\\\n    trigger.action.outText(\\\"Group not found: \\\"..tostring(name), 10)\\\n  end\\\nend\\\n\\\n-- kick off shortly after mission start\\\ntimer.scheduleFunction(startRandomCAP, nil, timer.getTime() + 0.1)\\\n\")",
+        "a_do_script(\"-- CONFIG\\\nlocal POOL = { \\\"MIG-21\\\", \\\"MIG-23\\\", \\\"MIG-19\\\", \\\"MIG-29\\\" }\\\nlocal RESPAWN_DELAY = 20       -- seconds after group destroyed before next spawn\\\nlocal CHECK_INTERVAL = 5       -- seconds between “is it dead yet?” checks\\\nlocal ALLOW_REUSE = true       -- true = reuse names forever; false = use each once\\\n\\\n-- STATE\\\nlocal currentName = nil        -- name of currently active group\\\nlocal available = {}           -- working list (filled from POOL)\\\n\\\n-- utils\\\nlocal function copyPool()\\\n  available = {}\\\n  for i=1,#POOL do available[#available+1] = POOL[i] end\\\nend\\\n\\\nlocal function pickRandomName()\\\n  if #available == 0 then\\\n    if ALLOW_REUSE then\\\n      copyPool()\\\n    else\\\n      trigger.action.outText(\\\"No more REDFOR groups available.\\\", 10)\\\n      return nil\\\n    end\\\n  end\\\n  local idx = math.random(1, #available)\\\n  local name = available[idx]\\\n  table.remove(available, idx)\\\n  return name\\\nend\\\n\\\nlocal function groupAliveCount(grp)\\\n  if not grp or not grp:isExist() then return 0 end\\\n  local units = grp:getUnits()\\\n  local alive = 0\\\n  for i=1,#units do\\\n    local u = units[i]\\\n    if u and u:isExist() and u:getLife() > 0 then\\\n      alive = alive + 1\\\n    end\\\n  end\\\n  return alive\\\nend\\\n\\\nlocal function monitorCurrent()\\\n  if not currentName then return end\\\n  local grp = Group.getByName(currentName)\\\n  local alive = groupAliveCount(grp)\\\n  if alive <= 0 then\\\n    trigger.action.outText(currentName..\\\" destroyed. New CAP in \\\"..RESPAWN_DELAY..\\\"s.\\\", 10)\\\n    currentName = nil\\\n    timer.scheduleFunction(function()\\\n      -- spawn another after delay\\\n      local nxt = pickRandomName()\\\n      if not nxt then return end\\\n      local g = Group.getByName(nxt)\\\n      if g then\\\n        trigger.action.activateGroup(g)\\\n        currentName = nxt\\\n        trigger.action.outText(\\\"Activated REDFOR: \\\"..currentName, 10)\\\n        -- start monitoring again\\\n        timer.scheduleFunction(monitorCurrent, nil, timer.getTime() + CHECK_INTERVAL)\\\n      end\\\n    end, nil, timer.getTime() + RESPAWN_DELAY)\\\n  else\\\n    -- still alive; check again later\\\n    timer.scheduleFunction(monitorCurrent, nil, timer.getTime() + CHECK_INTERVAL)\\\n  end\\\nend\\\n\\\nlocal function startRandomCAP()\\\n  copyPool()\\\n  local name = pickRandomName()\\\n  if not name then return end\\\n  local grp = Group.getByName(name)\\\n  if grp then\\\n    trigger.action.activateGroup(grp)\\\n    currentName = name\\\n    trigger.action.outText(\\\"Activated REDFOR: \\\"..currentName, 10)\\\n    timer.scheduleFunction(monitorCurrent, nil, timer.getTime() + CHECK_INTERVAL)\\\n  else\\\n    trigger.action.outText(\\\"Group not found: \\\"..tostring(name), 10)\\\n  end\\\nend\\\n\\\n\\\ntimer.scheduleFunction(startRandomCAP, nil, timer.getTime() + 0.1)\\\n\")",
+        "a_do_script(\"myHandler = {} \\\nfunction myHandler:onEvent(event)\\\n    local unit = event.initiator\\\n    if event.id == world.event.S_EVENT_LAND and event.initiator == world.getPlayer() then trigger.action.setUserFlag(101, 1) \\\n    end\\\nend\\\n\\\nworld.addEventHandler(myHandler)\")",
+        "a_do_script(\"if Group.getByName(\\\"Aerial-1\\\") then\\\nlocal id = Group.getByName(\\\"Aerial-1\\\"):getUnit(1)\\\n\\\nlocal _string = AGL(\\\"Aerial-1\\\")     \\\n\\\nlocal _string = 'Altitude: ' .. _altitude         \\\n\\\ntrigger.action.outText(_string,3,true)\\\nend\\\n\\\nif Group.getByName(\\\"Aerial-2\\\")then\\\nlocal id = Group.getByName(\\\"Aerial-2\\\"):getUnit(1)\\\nlocal _string = AGL(\\\"Aerial-2\\\")      \\\n\\\ntrigger.action.outText(_string,3,true)\\\nend\\\n\\\nif Group.getByName(\\\"Aerial-3\\\") then\\\nlocal id = Group.getByName(\\\"Aerial-3\\\"):getUnit(1)\\\n\\\nlocal _string = AGL(\\\"Aerial-3\\\")     \\\ntrigger.action.outText(_string,3,true)\\\nend\\\n\\\nif Group.getByName(\\\"Aerial-4\\\") then\\\nlocal id = Group.getByName(\\\"Aerial-4\\\"):getUnit(1)\\\n\\\n\\\nlocal _string = AGL(\\\"Aerial-4\\\")     \\\n\\\ntrigger.action.outText(_string,3,true)\\\nend\\\n\\\nfunction AGL(group_name)\\\n\\\n--[[\\\nReturn\\\n    Aircraft AGL altitude in Meters or Feet\\\nArguments\\\n    pilot_name = Name of Pilot/Unit in ME\\\n    unit_of_measure = Meters or Feet\\\n]]--\\\n\\\nlocal Huey = Group.getByName(group_name):getUnit(1)\\\nlocal Huey_Altitude_MSL = Huey:getPoint().y -- Altitude MSL, in meters\\\n\\\n-- Huey's altitude from ground\\\nlocal Huey_Vec3 = Huey:getPoint()\\\nlocal Huey_Land_Height = land.getHeight({x = Huey_Vec3.x , y = Huey_Vec3.z})\\\n\\\n-- Altitude from ground in meters\\\nlocal Huey_Altitude_Ground = Huey_Altitude_MSL - Huey_Land_Height  \\\n\\\n\\\n\\\n--Convert AGL from Meters to Feet\\\nlocal Huey_AGL_Feet = Huey_Altitude_Ground * 3.28084--Round to 0 decimal places\\\n\\\n\\\nif unit_of_measure == feet then \\\n    return Huey_AGL_Feet\\\nend\\\nend\")",
+        "a_do_script(\"myvalue = trigger.misc.getUserFlag(\\\"timer\\\");\\\ntrigger.action.outText(\\\"Elapsed time: \\\" .. myvalue .. \\\" seconds\\\", 1, 1);\\\n\")",
+        "a_do_script(\"result = trigger.misc.getUserFlag(\\\"timer\\\");\\\ntrigger.action.outText(\\\"Final time after reaching 12000m AGL: \\\" .. result .. \\\" seconds\\\", 1000, 1);\\\ntrigger.action.setUserFlag(\\\"myresult\\\", result);\\\n\")",
+        "a_do_script(\"local checkRate = 0.1\\\nlocal gLimits = 3\\\nlocal stopFlag = \\\"gLimit\\\"\\\nlocal stopIt = false\\\nlocal u = Unit.getByName(\\\"Player\\\")\\\n\\\nlocal function vecMag(vec)\\\n    return  (vec.x^2 + vec.y^2 + vec.z^2)^0.5\\\nend\\\nlocal function checkG(tbl)\\\n    local prevVel = tbl.prevVel\\\n    local prevTime = tbl.prevTime\\\n    local unit = tbl.unit\\\n\\\n    if prevVel and prevTime and unit and Unit.isExist(unit) == true then\\\n        local curTime = timer.getTime()\\\n        local unitVel = unit:getVelocity()\\\n        \\\n        local xAcc = (unitVel.x - prevVel.x)/(curTime - prevTime)\\\n        local yAcc = (unitVel.y - prevVel.y)/(curTime - prevTime)\\\n        local zAcc = (unitVel.z - prevVel.z)/(curTime - prevTime)\\\n        \\\n        local g = vecMag({x = xAcc, y = yAcc + 9.81, z = zAcc})/9.81\\\n        --trigger.action.outText(g, 10, true)\\\n        if g > gLimits then\\\n            trigger.action.setUserFlag(stopFlag, 1)\\\n            stopIt = true\\\n        end\\\n    end\\\n    if stopIt == false then\\\n        timer.scheduleFunction(checkG, {unit = unit, prevTime = timer.getTime(), prevVel = unit:getVelocity()}, timer.getTime() + checkRate)\\\n    end\\\n    \\\nend\\\ncheckG({unit = u})\")",
+        "a_do_script(\"FoxplusHandler = {}\\\nfunction FoxplusHandler:onEvent(event)\\\n        if event.id == world.event.S_EVENT_SHOT and event.initiator == Unit.getByName('Player') then\\\n            local _wpn = event.weapon:getDesc()\\\n            local _wpnType = _wpn.guidance\\\n            if _wpnType == 4 then\\\n                    trigger.action.setUserFlag('1001', true)\\\n            end\\\n            if _wpnType == 2 then\\\n                    trigger.action.setUserFlag('1002', true)\\\n            end\\\n            if _wpnType == 3 then\\\n                    trigger.action.setUserFlag('1003', true)\\\n            end\\\n    end\\\nend\\\nworld.addEventHandler(FoxplusHandler)\")",
+        "a_do_script(\"FoxplusHandler = {}\\\nfunction FoxplusHandler:onEvent(event)\\\n        if event.id == world.event.S_EVENT_SHOT and event.initiator == Unit.getByName('Bandit') then\\\n            local _wpn = event.weapon:getDesc()\\\n            local _wpnType = _wpn.guidance\\\n            if _wpnType == 4 then\\\n                    trigger.action.setUserFlag('2001', true)\\\n            end\\\n            if _wpnType == 2 then\\\n                    trigger.action.setUserFlag('2002', true)\\\n            end\\\n            if _wpnType == 3 then\\\n                    trigger.action.setUserFlag('2003', true)\\\n            end\\\n    end\\\nend\\\nworld.addEventHandler(FoxplusHandler)\")",
+        "a_do_script(\"FoxGunsHandler = {}\\\nfunction FoxGunsHandler:onEvent(event)\\\n        if event.id == world.event.S_EVENT_SHOOTING_START and event.initiator == Unit.getByName('Player') then\\\n                    trigger.action.setUserFlag('1007', true)\\\n    end\\\nend\\\nworld.addEventHandler(FoxGunsHandler)\")",
+        "a_do_script(\"FoxGunsHandler = {}\\\nfunction FoxGunsHandler:onEvent(event)\\\n        if event.id == world.event.S_EVENT_SHOOTING_START and event.initiator == Unit.getByName('Bandit') then\\\n                    trigger.action.setUserFlag('2007', true)\\\n    end\\\nend\\\nworld.addEventHandler(FoxGunsHandler)\")",
+        "a_do_script(\"local rate = 0.5\\\nlocal flagged = 0\\\nlocal function mag(vec)\\\n    return (vec.x^2 + vec.y^2 + vec.z^2)^0.5\\\nend\\\nlocal killFlag = \\\"Stop_G\\\"\\\nlocal function checkG(tbl)\\\n    local prevVel = tbl.prevVel\\\n    local prevTime = tbl.prevTime\\\n    local uObj = tbl.uObj\\\n    if Unit.isExist(uObj) then\\\n        local unitVel = uObj:getVelocity()\\\n        if prevVel and prevTime then\\\n            local curTime = timer.getTime()\\\n            local xAcc = (unitVel.x - prevVel.x)/(curTime - prevTime)\\\n            local yAcc = (unitVel.y - prevVel.y)/(curTime - prevTime)\\\n            local zAcc = (unitVel.z - prevVel.z)/(curTime - prevTime)\\\n            local g = (mag({x = xAcc, y = yAcc + 9.81, z = zAcc})/9.81)\\\n\\\n            local FoxTable = {\\\"AUDIO/antigsound.ogg\\\", \\\"AUDIO/antig2sound.ogg\\\"} -- 2 audio files\\\n                                   \\\n                                     \\\n                                   \\\n\\\n            if g > 5 and flagged == 0 and Unit.getByName('Bozo') then\\\n                trigger.action.setUserFlag(\\\"antig\\\", math.random(2))\\\n                trigger.action.outSound(FoxTable[math.random(1,2)])\\\n                flagged = 1 \\\n            elseif g < 5 and flagged == 1 then\\\n                flagged = 0\\\n                trigger.action.outSound(\\\"AUDIO/silence.ogg\\\")\\\n            end\\\n\\\n        end\\\n        if trigger.misc.getUserFlag(killFlag) == 0 then \\\n            timer.scheduleFunction(checkG, {uObj = uObj, prevTime = timer.getTime(), prevVel =  uObj:getVelocity()}, timer.getTime() + rate)\\\n        end\\\n    end\\\nend\\\ncheckG({uObj = Unit.getByName(\\\"Bozo\\\")})\")",
+        "a_do_script(\"local cappers = {\\\"MIG-21\\\", \\\"MIG-23\\\", \\\"MIG-19\\\", \\\"MIG-29\\\", \\\"MIG-15\\\", \\\"SU-27\\\", \\\"F-1\\\"}\\\nlocal capSelect = cappers[math.random(1,#cappers)]\\\nlocal choice = Group.getByName(capSelect)\\\nchoice:activate()\")",
+        "a_do_script(\"local T0 = timer.getAbsTime()\\\nlocal T1 = 0 -- will contain time in seconds from start to stop\\\n\\\nfunction countsecs()\\\n  -- calculate seconds\\\n  T1=timer.getAbsTime()-T0\\\nend\\\n\\\nstopper = TIMER:New(countsecs)\\\n--stopper:Start(1,1)\\\n\\\nfunction stoptimer()\\\n  if stopper.isrunning then\\\n    stopper:Stop()\\\n  end\\\n  MESSAGE:New(\\\"Stopped time is: \\\"..math.abs(T1).. \\\" seconds\\\",300,\\\"Info\\\"):ToAll()\\\nend\\\n\\\nstopme = TIMER:New(stoptimer)\\\n--stopme:Start(math.random(30,60))\")",
+        "a_do_script(\"local resetFlag = function() trigger.action.setUserFlag(\\\"SHOWPIC\\\", false) end\\\n\\\ntimer.scheduleFunction(resetFlag, nil, timer.getTime() + 4)\")",
+        "a_do_script(\"-- Таблица с правильным порядком точек\\\nlocal waypoints = {}\\\nfor i = 1, 43 do\\\n    table.insert(waypoints, tostring(i))\\\nend\\\n\\\nlocal currentWaypointIndex = 1\\\nlocal playerUnitName = \\\"TF-51D Hans\\\"  -- Имя самолета игрока\\\nlocal missionStarted = false  -- Флаг старта миссии\\\nlocal missionComplete = false\\\nlocal startTime = nil  -- Время начала миссии\\\n\\\n-- Функция для установки флага при взлете и запуска таймера\\\nfunction checkTakeoff()\\\n    local unit = Unit.getByName(playerUnitName)\\\n    if unit and unit:inAir() and unit:getPoint().y > 100 and not missionStarted then\\\n        trigger.action.setUserFlag(1500, true)\\\n        missionStarted = true\\\n        startTime = timer.getAbsTime()  -- Запоминаем абсолютное время старта\\\n    end\\\n    timer.scheduleFunction(checkTakeoff, nil, timer.getTime() + 1)\\\nend\\\n\\\n-- Функция для проверки пересечения зоны\\\nfunction checkWaypoint(unit, zoneName)\\\n    if currentWaypointIndex > #waypoints then return end  -- Если все точки пройдены, ничего не делаем\\\n    \\\n    if waypoints[currentWaypointIndex] == zoneName then\\\n        trigger.action.outText(\\\"Waypoint \\\" .. zoneName .. \\\" reached!\\\", 10)\\\n        currentWaypointIndex = currentWaypointIndex + 1  -- Переход к следующей точке\\\n    end\\\nend\\\n\\\n-- Функция форматирования времени\\\nfunction formatTime(timeElapsed)\\\n    local hours = math.floor(timeElapsed / 3600)\\\n    local minutes = math.floor((timeElapsed % 3600) / 60)\\\n    local seconds = math.floor(timeElapsed % 60)\\\n    local milliseconds = math.floor((timeElapsed * 100) % 100)\\\n    return string.format(\\\"%02d:%02d:%02d:%02d\\\", hours, minutes, seconds, milliseconds)\\\nend\\\n\\\n-- Функция для проверки приземления и вывода результатов\\\nfunction checkLanding()\\\n    local unit = Unit.getByName(playerUnitName)\\\n    if unit and unit:inAir() == false and missionComplete == false and missionStarted then\\\n        local scoringZone = trigger.misc.getZone(\\\"scoring\\\")\\\n        if scoringZone then\\\n            local unitPos = unit:getPoint()\\\n            local distance = ((unitPos.x - scoringZone.point.x)^2 + (unitPos.z - scoringZone.point.z)^2)^0.5\\\n            if distance < scoringZone.radius then\\\n                if currentWaypointIndex > #waypoints then\\\n                    local totalTime = timer.getAbsTime() - startTime  -- Используем абсолютное время\\\n                    local formattedTime = formatTime(totalTime)\\\n                    trigger.action.outText(\\\"Mission Complete! Time: \\\" .. formattedTime, 10)\\\n                else\\\n                    trigger.action.outText(\\\"Mission Failed! Some waypoints were missed.\\\", 10)\\\n                end\\\n            end\\\n        end\\\n        missionComplete = true  -- Флаг, чтобы не срабатывать повторно\\\n    end\\\nend\\\n\\\n-- Таймеры для периодической проверки точек\\\nfunction monitorWaypoints()\\\n    local unit = Unit.getByName(playerUnitName)\\\n    if not unit then return end\\\n    \\\n    for _, zoneName in ipairs(waypoints) do\\\n        local zone = trigger.misc.getZone(zoneName)\\\n        if zone then\\\n            local unitPos = unit:getPoint()\\\n            local distance = ((unitPos.x - zone.point.x)^2 + (unitPos.z - zone.point.z)^2)^0.5\\\n            if distance < zone.radius then\\\n                checkWaypoint(unit, zoneName)\\\n            end\\\n        end\\\n    end\\\n    \\\n    -- Запускаем проверку снова через 1 секунду\\\n    timer.scheduleFunction(monitorWaypoints, nil, timer.getTime() + 1)\\\nend\\\n\\\n-- Запускаем мониторинг точек после старта миссии\\\nmonitorWaypoints()\\\n\\\n-- Проверка посадки\\\nfunction monitorLanding()\\\n    checkLanding()\\\n    timer.scheduleFunction(monitorLanding, nil, timer.getTime() + 2)\\\nend\\\nmonitorLanding()\\\n\\\n-- Запускаем проверку взлета\\\ncheckTakeoff()\\\n\")",
+        "a_do_script(\"-- Таблица с правильным порядком точек\\\nlocal waypoints = {}\\\nfor i = 1, 42 do\\\n    table.insert(waypoints, tostring(i))\\\nend\\\n\\\nlocal currentWaypointIndex = 1\\\nlocal playerUnitName = \\\"TF-51D Walter\\\"  -- Имя самолета игрока\\\nlocal missionStarted = false  -- Флаг старта миссии\\\n\\\n-- Функция для установки флага при взлете\\\nfunction checkTakeoff()\\\n    local unit = Unit.getByName(playerUnitName)\\\n    if unit and unit:inAir() and unit:getPoint().y > 100 and not missionStarted then\\\n        trigger.action.setUserFlag(1500, true)\\\n        missionStarted = true\\\n    end\\\n    timer.scheduleFunction(checkTakeoff, nil, timer.getTime() + 1)\\\nend\\\n\\\n-- Функция для проверки пересечения зоны\\\nfunction checkWaypoint(unit, zoneName)\\\n    if currentWaypointIndex > #waypoints then return end  -- Если все точки пройдены, ничего не делаем\\\n    \\\n    if waypoints[currentWaypointIndex] == zoneName then\\\n        trigger.action.outText(\\\"Waypoint \\\" .. zoneName .. \\\" reached!\\\", 10)\\\n        currentWaypointIndex = currentWaypointIndex + 1  -- Переход к следующей точке\\\n    end\\\nend\\\n\\\n-- Таймеры для периодической проверки точек\\\nfunction monitorWaypoints()\\\n    local unit = Unit.getByName(playerUnitName)\\\n    if not unit then return end\\\n    \\\n    for _, zoneName in ipairs(waypoints) do\\\n        local zone = trigger.misc.getZone(zoneName)\\\n        if zone then\\\n            local unitPos = unit:getPoint()\\\n            local distance = ((unitPos.x - zone.point.x)^2 + (unitPos.z - zone.point.z)^2)^0.5\\\n            if distance < zone.radius then\\\n                checkWaypoint(unit, zoneName)\\\n            end\\\n        end\\\n    end\\\n    \\\n    -- Запускаем проверку снова через 1 секунду\\\n    timer.scheduleFunction(monitorWaypoints, nil, timer.getTime() + 1)\\\nend\\\n\\\n-- Запускаем мониторинг точек после старта миссии\\\nmonitorWaypoints()\\\n\\\n-- Запускаем проверку взлета\\\ncheckTakeoff()\\\n\")"
+      ]
     },
     {
       "predicate": "a_do_script_file",
@@ -70,7 +125,11 @@
         "zone": "",
         "preset": 1,
         "file": "ResKey_Script",
-        "predicate": "a_do_script_file"
+        "predicate": "a_do_script_file",
+        "ai_task": {
+          "1": "",
+          "2": ""
+        }
       },
       "lua": "a_do_script_file(getValueResourceByKey(\"ResKey_Script\"))"
     },
@@ -80,11 +139,11 @@
       "spec": {
         "density": 1,
         "name": "",
-        "predicate": "a_effect_smoke",
+        "zone": 330,
         "preset": 1,
-        "zone": 1
+        "predicate": "a_effect_smoke"
       },
-      "lua": "a_effect_smoke(1, 1, 1, \"\")"
+      "lua": "a_effect_smoke(330, 1, 1, \"\")"
     },
     {
       "predicate": "a_end_mission",
@@ -97,7 +156,10 @@
         "winner": "coalition.side.BLUE",
         "KeyDict_text": ""
       },
-      "lua": "a_end_mission(\"coalition.side.BLUE\", getValueDictByKey(\"\"), 0)"
+      "lua": "a_end_mission(\"coalition.side.BLUE\", getValueDictByKey(\"\"), 0)",
+      "alternatives": [
+        "a_end_mission(\"coalition.side.BLUE\", \"\", 0)"
+      ]
     },
     {
       "predicate": "a_explosion",
@@ -111,11 +173,56 @@
       "lua": "a_explosion(99, 1, 100)"
     },
     {
+      "predicate": "a_explosion_marker",
+      "role": "action",
+      "spec": {
+        "color": "3",
+        "altitude": 10,
+        "predicate": "a_explosion_marker",
+        "zone": 30
+      },
+      "lua": "a_explosion_marker(30, 10, \"3\")",
+      "alternatives": [
+        "a_explosion_marker(20, 200, \"3\", \"\")"
+      ]
+    },
+    {
+      "predicate": "a_explosion_marker_unit",
+      "role": "action",
+      "spec": {
+        "color": "2",
+        "ai_task": {
+          "1": "",
+          "2": ""
+        },
+        "predicate": "a_explosion_marker_unit",
+        "unit": 4
+      },
+      "lua": "a_explosion_marker_unit(4, \"2\")",
+      "alternatives": [
+        "a_explosion_marker_unit(82, \"1\", \"\")"
+      ]
+    },
+    {
+      "predicate": "a_explosion_unit",
+      "role": "action",
+      "spec": {
+        "volume": 100,
+        "predicate": "a_explosion_unit",
+        "unit": 369
+      },
+      "lua": "a_explosion_unit(369, 100)"
+    },
+    {
       "predicate": "a_group_off",
       "role": "action",
       "spec": {
         "group": 17,
-        "predicate": "a_group_off"
+        "predicate": "a_group_off",
+        "ai_task": {
+          "1": "",
+          "2": ""
+        }
       },
       "lua": "a_group_off(17)"
     },
@@ -124,7 +231,11 @@
       "role": "action",
       "spec": {
         "group": 17,
-        "predicate": "a_group_on"
+        "predicate": "a_group_on",
+        "ai_task": {
+          "1": "",
+          "2": ""
+        }
       },
       "lua": "a_group_on(17)"
     },
@@ -138,24 +249,66 @@
       "lua": "a_group_resume(27)"
     },
     {
+      "predicate": "a_mark_to_all",
+      "role": "action",
+      "spec": {
+        "KeyDict_text": "DictKey_ActionText_9",
+        "predicate": "a_mark_to_all",
+        "comment": "DictKey_ActionComment_10",
+        "zone": 1497,
+        "value": 1,
+        "text": "DictKey_ActionText_9",
+        "readonly": true,
+        "KeyDict_comment": "DictKey_ActionComment_10"
+      },
+      "lua": "a_mark_to_all(1, getValueDictByKey(\"DictKey_ActionText_9\"), 1497, true, getValueDictByKey(\"DictKey_ActionComment_10\"))",
+      "alternatives": [
+        "a_mark_to_all(1, getValueDictByKey(\"DictKey_ActionText_15\"), 33, false, getValueDictByKey(\"DictKey_ActionComment_16\"))"
+      ]
+    },
+    {
+      "predicate": "a_out_picture_s",
+      "role": "action",
+      "spec": {
+        "coalitionlist": "blue",
+        "horzAlignment": "0",
+        "size_units": "0",
+        "predicate": "a_out_picture_s",
+        "clearview": false,
+        "start_delay": 0,
+        "vertAlignment": "0",
+        "file": "ResKey_Action_35",
+        "seconds": 5,
+        "size": 15
+      },
+      "lua": "a_out_picture_s(\"blue\", getValueResourceByKey(\"ResKey_Action_35\"), 5, false, 0, \"0\", \"0\", 15, \"0\")"
+    },
+    {
       "predicate": "a_out_sound",
       "role": "action",
       "spec": {
         "file": "ResKey_Action_1105",
-        "predicate": "a_out_sound"
+        "predicate": "a_out_sound",
+        "ai_task": {
+          "1": "",
+          "2": ""
+        }
       },
-      "lua": "a_out_sound(getValueResourceByKey(\"ResKey_Action_1105\"), 0)"
+      "lua": "a_out_sound(getValueResourceByKey(\"ResKey_Action_1105\"), 0)",
+      "alternatives": [
+        "a_out_sound(getValueResourceByKey(\"ResKey_Action_572\"))"
+      ]
     },
     {
       "predicate": "a_out_sound_g",
       "role": "action",
       "spec": {
-        "group": 1,
-        "file": "ResKey_Action_55",
+        "group": 3009,
+        "file": "ResKey_Action_2394",
         "predicate": "a_out_sound_g",
         "start_delay": 0
       },
-      "lua": "a_out_sound_g(1, getValueResourceByKey(\"ResKey_Action_55\"), 0)"
+      "lua": "a_out_sound_g(3009, getValueResourceByKey(\"ResKey_Action_2394\"), 0)"
     },
     {
       "predicate": "a_out_sound_s",
@@ -180,69 +333,90 @@
       "predicate": "a_out_text_delay",
       "role": "action",
       "spec": {
-        "KeyDict_text": "DictKey_ActionText_1",
-        "clearview": false,
-        "predicate": "a_out_text_delay",
-        "seconds": 25,
+        "seconds": 20,
         "start_delay": 0,
-        "text": "DictKey_ActionText_1"
+        "predicate": "a_out_text_delay",
+        "text": "DictKey_ActionText_6",
+        "KeyDict_text": "DictKey_ActionText_6",
+        "clearview": false
       },
-      "lua": "a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_1\"), 25, false, 0)"
+      "lua": "a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_6\"), 20, false, 0)",
+      "alternatives": [
+        "a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_8\"), 10, true, 0)"
+      ]
     },
     {
       "predicate": "a_out_text_delay_c",
       "role": "action",
       "spec": {
-        "countrylist": 2,
-        "start_delay": 0,
+        "countrylist": 0,
+        "start_delay": 8,
         "seconds": 10,
-        "KeyDict_text": "DictKey_ActionText_2508",
-        "text": "DictKey_ActionText_2508",
+        "KeyDict_text": "DictKey_ActionText_2509",
+        "text": "DictKey_ActionText_2509",
         "predicate": "a_out_text_delay_c",
-        "clearview": true
+        "clearview": false
       },
-      "lua": "a_out_text_delay_c(2, getValueDictByKey(\"DictKey_ActionText_2508\"), 10, true, 0)"
+      "lua": "a_out_text_delay_c(0, getValueDictByKey(\"DictKey_ActionText_2509\"), 10, false, 8)",
+      "alternatives": [
+        "a_out_text_delay_c(2, getValueDictByKey(\"DictKey_ActionText_2508\"), 10, true, 0)"
+      ]
     },
     {
       "predicate": "a_out_text_delay_g",
       "role": "action",
       "spec": {
-        "seconds": 30,
+        "seconds": 17,
+        "start_delay": 0,
+        "zone": 221,
+        "group": 52,
+        "text": "DictKey_ActionText_583",
         "predicate": "a_out_text_delay_g",
-        "group": 90,
-        "text": "DictKey_ActionText_448",
-        "KeyDict_text": "DictKey_ActionText_448",
-        "clearview": false
+        "clearview": true,
+        "KeyDict_text": "DictKey_ActionText_583",
+        "ai_task": {
+          "1": 68,
+          "2": 1
+        }
       },
-      "lua": "a_out_text_delay_g(90, getValueDictByKey(\"DictKey_ActionText_448\"), 30, false)"
+      "lua": "a_out_text_delay_g(52, getValueDictByKey(\"DictKey_ActionText_583\"), 17, true, 0)",
+      "alternatives": [
+        "a_out_text_delay_g(52, getValueDictByKey(\"DictKey_ActionText_639\"), 8, false, 5)"
+      ]
     },
     {
       "predicate": "a_out_text_delay_s",
       "role": "action",
       "spec": {
-        "KeyDict_text": "DictKey_ActionText_2",
-        "clearview": false,
         "coalitionlist": "blue",
-        "predicate": "a_out_text_delay_s",
-        "seconds": 25,
         "start_delay": 0,
-        "text": "DictKey_ActionText_2"
+        "seconds": 20,
+        "predicate": "a_out_text_delay_s",
+        "text": "DictKey_ActionText_15",
+        "KeyDict_text": "DictKey_ActionText_15",
+        "clearview": false
       },
-      "lua": "a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_2\"), 25, false, 0)"
+      "lua": "a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_15\"), 20, false, 0)",
+      "alternatives": [
+        "a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_18\"), 8, true, 0)"
+      ]
     },
     {
       "predicate": "a_out_text_delay_u",
       "role": "action",
       "spec": {
-        "seconds": 20,
-        "start_delay": 3,
+        "seconds": 10,
+        "start_delay": 0,
         "unit": 1,
         "predicate": "a_out_text_delay_u",
-        "text": "DictKey_ActionText_17",
-        "KeyDict_text": "DictKey_ActionText_17",
+        "text": "DictKey_ActionText_14",
+        "KeyDict_text": "DictKey_ActionText_14",
         "clearview": false
       },
-      "lua": "a_out_text_delay_u(1, getValueDictByKey(\"DictKey_ActionText_17\"), 20, false, 3)"
+      "lua": "a_out_text_delay_u(1, getValueDictByKey(\"DictKey_ActionText_14\"), 10, false, 0)",
+      "alternatives": [
+        "a_out_text_delay_u(1, getValueDictByKey(\"DictKey_ActionText_18\"), 10, true, 0)"
+      ]
     },
     {
       "predicate": "a_radio_transmission",
@@ -251,16 +425,27 @@
         "modulation": true,
         "power": 100,
         "squelch_effects": true,
-        "predicate": "a_radio_transmission",
-        "loop": false,
-        "name": "intro",
-        "frequency": 257,
-        "zone": 395,
-        "file": "ResKey_Action_6",
+        "KeyDict_text": "DictKey_ActionText_71",
+        "mic_effects": false,
         "start_delay": 0,
-        "mic_effects": true
+        "loop": false,
+        "name": "",
+        "predicate": "a_radio_transmission",
+        "zone": 892,
+        "file": "ResKey_Action_48",
+        "text": "DictKey_ActionText_71",
+        "frequency": 124
       },
-      "lua": "a_radio_transmission(getValueResourceByKey(\"ResKey_Action_6\"), 395, true, false, 257000, 100, \"intro\", 0, true, true)"
+      "lua": "a_radio_transmission(getValueResourceByKey(\"ResKey_Action_48\"), 892, true, false, 124000, 100, \"\", 0, false, true, getValueDictByKey(\"DictKey_ActionText_71\"), 0)",
+      "alternatives": [
+        "a_radio_transmission(getValueResourceByKey(\"ResKey_Action_19\"), 829, false, false, 124000, 100, \"\", 0, false, true, getValueDictByKey(\"DictKey_ActionText_20\"))",
+        "a_radio_transmission(getValueResourceByKey(\"ResKey_Action_9\"), 414, true, false, 124000, 100, \"\", 0, false, true, getValueDictByKey(\"DictKey_ActionText_10\"))",
+        "a_radio_transmission(getValueResourceByKey(\"ResKey_Action_69\"), 8842, true, true, 275000, 55, \"GDR Mil Comms\", 0, false, true, getValueDictByKey(\"DictKey_ActionText_70\"), 0)",
+        "a_radio_transmission(getValueResourceByKey(\"ResKey_Action_37\"), 1657, false, false, 124000, 100, \"\", 0, true, true, getValueDictByKey(\"DictKey_ActionText_38\"))",
+        "a_radio_transmission(getValueResourceByKey(\"ResKey_Action_15\"), 311, true, false, 128700, 10, \"GDR Warning\", 0, true, true, getValueDictByKey(\"DictKey_ActionText_16\"))",
+        "a_radio_transmission(getValueResourceByKey(\"ResKey_Action_22\"), 1475, true, false, 251000, 100, \"\", 0, true, true, getValueDictByKey(\"DictKey_ActionText_23\"), 0)",
+        "a_radio_transmission(getValueResourceByKey(\"ResKey_Action_25\"), 360, false, false, 124000, 100, \"\", 10, true, true, getValueDictByKey(\"DictKey_ActionText_26\"), 0)"
+      ]
     },
     {
       "predicate": "a_remove_radio_item",
@@ -279,18 +464,39 @@
         "predicate": "a_remove_radio_item_for_group",
         "group": 165,
         "KeyDict_radiotext": "DictKey_ActionRadioText_952",
-        "radiotext": "DictKey_ActionRadioText_952"
+        "radiotext": "DictKey_ActionRadioText_952",
+        "ai_task": {
+          "1": "",
+          "2": ""
+        }
       },
       "lua": "a_remove_radio_item_for_group(165, getValueDictByKey(\"DictKey_ActionRadioText_952\"))"
+    },
+    {
+      "predicate": "a_set_ATC_silent_mode",
+      "role": "action",
+      "spec": {
+        "silent": true,
+        "object": 9,
+        "data": {
+          "type": "airdromeId"
+        },
+        "predicate": "a_set_ATC_silent_mode"
+      },
+      "lua": "a_set_ATC_silent_mode({airdromeId=9}, true)"
     },
     {
       "predicate": "a_set_flag",
       "role": "action",
       "spec": {
-        "flag": 10,
-        "predicate": "a_set_flag"
+        "flag": 20,
+        "predicate": "a_set_flag",
+        "ai_task": {
+          "1": "",
+          "2": ""
+        }
       },
-      "lua": "a_set_flag(10)"
+      "lua": "a_set_flag(20)"
     },
     {
       "predicate": "a_set_flag_random",
@@ -307,49 +513,105 @@
       "predicate": "a_set_flag_value",
       "role": "action",
       "spec": {
-        "flag": 2,
-        "max_value": 3,
-        "value": 3,
-        "min_value": 3,
-        "predicate": "a_set_flag_value"
+        "flag": "1",
+        "predicate": "a_set_flag_value",
+        "value": 3
       },
-      "lua": "a_set_flag_value(2, 3)"
+      "lua": "a_set_flag_value(\"1\", 3)"
+    },
+    {
+      "predicate": "a_shelling_zone",
+      "role": "action",
+      "spec": {
+        "shells_count": 100,
+        "TNT": 40,
+        "predicate": "a_shelling_zone",
+        "zone": 86
+      },
+      "lua": "a_shelling_zone(86, 40, 100)"
     },
     {
       "predicate": "a_signal_flare",
       "role": "action",
       "spec": {
-        "altitude": 1,
-        "zone": 331,
-        "color": "3",
+        "altitude": 1000,
+        "zone": 1749,
+        "color": "2",
         "predicate": "a_signal_flare",
-        "bearing": "0"
+        "bearing": 270
       },
-      "lua": "a_signal_flare(331, 1, \"3\", \"0\")"
+      "lua": "a_signal_flare(1749, 1000, \"2\", 270)"
+    },
+    {
+      "predicate": "a_signal_flare_unit",
+      "role": "action",
+      "spec": {
+        "color": "0",
+        "bearing": "0",
+        "predicate": "a_signal_flare_unit",
+        "unit": 5
+      },
+      "lua": "a_signal_flare_unit(5, \"0\", \"0\")"
+    },
+    {
+      "predicate": "a_zone_increment_resize",
+      "role": "action",
+      "spec": {
+        "meters": 1000,
+        "predicate": "a_zone_increment_resize",
+        "zone": 165
+      },
+      "lua": "a_zone_increment_resize(165, 1000)"
+    },
+    {
+      "predicate": "c_all_of_group_in_zone",
+      "role": "condition",
+      "spec": {
+        "coalitionlist": "red",
+        "unitType": "ALL",
+        "zone": 647,
+        "group": 284,
+        "predicate": "c_all_of_group_in_zone"
+      },
+      "lua": "c_all_of_group_in_zone(284, 647)"
+    },
+    {
+      "predicate": "c_bomb_in_zone",
+      "role": "condition",
+      "spec": {
+        "coalitionlist": "red",
+        "zone": 518,
+        "numbombs": 1,
+        "predicate": "c_bomb_in_zone",
+        "typebomb": {
+          "1": 4,
+          "2": 5,
+          "3": 36,
+          "4": 38
+        }
+      },
+      "lua": "c_bomb_in_zone(\"4.5.36.38\", 1, 518)"
     },
     {
       "predicate": "c_flag_equals",
       "role": "condition",
       "spec": {
-        "seconds": 60,
-        "coalitionlist": "red",
+        "flag": "5",
         "predicate": "c_flag_equals",
-        "zone": 1,
-        "value": 1,
-        "text": "DictKey_5",
-        "KeyDict_text": "DictKey_5",
-        "flag": 9
+        "value": 1
       },
-      "lua": "c_flag_equals(9, 1)"
+      "lua": "c_flag_equals(\"5\", 1)"
     },
     {
       "predicate": "c_flag_is_false",
       "role": "condition",
       "spec": {
-        "flag": 10,
-        "predicate": "c_flag_is_false"
+        "flag": 8,
+        "coalitionlist": "red",
+        "predicate": "c_flag_is_false",
+        "zone": 46
       },
-      "lua": "c_flag_is_false(10)"
+      "lua": "c_flag_is_false(8)"
     },
     {
       "predicate": "c_flag_is_true",
@@ -365,20 +627,39 @@
       "predicate": "c_flag_more",
       "role": "condition",
       "spec": {
-        "value": 5,
+        "coalitionlist": "red",
+        "unitType": "ALL",
+        "zone": 1320,
+        "group": 1,
+        "flag": "1",
         "predicate": "c_flag_more",
-        "flag": "1"
+        "value": 99
       },
-      "lua": "c_flag_more(\"1\", 5)"
+      "lua": "c_flag_more(\"1\", 99)"
+    },
+    {
+      "predicate": "c_group_alive",
+      "role": "condition",
+      "spec": {
+        "coalitionlist": "red",
+        "unitType": "ALL",
+        "zone": 43,
+        "group": 7,
+        "predicate": "c_group_alive"
+      },
+      "lua": "c_group_alive(7)"
     },
     {
       "predicate": "c_group_dead",
       "role": "condition",
       "spec": {
-        "group": 3,
+        "coalitionlist": "red",
+        "unitType": "ALL",
+        "zone": 171,
+        "group": 297,
         "predicate": "c_group_dead"
       },
-      "lua": "c_group_dead(3)"
+      "lua": "c_group_dead(297)"
     },
     {
       "predicate": "c_group_life_less",
@@ -395,15 +676,31 @@
       "lua": "c_group_life_less(72, 90)"
     },
     {
+      "predicate": "c_missile_in_zone",
+      "role": "condition",
+      "spec": {
+        "typemissile": {
+          "1": 4,
+          "2": 4,
+          "3": 11,
+          "4": 125
+        },
+        "predicate": "c_missile_in_zone",
+        "nummissiles": 1,
+        "zone": 2160
+      },
+      "lua": "c_missile_in_zone(\"4.4.11.125\", 1, 2160)"
+    },
+    {
       "predicate": "c_part_of_coalition_in_zone",
       "role": "condition",
       "spec": {
-        "coalitionlist": "blue",
         "predicate": "c_part_of_coalition_in_zone",
+        "coalitionlist": "blue",
         "unitType": "AIRPLANE",
-        "zone": 1
+        "zone": 496
       },
-      "lua": "c_part_of_coalition_in_zone(\"blue\", 1, \"AIRPLANE\")"
+      "lua": "c_part_of_coalition_in_zone(\"blue\", 496, \"AIRPLANE\")"
     },
     {
       "predicate": "c_part_of_group_in_zone",
@@ -411,11 +708,21 @@
       "spec": {
         "coalitionlist": "red",
         "unitType": "ALL",
-        "zone": 10,
-        "group": 217,
+        "zone": 221,
+        "group": 299,
         "predicate": "c_part_of_group_in_zone"
       },
-      "lua": "c_part_of_group_in_zone(217, 10)"
+      "lua": "c_part_of_group_in_zone(299, 221)"
+    },
+    {
+      "predicate": "c_part_of_group_out_zone",
+      "role": "condition",
+      "spec": {
+        "group": 2773,
+        "predicate": "c_part_of_group_out_zone",
+        "zone": 2361
+      },
+      "lua": "c_part_of_group_out_zone(2773, 2361)"
     },
     {
       "predicate": "c_random_less",
@@ -434,7 +741,11 @@
       "spec": {
         "flag": 1,
         "flag_back": 999,
-        "predicate": "c_start_wait_for_user"
+        "predicate": "c_start_wait_for_user",
+        "ai_task": {
+          "1": "",
+          "2": ""
+        }
       },
       "lua": "c_start_wait_for_user(1, 999)"
     },
@@ -450,10 +761,13 @@
       "predicate": "c_time_after",
       "role": "condition",
       "spec": {
+        "coalitionlist": "red",
+        "unitType": "ALL",
+        "zone": 102,
         "predicate": "c_time_after",
-        "seconds": 10
+        "seconds": 3
       },
-      "lua": "c_time_after(10)"
+      "lua": "c_time_after(3)"
     },
     {
       "predicate": "c_time_since_flag",
@@ -469,15 +783,68 @@
       "lua": "c_time_since_flag(20, 6)"
     },
     {
+      "predicate": "c_unit_altitude_higher",
+      "role": "condition",
+      "spec": {
+        "altitude": 2700,
+        "coalitionlist": "red",
+        "unitType": "ALL",
+        "zone": 165,
+        "predicate": "c_unit_altitude_higher",
+        "unit": 10
+      },
+      "lua": "c_unit_altitude_higher(10, 2700)"
+    },
+    {
+      "predicate": "c_unit_altitude_higher_AGL",
+      "role": "condition",
+      "spec": {
+        "altitude": 5000,
+        "coalitionlist": "red",
+        "unitType": "ALL",
+        "zone": 165,
+        "predicate": "c_unit_altitude_higher_AGL",
+        "unit": 154
+      },
+      "lua": "c_unit_altitude_higher_AGL(154, 5000)"
+    },
+    {
+      "predicate": "c_unit_altitude_lower",
+      "role": "condition",
+      "spec": {
+        "altitude": 1566,
+        "coalitionlist": "red",
+        "unitType": "ALL",
+        "zone": 10,
+        "predicate": "c_unit_altitude_lower",
+        "unit": 419
+      },
+      "lua": "c_unit_altitude_lower(419, 1566)"
+    },
+    {
+      "predicate": "c_unit_damaged",
+      "role": "condition",
+      "spec": {
+        "coalitionlist": "red",
+        "unitType": "ALL",
+        "zone": 43,
+        "predicate": "c_unit_damaged",
+        "unit": 24
+      },
+      "lua": "c_unit_damaged(24)"
+    },
+    {
       "predicate": "c_unit_dead",
       "role": "condition",
       "spec": {
         "coalitionlist": "red",
-        "zone": 46,
+        "unitType": "ALL",
+        "zone": 165,
+        "group": 1,
         "predicate": "c_unit_dead",
-        "unit": 172
+        "unit": 1
       },
-      "lua": "c_unit_dead(172)"
+      "lua": "c_unit_dead(1)"
     },
     {
       "predicate": "c_unit_in_zone",
@@ -490,6 +857,18 @@
         "unit": 119
       },
       "lua": "c_unit_in_zone(119, 102)"
+    },
+    {
+      "predicate": "c_unit_in_zone_unit",
+      "role": "condition",
+      "spec": {
+        "coalitionlist": "red",
+        "zone": 421,
+        "unit": 172,
+        "predicate": "c_unit_in_zone_unit",
+        "zoneunit": 184
+      },
+      "lua": "c_unit_in_zone_unit(172, 421, 184)"
     },
     {
       "predicate": "c_unit_out_zone",
@@ -527,809 +906,6 @@
       "condition": "return(c_flag_is_true(\"BR_END_MISSION\") )",
       "action": "a_end_mission(\"coalition.side.BLUE\", getValueDictByKey(\"\"), 600); mission.trig.func[2]=nil;",
       "func": "if mission.trig.conditions[2]() then mission.trig.actions[2]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 2,
-      "rules": [
-        {
-          "coalitionlist": "blue",
-          "predicate": "c_part_of_coalition_in_zone",
-          "unitType": "AIRPLANE",
-          "zone": 1
-        },
-        {
-          "flag": 10,
-          "predicate": "c_flag_is_false"
-        }
-      ],
-      "actions": [
-        {
-          "group": 2,
-          "predicate": "a_activate_group"
-        },
-        {
-          "KeyDict_text": "DictKey_ActionText_2",
-          "clearview": false,
-          "coalitionlist": "blue",
-          "predicate": "a_out_text_delay_s",
-          "seconds": 25,
-          "start_delay": 0,
-          "text": "DictKey_ActionText_2"
-        },
-        {
-          "flag": 10,
-          "predicate": "a_set_flag"
-        }
-      ],
-      "condition": "return(c_part_of_coalition_in_zone(\"blue\", 1, \"AIRPLANE\") and c_flag_is_false(10) )",
-      "action": "a_activate_group(2);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_2\"), 25, false, 0);a_set_flag(10); mission.trig.func[2]=nil;",
-      "func": "if mission.trig.conditions[2]() then mission.trig.actions[2]() end"
-    },
-    {
-      "type": "triggerFront",
-      "index": 3,
-      "rules": [
-        {
-          "group": 3,
-          "predicate": "c_group_dead"
-        }
-      ],
-      "actions": [
-        {
-          "density": 1,
-          "name": "",
-          "predicate": "a_effect_smoke",
-          "preset": 1,
-          "zone": 1
-        },
-        {
-          "KeyDict_text": "DictKey_ActionText_3",
-          "clearview": false,
-          "predicate": "a_out_text_delay",
-          "seconds": 25,
-          "start_delay": 0,
-          "text": "DictKey_ActionText_3"
-        }
-      ],
-      "condition": "return(c_group_dead(3) )",
-      "action": "a_effect_smoke(1, 1, 1, \"\");a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_3\"), 25, false, 0);",
-      "func": "if mission.trig.conditions[3]() then if not mission.trig.flag[3] then mission.trig.actions[3](); mission.trig.flag[3] = true;end; else mission.trig.flag[3] = false; end;"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 5,
-      "rules": [
-        {
-          "flag": 1,
-          "predicate": "c_flag_is_true"
-        },
-        {
-          "predicate": "c_time_after",
-          "seconds": 40
-        }
-      ],
-      "actions": [
-        {
-          "KeyDict_text": "DictKey_ActionText_4",
-          "clearview": false,
-          "predicate": "a_out_text_delay",
-          "seconds": 25,
-          "start_delay": 0,
-          "text": "DictKey_ActionText_4"
-        }
-      ],
-      "condition": "return(c_flag_is_true(1) and c_time_after(40) )",
-      "action": "a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_4\"), 25, false, 0); mission.trig.func[5]=nil;",
-      "func": "if mission.trig.conditions[5]() then mission.trig.actions[5]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 1,
-      "rules": [
-        {
-          "predicate": "c_part_of_coalition_in_zone",
-          "coalitionlist": "blue",
-          "unitType": "AIRPLANE",
-          "zone": 496
-        }
-      ],
-      "actions": [
-        {
-          "group": 93,
-          "predicate": "a_activate_group"
-        },
-        {
-          "group": 97,
-          "predicate": "a_activate_group"
-        },
-        {
-          "start_delay": 0,
-          "coalitionlist": "blue",
-          "predicate": "a_out_sound_s",
-          "file": "ResKey_Action_14"
-        },
-        {
-          "coalitionlist": "blue",
-          "start_delay": 0,
-          "seconds": 20,
-          "predicate": "a_out_text_delay_s",
-          "text": "DictKey_ActionText_15",
-          "KeyDict_text": "DictKey_ActionText_15",
-          "clearview": false
-        }
-      ],
-      "condition": "return(c_part_of_coalition_in_zone(\"blue\", 496, \"AIRPLANE\") )",
-      "action": "a_activate_group(93);a_activate_group(97);a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_14\"), 0);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_15\"), 20, false, 0); mission.trig.func[1]=nil;",
-      "func": "if mission.trig.conditions[1]() then mission.trig.actions[1]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 2,
-      "rules": [
-        {
-          "predicate": "c_part_of_coalition_in_zone",
-          "coalitionlist": "blue",
-          "unitType": "GROUND",
-          "zone": 20
-        }
-      ],
-      "actions": [
-        {
-          "group": 179,
-          "predicate": "a_activate_group"
-        },
-        {
-          "group": 228,
-          "predicate": "a_activate_group"
-        }
-      ],
-      "condition": "return(c_part_of_coalition_in_zone(\"blue\", 20, \"GROUND\") )",
-      "action": "a_activate_group(179);a_activate_group(228); mission.trig.func[2]=nil;",
-      "func": "if mission.trig.conditions[2]() then mission.trig.actions[2]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 7,
-      "rules": [
-        {
-          "predicate": "c_part_of_coalition_in_zone",
-          "coalitionlist": "blue",
-          "unitType": "HELICOPTER",
-          "zone": 53
-        }
-      ],
-      "actions": [
-        {
-          "file": "ResKey_Action_16",
-          "coalitionlist": "blue",
-          "start_delay": 0,
-          "predicate": "a_out_sound_s"
-        },
-        {
-          "coalitionlist": "blue",
-          "start_delay": 0,
-          "seconds": 30,
-          "KeyDict_text": "DictKey_ActionText_10",
-          "text": "DictKey_ActionText_10",
-          "predicate": "a_out_text_delay_s",
-          "clearview": false
-        },
-        {
-          "file": "ResKey_Action_11",
-          "coalitionlist": "blue",
-          "start_delay": 45,
-          "predicate": "a_out_sound_s"
-        }
-      ],
-      "condition": "return(c_part_of_coalition_in_zone(\"blue\", 53, \"HELICOPTER\") )",
-      "action": "a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_16\"), 0);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_10\"), 30, false, 0);a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_11\"), 45); mission.trig.func[7]=nil;",
-      "func": "if mission.trig.conditions[7]() then mission.trig.actions[7]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 1,
-      "rules": [
-        {
-          "predicate": "c_part_of_coalition_in_zone",
-          "coalitionlist": "blue",
-          "unitType": "AIRPLANE",
-          "zone": 51
-        }
-      ],
-      "actions": [
-        {
-          "group": 280,
-          "predicate": "a_deactivate_group"
-        },
-        {
-          "group": 270,
-          "predicate": "a_activate_group"
-        },
-        {
-          "group": 263,
-          "predicate": "a_activate_group"
-        },
-        {
-          "group": 259,
-          "predicate": "a_activate_group"
-        },
-        {
-          "group": 262,
-          "predicate": "a_activate_group"
-        },
-        {
-          "group": 261,
-          "predicate": "a_activate_group"
-        }
-      ],
-      "condition": "return(c_part_of_coalition_in_zone(\"blue\", 51, \"AIRPLANE\") )",
-      "action": "a_deactivate_group(280);a_activate_group(270);a_activate_group(263);a_activate_group(259);a_activate_group(262);a_activate_group(261); mission.trig.func[1]=nil;",
-      "func": "if mission.trig.conditions[1]() then mission.trig.actions[1]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 2,
-      "rules": [
-        {
-          "coalitionlist": "blue",
-          "unitType": "AIRPLANE",
-          "zone": 30,
-          "group": 272,
-          "predicate": "c_part_of_group_in_zone"
-        }
-      ],
-      "actions": [
-        {
-          "group": 279,
-          "predicate": "a_deactivate_group"
-        },
-        {
-          "group": 263,
-          "predicate": "a_activate_group"
-        },
-        {
-          "group": 259,
-          "predicate": "a_activate_group"
-        },
-        {
-          "group": 262,
-          "predicate": "a_activate_group"
-        },
-        {
-          "group": 261,
-          "predicate": "a_activate_group"
-        }
-      ],
-      "condition": "return(c_part_of_group_in_zone(272, 30) )",
-      "action": "a_deactivate_group(279);a_activate_group(263);a_activate_group(259);a_activate_group(262);a_activate_group(261); mission.trig.func[2]=nil;",
-      "func": "if mission.trig.conditions[2]() then mission.trig.actions[2]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 1,
-      "rules": [
-        {
-          "predicate": "c_part_of_coalition_in_zone",
-          "coalitionlist": "blue",
-          "unitType": "AIRPLANE",
-          "zone": 1136
-        }
-      ],
-      "actions": [
-        {
-          "predicate": "a_activate_group",
-          "group": 1257
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 1274
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 1256
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 1276
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 1275
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 1259
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 1273
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 2519
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 2497
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 2526
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 2528
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 2518
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 2525
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 2517
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 2524
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 1264
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 2510
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 1260
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 1279
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 1280
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 2512
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 2667
-        }
-      ],
-      "condition": "return(c_part_of_coalition_in_zone(\"blue\", 1136, \"AIRPLANE\") )",
-      "action": "a_activate_group(1257);a_activate_group(1274);a_activate_group(1256);a_activate_group(1276);a_activate_group(1275);a_activate_group(1259);a_activate_group(1273);a_activate_group(2519);a_activate_group(2497);a_activate_group(2526);a_activate_group(2528);a_activate_group(2518);a_activate_group(2525);a_activate_group(2517);a_activate_group(2524);a_activate_group(1264);a_activate_group(2510);a_activate_group(1260);a_activate_group(1279);a_activate_group(1280);a_activate_group(2512);a_activate_group(2667); mission.trig.func[1]=nil;",
-      "func": "if mission.trig.conditions[1]() then mission.trig.actions[1]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 5,
-      "rules": [
-        {
-          "coalitionlist": "red",
-          "unitType": "ALL",
-          "zone": 102,
-          "predicate": "c_time_after",
-          "seconds": 3
-        }
-      ],
-      "actions": [
-        {
-          "predicate": "a_activate_group",
-          "group": 110
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 119
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 120
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 111
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 112
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 113
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 114
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 115
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 116
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 117
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 118
-        }
-      ],
-      "condition": "return(c_time_after(3) )",
-      "action": "a_activate_group(110);a_activate_group(119);a_activate_group(120);a_activate_group(111);a_activate_group(112);a_activate_group(113);a_activate_group(114);a_activate_group(115);a_activate_group(116);a_activate_group(117);a_activate_group(118); mission.trig.func[5]=nil;",
-      "func": "if mission.trig.conditions[5]() then mission.trig.actions[5]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 2,
-      "rules": [
-        {
-          "coalitionlist": "red",
-          "seconds": 1,
-          "predicate": "c_time_after",
-          "zone": ""
-        }
-      ],
-      "actions": [
-        {
-          "file": "ResKey_Action_395",
-          "predicate": "a_do_script_file"
-        },
-        {
-          "file": "ResKey_Action_838",
-          "predicate": "a_do_script_file",
-          "zone": ""
-        },
-        {
-          "file": "ResKey_Action_893",
-          "predicate": "a_do_script_file",
-          "zone": ""
-        },
-        {
-          "predicate": "a_do_script_file",
-          "file": "ResKey_Action_894"
-        },
-        {
-          "predicate": "a_do_script_file",
-          "file": "ResKey_Action_896"
-        },
-        {
-          "file": "ResKey_Action_862",
-          "predicate": "a_do_script_file",
-          "zone": ""
-        },
-        {
-          "file": "ResKey_Action_863",
-          "predicate": "a_do_script_file",
-          "zone": ""
-        },
-        {
-          "file": "ResKey_Action_864",
-          "predicate": "a_do_script_file",
-          "zone": ""
-        },
-        {
-          "file": "ResKey_Action_865",
-          "predicate": "a_do_script_file",
-          "zone": ""
-        },
-        {
-          "file": "ResKey_Action_866",
-          "predicate": "a_do_script_file",
-          "zone": ""
-        },
-        {
-          "file": "ResKey_Action_867",
-          "predicate": "a_do_script_file",
-          "zone": ""
-        },
-        {
-          "file": "ResKey_Action_891",
-          "predicate": "a_do_script_file",
-          "zone": ""
-        },
-        {
-          "file": "ResKey_Action_892",
-          "predicate": "a_do_script_file",
-          "zone": ""
-        },
-        {
-          "text": "DictKey_ActionText_393",
-          "KeyDict_text": "DictKey_ActionText_393",
-          "file": "ResKey_Action_394",
-          "predicate": "a_do_script_file"
-        },
-        {
-          "file": "ResKey_Action_843",
-          "predicate": "a_do_script_file",
-          "zone": ""
-        }
-      ],
-      "condition": "return(c_time_after(1) )",
-      "action": "a_do_script_file(getValueResourceByKey(\"ResKey_Action_395\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_838\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_893\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_894\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_896\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_862\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_863\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_864\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_865\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_866\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_867\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_891\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_892\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_394\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_843\")); mission.trig.func[2]=nil;",
-      "func": "if mission.trig.conditions[2]() then mission.trig.actions[2]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 16,
-      "rules": [
-        {
-          "coalitionlist": "red",
-          "zone": 47,
-          "flag": 1,
-          "predicate": "c_unit_in_zone",
-          "unit": 91
-        },
-        {
-          "flag": 1,
-          "coalitionlist": "red",
-          "predicate": "c_flag_is_true",
-          "zone": 46
-        }
-      ],
-      "actions": [
-        {
-          "seconds": 30,
-          "clearview": false,
-          "KeyDict_text": "DictKey_ActionText_460",
-          "group": 90,
-          "text": "DictKey_ActionText_460",
-          "predicate": "a_out_text_delay_g"
-        },
-        {
-          "flag_back": 999,
-          "flag": 2,
-          "predicate": "c_start_wait_for_user"
-        }
-      ],
-      "condition": "return(c_unit_in_zone(91, 47) and c_flag_is_true(1) )",
-      "action": "a_out_text_delay_g(90, getValueDictByKey(\"DictKey_ActionText_460\"), 30, false);c_start_wait_for_user(2, 999); mission.trig.func[16]=nil;",
-      "func": "if mission.trig.conditions[16]() then mission.trig.actions[16]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 14,
-      "rules": [
-        {
-          "unit": 172,
-          "coalitionlist": "red",
-          "predicate": "c_unit_in_zone",
-          "zone": 142
-        },
-        {
-          "flag": 8,
-          "coalitionlist": "red",
-          "predicate": "c_flag_is_false",
-          "zone": 46
-        }
-      ],
-      "actions": [
-        {
-          "value": 0,
-          "radiotext": "DictKey_ActionRadioText_902",
-          "flag": 7,
-          "KeyDict_radiotext": "DictKey_ActionRadioText_902",
-          "predicate": "a_add_radio_item"
-        },
-        {
-          "value": 0,
-          "predicate": "a_add_radio_item",
-          "flag": 7,
-          "KeyDict_radiotext": "DictKey_ActionRadioText_644",
-          "radiotext": "DictKey_ActionRadioText_644"
-        },
-        {
-          "value": 1,
-          "radiotext": "DictKey_ActionRadioText_645",
-          "flag": 7,
-          "KeyDict_radiotext": "DictKey_ActionRadioText_645",
-          "predicate": "a_add_radio_item"
-        },
-        {
-          "seconds": 60,
-          "clearview": false,
-          "KeyDict_text": "DictKey_ActionText_957",
-          "group": 165,
-          "text": "DictKey_ActionText_957",
-          "predicate": "a_out_text_delay_g"
-        }
-      ],
-      "condition": "return(c_unit_in_zone(172, 142) and c_flag_is_false(8) )",
-      "action": "a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_902\"), 7, 0);a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_644\"), 7, 0);a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_645\"), 7, 1);a_out_text_delay_g(165, getValueDictByKey(\"DictKey_ActionText_957\"), 60, false); mission.trig.func[14]=nil;",
-      "func": "if mission.trig.conditions[14]() then mission.trig.actions[14]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 14,
-      "rules": [
-        {
-          "unit": 172,
-          "coalitionlist": "red",
-          "predicate": "c_unit_in_zone",
-          "zone": 142
-        },
-        {
-          "flag": 11,
-          "coalitionlist": "red",
-          "predicate": "c_flag_is_true",
-          "zone": 651
-        },
-        {
-          "flag": 8,
-          "coalitionlist": "red",
-          "predicate": "c_flag_is_false",
-          "zone": 651
-        }
-      ],
-      "actions": [
-        {
-          "flag": 7,
-          "predicate": "a_add_radio_item",
-          "value": 1,
-          "KeyDict_radiotext": "DictKey_ActionRadioText_854",
-          "radiotext": "DictKey_ActionRadioText_854"
-        },
-        {
-          "flag": 7,
-          "radiotext": "DictKey_ActionRadioText_644",
-          "value": 0,
-          "KeyDict_radiotext": "DictKey_ActionRadioText_644",
-          "predicate": "a_add_radio_item"
-        },
-        {
-          "flag": 7,
-          "predicate": "a_add_radio_item",
-          "value": 0,
-          "KeyDict_radiotext": "DictKey_ActionRadioText_645",
-          "radiotext": "DictKey_ActionRadioText_645"
-        },
-        {
-          "seconds": 20,
-          "clearview": false,
-          "KeyDict_text": "DictKey_ActionText_889",
-          "group": 165,
-          "text": "DictKey_ActionText_889",
-          "predicate": "a_out_text_delay_g"
-        }
-      ],
-      "condition": "return(c_unit_in_zone(172, 142) and c_flag_is_true(11) and c_flag_is_false(8) )",
-      "action": "a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_854\"), 7, 1);a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_644\"), 7, 0);a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_645\"), 7, 0);a_out_text_delay_g(165, getValueDictByKey(\"DictKey_ActionText_889\"), 20, false); mission.trig.func[14]=nil;",
-      "func": "if mission.trig.conditions[14]() then mission.trig.actions[14]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 58,
-      "rules": [
-        {
-          "flag": 11,
-          "coalitionlist": "red",
-          "predicate": "c_flag_is_true",
-          "zone": 46
-        },
-        {
-          "unit": 175,
-          "coalitionlist": "red",
-          "predicate": "c_unit_dead",
-          "zone": 46
-        },
-        {
-          "unit": 176,
-          "coalitionlist": "red",
-          "predicate": "c_unit_dead",
-          "zone": 46
-        }
-      ],
-      "actions": [
-        {
-          "flag": 12,
-          "predicate": "a_set_flag"
-        },
-        {
-          "flag": 13,
-          "predicate": "a_set_flag"
-        }
-      ],
-      "condition": "return(c_flag_is_true(11) and c_unit_dead(175) and c_unit_dead(176) )",
-      "action": "a_set_flag(12);a_set_flag(13); mission.trig.func[58]=nil;",
-      "func": "if mission.trig.conditions[58]() then mission.trig.actions[58]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 59,
-      "rules": [
-        {
-          "flag": 11,
-          "coalitionlist": "red",
-          "predicate": "c_flag_is_true",
-          "zone": 46
-        },
-        {
-          "unit": 172,
-          "coalitionlist": "red",
-          "predicate": "c_unit_dead",
-          "zone": 46
-        },
-        {
-          "unit": 173,
-          "coalitionlist": "red",
-          "predicate": "c_unit_dead",
-          "zone": 46
-        }
-      ],
-      "actions": [
-        {
-          "flag": 12,
-          "predicate": "a_set_flag"
-        }
-      ],
-      "condition": "return(c_flag_is_true(11) and c_unit_dead(172) and c_unit_dead(173) )",
-      "action": "a_set_flag(12); mission.trig.func[59]=nil;",
-      "func": "if mission.trig.conditions[59]() then mission.trig.actions[59]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 14,
-      "rules": [
-        {
-          "unit": 172,
-          "coalitionlist": "red",
-          "predicate": "c_unit_in_zone",
-          "zone": 142
-        },
-        {
-          "flag": 20,
-          "coalitionlist": "red",
-          "predicate": "c_flag_is_true",
-          "zone": 46
-        },
-        {
-          "flag": 8,
-          "coalitionlist": "red",
-          "predicate": "c_flag_is_false",
-          "zone": 46
-        }
-      ],
-      "actions": [
-        {
-          "flag": 7,
-          "radiotext": "DictKey_ActionRadioText_644",
-          "value": 1,
-          "KeyDict_radiotext": "DictKey_ActionRadioText_644",
-          "predicate": "a_add_radio_item"
-        },
-        {
-          "flag": 7,
-          "predicate": "a_add_radio_item",
-          "value": 0,
-          "KeyDict_radiotext": "DictKey_ActionRadioText_645",
-          "radiotext": "DictKey_ActionRadioText_645"
-        },
-        {
-          "seconds": 20,
-          "zone": 46,
-          "group": 165,
-          "text": "DictKey_ActionText_860",
-          "predicate": "a_out_text_delay_g",
-          "KeyDict_text": "DictKey_ActionText_860",
-          "clearview": false
-        }
-      ],
-      "condition": "return(c_unit_in_zone(172, 142) and c_flag_is_true(20) and c_flag_is_false(8) )",
-      "action": "a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_644\"), 7, 1);a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_645\"), 7, 0);a_out_text_delay_g(165, getValueDictByKey(\"DictKey_ActionText_860\"), 20, false); mission.trig.func[14]=nil;",
-      "func": "if mission.trig.conditions[14]() then mission.trig.actions[14]() end"
     },
     {
       "type": "triggerStart",
@@ -1372,6 +948,130 @@
       "funcStartup": "if mission.trig.conditions[1]() then mission.trig.actions[1]() end"
     },
     {
+      "type": "triggerFront",
+      "index": 6,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 165,
+          "flag": 3005,
+          "predicate": "c_flag_is_true"
+        }
+      ],
+      "actions": [
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 16,
+            "2": 2
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 76,
+            "2": 2
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 78,
+            "2": 2
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 90,
+            "2": 2
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 91,
+            "2": 2
+          }
+        }
+      ],
+      "condition": "return(c_flag_is_true(3005) )",
+      "action": "a_ai_task(16, 2);a_ai_task(76, 2);a_ai_task(78, 2);a_ai_task(90, 2);a_ai_task(91, 2);",
+      "func": "if mission.trig.conditions[6]() then if not mission.trig.flag[6] then mission.trig.actions[6](); mission.trig.flag[6] = true;end; else mission.trig.flag[6] = false; end;"
+    },
+    {
+      "type": "triggerContinious",
+      "index": 19,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "zone": 427,
+          "flag": "6",
+          "predicate": "c_time_since_flag",
+          "unit": 109,
+          "unitType": "ALL",
+          "value": 1,
+          "group": 15,
+          "percent": 10,
+          "seconds": 60
+        }
+      ],
+      "actions": [
+        {
+          "predicate": "a_clear_flag",
+          "flag": "6"
+        },
+        {
+          "group": 27,
+          "predicate": "a_group_resume"
+        }
+      ],
+      "condition": "return(c_time_since_flag(\"6\", 60) )",
+      "action": "a_clear_flag(\"6\");a_group_resume(27);",
+      "func": "if mission.trig.conditions[19]() then mission.trig.actions[19]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 1,
+      "rules": [
+        {
+          "predicate": "c_part_of_coalition_in_zone",
+          "coalitionlist": "blue",
+          "unitType": "AIRPLANE",
+          "zone": 496
+        }
+      ],
+      "actions": [
+        {
+          "group": 93,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 97,
+          "predicate": "a_activate_group"
+        },
+        {
+          "start_delay": 0,
+          "coalitionlist": "blue",
+          "predicate": "a_out_sound_s",
+          "file": "ResKey_Action_14"
+        },
+        {
+          "coalitionlist": "blue",
+          "start_delay": 0,
+          "seconds": 20,
+          "predicate": "a_out_text_delay_s",
+          "text": "DictKey_ActionText_15",
+          "KeyDict_text": "DictKey_ActionText_15",
+          "clearview": false
+        }
+      ],
+      "condition": "return(c_part_of_coalition_in_zone(\"blue\", 496, \"AIRPLANE\") )",
+      "action": "a_activate_group(93);a_activate_group(97);a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_14\"), 0);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_15\"), 20, false, 0); mission.trig.func[1]=nil;",
+      "func": "if mission.trig.conditions[1]() then mission.trig.actions[1]() end"
+    },
+    {
       "type": "triggerStart",
       "index": 1,
       "rules": [
@@ -1393,210 +1093,6 @@
       "condition": "return(c_time_after(5) )",
       "action": "a_do_script_file(getValueResourceByKey(\"ResKey_Action_6\"));a_do_script_file(getValueResourceByKey(\"ResKey_Action_8\"));",
       "funcStartup": "if mission.trig.conditions[1]() then mission.trig.actions[1]() end"
-    },
-    {
-      "type": "triggerStart",
-      "index": 2,
-      "rules": [
-        {
-          "percent": 40,
-          "coalitionlist": "red",
-          "predicate": "c_random_less",
-          "zone": 3
-        }
-      ],
-      "actions": [
-        {
-          "max_value": 3,
-          "flag": 2,
-          "min_value": 1,
-          "predicate": "a_set_flag_random"
-        }
-      ],
-      "condition": "return(c_random_less(40) )",
-      "action": "a_set_flag_random(2, 1, 3);",
-      "funcStartup": "if mission.trig.conditions[2]() then mission.trig.actions[2]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 4,
-      "rules": [
-        {
-          "coalitionlist": "red",
-          "unitType": "ALL",
-          "zone": 427,
-          "predicate": "c_time_after",
-          "seconds": 7
-        }
-      ],
-      "actions": [
-        {
-          "text": "ctld.activatePickupZone(\"pickzone1\")",
-          "predicate": "a_do_script"
-        },
-        {
-          "text": "ctld.activatePickupZone(\"pickzone2\")",
-          "predicate": "a_do_script"
-        },
-        {
-          "text": "ctld.activatePickupZone(\"pickzone3\")",
-          "predicate": "a_do_script"
-        },
-        {
-          "text": "ctld.activatePickupZone(\"pickzone4\")",
-          "predicate": "a_do_script"
-        },
-        {
-          "text": "ctld.activatePickupZone(\"pickzone5\")",
-          "predicate": "a_do_script"
-        },
-        {
-          "text": "ctld.activatePickupZone(\"pickzone6\")",
-          "predicate": "a_do_script"
-        },
-        {
-          "text": "ctld.activatePickupZone(\"pickzone7\")",
-          "predicate": "a_do_script"
-        },
-        {
-          "text": "ctld.activatePickupZone(\"pickzone8\")",
-          "predicate": "a_do_script"
-        }
-      ],
-      "condition": "return(c_time_after(7) )",
-      "action": "a_do_script(\"ctld.activatePickupZone(\\\"pickzone1\\\")\");a_do_script(\"ctld.activatePickupZone(\\\"pickzone2\\\")\");a_do_script(\"ctld.activatePickupZone(\\\"pickzone3\\\")\");a_do_script(\"ctld.activatePickupZone(\\\"pickzone4\\\")\");a_do_script(\"ctld.activatePickupZone(\\\"pickzone5\\\")\");a_do_script(\"ctld.activatePickupZone(\\\"pickzone6\\\")\");a_do_script(\"ctld.activatePickupZone(\\\"pickzone7\\\")\");a_do_script(\"ctld.activatePickupZone(\\\"pickzone8\\\")\"); mission.trig.func[4]=nil;",
-      "func": "if mission.trig.conditions[4]() then mission.trig.actions[4]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 6,
-      "rules": [
-        {
-          "coalitionlist": "red",
-          "unitType": "ALL",
-          "zone": 427,
-          "value": 1,
-          "seconds": 7,
-          "predicate": "c_flag_equals",
-          "flag": "13"
-        }
-      ],
-      "actions": [
-        {
-          "text": "ctld.JTACAutoLase('BLUE_AFAC-1', 1688, false,\"vehicle\")",
-          "predicate": "a_do_script"
-        },
-        {
-          "text": "ctld.JTACAutoLase('BLUE_AFAC-2', 1688, true,\"vehicle\")",
-          "predicate": "a_do_script"
-        },
-        {
-          "text": "ctld.JTACAutoLase('RED_AFAC-2', 1678, true,\"vehicle\")",
-          "predicate": "a_do_script"
-        },
-        {
-          "text": "ctld.JTACAutoLase('Paphos_UH-60L-1', 1688, false,\"vehicle\")",
-          "predicate": "a_do_script"
-        },
-        {
-          "text": "ctld.JTACAutoLase('A-G_UH-60L-1', 1688, false,\"vehicle\")",
-          "predicate": "a_do_script"
-        },
-        {
-          "text": "ctld.JTACAutoLase('helicargo13', 1688, false,\"vehicle\")",
-          "predicate": "a_do_script"
-        },
-        {
-          "text": "ctld.JTACAutoLase('helicargo14', 1688, false,\"vehicle\")",
-          "predicate": "a_do_script"
-        },
-        {
-          "text": "ctld.JTACAutoLase('helicargo1', 1688, false,\"vehicle\")",
-          "predicate": "a_do_script"
-        },
-        {
-          "text": "ctld.JTACAutoLase('helicargo2', 1688, false,\"vehicle\")",
-          "predicate": "a_do_script"
-        },
-        {
-          "KeyDict_radiotext": "DictKey_ActionRadioText_280",
-          "radiotext": "DictKey_ActionRadioText_280",
-          "predicate": "a_remove_radio_item"
-        },
-        {
-          "seconds": 20,
-          "start_delay": 4,
-          "KeyDict_text": "DictKey_ActionText_285",
-          "text": "DictKey_ActionText_285",
-          "predicate": "a_out_text_delay",
-          "clearview": false
-        },
-        {
-          "file": "ResKey_Action_323",
-          "predicate": "a_out_sound",
-          "start_delay": 4
-        }
-      ],
-      "condition": "return(c_flag_equals(\"13\", 1) )",
-      "action": "a_do_script(\"ctld.JTACAutoLase('BLUE_AFAC-1', 1688, false,\\\"vehicle\\\")\");a_do_script(\"ctld.JTACAutoLase('BLUE_AFAC-2', 1688, true,\\\"vehicle\\\")\");a_do_script(\"ctld.JTACAutoLase('RED_AFAC-2', 1678, true,\\\"vehicle\\\")\");a_do_script(\"ctld.JTACAutoLase('Paphos_UH-60L-1', 1688, false,\\\"vehicle\\\")\");a_do_script(\"ctld.JTACAutoLase('A-G_UH-60L-1', 1688, false,\\\"vehicle\\\")\");a_do_script(\"ctld.JTACAutoLase('helicargo13', 1688, false,\\\"vehicle\\\")\");a_do_script(\"ctld.JTACAutoLase('helicargo14', 1688, false,\\\"vehicle\\\")\");a_do_script(\"ctld.JTACAutoLase('helicargo1', 1688, false,\\\"vehicle\\\")\");a_do_script(\"ctld.JTACAutoLase('helicargo2', 1688, false,\\\"vehicle\\\")\");a_remove_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_280\"));a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_285\"), 20, false, 4);a_out_sound(getValueResourceByKey(\"ResKey_Action_323\"), 4); mission.trig.func[6]=nil;",
-      "func": "if mission.trig.conditions[6]() then mission.trig.actions[6]() end"
-    },
-    {
-      "type": "triggerOnce",
-      "index": 8,
-      "rules": [
-        {
-          "seconds": 6,
-          "unitType": "ALL",
-          "zone": 427,
-          "value": 1,
-          "coalitionlist": "red",
-          "predicate": "c_flag_equals",
-          "flag": "411"
-        }
-      ],
-      "actions": [
-        {
-          "group": 155,
-          "predicate": "a_activate_group"
-        },
-        {
-          "group": 490,
-          "predicate": "a_activate_group"
-        },
-        {
-          "group": 226,
-          "predicate": "a_activate_group"
-        },
-        {
-          "group": 312,
-          "predicate": "a_activate_group"
-        },
-        {
-          "group": 442,
-          "predicate": "a_activate_group"
-        },
-        {
-          "group": 467,
-          "predicate": "a_activate_group"
-        },
-        {
-          "group": 443,
-          "predicate": "a_activate_group"
-        },
-        {
-          "group": 1004,
-          "predicate": "a_activate_group"
-        },
-        {
-          "KeyDict_radiotext": "DictKey_ActionRadioText_334",
-          "radiotext": "DictKey_ActionRadioText_334",
-          "predicate": "a_remove_radio_item"
-        }
-      ],
-      "condition": "return(c_flag_equals(\"411\", 1) )",
-      "action": "a_activate_group(155);a_activate_group(490);a_activate_group(226);a_activate_group(312);a_activate_group(442);a_activate_group(467);a_activate_group(443);a_activate_group(1004);a_remove_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_334\")); mission.trig.func[8]=nil;",
-      "func": "if mission.trig.conditions[8]() then mission.trig.actions[8]() end"
     },
     {
       "type": "triggerFront",
@@ -1716,6 +1212,130 @@
       "func": "if mission.trig.conditions[10]() then if not mission.trig.flag[10] then mission.trig.actions[10](); mission.trig.flag[10] = true;end; else mission.trig.flag[10] = false; end;"
     },
     {
+      "type": "triggerContinious",
+      "index": 36,
+      "rules": [
+        {
+          "flag": 29,
+          "predicate": "c_flag_is_false",
+          "unit": ""
+        },
+        {
+          "flag": 28,
+          "predicate": "c_flag_is_true",
+          "unit": ""
+        }
+      ],
+      "actions": [
+        {
+          "seconds": 10,
+          "flag": 29,
+          "text": "DictKey_161",
+          "predicate": "a_set_flag",
+          "KeyDict_text": "DictKey_161"
+        }
+      ],
+      "condition": "return(c_flag_is_false(29) and c_flag_is_true(28) )",
+      "action": "a_set_flag(29);",
+      "func": "if mission.trig.conditions[36]() then mission.trig.actions[36]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 2,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 165,
+          "group": 72,
+          "predicate": "c_group_life_less",
+          "percent": 90,
+          "unit": 154
+        }
+      ],
+      "actions": [
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 93,
+            "2": 1
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 97,
+            "2": 1
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 70,
+            "2": 1
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 69,
+            "2": 1
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 106,
+            "2": 1
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 97,
+            "2": 2
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 93,
+            "2": 2
+          }
+        }
+      ],
+      "condition": "return(c_group_life_less(72, 90) )",
+      "action": "a_ai_task(93, 1);a_ai_task(97, 1);a_ai_task(70, 1);a_ai_task(69, 1);a_ai_task(106, 1);a_ai_task(97, 2);a_ai_task(93, 2); mission.trig.func[2]=nil;",
+      "func": "if mission.trig.conditions[2]() then mission.trig.actions[2]() end"
+    },
+    {
+      "type": "triggerStart",
+      "index": 2,
+      "rules": [
+        {
+          "percent": 40,
+          "coalitionlist": "red",
+          "predicate": "c_random_less",
+          "zone": 3
+        }
+      ],
+      "actions": [
+        {
+          "max_value": 3,
+          "flag": 2,
+          "min_value": 1,
+          "predicate": "a_set_flag_random",
+          "ai_task": {
+            "1": "",
+            "2": ""
+          }
+        }
+      ],
+      "condition": "return(c_random_less(40) )",
+      "action": "a_set_flag_random(2, 1, 3);",
+      "funcStartup": "if mission.trig.conditions[2]() then mission.trig.actions[2]() end"
+    },
+    {
       "type": "triggerFront",
       "index": 11,
       "rules": [
@@ -1782,6 +1402,112 @@
       "condition": "return(c_flag_equals(\"1\", 2) )",
       "action": "a_group_off(303);a_group_off(685);a_group_off(667);a_group_off(684);a_group_off(64);a_group_off(668);a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_126\"), 30, false, 0);a_remove_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_127\"));a_add_radio_item(getValueDictByKey(\"DictKey_ActionRadioText_129\"), \"1\", 1);a_out_sound(getValueResourceByKey(\"ResKey_Action_307\"), 0);",
       "func": "if mission.trig.conditions[11]() then if not mission.trig.flag[11] then mission.trig.actions[11](); mission.trig.flag[11] = true;end; else mission.trig.flag[11] = false; end;"
+    },
+    {
+      "type": "triggerContinious",
+      "index": 42,
+      "rules": [
+        {
+          "coalitionlist": "",
+          "flag": 14,
+          "predicate": "c_time_since_flag",
+          "seconds": 37
+        }
+      ],
+      "actions": [
+        {
+          "flag": 14,
+          "predicate": "a_clear_flag",
+          "ai_task": {
+            "1": "",
+            "2": ""
+          }
+        }
+      ],
+      "condition": "return(c_time_since_flag(14, 37) )",
+      "action": "a_clear_flag(14);",
+      "func": "if mission.trig.conditions[42]() then mission.trig.actions[42]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 1,
+      "rules": [
+        {
+          "predicate": "c_part_of_coalition_in_zone",
+          "coalitionlist": "blue",
+          "unitType": "AIRPLANE",
+          "zone": 171
+        }
+      ],
+      "actions": [
+        {
+          "coalitionlist": "blue",
+          "file": "ResKey_Action_6",
+          "predicate": "a_out_sound_s",
+          "start_delay": 0
+        },
+        {
+          "coalitionlist": "blue",
+          "start_delay": 0,
+          "seconds": 9,
+          "KeyDict_text": "DictKey_ActionText_7",
+          "text": "DictKey_ActionText_7",
+          "predicate": "a_out_text_delay_s",
+          "clearview": false
+        },
+        {
+          "coalitionlist": "blue",
+          "file": "ResKey_Action_8",
+          "predicate": "a_out_sound_s",
+          "start_delay": 13
+        },
+        {
+          "coalitionlist": "blue",
+          "start_delay": 13,
+          "seconds": 21,
+          "KeyDict_text": "DictKey_ActionText_9",
+          "text": "DictKey_ActionText_9",
+          "predicate": "a_out_text_delay_s",
+          "clearview": false
+        },
+        {
+          "coalitionlist": "blue",
+          "file": "ResKey_Action_10",
+          "predicate": "a_out_sound_s",
+          "start_delay": 33
+        }
+      ],
+      "condition": "return(c_part_of_coalition_in_zone(\"blue\", 171, \"AIRPLANE\") )",
+      "action": "a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_6\"), 0);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_7\"), 9, false, 0);a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_8\"), 13);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_9\"), 21, false, 13);a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_10\"), 33); mission.trig.func[1]=nil;",
+      "func": "if mission.trig.conditions[1]() then mission.trig.actions[1]() end"
+    },
+    {
+      "type": "triggerStart",
+      "index": 72,
+      "rules": [
+        {
+          "predicate": "c_random_less",
+          "percent": 50,
+          "unit": ""
+        },
+        {
+          "flag": 42,
+          "predicate": "c_flag_is_true",
+          "unit": ""
+        }
+      ],
+      "actions": [
+        {
+          "seconds": 10,
+          "flag": 43,
+          "text": "DictKey_238",
+          "predicate": "a_set_flag",
+          "KeyDict_text": "DictKey_238"
+        }
+      ],
+      "condition": "return(c_random_less(50) and c_flag_is_true(42) )",
+      "action": "a_set_flag(43);",
+      "funcStartup": "if mission.trig.conditions[72]() then mission.trig.actions[72]() end"
     },
     {
       "type": "triggerFront",
@@ -2017,6 +1743,249 @@
       "func": "if mission.trig.conditions[13]() then if not mission.trig.flag[13] then mission.trig.actions[13](); mission.trig.flag[13] = true;end; else mission.trig.flag[13] = false; end;"
     },
     {
+      "type": "triggerContinious",
+      "index": 39,
+      "rules": [
+        {
+          "numbombs": 1,
+          "typebomb": {
+            "1": 4,
+            "2": 5,
+            "3": 38,
+            "4": 35
+          },
+          "predicate": "c_bomb_in_zone",
+          "zone": 166
+        }
+      ],
+      "actions": [
+        {
+          "flag": 6,
+          "group": 35,
+          "predicate": "a_clear_flag",
+          "zone": 55
+        },
+        {
+          "group": 35,
+          "flag": 7,
+          "predicate": "a_clear_flag",
+          "zone": 55
+        },
+        {
+          "group": 35,
+          "flag": 5,
+          "predicate": "a_set_flag",
+          "zone": 55
+        },
+        {
+          "flag": 6,
+          "group": 35,
+          "predicate": "a_set_flag",
+          "zone": 55
+        }
+      ],
+      "condition": "return(c_bomb_in_zone(\"4.5.38.35\", 1, 166) )",
+      "action": "a_clear_flag(6);a_clear_flag(7);a_set_flag(5);a_set_flag(6);",
+      "func": "if mission.trig.conditions[39]() then mission.trig.actions[39]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 3,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 10,
+          "group": 299,
+          "predicate": "c_part_of_group_in_zone"
+        },
+        {
+          "altitude": 1566,
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 10,
+          "predicate": "c_unit_altitude_lower",
+          "unit": 419
+        }
+      ],
+      "actions": [
+        {
+          "group": 342,
+          "predicate": "a_activate_group"
+        }
+      ],
+      "condition": "return(c_part_of_group_in_zone(299, 10) and c_unit_altitude_lower(419, 1566) )",
+      "action": "a_activate_group(342); mission.trig.func[3]=nil;",
+      "func": "if mission.trig.conditions[3]() then mission.trig.actions[3]() end"
+    },
+    {
+      "type": "triggerStart",
+      "index": 2,
+      "rules": [
+        {
+          "group": 134,
+          "coalitionlist": "",
+          "predicate": "c_group_alive",
+          "zone": ""
+        }
+      ],
+      "actions": [
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 134
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 92
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 93
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 108
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 97
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 98
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 100
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 102
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 103
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 104
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 107
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 106
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 109
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 38
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 7
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 8
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 48
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 77
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 78
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 90
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 166
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 156
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 167
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 161
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 163
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 164
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 165
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 153
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 154
+        },
+        {
+          "flag": 1,
+          "predicate": "a_group_off",
+          "group": 155
+        }
+      ],
+      "condition": "return(c_group_alive(134) )",
+      "action": "a_group_off(134);a_group_off(92);a_group_off(93);a_group_off(108);a_group_off(97);a_group_off(98);a_group_off(100);a_group_off(102);a_group_off(103);a_group_off(104);a_group_off(107);a_group_off(106);a_group_off(109);a_group_off(38);a_group_off(7);a_group_off(8);a_group_off(48);a_group_off(77);a_group_off(78);a_group_off(90);a_group_off(166);a_group_off(156);a_group_off(167);a_group_off(161);a_group_off(163);a_group_off(164);a_group_off(165);a_group_off(153);a_group_off(154);a_group_off(155);",
+      "funcStartup": "if mission.trig.conditions[2]() then mission.trig.actions[2]() end"
+    },
+    {
       "type": "triggerFront",
       "index": 14,
       "rules": [
@@ -2145,6 +2114,84 @@
       "func": "if mission.trig.conditions[14]() then if not mission.trig.flag[14] then mission.trig.actions[14](); mission.trig.flag[14] = true;end; else mission.trig.flag[14] = false; end;"
     },
     {
+      "type": "triggerContinious",
+      "index": 40,
+      "rules": [
+        {
+          "flag": 74,
+          "seconds": 10,
+          "predicate": "c_time_since_flag",
+          "zone": 833
+        },
+        {
+          "flag": 3,
+          "predicate": "c_flag_is_false",
+          "zone": 833
+        },
+        {
+          "flag": 7,
+          "predicate": "c_flag_is_false",
+          "zone": 833
+        }
+      ],
+      "actions": [
+        {
+          "flag": 73,
+          "meters": 1000,
+          "predicate": "a_set_flag",
+          "zone": 833
+        },
+        {
+          "flag": 74,
+          "meters": 1000,
+          "predicate": "a_clear_flag",
+          "zone": 833
+        }
+      ],
+      "condition": "return(c_time_since_flag(74, 10) and c_flag_is_false(3) and c_flag_is_false(7) )",
+      "action": "a_set_flag(73);a_clear_flag(74);",
+      "func": "if mission.trig.conditions[40]() then mission.trig.actions[40]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 5,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 271,
+          "group": 342,
+          "predicate": "c_part_of_group_in_zone"
+        }
+      ],
+      "actions": [
+        {
+          "start_delay": 0,
+          "coalitionlist": "blue",
+          "predicate": "a_out_sound_s",
+          "file": "ResKey_Action_17"
+        },
+        {
+          "coalitionlist": "blue",
+          "start_delay": 0,
+          "seconds": 60,
+          "predicate": "a_out_text_delay_s",
+          "text": "DictKey_ActionText_18",
+          "KeyDict_text": "DictKey_ActionText_18",
+          "clearview": false
+        },
+        {
+          "start_delay": 47,
+          "coalitionlist": "blue",
+          "predicate": "a_out_sound_s",
+          "file": "ResKey_Action_19"
+        }
+      ],
+      "condition": "return(c_part_of_group_in_zone(342, 271) )",
+      "action": "a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_17\"), 0);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_18\"), 60, false, 0);a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_19\"), 47); mission.trig.func[5]=nil;",
+      "func": "if mission.trig.conditions[5]() then mission.trig.actions[5]() end"
+    },
+    {
       "type": "triggerFront",
       "index": 16,
       "rules": [
@@ -2251,34 +2298,125 @@
     },
     {
       "type": "triggerContinious",
-      "index": 19,
+      "index": 8,
       "rules": [
         {
-          "coalitionlist": "red",
-          "zone": 427,
-          "flag": "6",
-          "predicate": "c_time_since_flag",
-          "unit": 109,
-          "unitType": "ALL",
-          "value": 1,
-          "group": 15,
-          "percent": 10,
-          "seconds": 60
+          "numbombs": 1,
+          "seconds": 1,
+          "typebomb": {
+            "1": 4,
+            "2": 5,
+            "3": 9,
+            "4": 31
+          },
+          "zone": 993,
+          "flag": "13",
+          "text": "DictKey_ActionText_80",
+          "predicate": "c_bomb_in_zone",
+          "KeyDict_text": "DictKey_ActionText_80"
+        },
+        {
+          "flag": "21",
+          "text": "DictKey_ActionText_103",
+          "predicate": "c_flag_is_false",
+          "KeyDict_text": "DictKey_ActionText_103"
+        },
+        {
+          "flag": "32",
+          "text": "DictKey_ActionText_224",
+          "predicate": "c_flag_is_false",
+          "KeyDict_text": "DictKey_ActionText_224"
+        },
+        {
+          "flag": "99",
+          "text": "DictKey_ActionText_81",
+          "predicate": "c_flag_is_false",
+          "KeyDict_text": "DictKey_ActionText_81"
         }
       ],
       "actions": [
         {
-          "predicate": "a_clear_flag",
-          "flag": "6"
+          "predicate": "a_set_flag",
+          "flag": "21"
         },
         {
-          "group": 27,
-          "predicate": "a_group_resume"
+          "predicate": "a_set_flag",
+          "flag": "220"
+        },
+        {
+          "predicate": "a_clear_flag",
+          "flag": "13"
+        },
+        {
+          "seconds": 20,
+          "start_delay": 2,
+          "KeyDict_text": "DictKey_ActionText_82",
+          "group": 1,
+          "text": "DictKey_ActionText_82",
+          "predicate": "a_out_text_delay_g",
+          "clearview": true
+        },
+        {
+          "group": 1,
+          "file": "ResKey_Action_83",
+          "predicate": "a_out_sound_g",
+          "start_delay": 2
         }
       ],
-      "condition": "return(c_time_since_flag(\"6\", 60) )",
-      "action": "a_clear_flag(\"6\");a_group_resume(27);",
-      "func": "if mission.trig.conditions[19]() then mission.trig.actions[19]() end"
+      "condition": "return(c_bomb_in_zone(\"4.5.9.31\", 1, 993) and c_flag_is_false(\"21\") and c_flag_is_false(\"32\") and c_flag_is_false(\"99\") )",
+      "action": "a_set_flag(\"21\");a_set_flag(\"220\");a_clear_flag(\"13\");a_out_text_delay_g(1, getValueDictByKey(\"DictKey_ActionText_82\"), 20, true, 2);a_out_sound_g(1, getValueResourceByKey(\"ResKey_Action_83\"), 2);",
+      "func": "if mission.trig.conditions[8]() then mission.trig.actions[8]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 6,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 20,
+          "group": 342,
+          "predicate": "c_part_of_group_in_zone"
+        }
+      ],
+      "actions": [
+        {
+          "group": 326,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 332,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 331,
+          "predicate": "a_activate_group"
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 266,
+            "2": 1
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 266,
+            "2": 7
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 266,
+            "2": 3
+          }
+        }
+      ],
+      "condition": "return(c_part_of_group_in_zone(342, 20) )",
+      "action": "a_activate_group(326);a_activate_group(332);a_activate_group(331);a_ai_task(266, 1);a_ai_task(266, 7);a_ai_task(266, 3); mission.trig.func[6]=nil;",
+      "func": "if mission.trig.conditions[6]() then mission.trig.actions[6]() end"
     },
     {
       "type": "triggerFront",
@@ -2330,6 +2468,171 @@
       "func": "if mission.trig.conditions[20]() then if not mission.trig.flag[20] then mission.trig.actions[20](); mission.trig.flag[20] = true;end; else mission.trig.flag[20] = false; end;"
     },
     {
+      "type": "triggerContinious",
+      "index": 11,
+      "rules": [
+        {
+          "flag": 2,
+          "seconds": 7,
+          "predicate": "c_time_since_flag",
+          "zone": 119
+        }
+      ],
+      "actions": [
+        {
+          "flag": 2,
+          "predicate": "a_clear_flag",
+          "zone": 119
+        },
+        {
+          "altitude": 1,
+          "zone": 299,
+          "color": "0",
+          "predicate": "a_signal_flare",
+          "bearing": "0"
+        },
+        {
+          "flag": 2,
+          "predicate": "a_set_flag",
+          "zone": 119
+        }
+      ],
+      "condition": "return(c_time_since_flag(2, 7) )",
+      "action": "a_clear_flag(2);a_signal_flare(299, 1, \"0\", \"0\");a_set_flag(2);",
+      "func": "if mission.trig.conditions[11]() then mission.trig.actions[11]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 7,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 10,
+          "group": 326,
+          "predicate": "c_group_life_less",
+          "percent": 90
+        },
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 10,
+          "group": 332,
+          "predicate": "c_group_life_less",
+          "percent": 40
+        },
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 10,
+          "group": 331,
+          "predicate": "c_group_life_less",
+          "percent": 50
+        }
+      ],
+      "actions": [
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 266,
+            "2": 2
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 266,
+            "2": 6
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 266,
+            "2": 5
+          }
+        },
+        {
+          "group": 326,
+          "predicate": "a_deactivate_group"
+        },
+        {
+          "group": 332,
+          "predicate": "a_deactivate_group"
+        },
+        {
+          "group": 331,
+          "predicate": "a_deactivate_group"
+        },
+        {
+          "group": 342,
+          "predicate": "a_deactivate_group"
+        },
+        {
+          "group": 333,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 334,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 335,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 341,
+          "predicate": "a_activate_group"
+        },
+        {
+          "file": "ResKey_Action_20",
+          "coalitionlist": "blue",
+          "start_delay": 0,
+          "predicate": "a_out_sound_s"
+        },
+        {
+          "coalitionlist": "blue",
+          "start_delay": 0,
+          "seconds": 6,
+          "KeyDict_text": "DictKey_ActionText_21",
+          "text": "DictKey_ActionText_21",
+          "predicate": "a_out_text_delay_s",
+          "clearview": false
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 299,
+            "2": 1
+          }
+        },
+        {
+          "predicate": "a_out_sound_s",
+          "file": "ResKey_Action_39",
+          "start_delay": 30,
+          "coalitionlist": "blue"
+        },
+        {
+          "coalitionlist": "blue",
+          "start_delay": 30,
+          "seconds": 20,
+          "predicate": "a_out_text_delay_s",
+          "text": "DictKey_ActionText_42",
+          "KeyDict_text": "DictKey_ActionText_42",
+          "clearview": false
+        },
+        {
+          "predicate": "a_out_sound_s",
+          "file": "ResKey_Action_43",
+          "start_delay": 48,
+          "coalitionlist": "blue"
+        }
+      ],
+      "condition": "return(c_group_life_less(326, 90) and c_group_life_less(332, 40) and c_group_life_less(331, 50) )",
+      "action": "a_ai_task(266, 2);a_ai_task(266, 6);a_ai_task(266, 5);a_deactivate_group(326);a_deactivate_group(332);a_deactivate_group(331);a_deactivate_group(342);a_activate_group(333);a_activate_group(334);a_activate_group(335);a_activate_group(341);a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_20\"), 0);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_21\"), 6, false, 0);a_ai_task(299, 1);a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_39\"), 30);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_42\"), 20, false, 30);a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_43\"), 48); mission.trig.func[7]=nil;",
+      "func": "if mission.trig.conditions[7]() then mission.trig.actions[7]() end"
+    },
+    {
       "type": "triggerFront",
       "index": 23,
       "rules": [
@@ -2369,222 +2672,143 @@
       "func": "if mission.trig.conditions[23]() then if not mission.trig.flag[23] then mission.trig.actions[23](); mission.trig.flag[23] = true;end; else mission.trig.flag[23] = false; end;"
     },
     {
-      "type": "triggerOnce",
-      "index": 1,
+      "type": "triggerContinious",
+      "index": 16,
       "rules": [
         {
-          "coalitionlist": "red",
-          "unitType": "ALL",
-          "zone": 33,
-          "flag": "Reset",
-          "predicate": "c_flag_equals",
+          "seconds": 1,
+          "zone": 60,
+          "flag": 12,
+          "predicate": "c_time_since_flag",
           "value": 1
         }
       ],
       "actions": [
         {
-          "flag": "1",
-          "predicate": "a_set_flag_value",
-          "value": 0
+          "flag": 12,
+          "predicate": "a_clear_flag",
+          "zone": 655
         },
         {
-          "flag": "2",
-          "predicate": "a_set_flag_value",
-          "value": 0
+          "zone": 60,
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 15,
+            "2": 1
+          }
         },
         {
-          "flag": "3",
-          "predicate": "a_set_flag_value",
-          "value": 0
+          "ai_task": {
+            "1": 17,
+            "2": 1
+          },
+          "predicate": "a_ai_task",
+          "zone": 60
         },
         {
-          "flag": "4",
-          "predicate": "a_set_flag_value",
-          "value": 0
+          "flag": 13,
+          "predicate": "a_set_flag",
+          "zone": 655
         },
         {
-          "flag": "5",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "6",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "7",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "8",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "9",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "10",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "11",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "12",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "13",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "14",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "15",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "16",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "17",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "18",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "19",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "20",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "21",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "22",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "23",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "24",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "25",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "26",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "27",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "28",
-          "predicate": "a_set_flag_value",
-          "value": 0
-        },
-        {
-          "flag": "Reset",
-          "predicate": "a_set_flag_value",
-          "value": 0
+          "zone": 655,
+          "flag": 61,
+          "min_value": 1,
+          "predicate": "a_set_flag_random",
+          "max_value": 4
         }
       ],
-      "condition": "return(c_flag_equals(\"Reset\", 1) )",
-      "action": "a_set_flag_value(\"1\", 0);a_set_flag_value(\"2\", 0);a_set_flag_value(\"3\", 0);a_set_flag_value(\"4\", 0);a_set_flag_value(\"5\", 0);a_set_flag_value(\"6\", 0);a_set_flag_value(\"7\", 0);a_set_flag_value(\"8\", 0);a_set_flag_value(\"9\", 0);a_set_flag_value(\"10\", 0);a_set_flag_value(\"11\", 0);a_set_flag_value(\"12\", 0);a_set_flag_value(\"13\", 0);a_set_flag_value(\"14\", 0);a_set_flag_value(\"15\", 0);a_set_flag_value(\"16\", 0);a_set_flag_value(\"17\", 0);a_set_flag_value(\"18\", 0);a_set_flag_value(\"19\", 0);a_set_flag_value(\"20\", 0);a_set_flag_value(\"21\", 0);a_set_flag_value(\"22\", 0);a_set_flag_value(\"23\", 0);a_set_flag_value(\"24\", 0);a_set_flag_value(\"25\", 0);a_set_flag_value(\"26\", 0);a_set_flag_value(\"27\", 0);a_set_flag_value(\"28\", 0);a_set_flag_value(\"Reset\", 0); mission.trig.func[1]=nil;",
-      "func": "if mission.trig.conditions[1]() then mission.trig.actions[1]() end"
+      "condition": "return(c_time_since_flag(12, 1) )",
+      "action": "a_clear_flag(12);a_ai_task(15, 1);a_ai_task(17, 1);a_set_flag(13);a_set_flag_random(61, 1, 4);",
+      "func": "if mission.trig.conditions[16]() then mission.trig.actions[16]() end"
     },
     {
       "type": "triggerOnce",
-      "index": 5,
+      "index": 11,
       "rules": [
         {
           "coalitionlist": "red",
           "unitType": "ALL",
-          "zone": "",
-          "group": 16,
+          "zone": 171,
+          "group": 297,
           "predicate": "c_group_dead"
         },
         {
           "coalitionlist": "red",
           "unitType": "ALL",
-          "zone": "",
-          "group": 14,
-          "predicate": "c_group_dead"
-        },
-        {
-          "coalitionlist": "red",
-          "unitType": "ALL",
-          "zone": "",
-          "group": 15,
-          "predicate": "c_group_dead"
-        },
-        {
-          "coalitionlist": "red",
-          "unitType": "ALL",
-          "zone": "",
-          "group": 13,
-          "predicate": "c_group_dead"
+          "zone": 371,
+          "group": 333,
+          "predicate": "c_part_of_group_in_zone"
         }
       ],
       "actions": [
         {
-          "seconds": 20,
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 250,
+            "2": 1
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 333,
+            "2": 2
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 333,
+            "2": 1
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 333,
+            "2": 5
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 334,
+            "2": 1
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 334,
+            "2": 2
+          }
+        },
+        {
+          "predicate": "a_out_sound_s",
+          "file": "ResKey_Action_33",
           "start_delay": 0,
-          "KeyDict_text": "DictKey_ActionText_10",
-          "text": "DictKey_ActionText_10",
-          "predicate": "a_out_text_delay",
+          "coalitionlist": "blue"
+        },
+        {
+          "coalitionlist": "blue",
+          "start_delay": 2,
+          "seconds": 40,
+          "predicate": "a_out_text_delay_s",
+          "text": "DictKey_ActionText_34",
+          "KeyDict_text": "DictKey_ActionText_34",
           "clearview": false
         },
         {
-          "start_delay": 30,
-          "KeyDict_text": "DictKey_ActionText_11",
-          "winner": "blue",
-          "predicate": "a_end_mission",
-          "text": "DictKey_ActionText_11"
+          "predicate": "a_out_sound_s",
+          "file": "ResKey_Action_35",
+          "start_delay": 35,
+          "coalitionlist": "blue"
         }
       ],
-      "condition": "return(c_group_dead(16) and c_group_dead(14) and c_group_dead(15) and c_group_dead(13) )",
-      "action": "a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_10\"), 20, false, 0);a_end_mission(\"blue\", getValueDictByKey(\"DictKey_ActionText_11\"), 30); mission.trig.func[5]=nil;",
-      "func": "if mission.trig.conditions[5]() then mission.trig.actions[5]() end"
+      "condition": "return(c_group_dead(297) and c_part_of_group_in_zone(333, 371) )",
+      "action": "a_ai_task(250, 1);a_ai_task(333, 2);a_ai_task(333, 1);a_ai_task(333, 5);a_ai_task(334, 1);a_ai_task(334, 2);a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_33\"), 0);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_34\"), 40, false, 2);a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_35\"), 35); mission.trig.func[11]=nil;",
+      "func": "if mission.trig.conditions[11]() then mission.trig.actions[11]() end"
     },
     {
       "type": "triggerFront",
@@ -2609,75 +2833,535 @@
       "func": "if mission.trig.conditions[27]() then if not mission.trig.flag[27] then mission.trig.actions[27](); mission.trig.flag[27] = true;end; else mission.trig.flag[27] = false; end;"
     },
     {
-      "type": "triggerOnce",
-      "index": 4,
+      "type": "triggerContinious",
+      "index": 22,
       "rules": [
         {
-          "flag": "5",
+          "flag": "0",
           "predicate": "c_flag_is_true"
+        },
+        {
+          "flag": "SUCCESS",
+          "predicate": "c_flag_is_false"
         }
       ],
       "actions": [
         {
-          "predicate": "a_set_flag",
-          "flag": "10"
+          "seconds": 10,
+          "start_delay": 0,
+          "KeyDict_text": "DictKey_ActionText_257",
+          "text": "DictKey_ActionText_257",
+          "predicate": "a_out_text_delay",
+          "clearview": false
         },
         {
-          "predicate": "a_activate_group",
-          "group": 301
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 302
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 303
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 304
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 305
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 306
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 307
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 308
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 309
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 310
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 311
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 312
-        },
-        {
-          "predicate": "a_activate_group",
-          "group": 313
+          "file": "ResKey_Action_268",
+          "start_delay": 0,
+          "predicate": "a_out_sound"
         }
       ],
-      "condition": "return(c_flag_is_true(\"5\") )",
-      "action": "a_set_flag(\"10\");a_activate_group(301);a_activate_group(302);a_activate_group(303);a_activate_group(304);a_activate_group(305);a_activate_group(306);a_activate_group(307);a_activate_group(308);a_activate_group(309);a_activate_group(310);a_activate_group(311);a_activate_group(312);a_activate_group(313); mission.trig.func[4]=nil;",
-      "func": "if mission.trig.conditions[4]() then mission.trig.actions[4]() end"
+      "condition": "return(c_flag_is_true(\"0\") and c_flag_is_false(\"SUCCESS\") )",
+      "action": "a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_257\"), 10, false, 0);a_out_sound(getValueResourceByKey(\"ResKey_Action_268\"), 0);",
+      "func": "if mission.trig.conditions[22]() then mission.trig.actions[22]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 12,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 171,
+          "group": 333,
+          "predicate": "c_group_life_less",
+          "percent": 35
+        },
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 171,
+          "group": 334,
+          "predicate": "c_group_life_less",
+          "percent": 90
+        },
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 171,
+          "group": 335,
+          "predicate": "c_group_life_less",
+          "percent": 90
+        }
+      ],
+      "actions": [
+        {
+          "predicate": "a_out_sound_s",
+          "file": "ResKey_Action_37",
+          "start_delay": 0,
+          "coalitionlist": "blue"
+        },
+        {
+          "coalitionlist": "blue",
+          "start_delay": 0,
+          "seconds": 120,
+          "predicate": "a_out_text_delay_s",
+          "text": "DictKey_ActionText_38",
+          "KeyDict_text": "DictKey_ActionText_38",
+          "clearview": false
+        },
+        {
+          "group": 341,
+          "predicate": "a_deactivate_group"
+        },
+        {
+          "group": 340,
+          "predicate": "a_deactivate_group"
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 337,
+            "2": 1
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 333,
+            "2": 4
+          }
+        },
+        {
+          "predicate": "a_ai_task",
+          "ai_task": {
+            "1": 333,
+            "2": 3
+          }
+        }
+      ],
+      "condition": "return(c_group_life_less(333, 35) and c_group_life_less(334, 90) and c_group_life_less(335, 90) )",
+      "action": "a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_37\"), 0);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_38\"), 120, false, 0);a_deactivate_group(341);a_deactivate_group(340);a_ai_task(337, 1);a_ai_task(333, 4);a_ai_task(333, 3); mission.trig.func[12]=nil;",
+      "func": "if mission.trig.conditions[12]() then mission.trig.actions[12]() end"
+    },
+    {
+      "type": "triggerFront",
+      "index": 23,
+      "rules": [
+        {
+          "group": 79,
+          "seconds": 10,
+          "predicate": "c_part_of_group_in_zone",
+          "zone": 12
+        }
+      ],
+      "actions": [
+        {
+          "volume": 1000,
+          "group": 90,
+          "flag": 6,
+          "predicate": "a_activate_group",
+          "unit": ""
+        },
+        {
+          "group": 83,
+          "volume": 1000,
+          "predicate": "a_deactivate_group",
+          "unit": ""
+        }
+      ],
+      "condition": "return(c_part_of_group_in_zone(79, 12) )",
+      "action": "a_activate_group(90);a_deactivate_group(83);",
+      "func": "if mission.trig.conditions[23]() then if not mission.trig.flag[23] then mission.trig.actions[23](); mission.trig.flag[23] = true;end; else mission.trig.flag[23] = false; end;"
+    },
+    {
+      "type": "triggerContinious",
+      "index": 23,
+      "rules": [
+        {
+          "flag": "0",
+          "predicate": "c_flag_is_true"
+        },
+        {
+          "flag": "SUCCESS",
+          "predicate": "c_flag_is_false"
+        },
+        {
+          "flag": "BANK",
+          "predicate": "c_flag_is_false"
+        }
+      ],
+      "actions": [
+        {
+          "seconds": 10,
+          "start_delay": 0,
+          "predicate": "a_out_text_delay",
+          "text": "DictKey_ActionText_269",
+          "KeyDict_text": "DictKey_ActionText_269",
+          "clearview": false
+        }
+      ],
+      "condition": "return(c_flag_is_true(\"0\") and c_flag_is_false(\"SUCCESS\") and c_flag_is_false(\"BANK\") )",
+      "action": "a_out_text_delay(getValueDictByKey(\"DictKey_ActionText_269\"), 10, false, 0);",
+      "func": "if mission.trig.conditions[23]() then mission.trig.actions[23]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 1,
+      "rules": [
+        {
+          "coalitionlist": "red",
+          "unitType": "ALL",
+          "zone": 10,
+          "group": 217,
+          "predicate": "c_part_of_group_in_zone"
+        }
+      ],
+      "actions": [
+        {
+          "volume": 100,
+          "predicate": "a_explosion_unit",
+          "unit": 369
+        },
+        {
+          "group": 218,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 220,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 236,
+          "predicate": "a_activate_group"
+        },
+        {
+          "predicate": "a_out_sound_s",
+          "file": "ResKey_Action_148",
+          "start_delay": 2,
+          "coalitionlist": "blue"
+        },
+        {
+          "coalitionlist": "blue",
+          "start_delay": 2,
+          "seconds": 9,
+          "predicate": "a_out_text_delay_s",
+          "text": "DictKey_ActionText_149",
+          "KeyDict_text": "DictKey_ActionText_149",
+          "clearview": false
+        },
+        {
+          "seconds": 9,
+          "start_delay": 2,
+          "size_units": "0",
+          "predicate": "a_out_picture_s",
+          "size": 10,
+          "vertAlignment": "0",
+          "horzAlignment": "0",
+          "file": "ResKey_Action_150",
+          "coalitionlist": "blue",
+          "clearview": false
+        },
+        {
+          "predicate": "a_out_sound_s",
+          "file": "ResKey_Action_151",
+          "start_delay": 10,
+          "coalitionlist": "blue"
+        },
+        {
+          "coalitionlist": "blue",
+          "start_delay": 10,
+          "seconds": 60,
+          "predicate": "a_out_text_delay_s",
+          "text": "DictKey_ActionText_152",
+          "KeyDict_text": "DictKey_ActionText_152",
+          "clearview": false
+        },
+        {
+          "seconds": 60,
+          "start_delay": 10,
+          "size_units": "0",
+          "predicate": "a_out_picture_s",
+          "size": 10,
+          "vertAlignment": "0",
+          "horzAlignment": "0",
+          "file": "ResKey_Action_153",
+          "coalitionlist": "blue",
+          "clearview": false
+        },
+        {
+          "predicate": "a_out_sound_s",
+          "file": "ResKey_Action_154",
+          "start_delay": 100,
+          "coalitionlist": "blue"
+        },
+        {
+          "coalitionlist": "blue",
+          "start_delay": 100,
+          "seconds": 60,
+          "predicate": "a_out_text_delay_s",
+          "text": "DictKey_ActionText_155",
+          "KeyDict_text": "DictKey_ActionText_155",
+          "clearview": false
+        },
+        {
+          "seconds": 60,
+          "start_delay": 100,
+          "size_units": "0",
+          "predicate": "a_out_picture_s",
+          "size": 10,
+          "vertAlignment": "0",
+          "horzAlignment": "0",
+          "file": "ResKey_Action_156",
+          "coalitionlist": "blue",
+          "clearview": false
+        }
+      ],
+      "condition": "return(c_part_of_group_in_zone(217, 10) )",
+      "action": "a_explosion_unit(369, 100);a_activate_group(218);a_activate_group(220);a_activate_group(236);a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_148\"), 2);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_149\"), 9, false, 2);a_out_picture_s(\"blue\", getValueResourceByKey(\"ResKey_Action_150\"), 9, false, 2, \"0\", \"0\", 10, \"0\");a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_151\"), 10);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_152\"), 60, false, 10);a_out_picture_s(\"blue\", getValueResourceByKey(\"ResKey_Action_153\"), 60, false, 10, \"0\", \"0\", 10, \"0\");a_out_sound_s(\"blue\", getValueResourceByKey(\"ResKey_Action_154\"), 100);a_out_text_delay_s(\"blue\", getValueDictByKey(\"DictKey_ActionText_155\"), 60, false, 100);a_out_picture_s(\"blue\", getValueResourceByKey(\"ResKey_Action_156\"), 60, false, 100, \"0\", \"0\", 10, \"0\"); mission.trig.func[1]=nil;",
+      "func": "if mission.trig.conditions[1]() then mission.trig.actions[1]() end"
+    },
+    {
+      "type": "triggerFront",
+      "index": 37,
+      "rules": [
+        {
+          "coalitionlist": "",
+          "zone": "",
+          "flag": 40,
+          "predicate": "c_flag_is_true",
+          "seconds": 5
+        }
+      ],
+      "actions": [
+        {
+          "seconds": 20,
+          "flag": 1,
+          "text": "DictKey_53",
+          "predicate": "a_out_text_delay",
+          "KeyDict_text": "DictKey_53"
+        },
+        {
+          "ai_task": {
+            "1": "",
+            "2": ""
+          },
+          "predicate": "a_out_sound",
+          "color": "0",
+          "file": "ResKey_Action_15",
+          "bearing": "0",
+          "unit": 1
+        },
+        {
+          "ai_task": {
+            "1": "",
+            "2": ""
+          },
+          "color": "0",
+          "predicate": "a_signal_flare_unit",
+          "bearing": "0",
+          "unit": 91
+        },
+        {
+          "unit": 92,
+          "color": "3",
+          "bearing": 90,
+          "predicate": "a_signal_flare_unit",
+          "ai_task": {
+            "1": "",
+            "2": ""
+          }
+        },
+        {
+          "ai_task": {
+            "1": "",
+            "2": ""
+          },
+          "color": "3",
+          "predicate": "a_signal_flare_unit",
+          "bearing": 270,
+          "unit": 93
+        },
+        {
+          "unit": 94,
+          "color": "1",
+          "bearing": 180,
+          "predicate": "a_signal_flare_unit",
+          "ai_task": {
+            "1": "",
+            "2": ""
+          }
+        },
+        {
+          "flag": 40,
+          "predicate": "a_clear_flag",
+          "ai_task": {
+            "1": "",
+            "2": ""
+          }
+        }
+      ],
+      "condition": "return(c_flag_is_true(40) )",
+      "action": "a_out_text_delay(getValueDictByKey(\"DictKey_53\"), 20, false, 0);a_out_sound(getValueResourceByKey(\"ResKey_Action_15\"), 0);a_signal_flare_unit(91, \"0\", \"0\");a_signal_flare_unit(92, \"3\", 90);a_signal_flare_unit(93, \"3\", 270);a_signal_flare_unit(94, \"1\", 180);a_clear_flag(40);",
+      "func": "if mission.trig.conditions[37]() then if not mission.trig.flag[37] then mission.trig.actions[37](); mission.trig.flag[37] = true;end; else mission.trig.flag[37] = false; end;"
+    },
+    {
+      "type": "triggerContinious",
+      "index": 30,
+      "rules": [
+        {
+          "flag": "0",
+          "predicate": "c_flag_is_true"
+        },
+        {
+          "flag": "SUCCESS",
+          "predicate": "c_flag_is_false"
+        }
+      ],
+      "actions": [
+        {
+          "predicate": "c_stop_wait_for_user"
+        },
+        {
+          "flag": "0",
+          "predicate": "a_clear_flag"
+        },
+        {
+          "flag": "0",
+          "predicate": "c_start_wait_for_user",
+          "flag_back": "0"
+        }
+      ],
+      "condition": "return(c_flag_is_true(\"0\") and c_flag_is_false(\"SUCCESS\") )",
+      "action": "c_stop_wait_for_user();a_clear_flag(\"0\");c_start_wait_for_user(\"0\", \"0\");",
+      "func": "if mission.trig.conditions[30]() then mission.trig.actions[30]() end"
+    },
+    {
+      "type": "triggerOnce",
+      "index": 2,
+      "rules": [
+        {
+          "predicate": "c_part_of_coalition_in_zone",
+          "coalitionlist": "blue",
+          "unitType": "GROUND",
+          "zone": 20
+        }
+      ],
+      "actions": [
+        {
+          "group": 179,
+          "predicate": "a_activate_group"
+        },
+        {
+          "group": 228,
+          "predicate": "a_activate_group"
+        }
+      ],
+      "condition": "return(c_part_of_coalition_in_zone(\"blue\", 20, \"GROUND\") )",
+      "action": "a_activate_group(179);a_activate_group(228); mission.trig.func[2]=nil;",
+      "func": "if mission.trig.conditions[2]() then mission.trig.actions[2]() end"
+    },
+    {
+      "type": "triggerFront",
+      "index": 11,
+      "rules": [
+        {
+          "group": 67,
+          "zone": 306,
+          "predicate": "c_unit_out_zone",
+          "unit": 276
+        },
+        {
+          "group": 67,
+          "zone": 306,
+          "predicate": "c_unit_out_zone",
+          "unit": 277
+        }
+      ],
+      "actions": [
+        {
+          "ai_task": {
+            "1": 13,
+            "2": 2
+          },
+          "meters": 1000,
+          "predicate": "a_ai_task",
+          "zone": 102
+        }
+      ],
+      "condition": "return(c_unit_out_zone(276, 306) and c_unit_out_zone(277, 306) )",
+      "action": "a_ai_task(13, 2);",
+      "func": "if mission.trig.conditions[11]() then if not mission.trig.flag[11] then mission.trig.actions[11](); mission.trig.flag[11] = true;end; else mission.trig.flag[11] = false; end;"
+    },
+    {
+      "type": "triggerContinious",
+      "index": 7,
+      "rules": [
+        {
+          "seconds": 1,
+          "flag": "32",
+          "text": "DictKey_ActionText_244",
+          "KeyDict_text": "DictKey_ActionText_244",
+          "predicate": "c_time_since_flag"
+        },
+        {
+          "altitude": 1900,
+          "predicate": "c_unit_altitude_higher",
+          "text": "DictKey_ActionText_249",
+          "KeyDict_text": "DictKey_ActionText_249",
+          "unit": 1
+        },
+        {
+          "flag": "21",
+          "text": "DictKey_ActionText_245",
+          "predicate": "c_flag_is_false",
+          "KeyDict_text": "DictKey_ActionText_245"
+        },
+        {
+          "flag": "43",
+          "text": "DictKey_ActionText_270",
+          "predicate": "c_flag_is_false",
+          "KeyDict_text": "DictKey_ActionText_270"
+        },
+        {
+          "flag": "39",
+          "text": "DictKey_ActionText_248",
+          "predicate": "c_flag_is_false",
+          "KeyDict_text": "DictKey_ActionText_248"
+        },
+        {
+          "flag": "99",
+          "text": "DictKey_ActionText_247",
+          "predicate": "c_flag_is_false",
+          "KeyDict_text": "DictKey_ActionText_247"
+        }
+      ],
+      "actions": [
+        {
+          "predicate": "c_stop_wait_for_user"
+        },
+        {
+          "predicate": "a_clear_flag",
+          "flag": "32"
+        },
+        {
+          "seconds": 900,
+          "start_delay": 0,
+          "predicate": "a_out_text_delay_g",
+          "group": 1,
+          "text": "DictKey_ActionText_246",
+          "KeyDict_text": "DictKey_ActionText_246",
+          "clearview": true
+        },
+        {
+          "group": 1,
+          "file": "ResKey_Action_250",
+          "predicate": "a_out_sound_g",
+          "start_delay": 0
+        }
+      ],
+      "condition": "return(c_time_since_flag(\"32\", 1) and c_unit_altitude_higher(1, 1900) and c_flag_is_false(\"21\") and c_flag_is_false(\"43\") and c_flag_is_false(\"39\") and c_flag_is_false(\"99\") )",
+      "action": "c_stop_wait_for_user();a_clear_flag(\"32\");a_out_text_delay_g(1, getValueDictByKey(\"DictKey_ActionText_246\"), 900, true, 0);a_out_sound_g(1, getValueResourceByKey(\"ResKey_Action_250\"), 0);",
+      "func": "if mission.trig.conditions[7]() then mission.trig.actions[7]() end"
     }
   ]
 }

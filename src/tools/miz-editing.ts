@@ -507,8 +507,13 @@ export function registerMizEditingTools(server: McpServer): void {
       description:
         "Add a static object — buildings, fortifications, FARP equipment, cargo, or a parked aircraft/" +
         "vehicle/ship as scenery. Type ids come from dcs_list_unit_types (category=static, or any aircraft/" +
-        "vehicle/ship type). Cargo statics take massKg (default 1000) for sling loading.\n\n" +
-        "Args: sessionId, side, country, name, type, x/y or lat/lon, heading? (degrees), hidden?, dead?, massKg?\n\n" +
+        "vehicle/ship type). Cargo statics take massKg (default 1000) for sling loading. " +
+        "'big_smoke' is the editor's smoke/fire effect (the only one DCS offers, per ED's own db_countries.lua) and " +
+        "needs effectPreset 1-8; the editor's preset labels live in a table this server cannot read, so they are not " +
+        "named. liveryId applies to aircraft and ship statics. hiddenOnPlanner/hiddenOnMFD hide the object from the " +
+        "planner map or cockpit moving maps only.\n\n" +
+        "Args: sessionId, side, country, name, type, x/y or lat/lon, heading? (degrees), hidden?, dead?, massKg?, " +
+        "effectPreset?, effectTransparency?, effectCourseDegrees?, liveryId?, hiddenOnPlanner?, hiddenOnMFD?\n\n" +
         "Returns JSON: { added, category }.",
       inputSchema: z
         .object({
@@ -523,6 +528,12 @@ export function registerMizEditingTools(server: McpServer): void {
           hidden: z.boolean().default(false),
           dead: z.boolean().default(false).describe("Place as a destroyed wreck"),
           massKg: z.number().min(1).max(100000).optional(),
+          effectPreset: z.number().int().min(1).max(8).optional().describe("Effect statics only (big_smoke): editor preset 1-8"),
+          effectTransparency: z.number().min(0).max(1).optional().describe("Effect statics only: 0 invisible, 1 as the editor saves"),
+          effectCourseDegrees: z.number().min(0).max(360).optional().describe("Effect statics only: the editor's COURSE spinner"),
+          liveryId: z.string().min(1).max(120).optional().describe("Aircraft/ship statics: livery name (dcs_list_liveries)"),
+          hiddenOnPlanner: z.boolean().optional(),
+          hiddenOnMFD: z.boolean().optional(),
         })
         .strict(),
       outputSchema: z.object({ added: z.string(), category: z.string() }),
@@ -544,6 +555,12 @@ export function registerMizEditingTools(server: McpServer): void {
           hidden: a.hidden,
           dead: a.dead,
           massKg: a.massKg,
+          effectPreset: a.effectPreset,
+          effectTransparency: a.effectTransparency,
+          effectCourseDegrees: a.effectCourseDegrees,
+          liveryId: a.liveryId,
+          hiddenOnPlanner: a.hiddenOnPlanner,
+          hiddenOnMFD: a.hiddenOnMFD,
         });
         touched(s);
         const unit = (group["units"] as Record<number, Record<string, unknown>>)[1];

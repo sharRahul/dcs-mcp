@@ -6,11 +6,17 @@
  * oracle rather than a copy of anyone's mission.
  *
  * Usage:
- *   npx tsx tests/build-trig-oracle.ts "<missions folder>" tests/fixtures/trig-oracle.json
+ *   npx tsx tests/build-trig-oracle.ts "<folder>" ["<folder>" ...] tests/fixtures/trig-oracle.json
  *
- * Point it at a folder of missions saved by the DCS Mission Editor (for example
- * `Saved Games/DCS/Missions`). Rerun it after a DCS version bump to confirm the
- * trigger format has not changed.
+ * Point it at folders of missions saved by the DCS Mission Editor - for example
+ * `Saved Games/DCS/Missions` and the campaign missions shipped with DCS under
+ * `<DCS>/Mods/aircraft`. ED's own campaign missions are the widest
+ * source of trigger types; a user's folder is usually heavy on `triggerOnce`.
+ *
+ * Folders this project writes into are skipped (see EXCLUDED): an oracle built
+ * from our own output would assert that the compiler agrees with itself.
+ *
+ * Rerun it after a DCS version bump to confirm the trigger format has not changed.
  */
 import { readdirSync, statSync, writeFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
@@ -21,6 +27,12 @@ const SUPPORTED_CONDITIONS = new Set([
   "c_time_after", "c_time_since_flag", "c_flag_is_true", "c_flag_is_false", "c_flag_equals",
   "c_flag_more", "c_unit_in_zone", "c_unit_out_zone", "c_unit_dead", "c_group_dead",
   "c_group_life_less", "c_part_of_group_in_zone", "c_part_of_coalition_in_zone", "c_random_less",
+  // Added from the 2026-11-17 sweep of Mission-Editor-saved missions.
+  "c_group_alive", "c_unit_damaged", "c_all_of_group_in_zone", "c_part_of_group_out_zone",
+  "c_unit_in_zone_unit", "c_unit_altitude_higher", "c_unit_altitude_higher_AGL",
+  "c_unit_altitude_lower", "c_missile_in_zone", "c_bomb_in_zone",
+  // Not a call: a bare separator entry that makes the compiled chunk join with ` or `.
+  "or",
 ]);
 const SUPPORTED_ACTIONS = new Set([
   "a_out_text_delay", "a_out_text_delay_s", "a_out_text_delay_g", "a_out_text_delay_u",
@@ -34,6 +46,10 @@ const SUPPORTED_ACTIONS = new Set([
   "a_do_script", "a_do_script_file",
   // Named `c_*` but stored in a trigrule's `actions` array by DCS.
   "c_start_wait_for_user", "c_stop_wait_for_user",
+  // Added from the 2026-11-17 sweep of Mission-Editor-saved missions.
+  "a_explosion_unit", "a_explosion_marker", "a_explosion_marker_unit", "a_signal_flare_unit",
+  "a_out_picture_s", "a_mark_to_all", "a_add_radio_item_for_coalition",
+  "a_set_ATC_silent_mode", "a_shelling_zone", "a_zone_increment_resize", "a_ai_task",
 ]);
 
 /** Only the fields the compiler reads; ME writes many vestigial extras. */
@@ -44,6 +60,11 @@ const KEEP = new Set([
   "flag_back", "min_value", "max_value", "countrylist",
   "radiotext", "KeyDict_radiotext",
   "file", "frequency", "power", "modulation", "loop", "mic_effects", "squelch_effects",
+  // Parameters of the predicates added in the 2026-11-17 sweep.
+  "zoneunit", "numbombs", "typebomb", "nummissiles", "typemissile",
+  "size", "size_units", "horzAlignment", "vertAlignment",
+  "comment", "KeyDict_comment", "readonly",
+  "silent", "object", "data", "shells_count", "TNT", "meters", "ai_task",
 ]);
 
 function trim(entry: LuaTable): LuaTable {
@@ -52,11 +73,15 @@ function trim(entry: LuaTable): LuaTable {
   return out;
 }
 
+/** Folder names this project generates missions into; never oracle material. */
+const EXCLUDED = new Set(["vs code missions", "opencode missions", "test missions", ".acceptance", "dist"]);
+
 function walk(dir: string, acc: string[] = []): string[] {
   let ents: string[]; try { ents = readdirSync(dir); } catch { return acc; }
   for (const e of ents) {
     const p = path.join(dir, e); let st; try { st = statSync(p); } catch { continue; }
-    if (st.isDirectory()) walk(p, acc); else if (e.toLowerCase().endsWith(".miz")) acc.push(p);
+    if (st.isDirectory()) { if (!EXCLUDED.has(e.toLowerCase())) walk(p, acc); }
+    else if (e.toLowerCase().endsWith(".miz")) acc.push(p);
   }
   return acc;
 }
@@ -93,6 +118,11 @@ function splitConds(src: string): string[] {
     if (ch === "(") depth++;
     if (ch === ")") depth--;
     if (depth === 0 && body.startsWith(" and ", i)) { const t = cur.trim(); if (t) out.push(t); cur = ""; i += 4; continue; }
+    // An `or` entry in the spec is a bare separator, so emit a placeholder part
+    // for it: that keeps the parts aligned with the spec entries one for one.
+    if (depth === 0 && body.startsWith(" or ", i)) {
+      const t = cur.trim(); if (t) out.push(t); out.push("or"); cur = ""; i += 3; continue;
+    }
     cur += ch;
   }
   const t = cur.trim(); if (t) out.push(t);
@@ -103,7 +133,20 @@ function splitConds(src: string): string[] {
  * `role` is recorded rather than inferred from the name: DCS stores
  * `c_start_wait_for_user` in a trigrule's ACTIONS array despite the `c_` prefix.
  */
-interface PredicateCase { predicate: string; role: "condition" | "action"; spec: LuaTable; lua: string }
+interface PredicateCase {
+  predicate: string;
+  role: "condition" | "action";
+  spec: LuaTable;
+  lua: string;
+  /**
+   * Other compiled forms the editor wrote for a spec with the SAME fields.
+   * Present only when DCS itself is inconsistent - `a_radio_transmission`
+   * appears with eleven and twelve arguments for identical rules, and
+   * `a_explosion_marker` with three and four - so a compiler cannot be required
+   * to produce one particular form. A test should accept any of them.
+   */
+  alternatives?: string[];
+}
 interface RuleCase {
   type: string; index: number;
   rules: LuaTable[]; actions: LuaTable[];
@@ -121,20 +164,48 @@ const candidates = new Map<string, PredicateCase[]>();
 function template(lua: string): string {
   return lua.replace(/"(\\.|[^"\\])*"/g, "V").replace(/-?\d+(\.\d+)?/g, "V");
 }
+/**
+ * Pick the case to record for a predicate: the most common compiled SHAPE across
+ * the whole corpus.
+ *
+ * Shape, not field set, because several of the editor's actions take a trailing
+ * argument that no field in the rule explains - `a_out_text_delay` emits
+ * `, 0` whether or not the rule carries `start_delay`, and
+ * `a_radio_transmission` appears with both 11 and 12 arguments for identical
+ * specs. The corpus majority is therefore the only sound answer, and a compiler
+ * that reproduces it reproduces what DCS wrote in the overwhelming majority of
+ * real missions. Rules whose own sub-calls disagree with that majority are
+ * dropped below, so a mission with a stale `trig` cannot define the format.
+ */
 function pickMajority(list: PredicateCase[]): PredicateCase {
   const groups = new Map<string, PredicateCase[]>();
   for (const c of list) {
     const key = template(c.lua);
     (groups.get(key) ?? groups.set(key, []).get(key)!).push(c);
   }
-  return [...groups.values()].sort((a, b) => b.length - a.length)[0][0];
+  const ranked = [...groups.values()].sort((a, b) => b.length - a.length);
+  const chosen = ranked[0][0];
+  // Any other form the editor produced for a spec with the same fields is a
+  // genuine alternative, not a mistake: record it instead of pretending the
+  // majority is the only shape DCS writes.
+  const fields = Object.keys(chosen.spec).sort().join(",");
+  const alternatives = ranked
+    .slice(1)
+    .map((group) => group.find((c) => Object.keys(c.spec).sort().join(",") === fields))
+    .filter((c): c is PredicateCase => c !== undefined)
+    .map((c) => c.lua);
+  return alternatives.length ? { ...chosen, alternatives } : chosen;
 }
 
 const predicateCases = new Map<string, PredicateCase>();
 const ruleCases: RuleCase[] = [];
 const seenRuleShape = new Set<string>();
 
-for (const f of walk(process.argv[2])) {
+const roots = process.argv.slice(2, -1);
+if (!roots.length) throw new Error("usage: build-trig-oracle.ts <folder> [<folder> ...] <out.json>");
+const missionFiles = roots.flatMap((r) => walk(r));
+
+for (const f of missionFiles) {
   let mission: LuaTable;
   try {
     const zip = new AdmZip(f);
@@ -168,6 +239,9 @@ for (const f of walk(process.argv[2])) {
       specConds.forEach((c, j) => {
         const p = String(c["predicate"]);
         if (!SUPPORTED_CONDITIONS.has(p)) return;
+        // `or` compiles to no call of its own, so there is nothing to record for
+        // it on its own; it is exercised through the whole-trigger cases.
+        if (p === "or") return;
         const key = "c:" + p;
         (candidates.get(key) ?? candidates.set(key, []).get(key)!).push({ predicate: p, role: "condition", spec: trim(c), lua: condParts[j] });
       });
@@ -214,16 +288,27 @@ const consistent = ruleCases.filter((r) => {
   return parts.every(([key, lua]) => majorityTemplate.get(key) === template(lua));
 });
 
-const selected: RuleCase[] = [];
+// Keep one case per (type, nConditions, nActions) shape, and take the types in
+// rotation so a folder full of `triggerOnce` triggers cannot use up the whole
+// budget before the `triggerStart`/`triggerFront`/`triggerContinious` cases that
+// only a few missions contain. The wiring differs per type, so each one must be
+// represented or the end-to-end test silently stops checking it.
+const PER_TYPE = 12;
+const byType = new Map<string, RuleCase[]>();
 for (const r of consistent) {
   const shape = `${r.type}:${r.rules.length}:${r.actions.length}`;
-  if (seenRuleShape.has(shape) || selected.length >= 40) continue;
+  if (seenRuleShape.has(shape)) continue;
   seenRuleShape.add(shape);
-  selected.push(r);
+  (byType.get(r.type) ?? byType.set(r.type, []).get(r.type)!).push(r);
+}
+const selected: RuleCase[] = [];
+for (let i = 0; i < PER_TYPE; i++) {
+  for (const list of byType.values()) if (list[i]) selected.push(list[i]);
 }
 
-mkdirSync(path.dirname(process.argv[3]), { recursive: true });
-writeFileSync(process.argv[3], JSON.stringify({
+const outPath = process.argv[process.argv.length - 1];
+mkdirSync(path.dirname(outPath), { recursive: true });
+writeFileSync(outPath, JSON.stringify({
   note:
     "Trigger format oracle captured from DCS Mission-Editor-saved .miz files. " +
     "Each entry pairs a mission.trigrules spec with the mission.trig Lua DCS compiled for it. " +

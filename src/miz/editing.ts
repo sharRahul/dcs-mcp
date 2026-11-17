@@ -415,15 +415,52 @@ export interface AddStaticArgs {
   dead?: boolean;
   /** Cargo statics only: mass in kg (sling-loadable cargo). */
   massKg?: number;
+  /** Effect statics only (`big_smoke`): which of the editor's presets, 1-8. */
+  effectPreset?: number;
+  /** Effect statics only: 0 is invisible, 1 is what the editor saves. */
+  effectTransparency?: number;
+  /** Effect statics only: the editor's own COURSE spinner, in degrees. */
+  effectCourseDegrees?: number;
+  /** Aircraft, helicopter and ship statics: a livery name, as the editor stores it. */
+  liveryId?: string;
+  /** Hidden from the mission planner map only. */
+  hiddenOnPlanner?: boolean;
+  /** Hidden from in-cockpit MFD moving maps only. */
+  hiddenOnMFD?: boolean;
 }
+
+/**
+ * Effect statics: the editor's smoke-and-fire column objects.
+ *
+ * `big_smoke` is the ONLY one DCS offers. ED's own
+ * `Scripts/Database/db_countries.lua` declares `default_Effects = make_unit_list{
+ * "big_smoke" }` with `smoky_marker`, `smoking_line` and `dust_smoke` commented
+ * out beside it, so the others are not placeable and are not accepted here.
+ *
+ * It is absent from the pinned pydcs catalogue, which is why it needs naming
+ * here at all: without this, the one effect object the editor offers could not
+ * be placed. Its fields come from `MissionEditor/modules/me_static.lua`
+ * (`effectPreset`, `effectTransparency`, `effectCourse`) and from the presets
+ * seen in editor-saved missions.
+ */
+export const EFFECT_STATICS = new Set(["big_smoke"]);
+/**
+ * Presets 1-8 are what editor-saved missions carry for `big_smoke`. The
+ * editor's own list (`udb.tblPresets`, which also holds its labels and default)
+ * is not in any file this project can read, so the labels are not claimed and a
+ * preset outside the observed range is refused rather than guessed at.
+ */
+export const EFFECT_PRESET_RANGE = { min: 1, max: 8 };
 
 /** The `category` a static unit carries, from the catalogue. */
 function staticCategory(type: string): { category: string; shape?: string; rate?: number; canCargo?: boolean } {
+  if (EFFECT_STATICS.has(type)) return { category: "Effects" };
   const hit = findUnitType(type);
   if (!hit) {
     throw new Error(
       `Unknown static type '${type}'. Find one with dcs_list_unit_types category=static ` +
-        `(e.g. 'FARP Ammo Dump Coating', '.Command Center', 'Hangar A').`
+        `(e.g. 'FARP Ammo Dump Coating', '.Command Center', 'Hangar A'), ` +
+        `or '${[...EFFECT_STATICS].join("', '")}' for the editor's smoke effect.`
     );
   }
   switch (hit.category) {
@@ -459,6 +496,31 @@ export function addStatic(mission: LuaTable, args: AddStaticArgs): LuaTable {
   if (args.massKg !== undefined && !meta.canCargo) {
     throw new Error(`'${args.type}' is not a cargo static; massKg only applies to cargo.`);
   }
+  const isEffect = EFFECT_STATICS.has(args.type);
+  if (!isEffect && (args.effectPreset !== undefined || args.effectTransparency !== undefined || args.effectCourseDegrees !== undefined)) {
+    throw new Error(
+      `'${args.type}' is not an effect static; effect settings apply to '${[...EFFECT_STATICS].join("', '")}' only. ` +
+        `The editor writes effectPreset on other statics too, but as a vestigial default it does nothing there.`
+    );
+  }
+  if (isEffect) {
+    const preset = args.effectPreset;
+    if (preset === undefined) {
+      throw new Error(
+        `'${args.type}' needs effectPreset (${EFFECT_PRESET_RANGE.min}-${EFFECT_PRESET_RANGE.max}): ` +
+          `the editor's default comes from a preset table this server cannot read, so it is not assumed.`
+      );
+    }
+    if (!Number.isInteger(preset) || preset < EFFECT_PRESET_RANGE.min || preset > EFFECT_PRESET_RANGE.max) {
+      throw new Error(
+        `effectPreset must be an integer ${EFFECT_PRESET_RANGE.min}-${EFFECT_PRESET_RANGE.max}; ` +
+          `that is the range editor-saved missions use, and nothing documents more.`
+      );
+    }
+    if (args.effectTransparency !== undefined && (args.effectTransparency < 0 || args.effectTransparency > 1)) {
+      throw new Error("effectTransparency is 0 to 1");
+    }
+  }
   const country = ensureCountry(mission, args.side, args.country, countryId(args.country, args.countryId));
   const ids = maxIds(mission);
   const heading = normalizeRadians((args.heading ?? 0) * DEG);
@@ -473,6 +535,19 @@ export function addStatic(mission: LuaTable, args: AddStaticArgs): LuaTable {
   };
   if (meta.shape) unit["shape_name"] = meta.shape;
   if (meta.rate !== undefined) unit["rate"] = meta.rate;
+  if (isEffect && args.effectPreset !== undefined) {
+    unit["effectPreset"] = args.effectPreset;
+    unit["effectTransparency"] = args.effectTransparency ?? 1;
+    if (args.effectCourseDegrees !== undefined) {
+      unit["effectCourse"] = args.effectCourseDegrees;
+    }
+  }
+  if (args.liveryId !== undefined) {
+    if (!["Planes", "Helicopters", "Ships"].includes(meta.category)) {
+      throw new Error(`'${args.type}' is a ${meta.category} static; liveryId applies to aircraft and ships.`);
+    }
+    unit["livery_id"] = args.liveryId;
+  }
   if (meta.canCargo) {
     unit["canCargo"] = true;
     unit["mass"] = args.massKg ?? 1000;
@@ -485,6 +560,9 @@ export function addStatic(mission: LuaTable, args: AddStaticArgs): LuaTable {
     y: args.y,
     hidden: args.hidden ?? false,
     dead: args.dead ?? false,
+    // Written only when asked for: the editor leaves both out by default.
+    ...(args.hiddenOnPlanner === undefined ? {} : { hiddenOnPlanner: args.hiddenOnPlanner }),
+    ...(args.hiddenOnMFD === undefined ? {} : { hiddenOnMFD: args.hiddenOnMFD }),
     units: { 1: unit },
     route: {
       points: {

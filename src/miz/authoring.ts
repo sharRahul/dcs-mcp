@@ -954,7 +954,24 @@ export type ConditionSpec =
   | { kind: "group_life_less"; group: string; percent: number }
   | { kind: "part_of_group_in_zone"; group: string; zone: string }
   | { kind: "part_of_coalition_in_zone"; coalition: Side; zone: string; unitType?: UnitTypeFilter }
-  | { kind: "random_less"; percent: number };
+  | { kind: "random_less"; percent: number }
+  // --- captured in the 2026-11-17 sweep of Mission-Editor-saved missions -----
+  | { kind: "group_alive"; group: string }
+  | { kind: "unit_damaged"; unit: string }
+  | { kind: "all_of_group_in_zone"; group: string; zone: string }
+  | { kind: "part_of_group_out_zone"; group: string; zone: string }
+  // The editor's moving zone: `zone` gives the size, `zoneUnit` carries it.
+  | { kind: "unit_in_zone_unit"; unit: string; zone: string; zoneUnit: string }
+  | { kind: "unit_altitude_higher"; unit: string; altitudeMetres: number }
+  | { kind: "unit_altitude_higher_agl"; unit: string; altitudeMetres: number }
+  | { kind: "unit_altitude_lower"; unit: string; altitudeMetres: number }
+  // `types` is the editor's own four-number weapon selector, which this server
+  // does not interpret: copy it from a mission that already does what you want.
+  | { kind: "missile_in_zone"; zone: string; types: number[]; count?: number }
+  | { kind: "bomb_in_zone"; zone: string; types: number[]; count?: number }
+  // Not a test: a separator that makes the compiled chunk join with ` or `
+  // instead of ` and `, exactly as the editor's OR condition group does.
+  | { kind: "or" };
 
 export type ActionSpec =
   | { kind: "message"; text: string; seconds?: number; clearview?: boolean; delaySeconds?: number }
@@ -967,7 +984,7 @@ export type ActionSpec =
       delaySeconds?: number;
     }
   // The per-group message has no delay parameter in DCS.
-  | { kind: "message_to_group"; group: string; text: string; seconds?: number; clearview?: boolean }
+  | { kind: "message_to_group"; group: string; text: string; seconds?: number; clearview?: boolean; delaySeconds?: number }
   | { kind: "set_flag"; flag: number; value?: number }
   | { kind: "clear_flag"; flag: number }
   | { kind: "activate_group"; group: string }
@@ -1012,7 +1029,32 @@ export type ActionSpec =
     }
   // --- scripting ---
   | { kind: "do_script"; text: string }
-  | { kind: "do_script_file"; resourceKey: string };
+  | { kind: "do_script_file"; resourceKey: string }
+  // --- captured in the 2026-11-17 sweep of Mission-Editor-saved missions -----
+  | { kind: "explode_unit"; unit: string; power?: number }
+  | { kind: "smoke_marker"; zone: string; color?: number; altitudeMetres?: number }
+  | { kind: "smoke_marker_unit"; unit: string; color?: number; name?: string }
+  | { kind: "signal_flare_unit"; unit: string; color?: number; bearing?: number }
+  | {
+      kind: "picture_to_coalition";
+      coalition: Side;
+      resourceKey: string;
+      seconds?: number;
+      clearview?: boolean;
+      delaySeconds?: number;
+      size?: number;
+      horizontalAlignment?: number;
+      verticalAlignment?: number;
+      sizeUnits?: number;
+    }
+  | { kind: "mark_to_all"; id: number; text: string; zone: string; readonly?: boolean; comment?: string }
+  | { kind: "add_radio_item_for_coalition"; coalition: Side; text: string; flag: number; value?: number }
+  | { kind: "set_atc_silent_mode"; airdromeId: number; silent?: boolean }
+  | { kind: "shelling_zone"; zone: string; tnt: number; shells: number }
+  | { kind: "resize_zone"; zone: string; metres: number }
+  // Runs the group's n-th stored trigger task (the editor's "AI TASK PUSH"
+  // list on the group, not a route waypoint task).
+  | { kind: "ai_task"; group: string; taskNumber: number };
 
 const TRIGGER_PREDICATE: Record<TriggerType, string> = {
   start: "triggerStart",
@@ -1113,7 +1155,83 @@ function conditionRule(mission: LuaTable, c: ConditionSpec): LuaTable {
       };
     case "random_less":
       return { predicate: "c_random_less", percent: c.percent };
+    case "group_alive":
+      return { predicate: "c_group_alive", group: resolveGroupId(mission, c.group) };
+    case "unit_damaged":
+      return { predicate: "c_unit_damaged", unit: resolveUnitId(mission, c.unit) };
+    case "all_of_group_in_zone":
+      return {
+        predicate: "c_all_of_group_in_zone",
+        group: resolveGroupId(mission, c.group),
+        zone: resolveZoneId(mission, c.zone),
+      };
+    case "part_of_group_out_zone":
+      return {
+        predicate: "c_part_of_group_out_zone",
+        group: resolveGroupId(mission, c.group),
+        zone: resolveZoneId(mission, c.zone),
+      };
+    case "unit_in_zone_unit":
+      return {
+        predicate: "c_unit_in_zone_unit",
+        unit: resolveUnitId(mission, c.unit),
+        zone: resolveZoneId(mission, c.zone),
+        zoneunit: resolveUnitId(mission, c.zoneUnit),
+      };
+    case "unit_altitude_higher":
+      return {
+        predicate: "c_unit_altitude_higher",
+        unit: resolveUnitId(mission, c.unit),
+        altitude: c.altitudeMetres,
+      };
+    case "unit_altitude_higher_agl":
+      return {
+        predicate: "c_unit_altitude_higher_AGL",
+        unit: resolveUnitId(mission, c.unit),
+        altitude: c.altitudeMetres,
+      };
+    case "unit_altitude_lower":
+      return {
+        predicate: "c_unit_altitude_lower",
+        unit: resolveUnitId(mission, c.unit),
+        altitude: c.altitudeMetres,
+      };
+    case "missile_in_zone":
+      return {
+        predicate: "c_missile_in_zone",
+        typemissile: weaponSelector(c.types, "missile_in_zone"),
+        nummissiles: c.count ?? 1,
+        zone: resolveZoneId(mission, c.zone),
+      };
+    case "bomb_in_zone":
+      return {
+        predicate: "c_bomb_in_zone",
+        typebomb: weaponSelector(c.types, "bomb_in_zone"),
+        numbombs: c.count ?? 1,
+        zone: resolveZoneId(mission, c.zone),
+      };
+    case "or":
+      return { predicate: "or" };
   }
+}
+
+/**
+ * The editor's weapon selector for `c_missile_in_zone` / `c_bomb_in_zone`: four
+ * numbers it joins with dots in the compiled call (`"4.4.11.125"`). What the
+ * numbers MEAN is not documented anywhere this project can read, so they are
+ * passed through unchanged and never generated: copy them from a mission whose
+ * condition already selects the weapons you want.
+ */
+function weaponSelector(types: number[], kind: string): LuaTable {
+  if (types.length !== 4 || types.some((t) => !Number.isInteger(t) || t < 0)) {
+    throw new Error(
+      `${kind} needs exactly four non-negative integers (the editor's own weapon selector, ` +
+        `e.g. [4, 4, 11, 125] copied from an existing mission); got ${JSON.stringify(types)}.`
+    );
+  }
+  const out: LuaTable = {};
+  types.forEach((t, i) => { out[i + 1] = t; });
+  return out;
 }
 
 /**
@@ -1199,6 +1317,9 @@ function actionRule(mission: LuaTable, a: ActionSpec, dictionary?: LuaTable): Lu
         KeyDict_text: key,
         seconds: a.seconds ?? 10,
         clearview: a.clearview ?? false,
+        // Omitted entirely when no delay is asked for, so the call compiles to
+        // the editor's four-argument form.
+        ...(a.delaySeconds === undefined ? {} : { start_delay: a.delaySeconds }),
       };
     }
     case "set_flag":
@@ -1238,7 +1359,7 @@ function actionRule(mission: LuaTable, a: ActionSpec, dictionary?: LuaTable): Lu
         altitude: a.altitudeMetres ?? 1,
         // DCS stores flare colour and bearing as strings, not numbers.
         color: String(a.color ?? 1),
-        bearing: String(a.bearing ?? 0),
+        bearing: a.bearing ?? 0,
       };
     case "message_to_unit":
       return {
@@ -1333,6 +1454,90 @@ function actionRule(mission: LuaTable, a: ActionSpec, dictionary?: LuaTable): Lu
       return { predicate: "a_do_script", text: a.text };
     case "do_script_file":
       return { predicate: "a_do_script_file", file: a.resourceKey };
+    case "explode_unit":
+      return { predicate: "a_explosion_unit", unit: resolveUnitId(mission, a.unit), volume: a.power ?? 100 };
+    case "smoke_marker":
+      return {
+        predicate: "a_explosion_marker",
+        zone: resolveZoneId(mission, a.zone),
+        altitude: a.altitudeMetres ?? 1,
+        color: String(a.color ?? 0),
+      };
+    case "smoke_marker_unit":
+      return {
+        predicate: "a_explosion_marker_unit",
+        unit: resolveUnitId(mission, a.unit),
+        color: String(a.color ?? 0),
+        ...(a.name === undefined ? {} : { name: a.name }),
+      };
+    case "signal_flare_unit":
+      return {
+        predicate: "a_signal_flare_unit",
+        unit: resolveUnitId(mission, a.unit),
+        color: String(a.color ?? 0),
+        bearing: a.bearing ?? 0,
+      };
+    case "picture_to_coalition":
+      return {
+        predicate: "a_out_picture_s",
+        coalitionlist: a.coalition,
+        file: a.resourceKey,
+        seconds: a.seconds ?? 10,
+        clearview: a.clearview ?? false,
+        start_delay: a.delaySeconds ?? 0,
+        horzAlignment: String(a.horizontalAlignment ?? 0),
+        vertAlignment: String(a.verticalAlignment ?? 0),
+        size: a.size ?? 15,
+        size_units: String(a.sizeUnits ?? 0),
+      };
+    case "mark_to_all": {
+      // The label and the comment are two separate dictionary entries, with the
+      // editor's own prefixes; both come off the shared maxDictId counter.
+      const text = messageText(mission, dictionary, a.text);
+      const comment = dictionary
+        ? allocateDictKey(mission, dictionary, a.comment ?? "", "DictKey_ActionComment_")
+        : a.comment ?? "";
+      return {
+        predicate: "a_mark_to_all",
+        value: a.id,
+        text,
+        KeyDict_text: text,
+        zone: resolveZoneId(mission, a.zone),
+        readonly: a.readonly ?? false,
+        comment,
+        KeyDict_comment: comment,
+      };
+    }
+    case "add_radio_item_for_coalition":
+      return {
+        predicate: "a_add_radio_item_for_coalition",
+        coalitionlist: a.coalition,
+        ...radioText(mission, dictionary, a.text),
+        flag: String(a.flag),
+        value: a.value ?? 1,
+      };
+    case "set_atc_silent_mode":
+      return {
+        predicate: "a_set_ATC_silent_mode",
+        object: a.airdromeId,
+        data: { type: "airdromeId" },
+        silent: a.silent ?? true,
+      };
+    case "shelling_zone":
+      return {
+        predicate: "a_shelling_zone",
+        zone: resolveZoneId(mission, a.zone),
+        TNT: a.tnt,
+        shells_count: a.shells,
+      };
+    case "resize_zone":
+      return { predicate: "a_zone_increment_resize", zone: resolveZoneId(mission, a.zone), meters: a.metres };
+    case "ai_task": {
+      const task: LuaTable = {};
+      task[1] = resolveGroupId(mission, a.group);
+      task[2] = a.taskNumber;
+      return { predicate: "a_ai_task", ai_task: task };
+    }
   }
 }
 
@@ -1340,6 +1545,48 @@ function actionRule(mission: LuaTable, a: ActionSpec, dictionary?: LuaTable): Lu
 
 /** Raised when a trigrule uses a predicate this compiler has no verified mapping for. */
 class UncompilablePredicate extends Error {}
+
+/**
+ * Join compiled condition calls the way the editor does: ` and ` between
+ * tests, and a bare ` or ` wherever the rule list carries an `or` separator.
+ * The editor's OR condition group therefore comes out as
+ * `A and B or C and D` - Lua's own precedence, which is what DCS runs.
+ */
+function joinConditions(parts: string[]): string {
+  let out = "";
+  let afterOr = false;
+  for (const part of parts) {
+    if (part === OR_MARKER) { out += " or"; afterOr = true; continue; }
+    out += out === "" ? part : `${afterOr ? " " : " and "}${part}`;
+    afterOr = false;
+  }
+  // A list that starts or ends on a separator would compile to invalid Lua.
+  if (out.startsWith(" or") || out.endsWith(" or")) {
+    throw new UncompilablePredicate("an 'or' separator needs a condition on both sides");
+  }
+  return out;
+}
+
+/**
+ * The trailing `start_delay` of the text, sound and end-mission actions.
+ *
+ * The editor emits it whether or not the rule carries the field: across 3024
+ * editor-saved missions (29023 recompiled triggers) the four-argument form of
+ * `a_out_text_delay` appears only in missions whose `trig` predates their
+ * trigrules. So it is always written, defaulting to 0.
+ */
+function optionalDelay(rule: LuaTable): string {
+  return `, ${argNumberOr(rule, "start_delay", 0)}`;
+}
+
+/**
+ * Whether a rule carries a field at all. Some editor actions compile with an
+ * extra argument only when the field is present, so its absence is meaningful
+ * and must not be defaulted away.
+ */
+function has(rule: LuaTable, field: string): boolean {
+  return rule[field] !== undefined;
+}
 
 function argNumber(rule: LuaTable, field: string): string {
   const value = rule[field];
@@ -1360,10 +1607,29 @@ function argBool(rule: LuaTable, field: string, fallback: boolean): string {
   return (typeof value === "boolean" ? value : fallback) ? "true" : "false";
 }
 
+/** Optional string arg with a default, for fields the editor leaves out. */
+function argStringOr(rule: LuaTable, field: string, fallback: string): string {
+  const value = rule[field];
+  return quoteLuaString(typeof value === "string" ? value : fallback);
+}
+
 /** Optional numeric arg with a default, for fields older missions may omit. */
 function argNumberOr(rule: LuaTable, field: string, fallback: number): string {
   const value = rule[field];
   return String(typeof value === "number" && Number.isFinite(value) ? value : fallback);
+}
+
+/**
+ * Pass a stored value through with its own type: a number compiles bare, a
+ * string compiles quoted. The editor stores some arguments either way - a
+ * signal flare's `bearing` is `"0"` when it is zero and `90` when it is not -
+ * and DCS reads both, so the type is preserved rather than normalised.
+ */
+function argValue(rule: LuaTable, field: string): string {
+  const value = rule[field];
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  if (typeof value === "string") return quoteLuaString(value);
+  throw new UncompilablePredicate(`'${field}' is not a number or a string`);
 }
 
 /** A flag reference is a plain integer id or a named flag string. */
@@ -1404,13 +1670,66 @@ const CONDITION_COMPILERS: Record<string, (r: LuaTable) => string> = {
   c_part_of_coalition_in_zone: (r) =>
     `c_part_of_coalition_in_zone(${argString(r, "coalitionlist")}, ${argNumber(r, "zone")}, ${argString(r, "unitType")})`,
   c_random_less: (r) => `c_random_less(${argNumber(r, "percent")})`,
+  c_group_alive: (r) => `c_group_alive(${argNumber(r, "group")})`,
+  c_unit_damaged: (r) => `c_unit_damaged(${argNumber(r, "unit")})`,
+  c_all_of_group_in_zone: (r) => `c_all_of_group_in_zone(${argNumber(r, "group")}, ${argNumber(r, "zone")})`,
+  c_part_of_group_out_zone: (r) =>
+    `c_part_of_group_out_zone(${argNumber(r, "group")}, ${argNumber(r, "zone")})`,
+  c_unit_in_zone_unit: (r) =>
+    `c_unit_in_zone_unit(${argNumber(r, "unit")}, ${argNumber(r, "zone")}, ${argNumber(r, "zoneunit")})`,
+  c_unit_altitude_higher: (r) => `c_unit_altitude_higher(${argNumber(r, "unit")}, ${argNumber(r, "altitude")})`,
+  c_unit_altitude_higher_AGL: (r) =>
+    `c_unit_altitude_higher_AGL(${argNumber(r, "unit")}, ${argNumber(r, "altitude")})`,
+  c_unit_altitude_lower: (r) => `c_unit_altitude_lower(${argNumber(r, "unit")}, ${argNumber(r, "altitude")})`,
+  c_missile_in_zone: (r) =>
+    `c_missile_in_zone(${argWeaponSelector(r, "typemissile")}, ${argNumber(r, "nummissiles")}, ${argNumber(r, "zone")})`,
+  c_bomb_in_zone: (r) =>
+    `c_bomb_in_zone(${argWeaponSelector(r, "typebomb")}, ${argNumber(r, "numbombs")}, ${argNumber(r, "zone")})`,
+  // `or` emits no call of its own: compileTrig joins around it (see OR_MARKER).
+  or: () => OR_MARKER,
 };
+
+/** The separator `or` compiles to, recognised by the condition join. */
+const OR_MARKER = "or";
+
+/**
+ * The editor joins the four-number weapon selector with dots into ONE string
+ * argument (`"4.4.11.125"`). Older missions carry a single number there instead;
+ * that form has no oracle record, so it is refused and the existing compiled
+ * entry is preserved rather than rewritten from a guess.
+ */
+function argWeaponSelector(rule: LuaTable, field: string): string {
+  const table = asTable(rule[field]);
+  if (!table) throw new UncompilablePredicate(`'${field}' is not a weapon selector table`);
+  const numbers = Object.keys(table)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map((k) => table[k]);
+  if (!numbers.length) throw new UncompilablePredicate(`'${field}' is empty`);
+  if (numbers.some((n) => typeof n !== "number" || !Number.isFinite(n))) {
+    throw new UncompilablePredicate(`'${field}' holds a non-numeric entry`);
+  }
+  return quoteLuaString(numbers.join("."));
+}
 
 /** A resource reference resolves through the mission's mapResource at runtime. */
 function argResource(rule: LuaTable, field: string): string {
   const value = rule[field];
   if (typeof value !== "string") throw new UncompilablePredicate(`'${field}' is not a resource key`);
   return `getValueResourceByKey(${quoteLuaString(value)})`;
+}
+
+/**
+ * `a_set_ATC_silent_mode` names its object kind in `data.type`. Only
+ * `airdromeId` appears in any editor-saved mission available here, so any other
+ * kind is refused instead of being written from a guess.
+ */
+function argAtcObjectKey(rule: LuaTable): string {
+  const type = asTable(rule["data"])?.["type"];
+  if (type !== "airdromeId") {
+    throw new UncompilablePredicate(`unsupported a_set_ATC_silent_mode object type '${String(type)}'`);
+  }
+  return "airdromeId";
 }
 
 /** Radio menu labels sit in `radiotext`, not `text`. */
@@ -1421,11 +1740,15 @@ function argRadioText(rule: LuaTable): string {
 /** Action predicate -> runtime call. Same provenance as the conditions above. */
 const ACTION_COMPILERS: Record<string, (a: LuaTable) => string> = {
   a_out_text_delay: (a) =>
-    `a_out_text_delay(${argText(a, "text")}, ${argNumber(a, "seconds")}, ${argBool(a, "clearview", false)}, ${argNumberOr(a, "start_delay", 0)})`,
+    `a_out_text_delay(${argText(a, "text")}, ${argNumber(a, "seconds")}, ${argBool(a, "clearview", false)}${optionalDelay(a)})`,
   a_out_text_delay_s: (a) =>
-    `a_out_text_delay_s(${argString(a, "coalitionlist")}, ${argText(a, "text")}, ${argNumber(a, "seconds")}, ${argBool(a, "clearview", false)}, ${argNumberOr(a, "start_delay", 0)})`,
+    `a_out_text_delay_s(${argString(a, "coalitionlist")}, ${argText(a, "text")}, ${argNumber(a, "seconds")}, ${argBool(a, "clearview", false)}${optionalDelay(a)})`,
+  // Unlike the other per-audience messages this one DOES take a delay: the
+  // editor emits a fifth argument here too (the repo previously recorded the
+  // opposite, from a narrower corpus).
   a_out_text_delay_g: (a) =>
-    `a_out_text_delay_g(${argNumber(a, "group")}, ${argText(a, "text")}, ${argNumber(a, "seconds")}, ${argBool(a, "clearview", false)})`,
+    `a_out_text_delay_g(${argNumber(a, "group")}, ${argText(a, "text")}, ${argNumber(a, "seconds")}, ` +
+    `${argBool(a, "clearview", false)}${optionalDelay(a)})`,
   a_set_flag: (a) => `a_set_flag(${argFlag(a, "flag")})`,
   a_set_flag_value: (a) => `a_set_flag_value(${argFlag(a, "flag")}, ${argNumber(a, "value")})`,
   a_clear_flag: (a) => `a_clear_flag(${argFlag(a, "flag")})`,
@@ -1439,15 +1762,15 @@ const ACTION_COMPILERS: Record<string, (a: LuaTable) => string> = {
   a_effect_smoke: (a) =>
     `a_effect_smoke(${argNumber(a, "zone")}, ${argNumber(a, "preset")}, ${argNumber(a, "density")}, ${argString(a, "name")})`,
   a_signal_flare: (a) =>
-    `a_signal_flare(${argNumber(a, "zone")}, ${argNumberOr(a, "altitude", 1)}, ${argString(a, "color")}, ${argString(a, "bearing")})`,
+    `a_signal_flare(${argNumber(a, "zone")}, ${argNumberOr(a, "altitude", 1)}, ${argString(a, "color")}, ${argValue(a, "bearing")})`,
   a_out_text_delay_u: (a) =>
-    `a_out_text_delay_u(${argNumber(a, "unit")}, ${argText(a, "text")}, ${argNumber(a, "seconds")}, ${argBool(a, "clearview", false)}, ${argNumberOr(a, "start_delay", 0)})`,
+    `a_out_text_delay_u(${argNumber(a, "unit")}, ${argText(a, "text")}, ${argNumber(a, "seconds")}, ${argBool(a, "clearview", false)}${optionalDelay(a)})`,
   a_out_text_delay_c: (a) =>
-    `a_out_text_delay_c(${argNumber(a, "countrylist")}, ${argText(a, "text")}, ${argNumber(a, "seconds")}, ${argBool(a, "clearview", false)}, ${argNumberOr(a, "start_delay", 0)})`,
+    `a_out_text_delay_c(${argNumber(a, "countrylist")}, ${argText(a, "text")}, ${argNumber(a, "seconds")}, ${argBool(a, "clearview", false)}${optionalDelay(a)})`,
   a_set_flag_random: (a) =>
     `a_set_flag_random(${argFlag(a, "flag")}, ${argNumber(a, "min_value")}, ${argNumber(a, "max_value")})`,
   a_end_mission: (a) =>
-    `a_end_mission(${argString(a, "winner")}, ${argText(a, "text")}, ${argNumberOr(a, "start_delay", 0)})`,
+    `a_end_mission(${argString(a, "winner")}, ${argText(a, "text")}${optionalDelay(a)})`,
 
   // --- radio menu ---
   a_add_radio_item: (a) =>
@@ -1459,25 +1782,85 @@ const ACTION_COMPILERS: Record<string, (a: LuaTable) => string> = {
     `a_remove_radio_item_for_group(${argNumber(a, "group")}, ${argRadioText(a)})`,
 
   // --- sound and radio ---
-  a_out_sound: (a) => `a_out_sound(${argResource(a, "file")}, ${argNumberOr(a, "start_delay", 0)})`,
+  a_out_sound: (a) => `a_out_sound(${argResource(a, "file")}${optionalDelay(a)})`,
   a_out_sound_s: (a) =>
-    `a_out_sound_s(${argString(a, "coalitionlist")}, ${argResource(a, "file")}, ${argNumberOr(a, "start_delay", 0)})`,
+    `a_out_sound_s(${argString(a, "coalitionlist")}, ${argResource(a, "file")}${optionalDelay(a)})`,
   a_out_sound_g: (a) =>
-    `a_out_sound_g(${argNumber(a, "group")}, ${argResource(a, "file")}, ${argNumberOr(a, "start_delay", 0)})`,
+    `a_out_sound_g(${argNumber(a, "group")}, ${argResource(a, "file")}${optionalDelay(a)})`,
   a_out_sound_stop: () => `a_out_sound_stop()`,
   // Despite the `c_` name these are ACTIONS: DCS stores them in a trigrule's
   // `actions` array, not its `rules`.
+  // `flag_back` is a flag reference like any other: the editor writes it as a
+  // string in its own missions, so the stored type is preserved rather than
+  // forced to a number (which defaulted a real `"0"` away to 999).
   c_start_wait_for_user: (a) =>
-    `c_start_wait_for_user(${argFlag(a, "flag")}, ${argNumberOr(a, "flag_back", 999)})`,
+    `c_start_wait_for_user(${argFlag(a, "flag")}, ${has(a, "flag_back") ? argFlag(a, "flag_back") : "999"})`,
   c_stop_wait_for_user: () => `c_stop_wait_for_user()`,
-  a_radio_transmission: (a) =>
-    `a_radio_transmission(${argResource(a, "file")}, ${argNumber(a, "zone")}, ${argBool(a, "modulation", true)}, ` +
-    `${argBool(a, "loop", false)}, ${megahertzToHertz(a)}, ${argNumber(a, "power")}, ${argString(a, "name")}, ` +
-    `${argNumberOr(a, "start_delay", 0)}, ${argBool(a, "mic_effects", true)}, ${argBool(a, "squelch_effects", true)})`,
+  /**
+   * Three lengths, two of them field-driven and one not.
+   *
+   * Eight arguments is the base. The editor adds `mic_effects` and
+   * `squelch_effects` when the rule carries them, then a subtitle argument when
+   * it carries `text`. It ALSO writes a twelfth argument in some missions whose
+   * specs are identical to eleven-argument ones, so that one is a DCS-version
+   * artefact nothing in the rule explains - it is never emitted here, and the
+   * eleven-argument form it rewrites to is the editor's own output too.
+   */
+  a_radio_transmission: (a) => {
+    const base =
+      `a_radio_transmission(${argResource(a, "file")}, ${argNumber(a, "zone")}, ${argBool(a, "modulation", true)}, ` +
+      `${argBool(a, "loop", false)}, ${megahertzToHertz(a)}, ${argNumber(a, "power")}, ${argString(a, "name")}, ` +
+      `${argNumberOr(a, "start_delay", 0)}`;
+    const effects =
+      has(a, "mic_effects") || has(a, "squelch_effects")
+        ? `, ${argBool(a, "mic_effects", true)}, ${argBool(a, "squelch_effects", true)}`
+        : "";
+    const subtitle = has(a, "text") ? `, ${argText(a, "text")}` : "";
+    return `${base}${effects}${subtitle})`;
+  },
 
   // --- scripting ---
   a_do_script: (a) => `a_do_script(${argString(a, "text")})`,
   a_do_script_file: (a) => `a_do_script_file(${argResource(a, "file")})`,
+  a_explosion_unit: (a) => `a_explosion_unit(${argNumber(a, "unit")}, ${argNumber(a, "volume")})`,
+  // The marker's `name` is the only field-driven argument here: the corpus has
+  // both three- and four-argument calls for specs with the SAME fields (871 to
+  // 547), so the fourth is a DCS-version difference, and it is written only when
+  // the rule actually carries a name.
+  a_explosion_marker: (a) =>
+    `a_explosion_marker(${argNumber(a, "zone")}, ${argNumberOr(a, "altitude", 1)}, ${argStringOr(a, "color", "0")}` +
+    `${has(a, "name") ? `, ${argString(a, "name")}` : ""})`,
+  a_explosion_marker_unit: (a) =>
+    `a_explosion_marker_unit(${argNumber(a, "unit")}, ${argStringOr(a, "color", "0")}` +
+    `${has(a, "name") ? `, ${argString(a, "name")}` : ""})`,
+  a_signal_flare_unit: (a) =>
+    `a_signal_flare_unit(${argNumber(a, "unit")}, ${argStringOr(a, "color", "0")}, ${argValue(a, "bearing")})`,
+  a_out_picture_s: (a) =>
+    `a_out_picture_s(${argString(a, "coalitionlist")}, ${argResource(a, "file")}, ${argNumber(a, "seconds")}, ` +
+    `${argBool(a, "clearview", false)}, ${argNumberOr(a, "start_delay", 0)}, ${argString(a, "horzAlignment")}, ` +
+    `${argString(a, "vertAlignment")}, ${argNumber(a, "size")}, ${argString(a, "size_units")})`,
+  a_mark_to_all: (a) =>
+    `a_mark_to_all(${argNumber(a, "value")}, ${argText(a, "text")}, ${argNumber(a, "zone")}, ` +
+    `${argBool(a, "readonly", false)}, ${argText(a, "comment")})`,
+  a_add_radio_item_for_coalition: (a) =>
+    `a_add_radio_item_for_coalition(${argString(a, "coalitionlist")}, ${argRadioText(a)}, ${argFlag(a, "flag")}, ${argNumber(a, "value")})`,
+  // The object is written as an inline table keyed by the `data.type` the rule
+  // names, which is `airdromeId` in every editor-saved record available here.
+  a_set_ATC_silent_mode: (a) =>
+    `a_set_ATC_silent_mode({${argAtcObjectKey(a)}=${argNumber(a, "object")}}, ${argBool(a, "silent", true)})`,
+  a_shelling_zone: (a) =>
+    `a_shelling_zone(${argNumber(a, "zone")}, ${argNumber(a, "TNT")}, ${argNumber(a, "shells_count")})`,
+  a_zone_increment_resize: (a) =>
+    `a_zone_increment_resize(${argNumber(a, "zone")}, ${argNumber(a, "meters")})`,
+  a_ai_task: (a) => {
+    const pair = asTable(a["ai_task"]);
+    const group = pair?.[1];
+    const number = pair?.[2];
+    if (typeof group !== "number" || typeof number !== "number") {
+      throw new UncompilablePredicate("'ai_task' is not a {groupId, taskNumber} pair");
+    }
+    return `a_ai_task(${group}, ${number})`;
+  },
 };
 
 /** `a_radio_transmission` stores MHz in the rule but takes Hz in the compiled call. */
@@ -1564,7 +1947,7 @@ export function compileTrig(mission: LuaTable): CompileTrigResult {
         return compile(a);
       });
       // No conditions means "always", which the ME compiles to `return(true)`.
-      condition = conditions.length === 0 ? "return(true)" : `return(${conditions.join(" and ")} )`;
+      condition = conditions.length === 0 ? "return(true)" : `return(${joinConditions(conditions)} )`;
       action = actions.map((call) => `${call};`).join("");
     } catch (err) {
       if (err instanceof UncompilablePredicate) {

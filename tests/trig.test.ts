@@ -23,6 +23,8 @@ interface PredicateCase {
   role: "condition" | "action";
   spec: Record<string, unknown>;
   lua: string;
+  /** Other forms the editor wrote for an identical spec; any is correct. */
+  alternatives?: string[];
 }
 interface RuleCase {
   type: string;
@@ -38,6 +40,16 @@ interface RuleCase {
 const oracle = JSON.parse(
   readFileSync(fileURLToPath(new URL("./fixtures/trig-oracle.json", import.meta.url)), "utf8")
 ) as { predicates: PredicateCase[]; rules: RuleCase[] };
+
+/**
+ * Collapse a compiled call to its shape: strings and numbers become V. Used
+ * only where the oracle recorded ALTERNATIVES - the editor wrote several forms
+ * for one spec, and the alternative records come from other missions, so their
+ * argument values differ and only the shape can be compared.
+ */
+function shape(lua: string): string {
+  return lua.replace(/"(\\.|[^"\\])*"/g, "V").replace(/-?\d+(\.\d+)?/g, "V");
+}
 
 /** A trigrule the compiler cannot understand, used to hold an index slot. */
 function placeholderRule(): LuaTable {
@@ -74,11 +86,17 @@ test("every oracle condition predicate compiles to the Lua the Mission Editor wr
       actions: { 1: { predicate: "a_set_flag", flag: 1 } },
     } as unknown as LuaTable;
     const { trig } = compileOne(1, rule);
-    assert.equal(
-      trig.conditions[1],
-      `return(${oracleCase.lua} )`,
-      `${oracleCase.predicate}: compiled condition does not match the Mission Editor`
-    );
+    const ours = String(trig.conditions[1]);
+    if (!oracleCase.alternatives?.length) {
+      assert.equal(ours, `return(${oracleCase.lua} )`, `${oracleCase.predicate}: compiled condition does not match the Mission Editor`);
+    } else {
+      const shapes = [oracleCase.lua, ...oracleCase.alternatives].map((lua) => shape(`return(${lua} )`));
+      assert.ok(
+        shapes.includes(shape(ours)),
+        `${oracleCase.predicate}: compiled condition matches none of the editor's forms
+  ours: ${ours}`
+      );
+    }
   }
 });
 
@@ -94,11 +112,18 @@ test("every oracle action predicate compiles to the Lua the Mission Editor wrote
       actions: { 1: oracleCase.spec },
     } as unknown as LuaTable;
     const { trig } = compileOne(1, rule);
-    assert.equal(
-      trig.actions[1],
-      `${oracleCase.lua};`,
-      `${oracleCase.predicate}: compiled action does not match the Mission Editor`
-    );
+    const ours = String(trig.actions[1]);
+    if (!oracleCase.alternatives?.length) {
+      assert.equal(ours, `${oracleCase.lua};`, `${oracleCase.predicate}: compiled action does not match the Mission Editor`);
+    } else {
+      // DCS itself wrote several forms for this spec, so any of their shapes is right.
+      const shapes = [oracleCase.lua, ...oracleCase.alternatives].map((lua) => shape(`${lua};`));
+      assert.ok(
+        shapes.includes(shape(ours)),
+        `${oracleCase.predicate}: compiled action matches none of the editor's forms
+  ours: ${ours}`
+      );
+    }
   }
 });
 
@@ -342,4 +367,51 @@ test("authored triggers reference DCS ids, not names, and survive a round-trip",
   // 'change' is triggerFront, which latches through trig.flag.
   assert.match(String(trig.func[1]), /if not mission\.trig\.flag\[1\] then/);
   assert.equal(dictionary["DictKey_ActionText_1"], "Reserves inbound");
+});
+
+test("an 'or' separator groups conditions the way the editor's OR group does", () => {
+  const mission: LuaTable = { trigrules: {} } as unknown as LuaTable;
+  const dictionary: LuaTable = {};
+  addAircraftGroup(mission, "plane", {
+    side: "blue", country: "USA", name: "Lead", type: "F-16C_50",
+    count: 2, x: 0, y: 0, altitudeMetres: 5000, task: "CAP",
+  });
+  addTriggerZone(mission, { name: "North", x: 10000, y: 0, radius: 4000 });
+  addTriggerZone(mission, { name: "South", x: -10000, y: 0, radius: 4000 });
+
+  // Two alternatives, each a pair of tests: (A and B) or (C and D).
+  addTrigger(
+    mission,
+    {
+      type: "once",
+      comment: "Either approach",
+      conditions: [
+        { kind: "part_of_coalition_in_zone", coalition: "blue", zone: "North", unitType: "AIRPLANE" },
+        { kind: "unit_altitude_lower", unit: "Lead-1", altitudeMetres: 2000 },
+        { kind: "or" },
+        { kind: "part_of_coalition_in_zone", coalition: "blue", zone: "South", unitType: "AIRPLANE" },
+        { kind: "unit_altitude_higher_agl", unit: "Lead-1", altitudeMetres: 500 },
+      ],
+      actions: [{ kind: "set_flag", flag: 3 }],
+    },
+    dictionary
+  );
+
+  const reparsed = parseLuaAssignment(serializeLuaAssignment("mission", mission), "mission");
+  const trig = reparsed["trig"] as unknown as Record<string, LuaTable>;
+  const condition = String(trig.conditions[1]);
+  // One ` or ` between the two groups, ` and ` inside each: Lua's own precedence,
+  // which is exactly what the editor emits for an OR condition group.
+  assert.equal(condition.match(/ or /g)?.length, 1);
+  assert.equal(condition.match(/ and /g)?.length, 2);
+  assert.match(condition, /^return\(c_part_of_coalition_in_zone\("blue", \d+, "AIRPLANE"\) and c_unit_altitude_lower\(\d+, 2000\) or c_part_of_coalition_in_zone\("blue", \d+, "AIRPLANE"\) and c_unit_altitude_higher_AGL\(\d+, 500\) \)$/);
+  assert.doesNotThrow(() => luaparse.parse(`local f = function() ${condition} end`));
+});
+
+test("a separator with nothing beside it is refused, not compiled to broken Lua", () => {
+  const mission: LuaTable = { trigrules: {} } as unknown as LuaTable;
+  addTrigger(mission, { type: "once", comment: "Dangling or", conditions: [{ kind: "or" }], actions: [{ kind: "set_flag", flag: 1 }] });
+  const { compiled, skipped } = compileTrig(mission);
+  assert.deepEqual(compiled, []);
+  assert.deepEqual(skipped, [1], "an 'or' with no condition on both sides cannot compile");
 });

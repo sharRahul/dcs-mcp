@@ -30,7 +30,10 @@ Conventions that are easy to get wrong:
 - Never trust a ground coordinate you did not check: dcs_check_terrain (live) says land or water.
 - A flight only spawns at an airfield its side owns, or at a ship/FARP that has a warehouse entry. Adding an airfield/ship/FARP start claims a neutral airfield for the flight's side and creates a missing ship/FARP entry; an enemy-owned airfield is reported, never flipped (dcs_miz_set_airbase_coalition).
 - Removing something a trigger references is refused unless force=true (the trigger would never fire).
-- Validation severity is calibrated against 184 Mission-Editor-saved missions, which report zero ERRORs: an ERROR means DCS or the editor cannot handle the file. Things the editor itself saves — duplicate unit names, dangling trigger/task/goal ids, two aircraft on one parking spot, countermeasure counts above the pydcs catalogue — are WARNINGS. Read them; do not treat them as a broken mission.
+- Validation severity is calibrated against 3023 Mission-Editor-saved missions, every mission DCS itself ships among them, which report zero ERRORs: an ERROR means DCS or the editor cannot handle the file. Things the editor itself saves — duplicate unit names and unit ids, dangling trigger/task/goal/waypoint ids, two aircraft on one parking spot, countermeasure counts above the pydcs catalogue — are WARNINGS. Read them; do not treat them as a broken mission.
+- Reactive missions: late-activated reserves plus a trigger that activates them (dcs_miz_add_reactive_spawn) is how this is done and is oracle-backed. Conditions can be ORed with a { kind: 'or' } separator. ED's Dynamic Slots flag (dcs_miz_set_dynamic_spawn) is written as the boolean it is and nothing more is claimed for it.
+- Campaigns: dcs_campaign_read/write/step handle a real DCS .cmp. Stages are a score ladder (above 50 advances, 50 repeats, below 50 retreats) and DCS picks at random among the next stage's missions whose interval contains the score, so every stage must cover 0-100. Put the .cmp beside its missions; they are never copied.
+- Imported compounds: dcs_scan_scene_candidates / dcs_import_scene_template / dcs_miz_add_scene reuse a real static footprint from a mission the user supplies, with each object's own offset and heading. Provenance 'imported': measured, not flown.
 - Sessions are snapshotted to disk; after a server restart use dcs_miz_list_sessions and dcs_miz_restore_session.
 
 Full reference: resource dcs://guide/conventions.`;
@@ -85,6 +88,13 @@ export const CONVENTIONS_GUIDE = `# DCS-MCP conventions
   barracks); \`dcs_miz_add_naval_group\` adds a ship formation (csg, lha-group, kuznetsov-group, red-sag,
   convoy) and, with airWing 'auto' or a list, the aircraft on the lead ship's deck. 'auto' keeps only types
   pydcs offers the country and (where known) the country's Wikipedia list shows it operating. Layouts are conventions, not copied from editor missions; check terrain for land targets.
+- For a compound that looks like someone built it rather than like a grid, import one: \`dcs_scan_scene_candidates\`
+  clusters the statics in a mission YOU supply, \`dcs_import_scene_template\` keeps each object's exact offset and
+  its own heading, and \`dcs_miz_add_scene\` places that footprint anywhere at any facing. Provenance is 'imported':
+  measured from your file, never flown or opened in the Mission Editor by this server, and never shipped with it.
+- \`dcs_miz_add_static\` type 'big_smoke' is the editor's smoke/fire effect (the only one DCS offers) and needs
+  effectPreset 1-8; aircraft and ship statics take liveryId, and hiddenOnPlanner/hiddenOnMFD hide an object from
+  the planner map or the cockpit moving map alone.
 
 ## Triggers
 - Types: start (mission start), once, continuous, change (fires on the false->true edge).
@@ -92,6 +102,19 @@ export const CONVENTIONS_GUIDE = `# DCS-MCP conventions
 - DCS runs separate start triggers in undefined order. Anything order-dependent (MIST before Skynet)
   must be in one trigger — \`dcs_miz_load_scripts\` does this for frameworks.
 - F10 radio items raise a flag; pair with a continuous trigger that clears it to allow reuse.
+- Conditions are ANDed in order. A \`{ kind: 'or' }\` entry between them is a separator, not a test:
+  it compiles to \` or \`, so \`A, B, or, C, D\` becomes \`A and B or C and D\` — the editor's own OR
+  condition group. One with nothing on both sides is refused.
+- The condition surface also covers group alive, unit damaged, all-of-group / part-of-group out of a zone,
+  a zone carried by a unit, unit altitude above/below (MSL or AGL) and missile/bomb in zone; the actions
+  cover explosion and smoke markers at a zone or a unit, signal flares from a unit, a picture to a coalition,
+  an F10 map mark, a coalition radio item, ATC silent mode, zone resize, artillery shelling and AI TASK PUSH
+  (\`ai_task\`). Every one has a recorded editor spec-to-Lua pair behind it.
+- The weapon selector of missile_in_zone / bomb_in_zone is the editor's own four numbers. This server does
+  not interpret them and will not generate them: copy them from a mission whose condition already works.
+- \`dcs_miz_add_reactive_spawn\` is the usual way to make a mission react: a trigger (zone entry, a group
+  dead or hurt, a flag, a time) that activates late-activated reserves, optionally with a chance, a delay,
+  a message and an AI task push. Groups to activate must already have lateActivation set, or nothing happens.
 
 ## Editing safety
 - \`dcs_miz_save_as\` never overwrites the source and refuses to replace any file unless overwrite=true.
@@ -112,6 +135,19 @@ export const CONVENTIONS_GUIDE = `# DCS-MCP conventions
 - \`dcs_miz_make_troop_transport\` wires all three tasks at once: Embarking on the transport's pickup waypoint, EmbarkToTransport on the troops' waypoint, DisembarkFromTransport on the drop waypoint. They must agree on group ids and coordinates or nothing happens — no error, the helicopter just lands and leaves. Embarking/EmbarkToTransport are the editor's own field layout; DisembarkFromTransport is Hoggit-documented only. Not flown here.
 - \`dcs_miz_get_value\` / \`dcs_miz_set_value\` read and write any field of the session's mission table by path (\`coalition.blue.country[1].plane.group[1].name\`). Adding a key needs create=true, removing takes remove=true, and every write is serialized and reparsed or rolled back. A raw write is your assertion about the file format, not this server's: validate before saving.
 - \`dcs_list_map_icons\` lists every icon the Mission Editor's own picker offers (53 of them, read from the install) plus pydcs's nine names; \`dcs_miz_add_drawing\` kind=icon takes any of those labels and refuses anything else.
+
+## Campaign files (.cmp)
+- A DCS campaign is a plain Lua file next to its missions, not an archive. \`dcs_campaign_read\` parses and
+  validates one, \`dcs_campaign_write\` writes one, \`dcs_campaign_step\` walks its branches.
+- Stages are a ladder, not a graph: after a mission DCS moves up a stage on a score above 50, repeats the
+  stage on exactly 50 and moves down below 50; past the last stage is a win, below the first is a loss.
+- In the new stage DCS picks at RANDOM among the missions whose interval contains the score. So every stage
+  needs missions covering 0-100 or the campaign stops dead ('no mission chosen'), and the start stage wants
+  at least one mission whose interval ends at 100 or DCS always opens with the first.
+- Mission files are not copied: DCS resolves each one against the campaign's own folder, so put the .cmp
+  beside its missions. necessaryUnits is the module each mission's player aircraft needs.
+- \`dcs_campaign_generate\` is a different thing: it builds mission sessions and a victory/failure manifest,
+  which is richer than DCS's score ladder and is not a .cmp. Use it to design, then write the .cmp.
 
 ## Terrain
 - A ground unit placed on water does not error — it just sits inert. Check placements with
