@@ -131,6 +131,7 @@ for (const g of doc.groups) {
 
   const lead = g.units[0];
   const h = lead.heading ?? 0;
+  let explicitLayout = false;
   if (!(h >= 0 && h < TWO_PI)) {
     fail(`${g.name}: heading ${h} is not in [0, 2pi) — degrees written where radians belong?`);
     continue;
@@ -147,15 +148,36 @@ for (const g of doc.groups) {
     const expected = (h + Math.PI) % TWO_PI;
     const diff = Math.abs(((bearing - expected + Math.PI * 3) % TWO_PI) - Math.PI);
     if (g.category === "vehicle" && diff > 1e-6) {
-      fail(
-        `${g.name}: units offset toward ${((bearing + TWO_PI) % TWO_PI * 180 / Math.PI).toFixed(1)} deg, ` +
-          `expected ${(expected * 180 / Math.PI).toFixed(1)} deg (heading ${(h * 180 / Math.PI).toFixed(1)})`
-      );
-      continue;
+      // Not a trailing column. That is legitimate for a site laid out from a
+      // template's explicit (forward, right) offsets — an SA-2 battalion puts its
+      // launchers on a ring, which has no single bearing — so the column rule
+      // cannot apply. What must still never appear is the old fixed `x+30, y+30`
+      // bug, whose fingerprint is every unit on the 45-degree north-east diagonal
+      // no matter which way the group faces.
+      const diagonal = g.units.slice(1).every((u) => {
+        const dx = u.x - lead.x;
+        const dy = u.y - lead.y;
+        return dx > 0 && Math.abs(dx - dy) < 1e-6;
+      });
+      if (diagonal) {
+        fail(
+          `${g.name}: every unit sits on the 45-degree north-east diagonal from the lead ` +
+            `(heading ${(h * 180 / Math.PI).toFixed(1)}) — the fixed x+30/y+30 offset bug.`
+        );
+        continue;
+      }
+      pass(`${g.name}: ${g.units.length} unit(s) in an explicit layout, not a column (heading ${(h * 180 / Math.PI).toFixed(0)} deg)`);
+      explicitLayout = true;
     }
-    // Every unit in the group must share the group's heading.
+    // A column shares one heading. A site does NOT: the Mission Editor's own
+    // SA-2 template points each of its six launchers outward along a different
+    // bearing, so requiring a single heading would reject ED's own layout. What
+    // is still checked for every unit is that the value is radians, not degrees.
     for (const u of g.units) {
-      if (Math.abs((u.heading ?? 0) - h) > 1e-9) {
+      const uh = u.heading ?? 0;
+      if (!(uh >= 0 && uh < TWO_PI)) {
+        fail(`${g.name}: unit ${u.name} heading ${uh} is not in [0, 2pi) — degrees written where radians belong?`);
+      } else if (!explicitLayout && Math.abs(uh - h) > 1e-9) {
         fail(`${g.name}: unit ${u.name} heading ${u.heading} differs from lead ${h}`);
       }
     }

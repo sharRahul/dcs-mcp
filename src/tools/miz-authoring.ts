@@ -319,8 +319,12 @@ ${n}`).join(""), {
           skill: a.skill,
           composition,
           spacingMetres: a.spacingMetres ?? template?.spacingMetres,
-          // Imported templates carry the source mission's exact layout.
+          // Imported templates and the Mission Editor's own library carry the
+          // source layout exactly, per-unit headings included: an SA-2's six
+          // launchers each point outward along their own bearing.
           offsets: template?.offsets && !a.composition ? template.offsets : undefined,
+          headingOffsetsDegrees:
+            template?.headingOffsetsDegrees && !a.composition ? template.headingOffsetsDegrees : undefined,
         });
         s.dirty = true;
         refresh(s);
@@ -817,24 +821,26 @@ ${n}`).join(""), {
     {
       title: "Load mission scripts / frameworks",
       description:
-        "Embed Lua scripting frameworks (MIST, MOOSE, Skynet-IADS) and/or your own setup scripts into " +
+        "Embed Lua scripting frameworks (MIST, MOOSE, Skynet-IADS, Splash Damage) and/or your own setup scripts into " +
         "an open mission, and wire them to run at mission start.\n\n" +
         "All loads go into ONE 'Load Scripts' MISSION START trigger, in dependency order " +
-        "(MIST -> MOOSE -> Skynet -> your scripts). This matters: DCS gives no defined order between " +
+        "(MIST -> MOOSE -> Skynet -> Splash Damage -> your scripts). This matters: DCS gives no defined order between " +
         "separate start triggers, and Skynet fails to initialise unless MIST loaded first. Requesting " +
         "skynet pulls in mist automatically.\n\n" +
         "Framework files are auto-discovered under 'Saved Games/DCS/Missions/LUA Scripts' and " +
-        "'Saved Games/DCS/Scripts'; pass paths explicitly to override. Re-loading a framework already " +
+        "'Saved Games/DCS/Scripts'; pass paths explicitly to override. Splash Damage usually sits in its own " +
+        "folder under Missions, which is NOT one of those roots, so pass its path. Re-loading a framework already " +
         "in the mission reuses it instead of embedding a second copy.\n\n" +
-        "Args:\n  - sessionId\n  - frameworks?: ['mist'|'moose'|'skynet']\n" +
-        "  - frameworkPaths?: { mist?, moose?, skynet? } explicit .lua paths\n" +
+        "Splash Damage is a community script (stevey9062), not authored or verified by this server.\n\n" +
+        "Args:\n  - sessionId\n  - frameworks?: ['mist'|'moose'|'skynet'|'splash']\n" +
+        "  - frameworkPaths?: { mist?, moose?, skynet?, splash? } explicit .lua paths\n" +
         "  - scripts?: [string] paths to your own .lua files, loaded after the frameworks\n\n" +
         "Returns JSON: { triggerIndex, loaded: [{ framework?, fileName, resourceKey, bytes, reused }] }.",
       inputSchema: z
         .object({
           sessionId: sessionIdField,
           frameworks: z
-            .array(z.enum(["mist", "moose", "skynet"]))
+            .array(z.enum(["mist", "moose", "skynet", "splash"]))
             .default([])
             .describe("Frameworks to embed; dependencies are added automatically"),
           frameworkPaths: z
@@ -842,6 +848,7 @@ ${n}`).join(""), {
               mist: z.string().optional(),
               moose: z.string().optional(),
               skynet: z.string().optional(),
+              splash: z.string().optional(),
             })
             .strict()
             .optional()

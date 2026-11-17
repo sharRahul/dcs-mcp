@@ -951,3 +951,87 @@ file is fine in every case — these stay warnings.
 offers for the types pydcs knows; it cannot know a mod type, and reporting every one
 of them as "not offered to any country" said nothing (it had inflated
 `COUNTRY_TYPE_NOT_OFFERED` from 64 to 124).
+
+### Second live run: a flown sortie (0.6.3) — see docs/verification.md
+
+First run that got past the briefing. Newly VERIFIED live: `Disembarking` (zero
+`ComboTask` errors, closing the 0.6.2 bug); a reactive spawn on zone entry firing AND its
+actions running (`[DCSMCP] TRIG name=WAVE1` at t=38); `a_activate_group` turning a
+late-activated group into a live AI group that shot at things within 10 s.
+
+Three things that bite:
+
+- **An `On Railroads` group with no track under it does not exist in the mission.** The
+  train was absent from `Group.getByName`, absent from MOOSE's database, and dcs.log did
+  not mention it at all — nearest railroad 173 km away. `addTrain` REQUIRES points from
+  `dcs_terrain_roads kind=railroads`; without them it silently produces nothing.
+- **`big_smoke` statics are not retrievable as `StaticObject`s** (MOOSE: `does not exist`,
+  `Alive=false`, for all eight presets) while the mission loads clean. Consistent with an
+  effect object, but whether the smoke RENDERS is still unmeasured — do not check it with
+  `StaticObject.getByName`.
+- **`LoGetADIPitchBankYaw()` returns three values, not a table.** `handlers.self` indexed
+  the first one and crashed the moment a player was finally in a cockpit. Fixed; this is the
+  class of bug only a flown sortie finds.
+
+`eventMonitoring.available=false` reproduced while `[DCSMCP] EVT` lines were in the log and
+a trigger's DO SCRIPT reached `DCSMCP`: the hook's `runIn("mission", …)` lands in state
+`server`, the mission scripts live in the trigger state, and the two share no globals. Not
+fixed — the probe's target state needs deciding, not guessing.
+
+A reactive wave must never be placed on top of another thing the mission tests:
+`Wave1-Armour` sat on the troop lift's pickup point and killed the lift at t=60, so the
+transport could not be observed at all.
+
+### The Mission Editor ships its own template library (0.6.3)
+
+`MissionEditor/data/scripts/templates.lua` is a plain `templates = {...}` assignment holding
+the batteries the editor offers from its template list — **66 of them** on this install,
+including `SA-2 SAM Battery`, `SA-2 SAM Battery (early)`, `SA-2 SAM Battery Iran`, the
+Patriot, Hawk, NASAMS, S-300/S-400 and Rapier sites. `src/dcs/me-templates.ts` parses it as
+DATA (never executed) and `allSiteTemplates()` serves it under `me-<name>` ids, read from the
+install at call time and never vendored. On a machine with no DCS it contributes nothing, so
+no built-in may depend on it.
+
+This is first-party geometry and it beats anything assembled here from a reference diagram.
+ED's `SA-2 SAM Battery` is 15 units: Fan Song at the origin, six `S_75M_Volhov` on a
+**92-107 m ring**, `p-19 s-125 sr` 177 m out, two `ZIL-131 KUNG` vans at ~54 m, and a
+power/fuel park behind. The built-in `SA-2` (4 launchers in a column) stays as it is — it has
+`engaged` provenance and that is worth keeping — but new work should prefer the editor's.
+
+**A site is not a formation of identically-aligned vehicles.** Every unit in ED's template
+carries its OWN `heading`: the six launchers each point outward along a different bearing.
+`SiteTemplate.headingOffsetsDegrees` and `buildUnits`' `headingOffsetsDegrees` carry that
+through, as degrees relative to the group heading, so the whole site rotates as one. The old
+rule that every unit shares the group heading was ours, not DCS's, and `verify-mission.mjs`
+now enforces it only for a trailing column; for an explicit layout it checks the value is
+radians and nothing more. (The editor still overwrites unit headings from the leg when a
+group has 2+ route points, so these only stick on a single-point group — unchanged.)
+
+`registerTypeSource`-style layering applies: a built-in id always wins, then the editor's
+library, then the user's imported templates.
+
+### Splash Damage is a registered framework (0.6.3)
+
+`FRAMEWORKS.splash` embeds the community Splash Damage script (stevey9062) in the same single
+`Load Scripts` start trigger, after MIST/MOOSE/Skynet. It does NOT require MIST — 3.4 Standard
+contains no `mist.` call. Patterns match only the assembled release builds, never the ~132 KB
+`Splash_Damage_main.lua` pre-assembly source, backed by a 200 KB floor.
+
+**The three builds of a version are the same 7697 lines apart from three option flags**, so
+the file NAME is all that separates them and discovery must not pick by sort order:
+
+| file | smokeandcookoffeffectallvehicles | GU_Explode_on_Death | track_groundunitordnance |
+|---|---|---|---|
+| `Splash_Damage_<v>.lua` | false | false | false |
+| `Splash_Damage_<v>_Standard.lua` | **true** | **true** | false |
+| `..._Standard_With_Ground_Ordnance.lua` | **true** | **true** | **true** |
+
+The patterns are ordered so the maintainer's own `_Standard` build wins: without it, vehicles
+outside the script's cargo table get no secondary effects at all, which reads as the script
+not working. Ground-unit ordnance tracking is the heavier opt-in and is never assumed — pass
+an explicit path for that one or for the bare build. Discovery adds ONE
+named root, `Missions/DCSSplashDamageScript-master` (the GitHub zip's folder); `Missions`
+itself is deliberately not scanned, or a copy inside somebody's extracted `.miz` would win.
+Verified live: `SPLASH DAMAGE 3.4 SCRIPT RUNNING` in dcs.log. The acceptance package embeds it
+too and records `splashDamage: { embedded: false, reason }` in `manifest.json` on a machine
+that does not have it, rather than silently shipping different missions.

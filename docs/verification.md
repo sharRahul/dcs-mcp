@@ -695,3 +695,96 @@ into a broken action are distinguishable.
 
 Also still unverified: a `.cmp` played through two stages (needs the campaign UI), an
 imported compound opened in the Mission Editor, SAM provenance promotions beyond SA-2.
+
+---
+
+## 2026-11-17 (0.6.3), second live run — a flown sortie in `dcs-mcp-verify-0-6b.miz`
+
+The 0.6.2 run above got as far as the briefing and no further. This one was flown: the
+player took a shot at the SA-2 (`S_EVENT_SHOT` t=296, `S_EVENT_HIT` on
+`SAM-SA2-Verify-1` t=309) and ended the mission at t=322. So for the first time the
+in-flight half of the mission ran.
+
+DCS 2.9.31.29434 MT, Persian Gulf, started with
+`DCS.exe --force_disable_VR --no-launcher dcs-mcp-verify-0-6b.miz`. Bridge reported
+`phase=running missionEnv=true simTicking=true mission=dcs-mcp-verify-0-6b`.
+
+### Newly verified
+
+| what | evidence |
+|---|---|
+| **`Disembarking` is the right task** | zero `ComboTask` errors in the whole log, where the 0.6.2 run had `unable to create task "DisembarkFromTransport"`. The 0.6.2 bug is closed. |
+| **reactive spawn on zone entry fires, and its actions run** | `[DCSMCP] TRIG t=38 name=WAVE1` — the trigger fired AND its DO SCRIPT action executed. The `coalition_in_zone` predicate, the flag, and `a_activate_group` all work. |
+| **`a_activate_group` really activates** | `Wave1-Armour` went from `active=false` to shooting: `SHOOTING_START`/`HIT`/`KILL` against the troop group from t=47, and it shot the UH-1H down at t=60. A late-activated group becomes a live, AI-driven group. |
+| **late activation reads correctly before the trigger** | at t=7.9 both waves existed in `coalition.getGroups` with `active=false`; `Group.getByName` finds them, `Unit:isActive()` is the field that matters. Presence in a unit list is not evidence a late-activated group has spawned. |
+| **`DCSMCP` is reachable from the trigger state** | the `TRIG` line proves the telemetry table a start trigger created is visible to a later trigger's DO SCRIPT. |
+
+### The train does not spawn at all — and nothing says so
+
+`Verify-Train` was **absent from the running mission**: our own `Group.getByName` returned
+`exists=false`, MOOSE's database registered every other group and not this one, and
+`dcs.log` does not contain the string "train" anywhere. The group is correctly written in
+the file (groupId 13 under Russia's `vehicle` list, one `Train` unit, `wagons = {}`,
+`type`/`action` `"On Railroads"`).
+
+The cause is the documented limitation, biting silently: measured live with
+`dcs_terrain_roads kind=railroads`, the nearest railroad to the train's two route points is
+**173 km and 157 km away**. DCS drops an `On Railroads` group that has no track under it,
+and logs nothing at all.
+
+So the limitation is not cosmetic. `addTrain` without rail-snapped points produces a group
+that does not exist in the mission, with no error anywhere. `build-verify-mission.mjs` now
+places the train on the ends of a real 190-point `findPathOnRoads kind=railroads` path on
+the Persian Gulf's only railway.
+
+### `big_smoke` statics are not scriptable objects
+
+MOOSE reported all eight: `Static object Smoke-P1..P8 does not exist!` and
+`(Alive) = false`, while registering every other object in the mission. Nothing in dcs.log
+complains about them and the mission loads clean, so this is consistent with an effect
+object that renders without being retrievable as a `StaticObject` — but that is an
+inference, not a measurement. Whether the smoke columns actually render still needs a human
+to look at them, and `StaticObject.getByName` is not the way to check.
+
+### Fixed: `dcs_get_self_data` crashed the first time a player was in a cockpit
+
+```
+[string "local function enc(v)..."]:37: attempt to index local 'pby' (a number value)
+```
+
+`LoGetADIPitchBankYaw()` returns **three values, not a table**. The hook did
+`local pby = LoGetADIPitchBankYaw() or {}`, which captured the pitch number, and `pby[1]`
+then raised the error above. Every earlier run stopped at the briefing, so the export-state
+path had never been exercised. Fixed in `scripts/Hooks/dcs-mcp-hook.lua` (`handlers.self`);
+8/8 hook tests pass under `luae.exe`. The fix needs a DCS restart to be exercised live.
+
+### `eventMonitoring.available=false` while the events are in the log
+
+`dcs_runtime_inspect` reported `eventMonitoring: { available: false }` throughout, while
+dcs.log carried 24 `[DCSMCP] EVT` lines from the same mission, and the `TRIG` line proves
+the telemetry table exists. The hook resolves `runIn("mission", …)` to state `server` on
+this build (0.6.0 finding, unchanged), and the mission scripts were loaded by
+`a_do_script` into the trigger state. The two states do not share globals, so the hook
+cannot see `DCSMCP`. This reproduces the same symptom the acceptance round recorded, now
+with positive proof that the table is present and reachable from triggers. Not fixed: the
+right fix is to decide which state the probe should look in, and that needs its own
+investigation rather than a guess.
+
+### A flaw in the test mission itself
+
+`Wave1-Armour` was placed at (65256, -250053) — exactly the troop lift's pickup waypoint,
+25 m from the soldiers, with the drop waypoint on the SA-2 site. The wave activated as
+designed and then killed three of the four soldiers and shot the helicopter down at t=60,
+so the troop lift could never be observed. The wave is now at (70000, -256000) — 7.6 km
+away, LAND, slope 0.4 deg, no scenery, all checked live — and the drop is at
+(66000, -246500), LAND at 34.4 m. A reactive wave must not spawn on top of another thing
+the mission is testing.
+
+### Still unverified after this run
+
+`WAVE2` never fired: the SA-2 took one hit and the mission ended before the site died. So
+the `group_dead` reactive wave, its 20 s flag delay, and the `a_ai_task` push on
+`Wave2-CAP` remain untested, as do `a_mark_to_all` on the F10 map, the icon drawing, the
+eight smoke presets rendering, the train moving on its rails, and the troop lift loading
+and unloading. `dcs-mcp-verify-0-6c.miz` (sha256 53dfc518…) carries the fixes and is what
+the next sortie should fly, pressing the attack until every launcher of the SA-2 is dead.

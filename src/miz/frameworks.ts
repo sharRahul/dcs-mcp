@@ -28,7 +28,7 @@ import { addResource, type ResourceStore } from "./resources.js";
 /** The single start trigger every script load is appended to. */
 export const SCRIPT_TRIGGER_COMMENT = "Load Scripts";
 
-export type FrameworkName = "mist" | "moose" | "skynet";
+export type FrameworkName = "mist" | "moose" | "skynet" | "splash";
 
 interface FrameworkInfo {
   /** Lower loads first. Skynet needs MIST already in memory. */
@@ -67,6 +67,39 @@ export const FRAMEWORKS: Record<FrameworkName, FrameworkInfo> = {
     requires: ["mist"],
     notes: "Integrated Air Defence System. Requires MIST to be loaded first.",
   },
+  splash: {
+    order: 4,
+    label: "Splash Damage",
+    // The three released builds of a version are byte-for-byte the same 7697
+    // lines apart from THREE option flags, so the file name is the only thing
+    // that distinguishes them and auto-discovery must not pick by sort order:
+    //
+    //   file                                   allVehicles  explodeOnDeath  groundOrdnance
+    //   Splash_Damage_<v>.lua                      false         false           false
+    //   Splash_Damage_<v>_Standard.lua             TRUE          TRUE            false
+    //   ..._Standard_With_Ground_Ordnance.lua      TRUE          TRUE            TRUE
+    //
+    // (`smokeandcookoffeffectallvehicles`, `GU_Explode_on_Death`,
+    // `track_groundunitordnance`.) The maintainer's own "Standard" build is the
+    // default here: without it, vehicles outside the script's cargo table get no
+    // secondary effects at all, which reads as the script not working. Ground-unit
+    // ordnance tracking is the heavier opt-in and is NOT assumed. Pass an explicit
+    // path for either of the others.
+    //
+    // `Splash_Damage_main.lua` is the pre-assembly source, a third the size, and
+    // is matched by nothing here.
+    patterns: [
+      /^splash_damage_\d[\d._]*_standard\.lua$/i,
+      /^splash_damage_\d[\d._]*_standard_with_ground_ordnance\.lua$/i,
+      /^splash_damage_\d[\d._]*\.lua$/i,
+      /^splash_damage\.lua$/i,
+    ],
+    // Checked against 3.4 Standard, which contains no `mist.` call at all.
+    requires: [],
+    notes:
+      "Community script (stevey9062) that adds secondary explosions and blast damage. " +
+      "Standalone — it does not call MIST. Not authored or verified by this project.",
+  },
 };
 
 /**
@@ -78,6 +111,9 @@ const MIN_PLAUSIBLE_BYTES: Record<FrameworkName, number> = {
   mist: 100_000,
   moose: 1_000_000,
   skynet: 50_000,
+  // 3.4 Standard is ~467 KB; `Splash_Damage_main.lua` is ~132 KB and is not the
+  // assembled build, so the floor sits above it.
+  splash: 200_000,
 };
 
 /** Directories searched when no explicit path is given, most likely first. */
@@ -86,12 +122,21 @@ export function defaultSearchRoots(): string[] {
   const saved = path.join(home, "Saved Games", "DCS");
   const savedOpenBeta = path.join(home, "Saved Games", "DCS.openbeta");
   const explicit = process.env.DCS_SAVED_GAMES;
+  // Splash Damage is distributed as a GitHub zip that unpacks to its own folder
+  // under Missions, so that one folder is named explicitly. Scanning Missions
+  // itself is deliberately NOT done: it is the user's whole mission library, and
+  // a copy of the script embedded inside somebody's extracted .miz would win.
+  const splashFolder = (root: string) => path.join(root, "Missions", "DCSSplashDamageScript-master");
   return [
-    ...(explicit ? [path.join(explicit, "Missions", "LUA Scripts"), path.join(explicit, "Scripts")] : []),
+    ...(explicit
+      ? [path.join(explicit, "Missions", "LUA Scripts"), path.join(explicit, "Scripts"), splashFolder(explicit)]
+      : []),
     path.join(saved, "Missions", "LUA Scripts"),
     path.join(saved, "Scripts"),
+    splashFolder(saved),
     path.join(savedOpenBeta, "Missions", "LUA Scripts"),
     path.join(savedOpenBeta, "Scripts"),
+    splashFolder(savedOpenBeta),
   ];
 }
 

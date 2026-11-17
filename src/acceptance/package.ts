@@ -8,7 +8,7 @@ import { addTrigger, setPayload, findGroup, type ActionSpec } from '../miz/autho
 import { addFarp, populateAirfield } from '../miz/dressing.js';
 import { findAirport } from '../data/reference.js';
 import { asTable, luaArray } from '../miz/lua.js';
-import { loadScripts } from '../miz/frameworks.js';
+import { loadScripts, resolveFrameworkPath, type FrameworkName } from '../miz/frameworks.js';
 import { serializeLuaAssignment, quoteLuaString } from '../miz/serializer.js';
 import { saveSessionAs, closeSession, refresh } from '../miz/sessions.js';
 import { claimStartAirfields, editWarehouse } from '../miz/logistics.js';
@@ -19,6 +19,7 @@ export interface Progress { phase: string; completed: number; total: number; sce
 const documents = ['readme.md', 'test_matrix.md', 'manual_test_plan.md', 'expected_results.md', 'known_limitations.md', 'results_template.md'];
 export async function generateAcceptancePackage(outDir: string, onProgress?: (progress: Progress) => void) {
   const root = path.resolve(outDir), runId = randomUUID(), cases = acceptanceCases(), manifests = [];
+  let splashSkipped: string | undefined;
   await mkdir(root); // Deliberately not recursive: existing output is never replaced.
   try {
     await mkdir(path.join(root, 'missions')); await mkdir(path.join(root, 'specifications')); await mkdir(path.join(root, 'reports'));
@@ -51,7 +52,16 @@ export async function generateAcceptancePackage(outDir: string, onProgress?: (pr
         // Case edits above can re-link a start (08 moves the Huey to ServicePad);
         // re-claim so every start base has its warehouse entry. Idempotent.
         claimStartAirfields(s);
-        await loadScripts(s, s.dictionary, [{ filePath: packagePath('scripts', 'dcs-mcp-telemetry.lua') }]);
+        // Splash Damage goes in when this machine has it. It is a community
+        // script, not shipped here, so a machine without it still builds the
+        // package — the omission is recorded rather than failing the run.
+        const extraScripts: { framework?: FrameworkName; filePath: string }[] = [];
+        try {
+          extraScripts.push({ framework: 'splash', filePath: await resolveFrameworkPath('splash') });
+        } catch (error) {
+          splashSkipped ??= error instanceof Error ? error.message : String(error);
+        }
+        await loadScripts(s, s.dictionary, [...extraScripts, { filePath: packagePath('scripts', 'dcs-mcp-telemetry.lua') }]);
         addTrigger(s.mission, { type: 'start', comment: 'Acceptance identity', conditions: [], actions: [{ kind: 'do_script', text:
           `DCSMCP_ACCEPTANCE = {runId=${quoteLuaString(runId)}, scenarioId=${quoteLuaString(test.id)}}\nenv.info('[DCSMCP] ACCEPTANCE runId=${runId} scenarioId=${test.id}')` }] }, s.dictionary);
         for (const [value, outcome] of [[1, 'victory'], [2, 'failure']] as const) addTrigger(s.mission, { type: 'once', comment: `Acceptance ${outcome}`, conditions: [{ kind: 'flag_equals', flag: built.report.outcome.outcomeFlag, value }], actions: [{ kind: 'do_script', text:
@@ -75,7 +85,12 @@ export async function generateAcceptancePackage(outDir: string, onProgress?: (pr
           stockMode: test.id === '09-logistics' ? 'finite-empty aircraft/weapons; 1 InitFuel unit; positive native inventory metadata not supplied' : null });
       } finally { closeSession(s.id); }
     }
-    const manifest = { version: 1, runId, verification: 'offline only; all live DCS checks pending', scenarios: manifests };
+    const manifest = { version: 1, runId, verification: 'offline only; all live DCS checks pending',
+      // Splash Damage is a community script this project does not ship. When it is not
+      // on the machine the package still builds; say so rather than leaving the missions
+      // silently different from the ones built where it IS present.
+      splashDamage: splashSkipped ? { embedded: false, reason: splashSkipped } : { embedded: true },
+      scenarios: manifests };
     await atomicWrite(path.join(root, 'manifest.json'), JSON.stringify(manifest, null, 2));
     await atomicWrite(path.join(root, 'offline-report.json'), JSON.stringify({ status: 'pass', scenarios: manifests.length, liveStatus: 'pending', checks: manifests.map(m => ({ scenario: m.id, ...m.offline })) }, null, 2));
     onProgress?.({ phase: 'complete', completed: cases.length, total: cases.length });

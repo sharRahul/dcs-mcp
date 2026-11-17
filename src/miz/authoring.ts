@@ -259,6 +259,15 @@ interface UnitSpec {
   spacingMetres?: number;
   /** Explicit (forward, right) offsets from the lead, one per unit. */
   offsets?: { forward: number; right: number }[];
+  /**
+   * Each unit's own facing in DEGREES relative to the group heading, one per unit.
+   *
+   * A SAM site is not a formation of identically-aligned vehicles: the Mission
+   * Editor's own SA-2 template points each of its six launchers outward along a
+   * different bearing. Only a single-route-point group keeps these — with two or
+   * more route points the editor recomputes every unit heading from the leg.
+   */
+  headingOffsetsDegrees?: number[];
 }
 
 /**
@@ -292,6 +301,11 @@ function buildUnits(groupName: string, spec: UnitSpec): LuaTable {
   if (spec.offsets && spec.offsets.length !== spec.types.length) {
     throw new Error(`Group '${groupName}' has ${spec.types.length} unit(s) but ${spec.offsets.length} offset(s).`);
   }
+  if (spec.headingOffsetsDegrees && spec.headingOffsetsDegrees.length !== spec.types.length) {
+    throw new Error(
+      `Group '${groupName}' has ${spec.types.length} unit(s) but ${spec.headingOffsetsDegrees.length} heading offset(s).`
+    );
+  }
   for (let i = 1; i <= spec.types.length; i++) {
     const back = (i - 1) * spacing;
     // Right of the heading is the forward vector turned 90 degrees clockwise:
@@ -299,13 +313,14 @@ function buildUnits(groupName: string, spec: UnitSpec): LuaTable {
     const off = spec.offsets?.[i - 1];
     const dx = off ? off.forward * forwardX - off.right * forwardY : -back * forwardX;
     const dy = off ? off.forward * forwardY + off.right * forwardX : -back * forwardY;
+    const turn = spec.headingOffsetsDegrees?.[i - 1];
     const unit: LuaTable = {
       name: `${groupName}-${i}`,
       unitId: spec.firstUnitId + i - 1,
       type: spec.types[i - 1],
       x: spec.x + dx,
       y: spec.y + dy,
-      heading,
+      heading: turn === undefined ? heading : headingRadians((spec.heading ?? 0) + turn),
       skill: spec.skill ?? "High",
     };
     if (spec.altitudeMetres !== undefined) {
@@ -352,9 +367,12 @@ export interface AddGroupArgs {
   /**
    * Explicit per-unit positions relative to the lead, in metres along the
    * heading (`forward`) and to its right (`right`). One per unit, lead first.
-   * Overrides the default column — used for ship formations.
+   * Overrides the default column — used for ship formations and for site
+   * templates copied from the Mission Editor's own template library.
    */
   offsets?: { forward: number; right: number }[];
+  /** Each unit's own facing in DEGREES relative to the group heading, one per unit. */
+  headingOffsetsDegrees?: number[];
 }
 
 /** Expand `composition` (or the plain type/count pair) into one type per unit. */
@@ -697,6 +715,7 @@ export function addGroundGroup(mission: LuaTable, category: GroundCategory, args
       firstUnitId: ids.unitId + 1,
       spacingMetres: args.spacingMetres,
       offsets: args.offsets,
+      headingOffsetsDegrees: args.headingOffsetsDegrees,
     }),
     route: initialRoute(category, args.x, args.y),
     x: args.x,

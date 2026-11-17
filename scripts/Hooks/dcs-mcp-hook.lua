@@ -211,11 +211,15 @@ end
 function handlers.self()
   return runIn("export", [[
     local d = LoGetSelfData() or {}
-    local pby = LoGetADIPitchBankYaw() or {}
+    -- LoGetADIPitchBankYaw returns THREE values, not a table. Assigning it to
+    -- one local captured the pitch number, and pby[1] then raised
+    -- "attempt to index local 'pby' (a number value)" the first time a player
+    -- was actually in a cockpit (found live, 2026-11-17).
+    local pitch, bank, yaw = LoGetADIPitchBankYaw()
     return '{"ok":true,"data":' .. enc({
       name = d.Name, position = d.LatLongAlt,
       altBar = LoGetAltitudeAboveSeaLevel(), altRad = LoGetAltitudeAboveGroundLevel(),
-      pitch = pby[1], bank = pby[2], yaw = pby[3],
+      pitch = pitch, bank = bank, yaw = yaw,
       ias = LoGetIndicatedAirSpeed(), tas = LoGetTrueAirSpeed(), mach = LoGetMachNumber(),
     }) .. '}'
   ]])

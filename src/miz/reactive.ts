@@ -53,6 +53,10 @@ export const reactiveTriggerSchema = z.discriminatedUnion("on", [
   z.object({ on: z.literal("group_in_zone"), zone: name, group: name }).strict(),
   z.object({ on: z.literal("unit_in_zone"), zone: name, unit: name }).strict(),
   z.object({ on: z.literal("group_dead"), group: name }).strict(),
+  // A whole SAM battery dying is a high bar: a two-HARM SEAD pass kills the
+  // radars and leaves six launchers and the support park standing. Keying a
+  // reserve off ONE unit — the track radar — is what a mission usually wants.
+  z.object({ on: z.literal("unit_dead"), unit: name }).strict(),
   z.object({ on: z.literal("group_damaged"), group: name, percent: z.number().int().min(1).max(100) }).strict(),
   z.object({ on: z.literal("flag"), flag: z.number().int().min(1).max(2147483647) }).strict(),
   z.object({ on: z.literal("time"), seconds: z.number().int().nonnegative() }).strict(),
@@ -228,6 +232,8 @@ function conditionFor(trigger: z.output<typeof reactiveTriggerSchema>): Conditio
       return { kind: "unit_in_zone", unit: trigger.unit, zone: trigger.zone };
     case "group_dead":
       return { kind: "group_dead", group: trigger.group };
+    case "unit_dead":
+      return { kind: "unit_dead", unit: trigger.unit };
     case "group_damaged":
       return { kind: "group_life_less", group: trigger.group, percent: trigger.percent };
     case "flag":

@@ -28,6 +28,7 @@
  */
 import type { UnitComposition } from "./authoring.js";
 import { loadImportedTemplates } from "./site-import.js";
+import { meSiteTemplates } from "../dcs/me-templates.js";
 
 export type TemplateProvenance = "engaged" | "me-saved" | "loaded" | "catalogue" | "imported";
 
@@ -41,6 +42,14 @@ export interface SiteTemplate {
   skynetRole: "sam" | "ewr";
   /** Exact per-unit offsets from the lead (metres along / right of its heading), when the layout was copied from a mission. */
   offsets?: { forward: number; right: number }[];
+  /**
+   * Each unit's own facing, in degrees RELATIVE to the group heading.
+   *
+   * A real site is not a formation of identically-aligned vehicles: the Mission
+   * Editor's own SA-2 template points each of its six launchers outward along a
+   * different bearing. Absent, every unit takes the group heading.
+   */
+  headingOffsetsDegrees?: number[];
   /** Where the layout was copied from, for imported templates and for built-ins copied from a mission. */
   source?: { file: string; sha256: string; group: string; theatre: string; importedAt: string };
 }
@@ -239,10 +248,19 @@ export const SITE_TEMPLATES: SiteTemplate[] = [
   },
 ];
 
-/** Built-in templates, then the user's imported ones (an import can never shadow a built-in id). */
+/**
+ * Built-in templates, then the Mission Editor's own template library from the
+ * installed DCS, then the user's imported ones.
+ *
+ * Nothing can shadow a built-in id, and the editor's library is read from the
+ * install at call time — on a machine with no DCS it simply contributes nothing,
+ * which is why no built-in depends on it.
+ */
 export function allSiteTemplates(): SiteTemplate[] {
-  const builtIn = new Set(SITE_TEMPLATES.map((t) => t.id.toLowerCase()));
-  return [...SITE_TEMPLATES, ...loadImportedTemplates().filter((t) => !builtIn.has(t.id.toLowerCase()))];
+  const taken = new Set(SITE_TEMPLATES.map((t) => t.id.toLowerCase()));
+  const editor = meSiteTemplates().filter((t) => !taken.has(t.id.toLowerCase()));
+  for (const t of editor) taken.add(t.id.toLowerCase());
+  return [...SITE_TEMPLATES, ...editor, ...loadImportedTemplates().filter((t) => !taken.has(t.id.toLowerCase()))];
 }
 
 export function findSiteTemplate(id: string): SiteTemplate {
