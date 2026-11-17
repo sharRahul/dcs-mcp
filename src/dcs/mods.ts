@@ -17,6 +17,22 @@
  * discovery can never break anything that works without it: every filesystem
  * error is swallowed and simply yields fewer mods, so validation, saving and
  * every DCS-only workflow behave exactly as if no mods were installed.
+ *
+ * DEPLOYED vs AVAILABLE. Two different places hold mods, and the difference
+ * matters to whoever is building a mission:
+ *
+ *   - `Mods/aircraft` and `Mods/tech`, under a Saved Games profile or the install:
+ *     these are LIVE. DCS loads them, so their types spawn.
+ *   - a mod-manager repository - OvGME keeps one folder per mod, holding the tree
+ *     it would deploy: `Saved Games/_OvGME Offline Mods/F-22A/f-22a/...`. These are
+ *     AVAILABLE but not necessarily enabled. The machine this was written on had
+ *     273 units across 32 such folders (an F-22A, a J-20, a Rafale pack, a 166-unit
+ *     naval/SAM asset pack) that `Mods/` knew nothing about.
+ *
+ * Both are scanned, because a type id declared in a repository is still the real
+ * id and still better than "probably a typo". But `deployed` says which, and a
+ * mission using a type from a mod that is only AVAILABLE will not load until the
+ * user enables it - so nothing here pretends the two are the same.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
@@ -35,8 +51,16 @@ export interface InstalledMod {
   /** `declare_plugin` id, else the folder name. */
   id: string;
   folder: string;
-  /** "aircraft" | "tech" (the Mods/ sub-folder it lives in). */
+  /** "aircraft" | "tech" for a deployed mod, else the repository folder's name. */
   kind: string;
+  /**
+   * True when the mod sits in a `Mods/` folder DCS loads. False when it was found
+   * in a mod-manager repository: the types are real, but DCS will not spawn them
+   * until the mod is enabled.
+   */
+  deployed: boolean;
+  /** The repository it came from, when it is not deployed. */
+  repository?: string;
   units: ModUnit[];
 }
 
@@ -50,6 +74,42 @@ export function modRoots(env: NodeJS.ProcessEnv = process.env): string[] {
   const install = env.DCS_INSTALL_DIR ? [env.DCS_INSTALL_DIR] : defaultInstallDirs(env);
   for (const dir of install) roots.push(path.join(dir, "Mods"), path.join(dir, "CoreMods"));
   return roots.filter((r) => existsSync(r));
+}
+
+/**
+ * Mod-manager repositories: folders that hold mods which are NOT deployed.
+ *
+ * OvGME names its repository folders itself, so they are matched by shape rather
+ * than by a fixed list - any folder beside the DCS profile whose name mentions a
+ * mod manager, or that is plainly a mod drop. `DCS_MCP_MOD_REPOS` (a path list)
+ * overrides the search entirely for anyone whose layout is different.
+ */
+export function modRepositoryRoots(env: NodeJS.ProcessEnv = process.env): string[] {
+  if (env.DCS_MCP_MOD_REPOS) {
+    return env.DCS_MCP_MOD_REPOS.split(path.delimiter).map((d) => d.trim()).filter((d) => d && existsSync(d));
+  }
+  const roots: string[] = [];
+  // The repositories sit NEXT TO the Saved Games DCS profile, not inside it.
+  const parents = new Set<string>();
+  for (const sg of findSavedGamesDirs(env)) parents.add(path.dirname(sg.path));
+  for (const parent of parents) {
+    let names: string[];
+    try {
+      names = readdirSync(parent);
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      if (!/ovgme|jsgme|downloaded mods|mod ?repo/i.test(name)) continue;
+      const full = path.join(parent, name);
+      try {
+        if (statSync(full).isDirectory()) roots.push(full);
+      } catch {
+        continue;
+      }
+    }
+  }
+  return roots;
 }
 
 export function defaultInstallDirs(env: NodeJS.ProcessEnv): string[] {
@@ -93,8 +153,13 @@ function stripComments(src: string): string {
   return src.replace(/--\[(=*)\[[\s\S]*?\]\1\]/g, "").replace(/--[^\n]*/g, "");
 }
 
-/** Scan one mod folder. Exported for tests. */
-export function scanModFolder(folder: string, kind: string): InstalledMod {
+/**
+ * Scan one mod folder. Exported for tests.
+ *
+ * `deployed` defaults to true because the usual caller is scanning a live
+ * `Mods/` folder; a repository scan passes false.
+ */
+export function scanModFolder(folder: string, kind: string, deployed = true, repository?: string): InstalledMod {
   const units = new Map<string, ModUnit>();
   let id = path.basename(folder);
   for (const file of luaFiles(folder)) {
@@ -134,7 +199,14 @@ export function scanModFolder(folder: string, kind: string): InstalledMod {
     }
   }
   // make_flyable gives no category; a plane/helicopter seen elsewhere wins.
-  return { id, folder, kind, units: [...units.values()] };
+  return {
+    id,
+    folder,
+    kind,
+    deployed,
+    ...(repository ? { repository } : {}),
+    units: [...units.values()],
+  };
 }
 
 let cache: { at: number; mods: InstalledMod[] } | undefined;
@@ -171,18 +243,58 @@ export function installedMods(refresh = false, roots?: string[]): InstalledMod[]
       }
     }
   }
+  // Repositories last, and only for types nothing deployed already declares: a
+  // live mod is the better answer for the same id, every time.
+  const deployedTypes = new Set(mods.flatMap((m) => m.units.map((u) => u.type)));
+  for (const repo of roots ? [] : modRepositoryRoots()) {
+    let names: string[];
+    try {
+      names = readdirSync(repo);
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      const folder = path.join(repo, name);
+      try {
+        if (!statSync(folder).isDirectory()) continue;
+        const mod = scanModFolder(folder, path.basename(repo), false, repo);
+        mod.units = mod.units.filter((u) => !deployedTypes.has(u.type));
+        if (mod.units.length) mods.push(mod);
+      } catch {
+        continue;
+      }
+    }
+  }
   if (!roots) cache = { at: Date.now(), mods };
   return mods;
 }
 
-/** Find an installed mod unit by exact type id. */
-export function findModUnit(type: string, mods?: InstalledMod[]): (ModUnit & { mod: string }) | undefined {
+/** Mods DCS actually loads. */
+export function deployedMods(mods = installedMods()): InstalledMod[] {
+  return mods.filter((m) => m.deployed);
+}
+
+/**
+ * Find a mod unit by exact type id.
+ *
+ * A DEPLOYED mod wins over one that merely sits in a repository, so a type DCS
+ * can actually spawn is never reported as unavailable. `deployed` is on the
+ * result because the difference decides whether a mission will load.
+ */
+export function findModUnit(
+  type: string,
+  mods?: InstalledMod[]
+): (ModUnit & { mod: string; deployed: boolean; repository?: string }) | undefined {
   mods ??= installedMods();
+  let fallback: (ModUnit & { mod: string; deployed: boolean; repository?: string }) | undefined;
   for (const mod of mods) {
     const unit = mod.units.find((u) => u.type === type);
-    if (unit) return { ...unit, mod: mod.id };
+    if (!unit) continue;
+    const hit = { ...unit, mod: mod.id, deployed: mod.deployed, ...(mod.repository ? { repository: mod.repository } : {}) };
+    if (mod.deployed) return hit;
+    fallback ??= hit;
   }
-  return undefined;
+  return fallback;
 }
 
 /** For tests: drop the scan cache. */

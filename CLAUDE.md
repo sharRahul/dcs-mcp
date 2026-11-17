@@ -902,3 +902,52 @@ keys do not reach DCS, so nothing requiring the mission to RUN was reached — t
 waves firing, `a_ai_task`, `a_mark_to_all` on F10, the troop lift, the train moving.
 `net.load_mission` through the bridge also no-ops from that paused state, one step further
 in than the cold-menu no-op already documented.
+
+### Mod-manager repositories, and what "installed" actually means (0.6.3)
+
+Mods live in two different kinds of place, and conflating them produces a mission
+that looks fine and spawns nothing:
+
+- **Deployed**: `Mods/aircraft` or `Mods/tech`, under a Saved Games profile or the
+  install. DCS loads these, so their types spawn.
+- **Available**: a mod-manager repository. OvGME keeps one folder per mod holding
+  the tree it would deploy — `Saved Games/_OvGME Offline Mods/F-22A/f-22a/...` —
+  and those mods are not enabled.
+
+`modRepositoryRoots()` finds repositories beside the Saved Games DCS profile by
+shape (`ovgme`, `jsgme`, `downloaded mods`, `mod repo` in the folder name);
+`DCS_MCP_MOD_REPOS` (a path list) overrides the search for a different layout.
+On this machine that found **four repositories, 30 available-only mods, 269 units**
+that `Mods/` knew nothing about: an F-22A, an F-23A, a J-20, a Rafale pack, the CJS
+Super Hornet, VSN F-35s, a Civil Aircraft Mod, and a 166-unit naval/SAM asset pack
+(`Type055`, `CH_HQ22_STR`, …). 174 units are deployed, across 5 mods.
+
+`InstalledMod.deployed` and `findModUnit(...).deployed` carry the distinction, and a
+DEPLOYED mod always wins the same type id (`F15EX` resolves to the live copy, not the
+repository one). A repository mod's units are filtered against the deployed set first,
+so the two never double-count.
+
+#### The validator now separates four different answers for an unknown type
+
+Only the BUNDLED catalogue ends the question. A type that resolves because it was
+learned from a mission is evidence the id is real, NOT evidence it will spawn here,
+so the mod check still runs after a learned hit — otherwise a learned id silently
+hides an undeployed mod.
+
+| situation | code |
+|---|---|
+| in the pinned pydcs catalogue, or an effect static | (nothing) |
+| declared by a mod DCS loads | (nothing) |
+| declared by a mod sitting in a repository | `MOD_NOT_DEPLOYED` |
+| learned from a mission, nothing here declares it | `TYPE_NOT_ON_THIS_MACHINE` |
+| nothing knows it at all | `UNKNOWN_UNIT_TYPE` |
+
+Across the local corpus that turned **265 `UNKNOWN_UNIT_TYPE` into 0**: 184
+`TYPE_NOT_ON_THIS_MACHINE` (real ids from other people's mods), 16
+`MOD_NOT_DEPLOYED` (mods sitting in the OvGME repository), the rest resolved. The
+file is fine in every case — these stay warnings.
+
+`countryOffers` is now consulted for bundled types only. pydcs lists what the editor
+offers for the types pydcs knows; it cannot know a mod type, and reporting every one
+of them as "not offered to any country" said nothing (it had inflated
+`COUNTRY_TYPE_NOT_OFFERED` from 64 to 124).

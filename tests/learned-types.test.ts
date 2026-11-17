@@ -220,3 +220,83 @@ test('a mod that declares its units in split files is still detected', async () 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('a mod-manager repository is scanned, but its types are not pretended to be live', async (t) => {
+  const { installedMods, deployedMods, findModUnit, modRepositoryRoots, clearModCache } = await import('../src/dcs/mods.js');
+  const { mkdirSync, writeFileSync } = await import('node:fs');
+  const dir = mkdtempSync(path.join(tmpdir(), 'dcs-mcp-repo-'));
+  t.after(() => { delete process.env.DCS_MCP_MOD_REPOS; clearModCache(); rmSync(dir, { recursive: true, force: true }); });
+
+  // An OvGME-shaped repository: one folder per mod, holding the tree it would
+  // deploy. Nothing under Mods/, so DCS is not loading any of it.
+  const mod = path.join(dir, 'F-22A Raptor', 'f-22a');
+  mkdirSync(mod, { recursive: true });
+  writeFileSync(path.join(mod, 'entry.lua'), 'declare_plugin("F-22A", {});\nmake_flyable("F-22A", current_mod_path, {}, {});\n');
+
+  process.env.DCS_MCP_MOD_REPOS = dir;
+  clearModCache();
+  assert.deepEqual(modRepositoryRoots(), [dir]);
+  const mods = installedMods(true);
+  const repo = mods.find(m => m.id === 'F-22A');
+  assert.ok(repo, 'the repository mod was not found');
+  assert.equal(repo.deployed, false, 'a repository mod is available, not deployed');
+  assert.equal(repo.repository, dir);
+  assert.equal(deployedMods(mods).some(m => m.id === 'F-22A'), false);
+
+  const hit = findModUnit('F-22A', mods);
+  assert.ok(hit);
+  assert.equal(hit.deployed, false, 'the lookup must say the type will not spawn yet');
+});
+
+test('an undeployed mod type is reported as such, not as a typo or as fine', async (t) => {
+  const { clearModCache } = await import('../src/dcs/mods.js');
+  const { buildMissionDocument } = await import('../src/miz/parser.js');
+  const { validateMission } = await import('../src/miz/validator.js');
+  const { mkdirSync, writeFileSync } = await import('node:fs');
+  const dir = mkdtempSync(path.join(tmpdir(), 'dcs-mcp-repo2-'));
+  t.after(() => { delete process.env.DCS_MCP_MOD_REPOS; clearModCache(); registerTypeSource(undefined); rmSync(dir, { recursive: true, force: true }); });
+
+  const mod = path.join(dir, 'Raptor', 'f-22a');
+  mkdirSync(mod, { recursive: true });
+  writeFileSync(path.join(mod, 'entry.lua'), 'declare_plugin("Raptor Mod", {});\nmake_flyable("F-22A", current_mod_path, {}, {});\n');
+  process.env.DCS_MCP_MOD_REPOS = dir;
+  clearModCache();
+
+  const mission = newMissionTable('Caucasus', 43200);
+  addAircraftGroup(mission, 'plane', { side: 'blue', country: 'USA', name: 'Raptor', type: 'F-15C', count: 1, x: 0, y: 0, altitudeMetres: 5000, task: 'CAP' });
+  luaArray(asTable(findGroup(mission, 'Raptor')!.group['units']))[0]['type'] = 'F-22A';
+
+  const report = validateMission(buildMissionDocument(mission, {}, 'test'), mission);
+  const codes = report.warnings.map(w => w.code);
+  assert.ok(codes.includes('MOD_NOT_DEPLOYED'), `expected MOD_NOT_DEPLOYED, got ${codes.join(',')}`);
+  assert.ok(!codes.includes('UNKNOWN_UNIT_TYPE'), 'a real mod id is not a typo');
+  assert.equal(report.errors.length, 0, 'an undeployed mod is not a file DCS cannot open');
+  // pydcs cannot know whether the editor offers a mod type to a country, so it
+  // must not be reported as off-menu either.
+  assert.ok(!codes.includes('COUNTRY_TYPE_NOT_OFFERED'));
+});
+
+test('a type known only from missions is flagged as not present here', async (t) => {
+  const { clearModCache } = await import('../src/dcs/mods.js');
+  const { buildMissionDocument } = await import('../src/miz/parser.js');
+  const { validateMission } = await import('../src/miz/validator.js');
+  const dir = mkdtempSync(path.join(tmpdir(), 'dcs-mcp-learn4-'));
+  t.after(() => { registerTypeSource(undefined); clearModCache(); rmSync(dir, { recursive: true, force: true }); });
+  const missions = path.join(dir, 'missions');
+  const store = path.join(dir, 'packs');
+  const { mkdirSync } = await import('node:fs');
+  mkdirSync(missions, { recursive: true });
+  await missionWithUnknownTypes(path.join(missions, 'a.miz'));
+  await learnFromMissions({ folders: [missions], name: 'probe', dir: store });
+  enableLearnedTypes(store);
+
+  const mission = newMissionTable('Caucasus', 43200);
+  addAircraftGroup(mission, 'plane', { side: 'red', country: 'Russia', name: 'Learned', type: 'Su-30MKI', count: 1, x: 0, y: 0, altitudeMetres: 5000, task: 'CAP' });
+  const report = validateMission(buildMissionDocument(mission, {}, 'test'), mission);
+  const codes = report.warnings.map(w => w.code);
+  // Learning the id makes it placeable; it does NOT make it present. Both facts
+  // have to survive, or a mission would look fine and spawn nothing.
+  assert.ok(codes.includes('TYPE_NOT_ON_THIS_MACHINE'), `expected TYPE_NOT_ON_THIS_MACHINE, got ${codes.join(',')}`);
+  assert.ok(!codes.includes('UNKNOWN_UNIT_TYPE'));
+  assert.equal(report.errors.length, 0);
+});

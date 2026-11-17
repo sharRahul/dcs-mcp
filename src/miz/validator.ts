@@ -198,15 +198,64 @@ export function validateMission(doc: MissionDocument, mission?: LuaTable): Valid
   // Unit types the catalogue does not know. A warning, not an error: new modules
   // and mods add types the bundled list predates. A typo, though, spawns nothing.
   const unknownTypes = new Map<string, string>();
+  // A type a mod declares but that is NOT deployed is a different problem from a
+  // typo: the id is real, and DCS will simply fail to spawn it until the mod is
+  // enabled. Reported separately, because "probably a typo" would be wrong and
+  // "known" would hide a mission that does not load.
+  const undeployed = new Map<string, { unit: string; mod: string; repository?: string }>();
+  // Learned from someone's mission, but no mod on this machine declares it: the id
+  // is real for whoever built that mission and will not spawn here.
+  const learnedOnly = new Map<string, string>();
   for (const group of doc.groups) {
     for (const unit of group.units) {
+      if (!unit.type) continue;
       // EFFECT_STATICS are real DCS types that the pinned pydcs does not list, so
       // they are named in editing.ts from ED's own db_countries.lua rather than
       // reported as typos.
-      if (unit.type && !findUnitType(unit.type) && !findModUnit(unit.type) && !EFFECT_STATICS.has(unit.type) && !unknownTypes.has(unit.type)) {
-        unknownTypes.set(unit.type, unit.name);
+      if (EFFECT_STATICS.has(unit.type)) continue;
+      const known = findUnitType(unit.type);
+      // Only the BUNDLED catalogue ends the question. A type that resolves because
+      // it was learned from a mission is evidence the id is real, not evidence it
+      // will spawn HERE - so the mod check still runs, or a learned id would
+      // silently hide an undeployed mod.
+      if (known?.source === "bundled") continue;
+      const mod = findModUnit(unit.type);
+      if (mod?.deployed) continue;
+      if (mod) {
+        if (!undeployed.has(unit.type)) {
+          undeployed.set(unit.type, { unit: unit.name, mod: mod.mod, repository: mod.repository });
+        }
+        continue;
       }
+      if (known) {
+        // Learned from a mission, and nothing on this machine declares it.
+        if (!learnedOnly.has(unit.type)) learnedOnly.set(unit.type, unit.name);
+        continue;
+      }
+      if (!unknownTypes.has(unit.type)) unknownTypes.set(unit.type, unit.name);
     }
+  }
+  for (const [type, unit] of learnedOnly) {
+    warnings.push({
+      severity: "warning",
+      code: "TYPE_NOT_ON_THIS_MACHINE",
+      message:
+        `Unit type '${type}' (first used by '${unit}') is known only from missions that use it - no bundled ` +
+        `catalogue entry and no mod on this machine declares it. The id is real for whoever built those ` +
+        `missions; here the unit will not spawn. Install the mod, or pick a type dcs_list_unit_types offers.`,
+      location: `unit:${unit}`,
+    });
+  }
+  for (const [type, hit] of undeployed) {
+    warnings.push({
+      severity: "warning",
+      code: "MOD_NOT_DEPLOYED",
+      message:
+        `Unit type '${type}' (first used by '${hit.unit}') is declared by the mod '${hit.mod}', which is in a mod ` +
+        `repository${hit.repository ? ` (${hit.repository})` : ""} rather than a Mods folder DCS loads. The id is ` +
+        `real, but DCS will not spawn it until that mod is enabled - the mission will load with the unit missing.`,
+      location: `unit:${hit.unit}`,
+    });
   }
   for (const [type, unit] of unknownTypes) {
     warnings.push({
@@ -227,6 +276,10 @@ export function validateMission(doc: MissionDocument, mission?: LuaTable): Valid
   for (const group of doc.groups) {
     if (group.category === "static") continue;
     for (const unit of group.units) {
+      // pydcs lists what the editor offers for the types pydcs knows. It cannot
+      // know a mod type or one learned from a mission, and would report every
+      // one of them as not offered to any country - which says nothing.
+      if (findUnitType(unit.type)?.source !== "bundled") continue;
       const key = `${group.country}|${unit.type}`;
       if (!offMenu.has(key) && countryOffers(group.country, unit.type) === false) offMenu.set(key, unit.name);
     }

@@ -19,7 +19,7 @@ import { searchUnitTypes } from "../miz/editing.js";
 import { latLonToXY, xyToLatLon } from "../miz/projection.js";
 import { allSiteTemplates } from "../miz/templates.js";
 import { countryInventory, type InventoryRow } from "../miz/inventory.js";
-import { installedMods, modRoots } from "../dcs/mods.js";
+import { installedMods, modRepositoryRoots, modRoots } from "../dcs/mods.js";
 import { buildResult, errorResult, render, responseFormatField } from "./format.js";
 
 const readOnly = {
@@ -371,37 +371,63 @@ export function registerReferenceTools(server: McpServer): void {
   server.registerTool(
     "dcs_list_installed_mods",
     {
-      title: "List installed unit mods",
+      title: "List unit mods on this machine",
       description:
-        "Unit mods installed on this machine: Saved Games/DCS*/Mods/{aircraft,tech} and the DCS install's " +
-        "Mods (set DCS_INSTALL_DIR if DCS is not under Program Files/Eagle Dynamics). Mod files are scanned " +
-        "as text for unit declarations (make_flyable, add_aircraft Name, GT.Name) — never executed — so a " +
-        "mod that builds names in code may be missed. Types found here can be used in dcs_miz_add_* and the " +
-        "validator accepts them.\n\nArgs: refresh? (rescan now)\n\n" +
-        "Returns JSON: { roots, mods: [{ id, folder, kind, units: [{ type, category, file }] }] }.",
-      inputSchema: z.object({ refresh: z.boolean().default(false), response_format: responseFormatField }).strict(),
-      outputSchema: z.object({ roots: z.array(z.string()), mods: z.array(z.record(z.string(), z.unknown())) }),
+        "Unit mods on this machine, in two kinds. DEPLOYED mods live in Saved Games/DCS*/Mods/{aircraft,tech} " +
+        "or the install's Mods (set DCS_INSTALL_DIR if DCS is not under Program Files/Eagle Dynamics): DCS " +
+        "loads them, so their types spawn. AVAILABLE mods were found in a mod-manager repository beside the " +
+        "DCS profile (OvGME keeps one folder per mod; DCS_MCP_MOD_REPOS overrides the search): the type ids " +
+        "are real, but DCS will not spawn them until the mod is enabled, and the validator says so with " +
+        "MOD_NOT_DEPLOYED rather than calling them typos. A deployed mod always wins for the same id. " +
+        "Mod files are scanned as text for unit declarations (make_flyable, add_aircraft Name, GT.Name) — " +
+        "never executed — so a mod that registers from compiled Lua is invisible here; for those, learn the " +
+        "id from a mission that uses it (dcs_learn_mission_types).\n\n" +
+        "Args: refresh? (rescan now), deployedOnly?\n\n" +
+        "Returns JSON: { roots, repositories, counts, mods: [{ id, folder, kind, deployed, repository?, " +
+        "units: [{ type, category, file }] }] }.",
+      inputSchema: z
+        .object({
+          refresh: z.boolean().default(false),
+          deployedOnly: z.boolean().default(false).describe("Only mods DCS actually loads"),
+          response_format: responseFormatField,
+        })
+        .strict(),
+      outputSchema: z.object({
+        roots: z.array(z.string()),
+        repositories: z.array(z.string()),
+        counts: z.record(z.string(), z.number()),
+        mods: z.array(z.record(z.string(), z.unknown())),
+      }),
       annotations: readOnly,
     },
     async (a) => {
       try {
         const roots = modRoots();
-        const mods = installedMods(a.refresh);
+        const repositories = modRepositoryRoots();
+        const all = installedMods(a.refresh);
+        const mods = a.deployedOnly ? all.filter((m) => m.deployed) : all;
+        const counts = {
+          mods: mods.length,
+          deployed: all.filter((m) => m.deployed).length,
+          available: all.filter((m) => !m.deployed).length,
+          units: mods.reduce((n, m) => n + m.units.length, 0),
+          deployedUnits: all.filter((m) => m.deployed).reduce((n, m) => n + m.units.length, 0),
+        };
         return render(
           a.response_format,
           () =>
-            roots.length === 0
+            roots.length === 0 && repositories.length === 0
               ? "No DCS Saved Games or install folder found on this machine (set DCS_SAVED_GAMES / DCS_INSTALL_DIR)."
               : mods.length === 0
-                ? `No unit mods found under:\n${roots.map((r) => `- ${r}`).join("\n")}`
+                ? `No unit mods found under:\n${[...roots, ...repositories].map((r) => `- ${r}`).join("\n")}`
                 : mods
                     .map(
                       (m) =>
-                        `- **${m.id}** (${m.kind}, ${m.folder}): ` +
+                        `- **${m.id}** (${m.kind}, ${m.deployed ? "deployed" : "available only, not loaded by DCS"}): ` +
                         m.units.map((u) => `\`${u.type}\` (${u.category})`).join(", ")
                     )
                     .join("\n"),
-          { roots, mods: mods as unknown as Record<string, unknown>[] }
+          { roots, repositories, counts, mods: mods as unknown as Record<string, unknown>[] }
         );
       } catch (err) {
         return errorResult(err);

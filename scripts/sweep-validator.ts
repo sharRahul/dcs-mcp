@@ -16,6 +16,10 @@ import { readMizArchive } from '../src/miz/archive.js';
 import { parseLuaAssignment } from '../src/miz/lua.js';
 import { parseMission } from '../src/miz/parser.js';
 import { validateMission } from '../src/miz/validator.js';
+import { enableLearnedTypes } from '../src/dcs/mission-learned.js';
+
+// Learned types count as known here too, or every mod airframe reads as a typo.
+enableLearnedTypes();
 
 const files: string[] = [];
 const walkDir = (d: string) => {
