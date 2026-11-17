@@ -170,6 +170,12 @@ pydcs 1.0.0; no new item has been opened in the Mission Editor or flown.
 | Quad zones / airbase ownership | F (offline) | src/miz/zones.ts (pydcs TriggerZoneQuadPoint); warehouse coalition |
 | SA-5, Rapier and other sites | P | No built-in template (no ME-saved source). src/miz/site-import.ts imports any site from a user-supplied mission (provenance `imported`) |
 | Payload-library loadouts | P | src/dcs/payloads.ts reads the user's DCS UnitPayloads as data; unknown without a DCS install |
+| Radio bands | P | data/radio-bands.json: A-10C only (the only Hoggit '<type> Radios' page); enforced there, unchecked elsewhere; validator RADIO_* checks |
+| Aircraft fuel limits | F (max) / M (defaults) | src/miz/fuel.ts: every type's pydcs fuel_max, percent input, audit. Per-airframe default starting fuel unsourced |
+| Reference-data provenance | F | src/data/provenance.ts registry + test; pydcs data byte-reproducible in CI; Wikipedia revisions pinned |
+| Warehouse new stock | P | src/miz/warehouse-donor.ts: only from a user-supplied donor's real wsType entries; DCS behaviour unverified |
+| Native ME-saved fixtures | M (framework ready) | tests/native.test.ts + tests/fixtures/native; no ME-saved mission available yet |
+| Compatibility matrix | F (offline) | tests/compat.test.ts; editor fix-ups under stock Lua 5.1 in CI |
 
 Still open from this list: radio bands and starting fuel per airframe (neither pydcs nor the
 Hoggit wiki has them; the wiki only links an external spreadsheet for radios), and

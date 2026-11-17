@@ -1,0 +1,44 @@
+{
+ "_source": "Hoggit DCS wiki '<type> Radios' pages (facts only); radios mapped to a band only when all pydcs default channels fit exactly one documented band.",
+ "_skipped": [],
+ "aircraft": {
+  "A-10C": {
+   "page": "https://wiki.hoggitworld.com/view/A-10C_Radios",
+   "revid": 7679,
+   "bands": [
+    {
+     "name": "VHF FM",
+     "minMHz": 30.0,
+     "maxMHz": 88.0
+    },
+    {
+     "name": "VHF AM",
+     "minMHz": 118.0,
+     "maxMHz": 150.0
+    },
+    {
+     "name": "UHF",
+     "minMHz": 225.0,
+     "maxMHz": 400.0
+    }
+   ],
+   "radios": {
+    "1": {
+     "band": "VHF AM",
+     "minMHz": 118.0,
+     "maxMHz": 150.0
+    },
+    "2": {
+     "band": "UHF",
+     "minMHz": 225.0,
+     "maxMHz": 400.0
+    },
+    "3": {
+     "band": "VHF FM",
+     "minMHz": 30.0,
+     "maxMHz": 88.0
+    }
+   }
+  }
+ }
+}

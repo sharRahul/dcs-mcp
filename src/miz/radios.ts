@@ -3,13 +3,15 @@
  * set_radio_channel_preset) and unitgroup.py FlyingGroup.set_frequency.
  *
  * Data: `panelRadio` / `radioFrequency` in data/authoring.json, generated from pydcs
- * `panel_radio` / `radio_frequency`. pydcs carries no frequency bands, so this module
- * does NOT validate a frequency against a radio's band; it only refuses radios and
- * channels the airframe does not have. Offline only, not Mission-Editor verified.
+ * `panel_radio` / `radio_frequency`. pydcs carries no frequency bands. Where a band IS
+ * documented (data/radio-bands.json, Hoggit "<type> Radios" pages, mapped to a pydcs radio only
+ * when all its default channels fit), out-of-band frequencies are refused; everywhere else they
+ * are not checked and the result says so. Offline only, not Mission-Editor verified.
  */
 import { authoringData } from '../data/authoring.js';
 import { asTable, luaArray, type LuaTable } from './lua.js';
 import { findGroup, findUnit } from './authoring.js';
+import { radioBand } from '../data/radio-bands.js';
 
 type Panel = Record<string, { channels: Record<string, number> }>;
 
@@ -24,8 +26,9 @@ export function radioInfo(type: string) {
     radios: panel ? Object.entries(panel).map(([radio, cfg]) => ({
       radio: Number(radio), channels: Object.keys(cfg.channels).length,
       defaults: Object.fromEntries(Object.entries(cfg.channels).map(([c, f]) => [c, f])),
+      band: radioBand(type, radio) ?? null,
     })) : [],
-    bandsValidated: false,
+    bandsValidated: panel ? Object.keys(panel).every(r => radioBand(type, r)) : false,
     source: 'pydcs 1.0.0 panel_radio / radio_frequency',
   };
 }
@@ -54,6 +57,13 @@ function requireAircraftUnit(mission: LuaTable, unitName: string): LuaTable {
   return unit;
 }
 
+/** Refuse a frequency outside a documented band; silent where no band is sourced. */
+export function checkBand(type: string, radio: number, mhz: number, what: string): void {
+  const band = radioBand(type, radio);
+  if (band && (mhz < band.minMHz || mhz > band.maxMHz))
+    throw new Error(`${what}: ${mhz} MHz is outside ${type} radio ${radio}'s ${band.band} band ${band.minMHz}-${band.maxMHz} MHz (${band.page})`);
+}
+
 export interface PresetArgs { radio: number; channels: Record<string, number> }
 
 /** Set channel presets on one unit. Unknown radios/channels are refused (pydcs raises KeyError). */
@@ -66,6 +76,7 @@ export function setRadioPresets(mission: LuaTable, unitName: string, args: Prese
   for (const [channel, mhz] of Object.entries(args.channels)) {
     if (!(channel in radioCfg.channels)) throw new Error(`Radio ${args.radio} of '${type}' has no channel ${channel} (1..${Object.keys(radioCfg.channels).length})`);
     if (!Number.isFinite(mhz) || mhz <= 0 || mhz > 1000) throw new Error(`Channel ${channel}: frequency must be a positive MHz value`);
+    checkBand(type, args.radio, mhz, `Channel ${channel}`);
   }
   const existing = asTable(unit.Radio);
   const radio = existing ? structuredClone(existing) : defaultRadio(type);
@@ -75,7 +86,7 @@ export function setRadioPresets(mission: LuaTable, unitName: string, args: Prese
   unit.Radio = radio;
   const warnings: string[] = [];
   if (!isHuman(unit)) warnings.push('pydcs only writes presets for Client/Player units; AI aircraft may ignore them.');
-  warnings.push('Frequencies are not checked against the radio band (pydcs has no band data).');
+  if (!radioBand(type, args.radio)) warnings.push(`No documented band for ${type} radio ${args.radio}; frequencies are not band-checked.`);
   return { unit: unitName, type, radio: args.radio, set: Object.keys(args.channels).length, warnings };
 }
 
@@ -99,6 +110,7 @@ export function setIntraFlightFrequency(mission: LuaTable, groupName: string, fr
   const units = luaArray(found.group.units);
   const mhz = frequencyMHz ?? authoringData().aircraft[String(units[0]?.type)]?.radioFrequency;
   if (mhz === undefined || !Number.isFinite(mhz) || mhz <= 0) throw new Error('No frequency given and no pydcs default for this airframe');
+  checkBand(String(units[0]?.type), radio, mhz, 'Intra-flight frequency');
   found.group.frequency = mhz;
   found.group.radioSet = true;
   if (modulation !== undefined) found.group.modulation = modulation;
@@ -109,5 +121,5 @@ export function setIntraFlightFrequency(mission: LuaTable, groupName: string, fr
     presetUnits.push(String(u.name));
   }
   return { group: groupName, frequencyMHz: mhz, defaulted: frequencyMHz === undefined, presetUnits,
-    warnings: ['Frequency is not checked against the radio band (pydcs has no band data).'] };
+    warnings: radioBand(String(units[0]?.type), radio) ? [] : [`No documented band for ${units[0]?.type} radio ${radio}; frequency not band-checked.`] };
 }

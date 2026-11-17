@@ -71,6 +71,9 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run verify:lua51
+      # Compatibility matrix with the Mission Editor's load-time fix-ups (me-open.lua) run under stock Lua 5.1.
+      - name: Compatibility matrix with editor fix-ups (stock Lua 5.1, not DCS)
+        run: node --test --import tsx tests/compat.test.ts
       - run: npm run verify:design -- "${{ runner.temp }}/lua51-design-proof"
       - name: Mocked hook load and protocol checks
         shell: pwsh
@@ -88,3 +91,28 @@ jobs:
           path: |
             ${{ runner.temp }}/lua51-design-proof
             ${{ runner.temp }}/lua51-live-acceptance
+
+  provenance:
+    # Byte-for-byte regeneration of the pydcs-derived data from the pinned pydcs 1.0.0 wheel.
+    # Linux on purpose: the generators write text files, and byte equality is platform-neutral.
+    name: Reference-data reproducibility (pydcs 1.0.0)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: npm ci
+      - name: Fetch and verify the pinned pydcs wheel
+        run: |
+          pip download pydcs==1.0.0 --no-deps -d "${{ runner.temp }}/pydcs"
+          echo "584570bf42bbfabbb1257bc737eb232d21aa7814cba7dfe0ba653a36aa993dd5  ${{ runner.temp }}/pydcs/pydcs-1.0.0-py3-none-any.whl" | sha256sum -c -
+          python -m zipfile -e "${{ runner.temp }}/pydcs/pydcs-1.0.0-py3-none-any.whl" "${{ runner.temp }}/pydcs/src"
+      - name: Regenerate and compare
+        env:
+          PYDCS_SRC: ${{ runner.temp }}/pydcs/src
+        run: node --test --import tsx tests/provenance.test.ts
