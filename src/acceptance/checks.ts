@@ -23,7 +23,7 @@ export async function checkMission(path: string) {
     }
   }
   for (const group of doc.groups) {
-    for (const u of group.units) if (![u.x, u.y, u.heading ?? 0].every(Number.isFinite) || (u.heading !== undefined && (u.heading < 0 || u.heading >= 2 * Math.PI))) errors.push(`Invalid geometry: ${u.name}`);
+    for (const u of group.units) if (![u.x, u.y, u.heading ?? 0].every(Number.isFinite) || (u.heading !== undefined && Math.abs(u.heading) >= 2 * Math.PI)) errors.push(`Invalid geometry: ${u.name}`);
     // Arbitrary layouts (wedge/line/naval stations) are valid; do not assume every group is a column.
     const raw = findGroup(mission, group.name)?.group;
     for (const p of luaArray(asTable(raw?.route)?.points)) if (![p.x, p.y].every(v => typeof v === 'number' && Number.isFinite(v))) errors.push(`Invalid route geometry: ${group.name}`);

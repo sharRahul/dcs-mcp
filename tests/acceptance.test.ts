@@ -78,3 +78,22 @@ test('corrupt mission archives fail before editing or replacing their source', a
   assert.deepEqual(await readFile(file), bytes); assert.deepEqual(await readdir(root), ['broken.miz']);
  } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test('acceptance check accepts the negative headings the Mission Editor saves, but not out-of-range ones', async () => {
+ const root = await mkdtemp(path.join(os.tmpdir(), 'dcs-heading-'));
+ const { newSession, saveSessionAs, refresh, closeSession } = await import('../src/miz/sessions.js');
+ const { addGroundGroup, findGroup } = await import('../src/miz/authoring.js');
+ const { checkMission } = await import('../src/acceptance/checks.js');
+ const s = newSession('Caucasus', 0);
+ try {
+  addGroundGroup(s.mission, 'vehicle', { side: 'blue', country: 'USA', name: 'Convoy', type: 'M-1 Abrams', count: 1, x: 1, y: 2 });
+  const unit = (findGroup(s.mission, 'Convoy')!.group as any).units[1];
+  // ME-saved missions store headings in (-pi, 0) too, e.g. -1.199 on a plane.
+  for (const [heading, valid] of [[-1.199, true], [-6.2, true], [2 * Math.PI, false], [-7, false]] as const) {
+   unit.heading = heading; refresh(s);
+   const file = path.join(root, `h${heading}.miz`); await saveSessionAs(s, file);
+   const report = await checkMission(file);
+   assert.equal(report.errors.some(e => e.startsWith('Invalid geometry')), !valid, `heading ${heading}`);
+  }
+ } finally { closeSession(s.id); await rm(root, { recursive: true, force: true }); }
+});

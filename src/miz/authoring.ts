@@ -10,6 +10,7 @@ import { asTable, luaArray, type LuaTable, type LuaValue } from "./lua.js";
 import { authoringData } from "../data/authoring.js";
 import { quoteLuaString } from "./serializer.js";
 import { nextDictId } from "./resources.js";
+import { callsignOptions } from "./callsigns.js";
 import {
   findAirport,
   findCountry,
@@ -233,7 +234,12 @@ export const FORMATION_SPACING: Record<string, number> = {
   plane: 60,
   helicopter: 60,
   vehicle: 20,
-  ship: 120,
+  // Was 120 m. In DCS 2.9.31 (2026-11-17) a Moskva with two Rezky escorts laid
+  // out 120 m apart collided at t=0: both escorts HIT/KILLed each other and died.
+  // ME-saved warship groups sampled are 863-1185 m apart (frigates, Arleigh
+  // Burke, Forrestal); only speedboats/fast attack craft sit closer. There is no
+  // per-hull length data, so one safe warship spacing is used.
+  ship: 1000,
 };
 
 interface UnitSpec {
@@ -605,13 +611,51 @@ export function addAircraftGroup(mission: LuaTable, category: AirCategory, args:
     groupId: ids.groupId + 1,
     task: args.task ?? "CAP",
     task_started: false,
+    // Seconds after mission start. Every ME-saved plane/helicopter/vehicle/ship
+    // group carries it (0 unless delayed); the ME's auto-briefing does
+    // `mission.start_time + group.start_time` and errors on Fly without it.
+    start_time: 0,
     units,
     route,
     x: Number(firstUnit?.["x"] ?? args.x),
     y: Number(firstUnit?.["y"] ?? args.y),
   };
+  applyEditorAircraftDefaults(group, String(country["name"] ?? args.country ?? ""));
   groups[nextIndex(groups)] = group;
   return group;
+}
+
+/**
+ * Countries whose ME-saved aircraft carry a NUMERIC callsign (100, 101, ...)
+ * rather than a {family, flight, element, name} table. Observed, not inferred:
+ * 203 units across Russia, Ukraine and USSR in the sampled ME-saved missions,
+ * versus 802 table callsigns across 27 other countries.
+ */
+const NUMERIC_CALLSIGN_COUNTRIES = new Set(["Russia", "Ukraine", "USSR"]);
+
+/**
+ * Fields the Mission Editor writes on every plane/helicopter group and unit
+ * (124/124 player units sampled) that the flight builders did not. Verified in
+ * DCS 2.9.31 on 2026-11-16: with them (plus the mission-level picture/neutral
+ * task fields) a player slot gets a working briefing and Fly; without them the
+ * briefing fails and no player aircraft exists. Existing values are never
+ * overwritten, so configure_flight callsigns/liveries/tail numbers still win.
+ */
+export function applyEditorAircraftDefaults(group: LuaTable, countryName: string): void {
+  const defaults: LuaTable = { modulation: 0, tasks: {}, radioSet: false, uncontrolled: false, hidden: false, uncontrollable: false };
+  for (const [key, value] of Object.entries(defaults)) if (group[key] === undefined) group[key] = value;
+  const numeric = NUMERIC_CALLSIGN_COUNTRIES.has(countryName);
+  const units = luaArray(group["units"]);
+  // Family 1 of the role's list: Enfield (aircraft), Overlord (AWACS), Texaco (tanker).
+  const family = numeric ? "" : String(callsignOptions(String(units[0]?.["type"] ?? ""), String(group["task"] ?? "")).families[1] ?? "Enfield").replace(/\s+/g, "");
+  units.forEach((unit, i) => {
+    if (unit["callsign"] === undefined) {
+      unit["callsign"] = numeric ? 100 + i : { 1: 1, 2: 1, 3: i + 1, name: `${family}1${i + 1}` };
+    }
+    if (unit["onboard_num"] === undefined) unit["onboard_num"] = String(Number(unit["unitId"] ?? i + 1) % 1000).padStart(3, "0");
+    if (unit["livery_id"] === undefined) unit["livery_id"] = "";
+    if (unit["psi"] === undefined) unit["psi"] = -Number(unit["heading"] ?? 0);
+  });
 }
 
 /** Add a ground-vehicle or ship group. Returns the created group table. */
@@ -627,6 +671,7 @@ export function addGroundGroup(mission: LuaTable, category: GroundCategory, args
     name: args.name,
     groupId: ids.groupId + 1,
     task: args.task ?? "Ground Nothing",
+    start_time: 0, // see addAircraftGroup
     units: buildUnits(args.name, {
       types: unitTypes(args),
       x: args.x,
@@ -1492,6 +1537,14 @@ export function compileTrig(mission: LuaTable): CompileTrigResult {
     const index = i + 1;
     const type = rule["predicate"];
 
+    // An event-driven trigger (ME "event" field, e.g. eventlist="shot") is wired
+    // into mission.trig.events[<event>][i] with its own disarm, not func[i]. We
+    // have no oracle for that wiring, so leave its compiled Lua exactly as it is.
+    if (hasEventList(rule)) {
+      skipped.push(index);
+      return;
+    }
+
     let condition: string;
     let action: string;
     try {
@@ -1575,9 +1628,16 @@ export function addTrigger(mission: LuaTable, args: TriggerArgs, dictionary?: Lu
   return index;
 }
 
+/** True when a trigrule is bound to a world event (ME "event" field). */
+function hasEventList(rule: LuaTable): boolean {
+  const events = rule["eventlist"];
+  return typeof events === "string" ? events.trim() !== "" : events !== undefined && events !== null;
+}
+
 /** Predicates of a trigrule this server cannot compile, if any. */
 function uncompilablePredicates(rule: LuaTable): string[] {
   const missing: string[] = [];
+  if (hasEventList(rule)) missing.push(`eventlist "${String(rule["eventlist"])}"`);
   for (const c of luaArray(rule["rules"])) {
     if (!CONDITION_COMPILERS[String(c["predicate"])]) missing.push(String(c["predicate"]));
   }
@@ -1749,6 +1809,14 @@ export function newMissionTable(theatre: string, startTime: number): LuaTable {
     descriptionText: "",
     descriptionBlueTask: "",
     descriptionRedTask: "",
+    // Present in every ME-saved mission (37/37 sampled). Without these and the
+    // player unit's identity fields (see applyEditorAircraftDefaults), DCS
+    // 2.9.31 returns nil from DCS.getPlayerBriefing() and the briefing screen
+    // fails with "attempt to index global 'dataBrf'" — no player slot results.
+    descriptionNeutralsTask: "",
+    pictureFileNameB: {},
+    pictureFileNameR: {},
+    pictureFileNameN: {},
     sortie: "",
     maxDictId: 0,
     requiredModules: {},

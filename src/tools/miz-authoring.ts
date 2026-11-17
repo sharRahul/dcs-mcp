@@ -36,6 +36,7 @@ import { findSiteTemplate } from "../miz/templates.js";
 import { fuelKgFromPercent } from "../miz/fuel.js";
 import { countryOffers } from "../data/reference.js";
 import type { MissionSession } from "../miz/sessions.js";
+import { claimStartAirfields } from "../miz/logistics.js";
 import type { MissionDocument } from "../types.js";
 import { readFile } from "node:fs/promises";
 import { basename } from "node:path";
@@ -228,9 +229,11 @@ export function registerMizAuthoringTools(server: McpServer): void {
           task: a.task,
           start: a.start,
         });
+        const airfieldNotes = claimStartAirfields(s);
         s.dirty = true;
         refresh(s);
-        return buildResult(`Added ${a.category} group '${a.name}' (${a.count} unit(s)).`, {
+        return buildResult(`Added ${a.category} group '${a.name}' (${a.count} unit(s)).` + airfieldNotes.map((n) => `
+${n}`).join(""), {
           added: a.name,
           groupCount: s.document.summary.groupCount,
         });

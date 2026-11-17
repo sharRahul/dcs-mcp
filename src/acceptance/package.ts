@@ -11,7 +11,7 @@ import { asTable, luaArray } from '../miz/lua.js';
 import { loadScripts } from '../miz/frameworks.js';
 import { serializeLuaAssignment, quoteLuaString } from '../miz/serializer.js';
 import { saveSessionAs, closeSession, refresh } from '../miz/sessions.js';
-import { editWarehouse } from '../miz/logistics.js';
+import { claimStartAirfields, editWarehouse } from '../miz/logistics.js';
 import { packagePath } from '../paths.js';
 import { atomicWrite } from '../security/files.js';
 import { missionReport } from '../miz/report.js';
@@ -48,6 +48,9 @@ export async function generateAcceptancePackage(outDir: string, onProgress?: (pr
           for (const u of luaArray(helicopter.units)) { u.x = pad.x!; u.y = pad.y!; }
         }
         if (test.id === '09-logistics') s.warehouses = editWarehouse(s, 'airports', airport.id, { coalition: 'BLUE', unlimitedFuel: false, unlimitedAircrafts: false, unlimitedMunitions: false, fuel: { jet_fuel: 1 } }, true);
+        // Case edits above can re-link a start (08 moves the Huey to ServicePad);
+        // re-claim so every start base has its warehouse entry. Idempotent.
+        claimStartAirfields(s);
         await loadScripts(s, s.dictionary, [{ filePath: packagePath('scripts', 'dcs-mcp-telemetry.lua') }]);
         addTrigger(s.mission, { type: 'start', comment: 'Acceptance identity', conditions: [], actions: [{ kind: 'do_script', text:
           `DCSMCP_ACCEPTANCE = {runId=${quoteLuaString(runId)}, scenarioId=${quoteLuaString(test.id)}}\nenv.info('[DCSMCP] ACCEPTANCE runId=${runId} scenarioId=${test.id}')` }] }, s.dictionary);

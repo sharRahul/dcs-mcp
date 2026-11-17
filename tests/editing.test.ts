@@ -277,6 +277,17 @@ test("trigger removal refuses to renumber a trigger it cannot recompile", () => 
   assert.equal(luaArray(m["trigrules"]).length, 2);
 });
 
+test("event-driven triggers are never renumbered or retyped", () => {
+  const m = missionWithTriggers();
+  (asTable(m["trigrules"])![3] as LuaTable)["eventlist"] = "shot";
+  // Removing #1 would renumber the event trigger #3, whose compiled Lua names its slot.
+  assert.throws(() => removeTrigger(m, 1), /eventlist "shot"/);
+  assert.throws(() => updateTrigger(m, 3, { type: "continuous" }), /eventlist "shot"/);
+  // An empty eventlist is how the editor stores "no event": still a normal trigger.
+  (asTable(m["trigrules"])![3] as LuaTable)["eventlist"] = "";
+  updateTrigger(m, 3, { type: "continuous" });
+});
+
 test("updateTrigger rewires a type change", () => {
   const m = missionWithTriggers();
   updateTrigger(m, 2, { type: "start", comment: "B2" });

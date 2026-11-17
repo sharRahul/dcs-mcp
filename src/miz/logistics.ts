@@ -3,8 +3,8 @@ import AdmZip from 'adm-zip';
 import { z } from 'zod';
 import { asTable, luaArray, parseLuaAssignment, type LuaTable } from './lua.js';
 import { findAirport, findUnitType } from '../data/reference.js';
-import { findGroupOfUnit, findUnit } from './authoring.js';
-import type { MissionSession } from './sessions.js';
+import { eachGroup, findGroupOfUnit, findUnit } from './authoring.js';
+import { refresh, type MissionSession } from './sessions.js';
 const endpoint = z.object({ kind: z.enum(['airports', 'warehouses']), id: z.number().int().positive() }).strict();
 export const warehousePatchSchema = z.object({
   coalition: z.enum(['RED', 'BLUE', 'NEUTRAL']).optional(),
@@ -21,6 +21,66 @@ export function readWarehouses(session: MissionSession): LuaTable {
   if (session.warehouses) return session.warehouses;
   const entry = new AdmZip(session.sourceBytes).getEntry('warehouses');
   return entry ? parseLuaAssignment(entry.getData().toString('utf8'), 'warehouses') : { airports: {}, warehouses: {} };
+}
+/**
+ * Give each airfield that a plane/helicopter group STARTS from (parking, hot,
+ * runway) to that group's side when the airfield is unowned or NEUTRAL.
+ *
+ * Verified in DCS 2.9.31 (2026-11-16): a Player F-16 set to start at Kutaisi in
+ * a mission whose warehouses file had no entry for it never spawned (spectator
+ * only, any ground start); the identical mission with Kutaisi BLUE spawned it.
+ * An air start was unaffected. An airfield already owned by the OTHER side is
+ * never flipped — that is reported, since the flight cannot spawn there.
+ */
+export function claimStartAirfields(session: MissionSession): string[] {
+  const notes: string[] = [];
+  const wanted = new Map<number, Set<string>>();
+  eachGroup(session.mission, (group, category, side) => {
+    if (category !== 'plane' && category !== 'helicopter') return;
+    const first = asTable(asTable(asTable(group.route)?.points)?.[1]);
+    const id = Number(first?.airdromeId);
+    if (!first || !Number.isInteger(id) || id < 1 || !String(first.type ?? '').startsWith('TakeOff')) return;
+    if (side !== 'red' && side !== 'blue') return;
+    (wanted.get(id) ?? wanted.set(id, new Set()).get(id)!).add(`${side.toUpperCase()}:${group.name}`);
+  });
+  for (const [id, claims] of wanted) {
+    const sides = new Set([...claims].map(c => c.split(':')[0]));
+    const entry = asTable(asTable(readWarehouses(session).airports)?.[id]);
+    const owner = String(entry?.coalition ?? 'NEUTRAL').toUpperCase();
+    const groups = [...claims].map(c => c.split(':').slice(1).join(':')).join(', ');
+    if (sides.size > 1) { notes.push(`airfield ${id}: both sides start flights there (${groups}); ownership left ${owner}`); continue; }
+    const side = [...sides][0];
+    if (owner === side) continue;
+    if (owner !== 'NEUTRAL') { notes.push(`airfield ${id} is ${owner}; ${side} flight(s) ${groups} cannot spawn there`); continue; }
+    session.warehouses = editWarehouse(session, 'airports', id, { coalition: side as 'RED' | 'BLUE' }, true);
+    notes.push(`airfield ${id} set to ${side}: ${groups} start there (DCS does not spawn a flight at an airfield its side does not own)`);
+  }
+  // Ship and FARP starts (linkUnit). Verified in DCS 2.9.31 (2026-11-17): a Player
+  // F/A-18 linked to a Stennis with no warehouses entry never spawned; adding the
+  // carrier's entry (its own coalition) spawned it on deck. editWarehouse creates
+  // the entry with the ship's/FARP's side, never the flight's.
+  const linked = new Map<number, string[]>();
+  eachGroup(session.mission, (group, category) => {
+    if (category !== 'plane' && category !== 'helicopter') return;
+    const first = asTable(asTable(asTable(group.route)?.points)?.[1]);
+    const id = Number(first?.linkUnit);
+    if (!first || !Number.isInteger(id) || id < 1 || !String(first.type ?? '').startsWith('TakeOff')) return;
+    (linked.get(id) ?? linked.set(id, []).get(id)!).push(String(group.name));
+  });
+  // editWarehouse finds the ship/FARP through the canonical document; make sure
+  // it reflects groups added since the last refresh.
+  if (linked.size) refresh(session);
+  for (const [id, groups] of linked) {
+    if (asTable(asTable(readWarehouses(session).warehouses)?.[id])) continue;
+    try {
+      session.warehouses = editWarehouse(session, 'warehouses', id, {}, true);
+      const side = String(asTable(asTable(session.warehouses.warehouses)?.[id])?.coalition);
+      notes.push(`ship/FARP unit ${id} given its warehouse entry (${side}): ${groups.join(', ')} start there (DCS does not spawn flights from a ship/FARP without one)`);
+    } catch (error) {
+      notes.push(`ship/FARP unit ${id} has no warehouse entry and none could be created (${(error as Error).message}); ${groups.join(', ')} may not spawn`);
+    }
+  }
+  return notes;
 }
 export function listWarehouses(table: LuaTable) {
   return (['airports', 'warehouses'] as const).flatMap(kind => Object.entries(asTable(table[kind]) ?? {}).map(([id, value]) => ({ kind, id: Number(id), data: value })));

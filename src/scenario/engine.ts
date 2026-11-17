@@ -7,6 +7,7 @@ import { configureFlight, createFlight, flyingReference, orbitSchema, ROLES, app
 import { findSiteTemplate } from '../miz/templates.js';
 import { addFarp } from '../miz/dressing.js';
 import { newSession, closeSession, refresh, type MissionSession } from '../miz/sessions.js';
+import { claimStartAirfields } from '../miz/logistics.js';
 import { findCountry, findUnitType, resolveTheatreName } from '../data/reference.js';
 import { addGoal, allocateFlags } from '../miz/scoring.js';
 import { checkActionResources, directMission, directorSchema } from '../miz/director.js';
@@ -180,6 +181,8 @@ export function generateScenario(input: unknown) {
       }
       if (!progress) throw new Error(`Unresolved/cyclic force targets or start dependencies: ${pending.map(f => f.name).join(', ')}`);
     }
+    // A flight cannot spawn at an airfield its side does not own (DCS 2.9.31, verified).
+    warnings.push(...claimStartAirfields(s));
     for (const zone of spec.zones) addTriggerZone(s.mission, zone);
     const assetKeys: Record<string, string> = {}; let assetBytes = 0;
     for (const asset of spec.assets) {

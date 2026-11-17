@@ -65,10 +65,20 @@ test(
     // The listener must come up at LOAD time, not on mission start, so the
     // bridge answers in the menu and the Mission Editor.
     assert.match(output, /hook server listening/, "the hook did not bind at load time");
+    // The read-only state probe runs once per mission from each tick source.
+    for (const source of ["sim", "gui"]) {
+      for (const state of ["mission", "server", "export", "config"]) {
+        assert.match(output, new RegExp(`state probe source=${source} state=${state} -> `), `${source}/${state} probe missing`);
+      }
+    }
 
     assert.equal(replies.length, 9, `expected 9 replies, got:\n${output}`);
     assert.match(replies[0], /^\{"ok":true,"data":\{"pong":true/, "ping did not answer");
     assert.match(replies[1], /^\{"ok":true,/, "mission query did not answer");
+    // Mission-env commands go to the state that actually holds `timer`
+    // ("server" on DCS 2.9.31), not to a hardcoded "mission".
+    assert.match(replies[1], /"state":"server"/, "mission query did not reach the scripting state");
+    assert.match(output, /mission scripting environment is net\.dostring_in state 'server'/);
     assert.match(replies[2], /"ok":false.*Unknown command/, "unknown command not rejected");
     // Raw Lua execution stays gated even when it is asked for directly.
     assert.match(replies[3], /"ok":false.*Raw exec is disabled/, "exec was not gated");
@@ -142,3 +152,32 @@ test("the hook binds only to localhost", () => {
   const source = readFileSync(HOOK, "utf8");
   assert.match(source, /^local HOST = "127\.0\.0\.1"/m, "the hook must not listen on a public interface");
 });
+
+test(
+  "telemetry logs a missing framework as ERROR only when the mission loads it",
+  { skip: lua ? false : "no DCS Lua interpreter found; set DCS_LUA to <DCS>/bin-mt/luae.exe" },
+  () => {
+    const harness = fileURLToPath(new URL("./fixtures/telemetry-frameworks.lua", import.meta.url));
+    const run = (c: string) => {
+      const r = spawnSync(lua!, [harness, "scripts/dcs-mcp-telemetry.lua", c], { encoding: "utf8" });
+      assert.equal(r.status, 0, `${r.stdout}${r.stderr}`);
+      return r.stdout.replace(/\r\n/g, "\n");
+    };
+    // The mission's DO SCRIPT FILE loads mist_*.lua, so a missing MIST is a fault;
+    // MOOSE and Skynet were never loaded, so their absence must not dirty the log.
+    const known = run("mist-missing");
+    assert.match(known, /^ERROR \[DCSMCP\] FRAMEWORK name=MIST loaded=0 expected=1$/m);
+    assert.match(known, /^INFO \[DCSMCP\] FRAMEWORK name=MOOSE loaded=0 expected=0$/m);
+    assert.match(known, /^INFO \[DCSMCP\] FRAMEWORK name=SKYNET loaded=0 expected=0$/m);
+    assert.match(known, /READY telemetry=1/);
+    // Expectation unreadable (as on DCS 2.9.31) and no framework at all: a
+    // framework-free mission, logged at INFO so LOG_CLEAN can pass.
+    const unknown = run("unknown");
+    for (const name of ["MIST", "MOOSE", "SKYNET"]) assert.match(unknown, new RegExp(`^INFO \\[DCSMCP\\] FRAMEWORK name=${name} loaded=0 expected=unknown$`, "m"));
+    assert.doesNotMatch(unknown, /^ERROR/m);
+    // Unreadable but partially loaded: the load-order failure stays an ERROR.
+    const partial = run("partial");
+    assert.match(partial, /^INFO \[DCSMCP\] FRAMEWORK name=MIST loaded=1/m);
+    for (const name of ["MOOSE", "SKYNET"]) assert.match(partial, new RegExp(`^ERROR \\[DCSMCP\\] FRAMEWORK name=${name} loaded=0$`, "m"));
+  }
+);

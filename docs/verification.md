@@ -2,6 +2,90 @@
 
 Single verification record. Historical results retain their original scope; current live DCS acceptance remains pending.
 
+## Windows acceptance run — 2026-11-16
+
+Tested checkout `c2bc179d4e9aaddbd8fd9c9fc6e5341f668c24a7` using
+`docs/testing/live-acceptance`, Windows PowerShell and Node v25.6.1.
+Local evidence is in `.acceptance-session-20261116/` (not committed).
+
+- Initial installed dependencies were stale (SDK 1.29.0 and Zod 3.25.76), causing
+  a TypeScript constructor error and schema fixture mismatch. After successful
+  `npm.cmd ci` using the lockfile (SDK 1.32.2, Zod 4.6.7), `npm.cmd run build`
+  passed and `npm.cmd test` passed **244/244, zero failures, zero skips** with
+  `DCS_LUA=H:/DCS World/Eagle Dynamics/DCS World/bin-mt/luae.exe`.
+- The earlier test run during incomplete dependency installation is invalid as a
+  product result; `build-final.log` and `tests-final.log` are authoritative.
+- `final-package/offline-report.json` reports pass for all ten scenarios.
+  `lua51-final.log` records successful compilation of all ten missions using the
+  installed DCS Lua interpreter. These checks do not verify simulator behavior.
+- Final package runId: `5505064f-d666-4faa-a8c6-af74ded33bc6`. All scenarios remain
+  live pending. Preserve `final-package/manifest.json` and the original missions.
+  Ten matching `operator-<scenario>.json` records were prepared with pending checks.
+- Actual stdio MCP smoke checks discovered **143 tools**, exercised acceptance
+  catalogue pagination, invalid-input rejection and subsequent recovery, and checked
+  the generated SEAD archive. Full responses are in `mcp-smoke.json`.
+- The live bridge responded at `127.0.0.1:8899` with `listening=true`, `phase=menu`,
+  `missionEnv=false`. Runtime inspection failed with `Unknown command: runtime`.
+  The installed hook differs from the checkout: installed SHA-256
+  `FBE6C7F3F85616C715B3FB47D21367FD737F715124678754888768CC88D3D456`;
+  checkout SHA-256 `62070859C4B411F3CB15B7792948244C83A0C5A8FACD4B619D259C92D80BAE20`.
+
+Live acceptance is **pending**, blocked on installing the current hook and restarting
+DCS, then executing the manual test plan. No missions were started or replaced,
+no runtime writes were performed, and no operator or aircraft behavior checks were
+marked passed. Mission Editor inspection, victory/failure and branching sorties,
+carrier recovery, JTAC, logistics, pause/retry, isolated spawn/message, safe reload,
+event retention and native-donor preservation still require execution and evidence.
+
+Documentation observations: README's stated 102-tool count is stale (143 discovered).
+The manual plan's `--bridge` collection option is not accepted by
+`scripts/collect-acceptance.mjs`; use separate `dcs_runtime_inspect` snapshots, as
+the live-acceptance README specifies.
+
+## Live acceptance run — 2026-11-16/17 (DCS 2.9.31.29434, multithreaded)
+
+Driven unattended: DCS was restarted into each mission from the command line
+(`DCS.exe --force_disable_VR --no-launcher <file.miz>`), the briefing's FLY button
+was clicked, and state was read through the bridge `runtime` command plus
+dcs.log telemetry. Evidence (per-scenario `capture.json`, `dcs.log`, screenshots)
+is in `.acceptance-session-20261116/live-r4|r5|r6*` (not committed). Nobody flew
+the aircraft: objective/victory paths that need a pilot remain unverified.
+
+### Defects found live and fixed (each with a regression test)
+
+| Symptom in DCS | Cause | Fix |
+|---|---|---|
+| Every mission-env bridge command: `attempt to index global 'timer'` | On 2.9.31 the scripting globals live in `net.dostring_in` state `server`; `mission` is now the trigger state (probe logged per state) | Hook resolves the state holding `timer`/`coalition` (`server`, then `mission`) once per mission |
+| ME `me_autobriefing.lua:493` arithmetic on nil `start_time` when pressing Fly | Authored groups lacked `start_time` (2,332/2,332 ME-saved non-static groups have it) | `start_time = 0` on new groups; `GROUP_NO_START_TIME` warning |
+| Briefing `BriefingDialog.lua:372: attempt to index global 'dataBrf'` | Missing `pictureFileNameB/R/N`, `descriptionNeutralsTask` and unit `callsign`/`onboard_num`/`livery_id`/`psi` (bisected: both sets needed) | Mission template and `applyEditorAircraftDefaults` write them; numeric callsigns for Russia/Ukraine/USSR as observed |
+| Player (or AI) flight starting at an airfield never spawns; spectator only | Start airfield unowned (empty warehouses) | `claimStartAirfields` gives the start airfield to the flight's side; never flips an enemy-owned one |
+| Carrier/FARP start never spawns | Ship/FARP had no warehouse entry | Same helper creates the base's entry with the base's own side |
+| Moskva group: both Rezky escorts HIT/KILL each other at t=0 | Ship default spacing 120 m | 1000 m (ME-saved warship groups: 863–1185 m) |
+| `[DCSMCP] FRAMEWORK loaded=0` logged as ERROR in framework-free missions | No notion of expectation | INFO `expected=0`/`expected=unknown`; ERROR kept for partial loads |
+| Statics reported as missing by `runtime` | `Group.getByName` never finds statics | Falls back to `StaticObject.getByName` |
+
+Also confirmed: bundled Kutaisi parking (pydcs) matches live `Airbase:getParking()`
+(58/58 slots within 1 m, same indices; new read-only hook command `parking`).
+Unit `alt = 0` at a parking start is accepted (field elevation is not required).
+
+### Scenario status (run `43c4d310` / `17f35cdd` / `77e74405`)
+
+| Scenario | Verified live | Still needs a pilot / longer run |
+|---|---|---|
+| 01 SEAD | Player F-16 hot on Kutaisi parking; SA-6 + Osa alive; no false outcome | HARM attack, site kill, victory |
+| 02 CAP | AWACS orbiting (climbs to ~8.2 km); 2 MiGs airborne and descending on route | Intercept/kills |
+| 03 Carrier | Player F/A-18 on the Stennis deck; carrier under way | Launch, arrested recovery |
+| 04 CAS/JTAC | JTAC HMMWV and T-72 targets placed and alive | F10 JTAC menu, designation |
+| 05 Convoy | Ambush inactive until zone entry. Short-approach VARIANT (convoy moved 1.5 km outside the zone; not the generated mission): all 3 ambush T-72s BIRTH at t=468 on actual entry, once | Generated route is ~35 km (~3 h sim); no fire exchange observed in the following ~145 s |
+| 06 Naval | Moskva + 2 Rezky alive, ~1 km apart, under way | Harpoon attack |
+| 07 Branching | Escalation branch: both Reinforce T-72s BIRTH at exactly t=1200 (1,700 s real-time run); nothing fired early | Target-destroyed path and ANDed victory |
+| 08 Airfield/FARP | Player on parking; 3 parked static F-16s; 2 FARPs with statics; support trucks; AI Huey cold at ServicePad | Rearm/refuel |
+| 09 Logistics | Finite **empty** aircraft stock at Kutaisi denies the Player F-16 spawn (01 is the same slot with unlimited stock and spawns) | Positive-stock follow-up |
+| 10 Cinematic | Briefing phase flag set; AWACS flying | Departure/update/victory phases follow player takeoff |
+
+Not achievable unattended: synthetic LCtrl+Z did not change DCS time acceleration,
+so long timelines run in real time.
+
 ## Mission design verification
 
 

@@ -116,7 +116,38 @@ local function fail(msg) return '{"ok":false,"error":' .. enc(tostring(msg)) .. 
 -- Run a snippet in a DCS state; the snippet must RETURN a full envelope
 -- string (built with the embedded encoder). Errors are wrapped safely.
 ----------------------------------------------------------------------
+--[[
+  Which net.dostring_in state is the mission SCRIPTING environment (timer,
+  coalition, env, trigger)? It moved between DCS versions, so it is detected,
+  not assumed:
+    - DCS 2.9.25 (verified July 2026): "mission".
+    - DCS 2.9.31 (verified 2026-11-16 by the state probe): "server". There,
+      "mission" is the trigger state (a_do_script exists, timer is nil), which is
+      exactly why every mission-env command failed with "index global 'timer'".
+  Resolved on first use with a fixed read-only snippet, cached until the next
+  mission starts (resetScriptingState), and only ever on the simulation thread.
+--]]
+local SCRIPTING_CANDIDATES = { "server", "mission" }
+local scriptingState = nil
+
+local function resolveScriptingState()
+  if scriptingState then return scriptingState end
+  for _, state in ipairs(SCRIPTING_CANDIDATES) do
+    local okp, res = pcall(net.dostring_in, state, "return type(timer) .. ',' .. type(coalition)")
+    if okp and res == "table,table" then
+      scriptingState = state
+      log.write("DCS-MCP", log.INFO, "mission scripting environment is net.dostring_in state '" .. state .. "'")
+      return state
+    end
+  end
+  return "mission" -- nothing answered; keep the historical default and let the caller report it
+end
+
+local function resetScriptingState() scriptingState = nil end
+
 local function runIn(state, body)
+  -- "mission" here means "the mission scripting environment", wherever DCS keeps it.
+  if state == "mission" then state = resolveScriptingState() end
   local snippet = JSON_ENC_SRC .. "\n" ..
     "local ok_, res_ = pcall(function()\n" .. body .. "\nend)\n" ..
     "if ok_ then return res_ else return '{\"ok\":false,\"error\":' .. enc(tostring(res_)) .. '}' end"
@@ -265,7 +296,15 @@ function handlers.runtime(args)
       if entry.exists then for _, unit in ipairs(group:getUnits() or {}) do
         if count >= 2000 then out.truncated = true; break end
         entry.units[#entry.units + 1] = state(unit); count = count + 1
-      end end
+      end elseif StaticObject and StaticObject.getByName then
+        -- Statics (FARP pads, parked aircraft, buildings) are not groups: DCS
+        -- keeps them as StaticObjects, so Group.getByName never finds them.
+        local static = StaticObject.getByName(name)
+        if static and static:isExist() then
+          entry.exists, entry.static = true, true
+          entry.units[1] = state(static); count = count + 1
+        end
+      end
       out.groups[#out.groups + 1] = entry
     end
     if out.eventMonitoring.available then
@@ -671,8 +710,15 @@ end
   pcall, and dropped after repeated failures rather than risking the user's UI.
 --]]
 local guiFailures = 0
+-- State probe bookkeeping (defined with the probe below; reset per mission).
+local logProbe
+local probedSim, probedGui = false, false
 
 local function guiTick()
+  if not probedGui and missionState.phase == "running" and logProbe then
+    probedGui = true
+    logProbe("gui")
+  end
   local okp, err = pcall(poll, "gui")
   if okp then
     guiFailures = 0
@@ -702,15 +748,80 @@ local function registerGuiTick()
   return true
 end
 
+--[[
+  Which net.dostring_in state holds the mission scripting globals?
+
+  Verified as "mission" on DCS 2.9.25 (July 2026). On 2.9.31 every mission-env
+  command came back "attempt to index global 'timer'" with a mission running and
+  requests dispatched from onSimulationFrame. This asks each candidate state a
+  FIXED, read-only question (which globals exist) and logs the answers, so the
+  right state is established from this install rather than guessed. No caller
+  supplied code runs here.
+--]]
+local PROBE_STATES = { "mission", "server", "export", "config" }
+local PROBE_SNIPPET = "local t = {} for _, k in ipairs({'timer','coalition','env','trigger','a_do_script'}) do " ..
+  "t[#t + 1] = k .. '=' .. type(_G[k]) end return table.concat(t, ',')"
+
+local function probeStates()
+  local out = {}
+  for _, state in ipairs(PROBE_STATES) do
+    local okp, res = pcall(net.dostring_in, state, PROBE_SNIPPET)
+    out[state] = okp and tostring(res) or ("error: " .. tostring(res))
+  end
+  return out
+end
+
+function logProbe(source)
+  local okp, result = pcall(probeStates)
+  if not okp then
+    log.write("DCS-MCP", log.ERROR, "state probe (" .. source .. ") failed: " .. tostring(result))
+    return
+  end
+  for _, state in ipairs(PROBE_STATES) do
+    log.write("DCS-MCP", log.INFO, "state probe source=" .. source .. " state=" .. state .. " -> " .. result[state])
+  end
+end
+
+-- Read-only: an airbase's parking spots as DCS itself reports them, so the
+-- bundled (pydcs-derived) parking data can be checked against the running game.
+function handlers.parking(args)
+  local name = args and args.airbase
+  if type(name) ~= "string" or #name == 0 or #name > 100 then return fail("parking: airbase name required") end
+  return runIn("mission", string.format([[
+    local ab = Airbase.getByName(%q)
+    if not ab then return '{"ok":false,"error":"no airbase named ' .. %q .. '"}' end
+    local spots = {}
+    for _, p in ipairs(ab:getParking() or {}) do
+      if #spots >= 500 then break end
+      spots[#spots + 1] = { term = p.Term_Index, term0 = p.Term_Index_0, termType = p.Term_Type,
+        x = p.vTerminalPos and p.vTerminalPos.x, y = p.vTerminalPos and p.vTerminalPos.y, z = p.vTerminalPos and p.vTerminalPos.z, toAC = p.TO_AC, distRW = p.fDistToRW }
+    end
+    local desc = ab:getDesc() or {}
+    return '{"ok":true,"data":' .. enc({ airbase = %q, id = ab:getID(), displayName = desc.displayName, spots = spots }) .. '}'
+  ]], name, name, name))
+end
+MISSION_ENV_COMMANDS.parking = true
+
+function handlers.probe()
+  return ok({ states = probeStates() })
+end
+MISSION_ENV_COMMANDS.probe = true
+
 local callbacks = {}
 
 function callbacks.onSimulationStart()
   missionState.phase = "running"
+  probedSim, probedGui = false, false
+  resetScriptingState()
   startServer() -- no-op when the load-time start already succeeded
 end
 
 function callbacks.onSimulationFrame()
   lastSimFrame = os.clock()
+  if not probedSim and missionState.phase == "running" then
+    probedSim = true
+    logProbe("sim")
+  end
   local okp, err = pcall(poll, "sim")
   if not okp then recordError("poll error", err) end
 end

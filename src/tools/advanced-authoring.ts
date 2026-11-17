@@ -4,7 +4,7 @@ import { requireSession, refresh } from '../miz/sessions.js';
 import { appendWaypointTask, configureFlight, createFlight, flightConfigSchema, orbitSchema, ROLES, ROLE_TASK, taskSchema } from '../miz/flight.js';
 import { addThreatRing, appendSurfaceTask, createGroundPlan, groundPlanSchema, ringSchema, surfaceTaskSchema } from '../miz/operations.js';
 import { configureIads, iadsSchema } from '../miz/iads.js';
-import { editWarehouse, listWarehouses, readWarehouses, warehousePatchSchema } from '../miz/logistics.js';
+import { claimStartAirfields, editWarehouse, listWarehouses, readWarehouses, warehousePatchSchema } from '../miz/logistics.js';
 import { authoringData } from '../data/authoring.js';
 import { findUnitType } from '../data/reference.js';
 import { buildResult, errorResult } from './format.js';
@@ -53,7 +53,7 @@ export function registerAdvancedAuthoringTools(server: McpServer) {
   }, async a => {
     try {
       const s = requireSession(a.sessionId), pos = a.start && a.start.kind !== 'air' ? { x: 0, y: 0 } : resolvePosition(s, a);
-      const data = createFlight(s.mission, { ...a, ...pos }); s.dirty = true; refresh(s); return result(data);
+      const data = createFlight(s.mission, { ...a, ...pos }); data.warnings.push(...claimStartAirfields(s)); s.dirty = true; refresh(s); return result(data);
     } catch (e) { return errorResult(e); }
   });
   server.registerTool('dcs_miz_configure_flight', {

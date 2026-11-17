@@ -174,6 +174,37 @@ test("compileTrig leaves triggers it does not understand exactly as they were", 
   assert.equal(trig.conditions[2], "return(c_time_after(5) )");
 });
 
+test("compileTrig leaves event-driven (eventlist) triggers wired exactly as the editor saved them", () => {
+  // Shape of a real ME-saved trigger: a once trigger on the "shot" event. The
+  // editor wires it into trig.events.shot[1] with an events-table disarm and NO
+  // func[1]. Its predicates are compilable, which is exactly why it used to be
+  // rewritten into a polled func[1] trigger.
+  const mission = missionWithRuleAt(1, {
+    predicate: "triggerOnce",
+    eventlist: "shot",
+    rules: { 1: { predicate: "c_time_after", seconds: 5 } },
+    actions: { 1: { predicate: "a_set_flag", flag: 1 } },
+  } as unknown as LuaTable);
+  const wiring = "if mission.trig.conditions[1]() then mission.trig.actions[1]() end";
+  const savedAction = `a_set_flag("1"); mission.trig.events["shot"][1]=nil;`;
+  mission["trig"] = {
+    conditions: { 1: "return(c_time_after(5) )" },
+    actions: { 1: savedAction },
+    events: { shot: { 1: wiring } },
+    func: {},
+    funcStartup: {},
+    flag: { 1: true },
+  } as unknown as LuaTable;
+  const before = structuredClone(mission["trig"]);
+
+  const result = compileTrig(mission);
+
+  assert.deepEqual(result.skipped, [1]);
+  assert.deepEqual(result.compiled, []);
+  const after = mission["trig"] as unknown as Record<string, unknown>;
+  for (const section of Object.keys(before)) assert.deepEqual(after[section], (before as Record<string, unknown>)[section], section);
+});
+
 test("recompiling is idempotent and never doubles the once-trigger's disarm", () => {
   const mission = missionWithRuleAt(1, {
     predicate: "triggerOnce",

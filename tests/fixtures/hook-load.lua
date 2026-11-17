@@ -48,7 +48,14 @@ net = {
     local path = s:match('"path"%s*:%s*"([^"]+)"')
     return { cmd = cmd, args = { path = path } }
   end,
-  dostring_in = function(state, code) return '{"ok":true,"data":{"state":"' .. state .. '"}}' end,
+  dostring_in = function(state, code)
+    -- DCS 2.9.31: only the "server" state holds the scripting globals; the
+    -- hook's scripting-state resolver must find it there, not in "mission".
+    if code == "return type(timer) .. ',' .. type(coalition)" then
+      return state == "server" and "table,table" or "nil,nil"
+    end
+    return '{"ok":true,"data":{"state":"' .. state .. '"}}'
+  end,
   load_mission = function(p) loadMissionCalls[#loadMissionCalls + 1] = p; return nil end,
 }
 

@@ -474,3 +474,110 @@ test("a mixed composition builds one group of several unit types", async () => {
 
   closeSession(s.id);
 });
+
+test("every authored non-static group carries start_time = 0, as ME-saved groups do", async () => {
+  // The ME auto-briefing computes `mission.start_time + group.start_time` when
+  // Fly is pressed; a group without it raises "attempt to perform arithmetic on
+  // field 'start_time' (a nil value)" (me_autobriefing.lua, DCS 2.9.31).
+  const s = newSession("Caucasus", 43200);
+  addAircraftGroup(s.mission, "plane", { side: "blue", country: "USA", name: "Colt 1", type: "FA-18C_hornet", count: 1, x: 1, y: 2 });
+  addAircraftGroup(s.mission, "helicopter", { side: "blue", country: "USA", name: "Dude 1", type: "UH-1H", count: 1, x: 3, y: 4 });
+  addGroundGroup(s.mission, "vehicle", { side: "blue", country: "USA", name: "Convoy", type: "M-1 Abrams", count: 1, x: 5, y: 6 });
+  addGroundGroup(s.mission, "ship", { side: "blue", country: "USA", name: "Fleet", type: "CVN_74", count: 1, x: 7, y: 8 });
+  refresh(s);
+  const dir = mkdtempSync(join(tmpdir(), "dcs-start-time-"));
+  const out = join(dir, "out.miz");
+  await saveSessionAs(s, out);
+  const reopened = await openSession(out);
+  for (const name of ["Colt 1", "Dude 1", "Convoy", "Fleet"]) {
+    assert.equal(findGroup(reopened.mission, name)!.group["start_time"], 0, name);
+  }
+  assert.ok(!validateMission(reopened.document, reopened.mission).warnings.some((w) => w.code === "GROUP_NO_START_TIME"));
+
+  // A group from an older build without the field is flagged, not silently accepted.
+  delete findGroup(reopened.mission, "Convoy")!.group["start_time"];
+  const report = validateMission(reopened.document, reopened.mission);
+  assert.ok(report.warnings.some((w) => w.code === "GROUP_NO_START_TIME" && w.location === "group:Convoy"));
+  closeSession(s.id);
+  closeSession(reopened.id);
+});
+
+test("new missions and flights carry the fields DCS needs for a player slot and briefing", async () => {
+  // DCS 2.9.31, 2026-11-16: without the mission-level picture/neutral-task
+  // fields and the units' callsign/onboard_num/livery_id/psi, the briefing
+  // failed ("attempt to index global 'dataBrf'"); with an unowned start
+  // airfield, a Player flight never spawned at all.
+  const { claimStartAirfields, readWarehouses } = await import("../src/miz/logistics.js");
+  const s = newSession("Caucasus", 43200);
+  for (const key of ["pictureFileNameB", "pictureFileNameR", "pictureFileNameN"]) assert.deepEqual(s.mission[key], {}, key);
+  assert.equal(s.mission["descriptionNeutralsTask"], "");
+
+  addAircraftGroup(s.mission, "plane", { side: "blue", country: "USA", name: "Viper", type: "F-16C_50", count: 2, x: 0, y: 0, skill: "Player", task: "SEAD", start: { kind: "parking_hot", airfield: "Kutaisi" } });
+  addAircraftGroup(s.mission, "plane", { side: "red", country: "Russia", name: "Flanker", type: "Su-27", count: 2, x: 1000, y: 1000, altitudeMetres: 5000 });
+  addAircraftGroup(s.mission, "plane", { side: "blue", country: "USA", name: "Darkstar", type: "E-3A", count: 1, x: 2000, y: 2000, altitudeMetres: 9000, task: "AWACS" });
+  const viper = findGroup(s.mission, "Viper")!.group as any;
+  assert.equal(viper.units[1].callsign.name, "Enfield11");
+  assert.equal(viper.units[2].callsign.name, "Enfield12");
+  assert.equal(viper.units[1].onboard_num.length, 3);
+  assert.equal(viper.units[1].livery_id, "");
+  assert.equal(viper.units[1].psi, -viper.units[1].heading);
+  for (const key of ["modulation", "tasks", "radioSet", "uncontrolled", "hidden", "uncontrollable"]) assert.ok(key in viper, key);
+  // Russia uses numeric callsigns in ME-saved missions; AWACS family 1 is Overlord.
+  const flanker = findGroup(s.mission, "Flanker")!.group as any;
+  assert.deepEqual([flanker.units[1].callsign, flanker.units[2].callsign], [100, 101]);
+  assert.equal((findGroup(s.mission, "Darkstar")!.group as any).units[1].callsign.name, "Overlord11");
+
+  // The start airfield goes to the flight's side; air starts claim nothing.
+  const notes = claimStartAirfields(s);
+  assert.equal(notes.length, 1);
+  const kutaisi = (readWarehouses(s) as any).airports[viper.route.points[1].airdromeId];
+  assert.equal(kutaisi.coalition, "BLUE");
+  // Never flips an airfield the other side owns.
+  kutaisi.coalition = "RED";
+  assert.match(claimStartAirfields(s).join(" "), /is RED; BLUE flight\(s\) Viper cannot spawn there/);
+  assert.equal((readWarehouses(s) as any).airports[viper.route.points[1].airdromeId].coalition, "RED");
+
+  // Everything survives a save and reopen.
+  kutaisi.coalition = "BLUE";
+  refresh(s);
+  const dir = mkdtempSync(join(tmpdir(), "dcs-player-slot-"));
+  await saveSessionAs(s, join(dir, "out.miz"));
+  const r = await openSession(join(dir, "out.miz"));
+  assert.equal((findGroup(r.mission, "Viper")!.group as any).units[1].callsign.name, "Enfield11");
+  assert.deepEqual(r.mission["pictureFileNameB"], {});
+  assert.equal((readWarehouses(r) as any).airports[viper.route.points[1].airdromeId].coalition, "BLUE");
+  closeSession(s.id);
+  closeSession(r.id);
+});
+
+test("ships in one group are spaced like ME-saved warship groups, not close enough to collide", () => {
+  // 120 m spacing made a Moskva group's escorts collide and die at t=0 in DCS 2.9.31.
+  const s = newSession("Caucasus", 43200);
+  addGroundGroup(s.mission, "ship", { side: "red", country: "Russia", name: "Cruisers", composition: [{ type: "MOSCOW", count: 1 }, { type: "REZKY", count: 2 }], x: -300000, y: 350000 } as any);
+  const units = Object.values((findGroup(s.mission, "Cruisers")!.group as any).units) as any[];
+  for (let i = 0; i < units.length; i++) for (let j = i + 1; j < units.length; j++) {
+    assert.ok(Math.hypot(units[i].x - units[j].x, units[i].y - units[j].y) >= 860, `${units[i].name}~${units[j].name} too close`);
+  }
+  closeSession(s.id);
+});
+
+test("ship and FARP starts get the base's warehouse entry so the flight can spawn", async () => {
+  // DCS 2.9.31, 2026-11-17: a Player F/A-18 linked to a Stennis without a
+  // warehouses entry never spawned; with the carrier's entry it spawned on deck.
+  const { claimStartAirfields, readWarehouses } = await import("../src/miz/logistics.js");
+  const { addFarp } = await import("../src/miz/dressing.js");
+  const s = newSession("Caucasus", 43200);
+  addGroundGroup(s.mission, "ship", { side: "blue", country: "USA", name: "Carrier", type: "Stennis", count: 1, x: -300000, y: 400000 });
+  addAircraftGroup(s.mission, "plane", { side: "blue", country: "USA", name: "Player", type: "FA-18C_hornet", count: 1, x: 0, y: 0, skill: "Player", start: { kind: "ship_hot", ship: "Carrier-1" } });
+  addFarp(s.mission, { side: "blue", country: "USA", name: "Pad", x: -280000, y: 686000 } as any);
+  addAircraftGroup(s.mission, "helicopter", { side: "blue", country: "USA", name: "Huey", type: "UH-1H", count: 1, x: 0, y: 0, start: { kind: "farp_cold", farp: "Pad" } });
+  const carrierId = Number((findGroup(s.mission, "Player")!.group as any).route.points[1].linkUnit);
+  const padId = Number((findGroup(s.mission, "Huey")!.group as any).route.points[1].linkUnit);
+  const notes = claimStartAirfields(s);
+  const wh = (readWarehouses(s) as any).warehouses;
+  assert.equal(wh[carrierId].coalition, "BLUE", notes.join("; "));
+  assert.equal(wh[padId].coalition, "BLUE", notes.join("; "));
+  // Idempotent: a second pass changes nothing.
+  assert.deepEqual(claimStartAirfields(s), []);
+  closeSession(s.id);
+});

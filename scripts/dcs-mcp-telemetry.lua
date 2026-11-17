@@ -115,6 +115,40 @@ end
   Skynet is just silently absent. Naming each global explicitly turns that into
   a visible line instead of a mystery.
 ]]
+-- File-name patterns per framework; keep in step with FRAMEWORKS in src/miz/frameworks.ts.
+local FRAMEWORK_FILES = {
+  MIST = { "^mist_%d[%d_]*%.lua$", "^mist%.lua$" },
+  MOOSE = { "^moose%.lua$", "^moose_%d[%d%._]*%.lua$" },
+  SKYNET = { "^skynet%-iads%-compiled%.lua$", "^skynet%-iads%.lua$" },
+}
+
+--[[
+  Which frameworks this mission itself loads, from its DO SCRIPT FILE actions.
+  Returns nil when that cannot be determined, so callers keep treating an absent
+  framework as an error rather than guessing it was never wanted.
+]]
+local function expectedFrameworks()
+  if not (env and env.mission and type(getValueResourceByKey) == "function") then return nil end
+  local ok, result = pcall(function()
+    local expected = {}
+    for _, rule in pairs(env.mission.trigrules or {}) do
+      for _, action in pairs(type(rule) == "table" and rule.actions or {}) do
+        if type(action) == "table" and action.predicate == "a_do_script_file" and action.file then
+          local path = getValueResourceByKey(action.file) or action.file
+          local base = string.lower(tostring(path):match("[^/\\]+$") or "")
+          for name, patterns in pairs(FRAMEWORK_FILES) do
+            for _, pattern in ipairs(patterns) do
+              if base:match(pattern) then expected[name] = true end
+            end
+          end
+        end
+      end
+    end
+    return expected
+  end)
+  return ok and result or nil
+end
+
 local function auditFrameworks()
   local checks = {
     { name = "MIST", present = (mist ~= nil), version = mist and mist.majorVersion and
@@ -122,11 +156,25 @@ local function auditFrameworks()
     { name = "MOOSE", present = (BASE ~= nil and _DATABASE ~= nil), version = _G.MOOSE_VERSION },
     { name = "SKYNET", present = (SkynetIADS ~= nil), version = SkynetIADS and SkynetIADS.VERSION },
   }
+  local expected = expectedFrameworks()
+  local anyPresent = false
+  for _, c in ipairs(checks) do anyPresent = anyPresent or c.present end
   for _, c in ipairs(checks) do
     if c.present then
       log("FRAMEWORK", string.format("name=%s loaded=1 version=%s", c.name, safe(c.version or "unknown")))
+    elseif expected and not expected[c.name] then
+      -- The mission never loads this framework, so its absence is not a fault.
+      log("FRAMEWORK", string.format("name=%s loaded=0 expected=0", c.name))
+    elseif not expected and not anyPresent then
+      -- Expectation unreadable (DCS 2.9.31 keeps getValueResourceByKey in the
+      -- trigger state, not the scripting state) and no framework at all: a
+      -- framework-free mission. A framework file that failed to run raises its
+      -- own Lua error in dcs.log, so this does not hide a broken load.
+      log("FRAMEWORK", string.format("name=%s loaded=0 expected=unknown", c.name))
     else
-      logError("FRAMEWORK", string.format("name=%s loaded=0", c.name))
+      -- Loaded by a DO SCRIPT FILE action yet missing (or expectation unknown):
+      -- exactly the load-order failure this audit exists to surface.
+      logError("FRAMEWORK", string.format("name=%s loaded=0%s", c.name, expected and " expected=1" or ""))
     end
   end
 end

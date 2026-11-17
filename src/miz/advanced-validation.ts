@@ -27,6 +27,10 @@ export function validateAuthoring(mission: LuaTable): ValidationIssue[] {
       if (group.modulation !== undefined && group.modulation !== 0 && group.modulation !== 1)
         issue('RADIO_MODULATION_INVALID', `Group modulation '${group.modulation}' is not 0 (AM) or 1 (FM)`, where);
     }
+    // Every ME-saved non-static group carries start_time (2,332 of 2,332 sampled;
+    // statics never do). Without it the ME auto-briefing fails on Fly.
+    if (category !== 'static' && typeof group.start_time !== 'number')
+      issue('GROUP_NO_START_TIME', `Group '${group.name}' has no start_time; the Mission Editor's auto-briefing fails on it (set 0 for mission start)`, `group:${group.name}`, 'warning');
     for (const unit of luaArray(group.units)) {
       const hit = findUnitType(String(unit.type)), location = `unit:${unit.name}`;
       if (hit && category !== 'static' && hit.category !== category) issue('UNIT_CATEGORY_MISMATCH', `${unit.type} is ${hit.category}, not ${category}`, location);

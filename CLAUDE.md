@@ -342,6 +342,22 @@ incrementally alongside a bridge poll and maintains a small `digest.json`.
 `scripts/verify-mission.mjs` runs the offline acceptance checks (validator, ED's own
 `fixUnitsPos`, compiled-trigger syntax, unit geometry) against any `.miz`.
 
+## What DCS needs before a flight spawns (verified live, DCS 2.9.31, 2026-11-16/17)
+
+- A flight starting at an airfield only spawns if its side OWNS the airfield
+  (`warehouses.airports[id].coalition`); a ship/FARP start needs the base's
+  `warehouses.warehouses[unitId]` entry. Missing → no player slot, spectator only,
+  no error anywhere. `claimStartAirfields` (logistics.ts) fixes both; it never flips
+  an enemy-owned airfield. Air starts are unaffected. A finite EMPTY aircraft stock
+  also denies the spawn (that is the logistics feature working).
+- The briefing (`DCS.getPlayerBriefing()`) returns nil unless the mission has
+  `pictureFileNameB/R/N` + `descriptionNeutralsTask` AND the units carry
+  `callsign`/`onboard_num`/`livery_id`/`psi` — bisected live; keep both.
+- Ship groups need ~1 km spacing: at 120 m a Moskva's escorts collided and died at t=0.
+- To test unattended: `DCS.exe --force_disable_VR --no-launcher <miz>` starts straight
+  into the mission; the sim waits on the briefing until FLY is clicked. The display
+  is 150 % scaled — use DPI-aware coordinates. Synthetic keys do not reach DCS.
+
 ## Two invariants the Mission Editor enforces
 
 **Every group needs `route.points[1]`.** `me_mission.lua:fixUnitsPos` indexes it
@@ -381,6 +397,13 @@ every mission-env command came back:
 ```
 attempt to index global 'coalition' (a nil value)
 ```
+
+**DCS 2.9.31 moved it again (verified 2026-11-16 with the hook's state probe):** the
+scripting globals (`timer`, `coalition`, `env`, `trigger`) are in state **`server`**;
+`mission` is now the trigger state (`a_do_script` exists, `timer` is nil). Even on the
+simulation thread `mission` fails with `index global 'timer'`. `runIn("mission", …)`
+therefore resolves the real state (`server`, then `mission`) per mission and logs it.
+Note `getValueResourceByKey` lives in the trigger state, not the scripting state.
 
 `MISSION_ENV_COMMANDS` in the hook lists the affected commands; `service(source)` holds
 such a request until an `onSimulationFrame` tick dispatches it. Do not "simplify" that

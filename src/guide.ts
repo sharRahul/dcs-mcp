@@ -24,6 +24,7 @@ Conventions that are easy to get wrong:
 - FARPs, parked statics on airfields, static target areas and naval formations have their own tools (dcs_list_scene_templates).
 - Triggers reference names in this API; unknown names are errors. Order-dependent script loads belong in ONE start trigger (dcs_miz_load_scripts does this).
 - Never trust a ground coordinate you did not check: dcs_check_terrain (live) says land or water.
+- A flight only spawns at an airfield its side owns, or at a ship/FARP that has a warehouse entry. Adding an airfield/ship/FARP start claims a neutral airfield for the flight's side and creates a missing ship/FARP entry; an enemy-owned airfield is reported, never flipped (dcs_miz_set_airbase_coalition).
 - Removing something a trigger references is refused unless force=true (the trigger would never fire).
 - Sessions are snapshotted to disk; after a server restart use dcs_miz_list_sessions and dcs_miz_restore_session.
 
