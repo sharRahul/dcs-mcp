@@ -801,3 +801,104 @@ To verify in DCS next: a written `.cmp` actually played through two stages and b
 an imported compound opened in the ME and sitting where it was placed; a reactive spawn firing in
 flight (zone entry and group-dead); `big_smoke` with each preset; an `a_ai_task` push moving an AI
 group; `a_mark_to_all` showing on the F10 map; `a_out_picture_s` displaying.
+
+---
+
+## Install, mods and types learned from missions; first live run (0.6.2)
+
+### What is placeable now, and where each answer comes from
+
+Three sources, checked in this order, and the first two never shadow each other:
+
+1. **The pinned pydcs catalogue** (`data/unit-types.json`) — authoritative, with fuel,
+   dimensions, tasks, parking fit. Always wins.
+2. **Installed mods** (`src/dcs/mods.ts`) — mod Lua scanned as TEXT, never executed.
+3. **Types learned from missions** (`src/dcs/mission-learned.ts`) — the general fallback,
+   registered through `registerTypeSource` in `reference.ts`.
+
+`findUnitType` now returns `source: "bundled" | "learned"`. A **learned** entry proves only
+that the id exists and which category DCS files it under: `fuelMax`, dimensions and tasks
+are NULL, so `addAircraftGroup` writes no `payload.fuel` (DCS applies its own default) and
+parking fit cannot be checked. Never fill those in from a guess.
+
+### Why learning from missions is the only general answer
+
+A sweep of the local corpus found **145 distinct unit types no catalogue here knows**, in
+three kinds:
+
+- **Stock DCS types newer than the pydcs pin**: `Oil rig` (195 units), the carrier deck crew
+  (`Carrier LSO Personell`, `us carrier tech`), `FARP_SINGLE_01`, `AS32-p25`, `CV_59_*`.
+- **Mods whose ids are unreadable.** The Su-35 mod registers its type from COMPILED Lua
+  (`Entry/Su35s_encrypt.lua`, LuaQ bytecode). No text scan will ever find `Su-35S`; its
+  `Config.lua` mentions the name but the registration is in the bytecode.
+- **Mods not installed here at all**: `Su-30MKI` (34 CLSIDs on its pylons), `Su-30SM`,
+  `Su-30MKM`, `J-20X`, `Rafale_C`, `B-21`, `A-4E-C`, `UH-60L`, `OH-6A`.
+
+The CLSIDs on a mod airframe's pylons in a real mission are the closest thing to that mod's
+own weapon list that this project can get, so they are recorded as `stores`. `missions` (how
+many distinct missions carried the type) is the confidence measure — one is a typo, ten is
+real. Tools: `dcs_learn_mission_types`, `dcs_list_learned_types`, `dcs_remove_learned_types`.
+Nothing is written to the user's missions, and a learned pack lives in the user data folder,
+never in this repo: the ids may be someone else's mod.
+
+### Mod scanning: `GT.Name` without a registration call in the same file
+
+`scanModFolder` required `add_surface_unit(` in the SAME file as `GT.Name`. Big mods split
+the two — HighDigitSAMs defines one unit per file under `Database/Vehicles` and registers
+them from a loader elsewhere — so **72 of its 162 units were invisible**, including every
+S-300/S-400 launcher. A file that sets `GT.Name` and carries the rest of a ground-unit
+definition (`GT.DisplayName`, `GT.WS`, or the `GT_t` helper) now counts on its own.
+
+### A heliport type the catalogue does not list
+
+`addStatic` refuses `category = "Heliports"` on purpose (it needs the ATC fields), and
+`FARP_KINDS` only had the three built-ins, so `FARP_SINGLE_01` and the like could not be
+placed at all. `addFarp` now takes `type` for any heliport static a registered source knows,
+taking its `shape_name` from that source. Pad count is reported as 1 because nothing in a
+mission file states it.
+
+### An empty group is now refused
+
+`addGroundGroup` with no resolvable types built a group with zero units — silently. That is
+the one shape that looks fine in the file and does nothing in the mission, and it happened
+because a site template id was passed straight to the authoring function instead of being
+resolved to a composition first (which is the tool layer's job: `findSiteTemplate`).
+`buildUnits` now refuses it and says what to pass.
+
+### Unbundled theatres
+
+`theatre()`'s error used to read as "unsupported". It now says what is actually missing:
+units can be placed and a mission authored on any theatre (the theatre is just a string in
+the file); what needs bundled data is airfield lookup and lat/lon conversion, and an
+installed theatre pydcs never exported gets those from `dcs_airbase_build_pack`.
+
+### First live DCS run — see docs/verification.md for the full record
+
+`scripts/build-verify-mission.mjs` builds a mission carrying eleven never-tested features;
+`DCS.exe --force_disable_VR --no-launcher <miz>` starts straight into it. The run confirmed
+the hook, the mission loading, `land` / `roads` / `los` / `clearspot` / `airbases`, an
+airbase pack of 30 airfields, a terrain pack that **matches `dcs_check_terrain` to 0.003 m**,
+and ordered script loading from one start trigger.
+
+It also found a real bug: **`DisembarkFromTransport` does not exist for DCS.**
+
+```
+ERROR WORLDGENERAL: "ComboTask" unable to create task "DisembarkFromTransport"
+```
+
+Hoggit documents it; the editor writes `Disembarking` with `{x, y, groupsForEmbarking}` and
+no radius. The corpus is unambiguous — `Disembarking` 58 occurrences including missions DCS
+ships, `DisembarkFromTransport` zero — and `transport.ts` now writes that. **Hoggit
+documents the scripting API; what the ComboTask factory accepts is a different list.** When
+the two disagree, the editor's own output wins.
+
+Two corrections the live data forced on `airbase-packs.ts`: DCS's parking `termType` IS
+returned (the docs said it was not) but it is a DIFFERENT enum from pydcs's `flags` — live
+104/72/16 against bundled 6/4 on the same airfield — so it is stored and never mapped; and
+`Term_Index_0` comes back as `-1` when absent, which was being written as the parking id.
+
+What still needs a human: the sim waits at the briefing until FLY is clicked and synthetic
+keys do not reach DCS, so nothing requiring the mission to RUN was reached — the reactive
+waves firing, `a_ai_task`, `a_mark_to_all` on F10, the troop lift, the train moving.
+`net.load_mission` through the bridge also no-ops from that paused state, one step further
+in than the cold-menu no-op already documented.

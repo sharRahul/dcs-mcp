@@ -605,3 +605,93 @@ the Mission Editor; a reactive spawn firing in flight on zone entry and on group
 at each preset; an `a_ai_task` push moving an AI group; `a_mark_to_all` on the F10 map;
 `a_out_picture_s` displaying; `dynSpawnTemplate = true` producing a usable dynamic slot (not
 claimed anywhere).
+
+---
+
+## 2026-11-17 (0.6.2) — first live DCS run of the 0.6.x work, and a bug it found
+
+DCS 2.9.31, Persian Gulf, started cold straight into a purpose-built mission:
+
+```
+node scripts/build-verify-mission.mjs [outPath] [--learned-type=<id>]
+"H:\DCS World\...\bin\DCS.exe" --force_disable_VR --no-launcher <the .miz>
+```
+
+The mission (`scripts/build-verify-mission.mjs`) carries eleven of the things that had
+never been near DCS: a reactive wave on zone entry, a second on `group_dead` with a
+20 s delay, an `a_ai_task` push, `a_mark_to_all`, `big_smoke` at presets 1-8, a train,
+a troop lift, an editor icon drawing, a built-in SA-2 site, a learned mod type, and MIST +
+MOOSE + telemetry loaded in order from one start trigger.
+
+### The bug: `DisembarkFromTransport` does not exist as far as DCS is concerned
+
+```
+ERROR WORLDGENERAL (Main): "ComboTask" unable to create task "DisembarkFromTransport"
+```
+
+Hoggit documents `DisembarkFromTransport(x, y, zoneRadius)`, and that is what
+`src/miz/transport.ts` wrote. DCS refuses it and drops the task, so a troop lift built this
+way would fly to the drop point and never unload — silently, because the error is in
+dcs.log and nowhere else.
+
+A sweep of every editor-saved mission on the machine then settled what the right task is:
+
+| task id | occurrences |
+|---|---|
+| `EmbarkToTransport` | 75 |
+| `Embarking` | 68 |
+| **`Disembarking`** | **58** |
+| `CargoTransportation` | 1 |
+| `DisembarkFromTransport` | 1 (only the mission this test built) |
+
+`Disembarking` takes `{ x, y, groupsForEmbarking = { 1 = <groupId> } }` and no radius, and
+it appears in missions DCS itself ships. `transport.ts` now writes that, and
+`tests/raw-transport.test.ts` asserts both the new task AND the absence of the old one.
+This is the Hoggit-documents-the-scripting-API / the-editor-writes-something-else split,
+caught the only way it can be: by loading the file in DCS.
+
+### Verified live
+
+| what | result |
+|---|---|
+| hook loads on this build | `DCS-MCP: hook server listening on 127.0.0.1:8899`, GUI poll registered, `Loaded ...dcs-mcp-hook.lua`, no adjacent ERROR |
+| a dcs-mcp-authored mission loads | `loadMission Done: Control passed to the player`; no mission-specific error other than the one above |
+| scripting-state probe | `state=server -> timer=table,coalition=table,env=table,trigger=table`; `state=mission -> a_do_script=function, timer=nil`. The 0.6.0 finding holds on this build. |
+| `land` (`dcs_check_terrain`) | 5 points, heights and surfaces; it caught the test mission's own troop pickup sitting on WATER at (60520, -299020), which was then moved |
+| `roads` kind=roads | nearest road point 15.4 km from the SA-2, with height and surface |
+| `roads` kind=railroads | nearest rail 157-173 km away — the Persian Gulf has rails only in one corner, so the train in this mission is NOT on a railway. The limitation documented for `addTrain` is real and this is how to fix it. |
+| `roads` rail path | `findPathOnRoads` returned a path |
+| `los` | `isVisible` true over 46.6 km, with the geometry-only note |
+| `clearspot` | 37 clear spots in a 400 m radius, slopes 6.4-7.8 deg, scenery search ran (0 objects) |
+| `airbases` | 30 airbases with runways and parking |
+| `dcs_airbase_build_pack` | pack of 30 Persian Gulf airbases built from the running mission; `packAirports` serves them with `slotsUnverified` |
+| terrain pack vs `dcs_check_terrain` | 9x9 pack at 250 m; pack says height 27.91 / surface 1 at the SA-2, DCS says 27.9126186 / surface 1. **Match.** (0.3.0 pending item closed.) |
+| one start trigger, ordered script load | telemetry `BOOT t=0`, `FRAMEWORK MIST loaded=1 version=4.5.125`, `FRAMEWORK MOOSE loaded=1`, `READY telemetry=1` |
+| learned mod type | `Su-35S`, learned from the mission corpus, was accepted as a type id by DCS — it got as far as loading the model, then reported `Corrupt damage model`, which is the Su-35 mod's own state on this install, not a dcs-mcp fault |
+| `big_smoke`, train, icon drawing, SA-2 site, reactive triggers | all loaded with no complaint from DCS; the file format is accepted |
+
+### Two corrections the live data forced
+
+- **`termType` is not pydcs's `flags`.** The live parking answer DOES include a category
+  field, which the pack docs said it did not. But sampling Bandar Abbas gave termType
+  104/72/16 where the bundled pydcs slots for the same airfield carry flags 6/4, so the two
+  are different enums. `termType` is kept in the pack and never mapped onto `flags`.
+- **Term_Index_0 comes back as -1** when a slot has none, so the pack was writing `"-1"` as
+  a `parking_id` — a slot name no airfield has. It now falls back to the terminal index.
+
+### Still not verified, and why
+
+The sim sits at the briefing until FLY is clicked, and synthetic keys do not reach DCS, so
+nothing that needs the mission to actually RUN was reached: the reactive waves firing,
+`a_ai_task` moving a flight, `a_mark_to_all` on the F10 map, the troop lift loading and
+unloading, the train moving on its rails, `big_smoke` rendering per preset. `net.load_mission`
+through the bridge also did nothing from that paused state — same no-op class as from the
+cold menu, now seen one step further in.
+
+Everything above needs a human to click FLY in
+`Saved Games/DCS/Missions/VS Code Missions/dcs-mcp-verify-0-6b.miz` and watch dcs.log:
+every trigger in it calls `DCSMCP.trig`, so a trigger that fired and a trigger that fired
+into a broken action are distinguishable.
+
+Also still unverified: a `.cmp` played through two stages (needs the campaign UI), an
+imported compound opened in the Mission Editor, SAM provenance promotions beyond SA-2.

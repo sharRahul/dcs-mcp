@@ -12,9 +12,12 @@
  * What is sound and what is not, because it must not be blurred:
  *   - ids, names, callsigns, category, coalition, position (map metres + lat/lon),
  *     runways and parking positions are DCS's own answers. Sound.
- *   - a parking slot's physical size, its category flags (heli/aeroplane/shelter) and
- *     which of Term_Index / Term_Index_0 the mission file's `parking_id` holds are NOT in
- *     the live answer. They are recorded as unknown (0 / the index as a string) and a
+ *   - a parking slot's physical size is NOT in the live answer. Its category is: DCS
+ *     reports `termType`, but that is a DIFFERENT enum from the `flags` pydcs stores -
+ *     sampling Bandar Abbas live gave termType 104/72/16 against bundled flags 6/4 on the
+ *     same airfield - so termType is kept in the pack and never mapped onto flags.
+ *     Term_Index_0 comes back as -1 when a slot has none, so the terminal index is used
+ *     for `parking_id` instead. Size and flags are recorded as unknown (0) and a
  *     pack airfield is marked `slotsUnverified`, so parking choice stops applying the
  *     pydcs fit rule rather than inventing dimensions. A flight parked from a pack has
  *     not been opened in the Mission Editor by this project.
@@ -97,8 +100,18 @@ export function packAirports(theatre: string, packs = loadAirbasePacks(theatre))
         .filter(s => Number.isFinite(s.x) && Number.isFinite(s.y))
         .map(s => [
           Number(s.term ?? 0),
-          String(s.term0 ?? s.term ?? ''),
+          // `parking_id` is the slot NAME the mission file carries. DCS reports
+          // Term_Index_0 as -1 when the slot has none (seen on every Persian Gulf
+          // airbase sampled live on 2026-11-17), so a negative value means absent
+          // and the terminal index is used instead - writing "-1" as a parking id
+          // would be a slot name no airfield has.
+          String(typeof s.term0 === 'number' && s.term0 >= 0 ? s.term0 : s.term ?? ''),
           Number(s.x), Number(s.y),
+          // Size and category flags: see the note at the top of this file. DCS's
+          // own `termType` IS in the live answer, but it is a different enum from
+          // the pydcs `flags` this tuple's 5th element holds - sampling Bandar
+          // Abbas live gave termType 104/72/16 where the bundled slots carry
+          // flags 6/4 - so it is kept in the pack and NOT mapped here.
           0, 0, 0, 0,
         ] as ParkingSlotTuple);
       byId.set(ab.id, {

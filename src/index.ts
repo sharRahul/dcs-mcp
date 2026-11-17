@@ -32,10 +32,12 @@ import { registerMizExtendedTools } from "./tools/miz-extended.js";
 import { registerMizInspectEditTools } from "./tools/miz-inspect-edit.js";
 import { registerDataQualityTools } from "./tools/data-quality.js";
 import { registerCampaignSceneTools } from "./tools/campaign-scene.js";
+import { registerLearnedTypeTools } from "./tools/learned-types.js";
 import { registerDiagnosticTools } from "./tools/diagnostics.js";
 import { registerPrompts, registerResources } from "./tools/resources.js";
 import { enableSessionPersistence } from "./miz/sessions.js";
 import { enableAirbasePacks } from "./dcs/airbase-packs.js";
+import { enableLearnedTypes } from "./dcs/mission-learned.js";
 import { findSavedGamesDirs, installHook } from "./dcs/install.js";
 import { SERVER_INSTRUCTIONS } from "./guide.js";
 import { PACKAGE_VERSION } from "./paths.js";
@@ -58,6 +60,7 @@ function createServer() {
   registerMizInspectEditTools(server);
   registerDataQualityTools(server);
   registerCampaignSceneTools(server);
+  registerLearnedTypeTools(server);
   registerReferenceTools(server);
   registerBridgeTools(server);
   registerRuntimeTools(server);
@@ -114,6 +117,9 @@ async function main(): Promise<void> {
   // Airfields sampled from a running DCS (airbase packs) become visible to the airfield
   // lookup, which is what makes a theatre pydcs never exported usable offline.
   enableAirbasePacks();
+  // Types learned from the user's own missions: mod airframes, and DCS types
+  // newer than the pinned pydcs. Never shadows a bundled type.
+  enableLearnedTypes();
   const { server } = createServer();
   await server.connect(new GuardedStdioTransport());
   console.error(

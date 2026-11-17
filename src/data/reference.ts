@@ -202,8 +202,16 @@ export function theatre(name: string): Theatre {
   const id = resolveTheatreName(name);
   const t = id ? theatres()[id] : undefined;
   if (!t) {
+    // A theatre with no bundled data is not unusable: missions can be authored on
+    // it (the theatre is just a string in the file) and its airfields can come
+    // from a pack sampled off a running mission. Only the bundled projection and
+    // airfield tables are missing, so say which part is actually unavailable.
     throw new Error(
-      `Unknown theatre '${name}'. Supported: ${Object.keys(theatres()).join(", ")}.`
+      `No bundled data for theatre '${name}'. Bundled: ${Object.keys(theatres()).join(", ")}. ` +
+        `Placing units and authoring a mission on it still works; what needs bundled data is airfield ` +
+        `lookup and lat/lon conversion. For an installed theatre the pinned pydcs does not cover ` +
+        `(dcs_install_report lists them), sample its airbases once from a running mission with ` +
+        `dcs_airbase_build_pack.`
     );
   }
   return t;
@@ -229,16 +237,46 @@ const HELIPORT_STATICS: StaticType[] = [
   { type: "Invisible FARP", name: "Invisible FARP", group: "Heliport", shape: "invisiblefarp", category: "Heliports", rate: 0, canCargo: false },
 ];
 
-/** Find a unit type in any category (exact type id). */
-export function findUnitType(type: string): { category: UnitCategory; entry: NamedType | FlyingType | StaticType } | undefined {
+/**
+ * A source of type ids this data layer does not bundle: mods, DCS types newer
+ * than the pinned pydcs, or types learned from the user's own missions. Keeping
+ * it behind a registration call leaves `src/data/` filesystem-agnostic.
+ */
+export interface ExtraTypeSource {
+  find(type: string): { category: UnitCategory; entry: NamedType | FlyingType | StaticType } | undefined;
+  list(): { type: string; category: UnitCategory }[];
+}
+let extraTypes: ExtraTypeSource | undefined;
+export function registerTypeSource(source: ExtraTypeSource | undefined): void {
+  extraTypes = source;
+}
+
+/**
+ * Find a unit type in any category (exact type id).
+ *
+ * `source` says where the answer came from. A "learned" entry proves only that
+ * the id exists and which category DCS files it under: its catalogue fields are
+ * null, so anything needing a maximum fuel, a parking footprint or a task list
+ * must treat it as unknown instead of defaulting.
+ */
+export function findUnitType(
+  type: string
+): { category: UnitCategory; entry: NamedType | FlyingType | StaticType; source: "bundled" | "learned" } | undefined {
   const heliport = HELIPORT_STATICS.find((h) => h.type === type);
-  if (heliport) return { category: "static", entry: heliport };
+  if (heliport) return { category: "static", entry: heliport, source: "bundled" };
   const all = unitTypes();
   for (const category of Object.keys(all) as UnitCategory[]) {
     const entry = (all[category] as { type: string }[]).find((t) => t.type === type);
-    if (entry) return { category, entry: entry as NamedType };
+    if (entry) return { category, entry: entry as NamedType, source: "bundled" };
   }
-  return undefined;
+  // The bundled catalogue always wins, so a learned entry can never shadow it.
+  const extra = extraTypes?.find(type);
+  return extra ? { ...extra, source: "learned" } : undefined;
+}
+
+/** Type ids an extra source contributes, for listings that say what is placeable. */
+export function extraTypeList(): { type: string; category: UnitCategory }[] {
+  return extraTypes?.list() ?? [];
 }
 
 /** Suggest near matches for a type id that is not in the catalogue. */

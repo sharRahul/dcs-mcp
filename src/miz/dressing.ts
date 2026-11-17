@@ -62,6 +62,14 @@ export interface AddFarpArgs {
   y: number;
   heading?: number;
   kind?: FarpKind;
+  /**
+   * A heliport static the bundled catalogue does not list, by exact type id -
+   * `FARP_SINGLE_01`, an oil platform, a mod pad. Only accepted when a type
+   * source knows it (dcs_learn_mission_types) and reports it as a Heliports
+   * static, and its `shape_name` then comes from that source rather than being
+   * invented. Overrides `kind`.
+   */
+  type?: string;
   /** ATC frequency in MHz (default 127.5). */
   frequencyMHz?: number;
   /** 0 = AM, 1 = FM. */
@@ -75,6 +83,35 @@ export interface AddFarpArgs {
    * — not from the statics, which are scenery.
    */
   support?: boolean;
+}
+
+/**
+ * Resolve a heliport type that is not one of the three built-ins.
+ *
+ * Editor-saved missions place `FARP_SINGLE_01` and the like exactly like a FARP:
+ * a one-unit static group with `category = "Heliports"` and the same
+ * `heliport_frequency` / `modulation` / `callsign_id` fields. So the only thing
+ * needed beyond the built-ins is the type id and its shape, and both come from
+ * the registered source instead of being guessed. Pad count is unknown for these
+ * - nothing in a mission file states it - so it is reported as 1, which is what
+ * a single-pad id implies and the conservative answer for a linked start.
+ */
+function learnedHeliport(type: string): { type: string; shape: string; pads: number } {
+  const hit = findUnitType(type);
+  if (!hit) {
+    throw new Error(
+      `Unknown heliport type '${type}'. The built-in kinds are ${Object.keys(FARP_KINDS).join(", ")}; ` +
+        `any other id has to come from a registered type source (learn one with dcs_learn_mission_types).`
+    );
+  }
+  const entry = hit.entry as { category?: string; shape?: string | null };
+  if (hit.category !== "static" || entry.category !== "Heliports") {
+    throw new Error(`'${type}' is a ${hit.category}/${entry.category ?? "?"} type, not a heliport static.`);
+  }
+  if (!entry.shape) {
+    throw new Error(`'${type}' has no shape_name in the source that knows it, so it cannot be written faithfully.`);
+  }
+  return { type, shape: entry.shape, pads: 1 };
 }
 
 /** Support layout around the pad: (forward, right) metres, then type. */
@@ -98,7 +135,7 @@ export interface AddFarpResult {
 }
 
 export function addFarp(mission: LuaTable, args: AddFarpArgs): AddFarpResult {
-  const kind = FARP_KINDS[args.kind ?? "FARP"];
+  const kind = args.type ? learnedHeliport(args.type) : FARP_KINDS[args.kind ?? "FARP"];
   const country = ensureCountry(mission, args.side, args.country, countryId(args.country, args.countryId));
   const ids = maxIds(mission);
   const heading = normalizeRadians((args.heading ?? 0) * DEG);

@@ -59,6 +59,8 @@ export function registerMizDressingTools(server: McpServer): void {
           ...positionFields,
           heading: z.number().min(0).max(360).default(0),
           kind: z.enum(["FARP", "SINGLE_HELIPAD", "INVISIBLE"]).default("FARP"),
+          type: z.string().min(1).max(120).optional()
+            .describe("A heliport static the catalogue does not list, by exact id (FARP_SINGLE_01, a mod pad). Needs a learned or mod type source that reports it as a Heliports static; overrides kind."),
           frequencyMHz: z.number().min(1).max(400).default(127.5),
           modulation: z.union([z.literal(0), z.literal(1)]).default(0),
           callsignId: z.number().int().min(1).max(100).default(1),
@@ -74,12 +76,12 @@ export function registerMizDressingTools(server: McpServer): void {
         const pos = resolvePosition(s, a);
         const r = addFarp(s.mission, {
           side: a.side, country: a.country, countryId: a.countryId, name: a.name, ...pos, heading: a.heading,
-          kind: a.kind, frequencyMHz: a.frequencyMHz, modulation: a.modulation, callsignId: a.callsignId,
+          kind: a.kind, type: a.type, frequencyMHz: a.frequencyMHz, modulation: a.modulation, callsignId: a.callsignId,
           support: a.support,
         });
         touched(s);
         return buildResult(
-          `Added ${a.kind} '${a.name}'` +
+          `Added ${a.type ?? a.kind} '${a.name}'` +
             (a.support ? ` with ${r.statics.length} support statics${r.supportGroup ? ` and group '${r.supportGroup}'` : ""}` : "") +
             ".",
           { ...r }

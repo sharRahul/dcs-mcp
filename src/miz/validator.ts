@@ -4,6 +4,7 @@ import type { LuaTable } from "./lua.js";
 import type { MissionDocument, ValidationIssue, ValidationReport } from "../types.js";
 import { countryOffers, findUnitType } from "../data/reference.js";
 import { findModUnit } from "../dcs/mods.js";
+import { EFFECT_STATICS } from "./editing.js";
 
 /** Run read-only validation over a parsed mission. Never modifies the document. */
 export function validateMission(doc: MissionDocument, mission?: LuaTable): ValidationReport {
@@ -199,7 +200,10 @@ export function validateMission(doc: MissionDocument, mission?: LuaTable): Valid
   const unknownTypes = new Map<string, string>();
   for (const group of doc.groups) {
     for (const unit of group.units) {
-      if (unit.type && !findUnitType(unit.type) && !findModUnit(unit.type) && !unknownTypes.has(unit.type)) {
+      // EFFECT_STATICS are real DCS types that the pinned pydcs does not list, so
+      // they are named in editing.ts from ED's own db_countries.lua rather than
+      // reported as typos.
+      if (unit.type && !findUnitType(unit.type) && !findModUnit(unit.type) && !EFFECT_STATICS.has(unit.type) && !unknownTypes.has(unit.type)) {
         unknownTypes.set(unit.type, unit.name);
       }
     }

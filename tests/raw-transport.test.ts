@@ -90,7 +90,7 @@ test('a raw write that breaks the Lua round trip is rolled back', () => {
   assert.equal(serializeLuaAssignment('mission', m), before);
 });
 
-test('troop transport wires Embarking, EmbarkToTransport and DisembarkFromTransport together', () => {
+test('troop transport wires Embarking, EmbarkToTransport and Disembarking together', () => {
   const m = mission();
   const out = makeTroopTransport(m, { transport: 'Lift', troops: 'Infantry', pickupWaypoint: 2, dropWaypoint: 3 });
   const parsed = rt(m);
@@ -121,9 +121,16 @@ test('troop transport wires Embarking, EmbarkToTransport and DisembarkFromTransp
   assert.ok(embark);
   assert.deepEqual(asTable(embark!.params), { x: 5000, y: 0, zoneRadius: 200 });
 
-  const disembark = taskAt(lift, 3, 'DisembarkFromTransport');
-  assert.ok(disembark);
-  assert.equal(asTable(disembark!.params)!.x, 12000);
+  // The unload task is 'Disembarking', not Hoggit's 'DisembarkFromTransport':
+  // DCS refuses that one with a ComboTask error, and no editor-saved mission
+  // uses it. Checked live on 2026-11-17.
+  assert.equal(taskAt(lift, 3, 'DisembarkFromTransport'), undefined);
+  const disembark = taskAt(lift, 3, 'Disembarking');
+  assert.ok(disembark, "the transport has no Disembarking task at its drop waypoint");
+  const dropParams = asTable(disembark!.params)!;
+  assert.equal(dropParams.x, 12000);
+  assert.deepEqual(Object.keys(dropParams).sort(), ['groupsForEmbarking', 'x', 'y']);
+  assert.deepEqual(asTable(dropParams.groupsForEmbarking), { 1: troopId });
 
   assert.equal(out.troopGroupId, troopId);
   assert.ok(out.notes.some(n => n.includes('Not flown by this project')));

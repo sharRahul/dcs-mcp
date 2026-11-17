@@ -70,7 +70,7 @@
   "dcs_miz_set_mission_options": "a545a7f7fcff095aceabce5b90bcabe6a4d63a8a26260a8137734e297ec3e9ef",
   "dcs_miz_list_triggers": "87f33aa97dd084f879bb71d1d07393a2fa6bf20c302ff79d4659b66faec51c63",
   "dcs_miz_list_zones": "1385d4fd5b0692e2a06d2f8898f559e96d97c5d9455df1bc843b3261689a740e",
-  "dcs_miz_add_farp": "60cfb1e083d047151011e48ed65cc96a2d40bfbf25d3446aba9a4c5fba4c5095",
+  "dcs_miz_add_farp": "12a7253101275eb72f0bee4347515cf0c307889f1fc858b9fa37c0c331d32847",
   "dcs_miz_populate_airfield": "5a0aea435ca93b8139fa90a30596b92b02c4c7ac689c6cfd46d4c4679dbdf59b",
   "dcs_miz_add_target_area": "5d9c9e6ff71236045a9bfb908f6547463473f1c103646c53006eaa3956c3a1df",
   "dcs_miz_add_naval_group": "3d1a2aa33704f1c037c34f58f187336e922a9654eb34a60f2993608a01391af0",
@@ -170,5 +170,8 @@
   "dcs_remove_scene_template": "87099ef2d2168f66f91563be384ee8975ac9f0f2db831ebfade26d0ab714cc0e",
   "dcs_miz_add_scene": "301e4d3abf159e9996d1f8f399947dadef3a47793c52b8fc172946528dcdd931",
   "dcs_miz_add_reactive_spawn": "a0a9467c5ae84e0000db90acafe9d88bffee1a27f374af3ebdb8ea9d8e18e2bc",
-  "dcs_miz_set_dynamic_spawn": "d846e94dda972d7cf2a7413a542a693b107eb4e045bf68391d2d88eaff2360cc"
+  "dcs_miz_set_dynamic_spawn": "d846e94dda972d7cf2a7413a542a693b107eb4e045bf68391d2d88eaff2360cc",
+  "dcs_learn_mission_types": "40fd5c40382f8f0f7a030df2ed1b8fe23c55c01afa700248fc036c739764d5aa",
+  "dcs_list_learned_types": "4436d3bce76768d2f8873a5bb17d5a94a44520636a58231f7554871d50e7cdd2",
+  "dcs_remove_learned_types": "2c6713772015dddbb289fae75ba45157773fccf416be9164d9a149f4be7a7ccd"
 }

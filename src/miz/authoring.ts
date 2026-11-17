@@ -279,6 +279,16 @@ function buildUnits(groupName: string, spec: UnitSpec): LuaTable {
   const forwardY = Math.sin(heading);
 
   const units: LuaTable = {};
+  // A group with no units is the one shape that looks fine in the file and does
+  // nothing in the mission, and it used to be produced silently when a caller
+  // passed a site template id straight to the authoring function instead of
+  // resolving it to a composition first.
+  if (!spec.types.length) {
+    throw new Error(
+      `Group '${groupName}' would have no units. Pass a type, a composition, or resolve a site ` +
+        `template to a composition first (findSiteTemplate).`
+    );
+  }
   if (spec.offsets && spec.offsets.length !== spec.types.length) {
     throw new Error(`Group '${groupName}' has ${spec.types.length} unit(s) but ${spec.offsets.length} offset(s).`);
   }

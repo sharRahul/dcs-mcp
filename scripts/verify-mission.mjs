@@ -22,6 +22,11 @@ import { parseMission, parseMissionTables } from "../dist/miz/parser.js";
 import { serializeLuaAssignment } from "../dist/miz/serializer.js";
 import { luaArray, asTable } from "../dist/miz/lua.js";
 import { validateMission } from "../dist/miz/validator.js";
+import { enableLearnedTypes } from "../dist/dcs/mission-learned.js";
+
+// Types learned from the user's own missions count as known here too, or every
+// mod airframe in a checked mission reports as a typo.
+enableLearnedTypes();
 
 const mizPath = process.argv[2];
 if (!mizPath) {

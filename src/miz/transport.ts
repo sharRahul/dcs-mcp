@@ -8,7 +8,7 @@
  *     and distributing them over its own units;
  *   - the TROOPS get `EmbarkToTransport` at their waypoint, with the same pickup point
  *     and a radius to wait in;
- *   - the TRANSPORT gets `DisembarkFromTransport` at its drop waypoint.
+ *   - the TRANSPORT gets `Disembarking` at its drop waypoint.
  * Get the group ids or the coordinates out of step and nothing happens at all — no error,
  * the helicopter just lands and leaves.
  *
@@ -20,9 +20,18 @@
  *   EmbarkToTransport.params = { x, y, zoneRadius }
  * `durationFlag` and `onStartMission` are not in the Hoggit documentation, which is why
  * this does not go through the catalogue (`actions.ts` refuses undocumented params): they
- * are in the editor's own output. `DisembarkFromTransport` is Hoggit-documented
- * (x, y, zoneRadius) but this project has no ME-saved example of it — so the result says
- * so rather than implying the whole flow is editor-verified. Nothing here has been flown.
+ * are in the editor's own output.
+ *
+ * The unload task is `Disembarking`, with `{ x, y, groupsForEmbarking }` and NO radius.
+ * This was wrong until DCS said so. Hoggit documents `DisembarkFromTransport(x, y,
+ * zoneRadius)` and that is what this wrote; loading a mission built that way logs
+ *
+ *     ERROR WORLDGENERAL: "ComboTask" unable to create task "DisembarkFromTransport"
+ *
+ * and the task is dropped. A sweep of every editor-saved mission on the machine then
+ * settled it: `Disembarking` appears 58 times, including in missions DCS itself ships,
+ * and `DisembarkFromTransport` appears zero times. Hoggit documents the scripting API;
+ * what the editor writes and the ComboTask factory accepts is a different list.
  */
 import { z } from 'zod';
 import { appendTaskTable } from './actions.js';
@@ -95,8 +104,10 @@ export function makeTroopTransport(mission: LuaTable, input: z.input<typeof troo
     params: { x: pickup.x, y: pickup.y, zoneRadius: a.zoneRadiusMetres },
   });
   const disembark = appendTaskTable(transport.group, a.dropWaypoint, {
-    id: 'DisembarkFromTransport',
-    params: { x: drop.x, y: drop.y, zoneRadius: a.zoneRadiusMetres },
+    id: 'Disembarking',
+    // Field for field as the editor writes it: the drop point and the group(s)
+    // to put down, keyed the same way Embarking keys them. No radius.
+    params: { x: drop.x, y: drop.y, groupsForEmbarking: { 1: troopGroupId } },
   });
 
   return {
@@ -108,7 +119,7 @@ export function makeTroopTransport(mission: LuaTable, input: z.input<typeof troo
     durationSeconds: a.durationSeconds, zoneRadiusMetres: a.zoneRadiusMetres,
     notes: [
       'Embarking and EmbarkToTransport are written in the exact field layout Mission-Editor-saved missions use (including durationFlag and onStartMission, which the Hoggit docs do not list).',
-      'DisembarkFromTransport is Hoggit-documented (x, y, zoneRadius); this project has no ME-saved example of it.',
+      'Disembarking is the unload task the editor writes and DCS accepts: 58 occurrences across the editor-saved corpus, including missions DCS ships. Hoggit documents DisembarkFromTransport instead, which DCS refuses with a ComboTask error - seen live on 2026-11-17 and fixed from it.',
       'The troops wait at their own waypoint, so put them (and the pickup point) somewhere the transport can actually land: check the surface with dcs_check_terrain or dcs_terrain_clear_spot.',
       'Not flown by this project: no sortie has verified that these three tasks lift this group.',
     ],

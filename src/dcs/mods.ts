@@ -119,7 +119,15 @@ export function scanModFolder(folder: string, kind: string): InstalledMod {
       const name = src.match(/\bName\s*=\s*["']([^"']+)["']/);
       if (name) add(name[1], /\bHelicopter\b|helicopter\s*=\s*true|\bis_helicopter\b/i.test(src) ? "helicopter" : "plane");
     }
-    if (/add_surface_unit\s*\(/.test(src)) {
+    // A ground or ship unit is `GT.Name` plus a registration call. Big mods split
+    // the two: HighDigitSAMs defines one unit per file under Database/Vehicles and
+    // registers them from a loader elsewhere, so requiring `add_surface_unit` in
+    // the SAME file missed every SAM launcher it actually declares. A file that
+    // sets `GT.Name` and carries the rest of a ground-unit definition — a display
+    // name, a weapon system, or the `GT_t` helper — counts on its own.
+    const registersHere = /add_surface_unit\s*\(/.test(src);
+    const looksLikeGroundUnit = /\bGT\.DisplayName\b|\bGT\.WS\b|\bGT_t\./.test(src);
+    if (registersHere || looksLikeGroundUnit) {
       for (const m of src.matchAll(/\bGT\.Name\s*=\s*["']([^"']+)["']/g)) {
         add(m[1], /\bGT\.ship\b|\bShip\b|wsType_Navy|\bNavy\b/.test(src) ? "ship" : "vehicle");
       }

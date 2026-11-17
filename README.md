@@ -616,7 +616,7 @@ This checkout adds `dcs_runtime_inspect` (bounded groups, unit states, flags and
 telemetry event cursors), `dcs_tool_catalogue` (paginated discovery), and shared
 acceptance tools: `dcs_acceptance_check`, `dcs_acceptance_generate`,
 `dcs_acceptance_job`, `dcs_acceptance_collect`. Generation returns a job id to poll;
-CLI and MCP use the same implementation. The catalogue currently has 172 tools.
+CLI and MCP use the same implementation. The catalogue currently has 175 tools.
 
 Generate ten missions and the Windows operator kit with one command after building:
 
