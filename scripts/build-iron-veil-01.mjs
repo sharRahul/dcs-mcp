@@ -16,11 +16,15 @@
  *    not emit a sound or radio-transmission action with no file behind it, so
  *    the transmissions are subtitles until someone records them and embeds them
  *    with dcs_miz_embed_asset.
- * 2. The ground coordinates are projected from latitude/longitude, NOT sampled
+ * 2. The ground coordinates are projected from latitude/longitude, not sampled
  *    from DCS. `land.getSurfaceType` is the only authority on land versus water
- *    and it needs a running mission. The embedded telemetry re-checks every
- *    ground unit five seconds in and logs TERRAIN_WATER as an ERROR, so the
- *    first run says whether any of them are wet.
+ *    and it needs a running mission, so the embedded telemetry re-checks every
+ *    ground unit five seconds in and logs TERRAIN_WATER as an ERROR.
+ *
+ *    CHECKED LIVE, 2026-11-18, mission loaded in DCS 2.9.31: every ground unit
+ *    is dry. RED_SAM_1 reports LAND at 629-635 m; RED_GROUND reports ROAD at
+ *    625-630 m, which is the convoy sitting on an actual road. Move either group
+ *    and that answer no longer holds — re-check it.
  *
  * The fiction is the user's. Neither coalition represents any real country's
  * actions, and the radio phraseology is cinematic rather than authentic
