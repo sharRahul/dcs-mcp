@@ -616,7 +616,14 @@ This checkout adds `dcs_runtime_inspect` (bounded groups, unit states, flags and
 telemetry event cursors), `dcs_tool_catalogue` (paginated discovery), and shared
 acceptance tools: `dcs_acceptance_check`, `dcs_acceptance_generate`,
 `dcs_acceptance_job`, `dcs_acceptance_collect`. Generation returns a job id to poll;
-CLI and MCP use the same implementation. The catalogue currently has 175 tools.
+CLI and MCP use the same implementation. The catalogue currently has 184 tools.
+
+Aircraft contact/history queries, option inspection, task lifecycle control and
+support-flight/transport evidence monitoring are described in
+[Aircraft runtime](docs/aircraft-runtime.md). These require the updated hook and
+distinguish configured behavior, controller knowledge and observed outcomes.
+Barracks camps now include configurable static boundaries and entrances; see
+[camp perimeters](docs/camp-perimeters.md) for defaults and geometry limitations.
 
 Generate ten missions and the Windows operator kit with one command after building:
 

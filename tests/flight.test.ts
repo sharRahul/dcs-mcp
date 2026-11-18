@@ -11,6 +11,22 @@ import { validateMission } from '../src/miz/validator.js';
 import { buildMissionDocument } from '../src/miz/parser.js';
 const base = { side: 'blue' as const, country: 'USA', name: 'Viper', type: 'F-16C_50', category: 'plane' as const, count: 2, x: 0, y: 0 };
 const orbit = { point: { x: 10000, y: 20000 }, pattern: 'Race-Track' as const, point2: { x: 30000, y: 20000 }, altitudeMetres: 7000, speedMps: 210, durationSeconds: 600 };
+test('horizontal AAA reaction is accepted for planes and helicopters without widening other option ranges', () => {
+  const m = fresh();
+  for (const category of ['plane', 'helicopter'] as const) {
+    const name = category;
+    addAircraftGroup(m, category, { ...base, name, type: category === 'plane' ? base.type : 'UH-1H', count: 1 });
+    appendWaypointTask(m, name, 1, { kind: 'option', option: 'reaction', value: 5 });
+    const action = asTable(asTable(tasks(rt(m), name).at(-1)!.params)?.action)!;
+    assert.equal(action.id, 'Option');
+    assert.deepEqual(action.params, { name: 1, value: 5 });
+    const before = serializeLuaAssignment('mission', m);
+    for (const [option, value] of [['reaction', 6], ['roe', 5], ['radar', 4]] as const) {
+      assert.throws(() => appendWaypointTask(m, name, 1, { kind: 'option', option, value }), /Invalid/);
+      assert.equal(serializeLuaAssignment('mission', m), before);
+    }
+  }
+});
 function fresh() { return newMissionTable('Caucasus', 43200); }
 function rt(m: LuaTable) { return parseLuaAssignment(serializeLuaAssignment('mission', m), 'mission'); }
 function tasks(m: LuaTable, name = 'Viper', index = 1) {

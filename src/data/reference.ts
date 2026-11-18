@@ -247,8 +247,12 @@ export interface ExtraTypeSource {
   list(): { type: string; category: UnitCategory }[];
 }
 let extraTypes: ExtraTypeSource | undefined;
-export function registerTypeSource(source: ExtraTypeSource | undefined): void {
-  extraTypes = source;
+export function registerTypeSource(source: ExtraTypeSource | undefined, append = false): void {
+  const previous = extraTypes;
+  extraTypes = append && source && previous ? {
+    find(type) { return previous.find(type) ?? source.find(type); },
+    list() { return [...new Map([...previous.list(), ...source.list()].map(t => [t.type, t])).values()]; },
+  } : source;
 }
 
 /**

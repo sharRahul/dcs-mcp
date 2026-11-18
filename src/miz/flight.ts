@@ -113,7 +113,9 @@ export function appendWaypointTask(mission: LuaTable, name: string, index: numbe
       const keys = { roe: 0, reaction: 1, radar: 3, formation: 5 };
       if (spec.option === 'formation') {
         if (found.category !== 'plane' || !(Object.values(FORMATIONS) as number[]).includes(spec.value)) throw new Error('Unsupported fixed-wing formation value');
-      } else if (spec.value > (spec.option === 'radar' ? 3 : 4)) throw new Error(`Invalid ${spec.option} value`);
+      // Reaction 5 is the editor's Horizontal AAA Fire Evade (also in our catalogue).
+      // ED documents this option and its fix in DCS 2.9.9.2280; it is not an ROE value.
+      } else if (spec.value > (spec.option === 'radar' ? 3 : spec.option === 'reaction' ? 5 : 4)) throw new Error(`Invalid ${spec.option} value`);
       task = wrapped('Option', { name: keys[spec.option], value: spec.value,
         ...(spec.option === 'formation' ? { formationIndex: Math.floor(spec.value / 65536), variantIndex: 1 } : {}) }); break;
     }

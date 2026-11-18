@@ -37,8 +37,9 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { findSavedGamesDirs } from "./install.js";
+import { parseSceneryDeclarations } from "./scenery-assets.js";
 
-export type ModCategory = "plane" | "helicopter" | "vehicle" | "ship" | "unknown";
+export type ModCategory = "plane" | "helicopter" | "vehicle" | "ship" | "static" | "unknown";
 
 export interface ModUnit {
   type: string;
@@ -178,6 +179,9 @@ export function scanModFolder(folder: string, kind: string, deployed = true, rep
       const existing = units.get(type);
       if (!existing || existing.category === "unknown") units.set(type, { type, category, file: rel });
     };
+    if (/add_personnel\s*\(|add_structure\s*\(|CWAY\s*=/.test(src)) {
+      for (const asset of parseSceneryDeclarations(src, file)) add(asset.type, 'static');
+    }
     for (const m of src.matchAll(/make_flyable\s*\(\s*["']([^"']+)["']/g)) add(m[1], "unknown");
     // add_aircraft({ Name = "X", ... }) or a table assigned earlier and passed in.
     if (/add_aircraft\s*\(/.test(src)) {

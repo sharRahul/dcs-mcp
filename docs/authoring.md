@@ -84,6 +84,12 @@ actions. Typed tasks cover Orbit (including duration), EngageTargets or a zone,
 AttackGroup, Escort, AWACS, Tanker, air ROE/reaction/radar options, fixed-wing
 formation, SetFrequency (MHz converted to Hz), and tanker TACAN (X/Y, 1–126).
 TACAN availability on individual tanker variants still needs runtime verification.
+The typed `reaction` option accepts values 0–5, including 5 for Horizontal AAA Fire
+Evade for aircraft and helicopters. This matches the bundled option catalogue;
+[ED's manual](https://www.digitalcombatsimulator.com/upload/iblock/ed6/87v22jwd1xh51i3rgki944xsf503istq/DCS_User_Manual_EN_2020.pdf)
+describes the behavior and [DCS 2.9.9.2280](https://www.digitalcombatsimulator.com/en/news/changelog/release/2.9.9.2280)
+records an AI fix for it. Selecting an option configures native DCS behavior;
+it does not establish what the crew detected or guarantee a particular maneuver.
 `dcs_miz_add_airfield_landing` appends a known-airfield Land/Landing waypoint.
 Carrier recovery is not exposed without stronger mission-format/compatibility evidence.
 

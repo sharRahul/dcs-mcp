@@ -145,7 +145,8 @@ net = {
     if not cmd then return nil end
     local path = s:match('"path"%s*:%s*"([^"]+)"')
     local args = { path = path }
-    if cmd == "airbases" then args = { from = 1, limit = 2 }
+    if cmd == "aircraft_ai" then args = { operation = 'monitor_remove', name = 'Quoted " % name\nline' }
+    elseif cmd == "airbases" then args = { from = 1, limit = 2 }
     elseif cmd == "roads" then args = { kind = "roads", points = { { x = 1000, y = 2000 } } }
     elseif cmd == "los" then args = { pairs = { { from = { x = 0, y = 0 }, to = { x = 3000, y = 0 } } } }
     elseif cmd == "clearspot" then args = { centre = { x = 0, y = 0 }, radius = 300, spacing = 100, clearance = 20 }
@@ -328,3 +329,12 @@ print("SNIPPET_FAILURES " .. #snippetFailures)
 
 for i, s in ipairs(sent) do print("REPLY " .. i .. " " .. s:gsub("%s+$", "")) end
 print("DONE")
+
+-- Exercise the real embedded module, argument serializer and mission-thread gate.
+before = #sent
+queuedRequest = '{"cmd":"aircraft_ai"}'
+guiCallback()
+print('AIRCRAFT_GUI_HELD '..tostring(#sent==before))
+userCallbacks.onSimulationFrame()
+local aircraftReply=sent[#sent] or ''
+print('AIRCRAFT_STRUCTURED '..tostring(aircraftReply:find('"ok":true',1,true)~=nil and aircraftReply:find('"removed":true',1,true)~=nil))

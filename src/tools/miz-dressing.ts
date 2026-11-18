@@ -20,6 +20,7 @@ import { addGroundGroup, addTriggerZone } from "../miz/authoring.js";
 import { countryOffers } from "../data/reference.js";
 import { buildResult, errorResult, render, responseFormatField } from "./format.js";
 import { positionFields, resolvePosition } from "./position.js";
+import { addRectanglePerimeter, perimeterSpecSchema } from '../miz/perimeter.js';
 
 const sessionIdField = z.string().min(1).describe("Session id from dcs_miz_open or dcs_miz_new");
 const sideField = z.enum(["red", "blue", "neutrals"]).describe("Coalition side");
@@ -148,7 +149,8 @@ export function registerMizDressingTools(server: McpServer): void {
         TARGET_TEMPLATES.map((t) => `'${t.id}' (${t.description})`).join("; ") +
         ". Objects are laid out in a grid centred on the position and rotated to the heading; each is its own " +
         "static named <name>-N. zone=true also adds a trigger zone named <name> covering the area. The grid is a " +
-        "convention, not copied from an editor mission — check terrain (dcs_check_terrain) and adjust.\n\n" +
+        "convention, not copied from an editor mission — check terrain (dcs_check_terrain) and adjust. " +
+        "Barracks camps include a rectangular static perimeter and front entrance by default. Set perimeter=false to disable; pass a perimeter object to customize type, nominal segment dimensions, padding and entrance gaps. Other templates opt in explicitly. Perimeter sizes are layout assumptions, not measured collision meshes; approach metadata does not create roads.\n\n" +
         "Args: sessionId, side, country, name, template, x/y or lat/lon, heading?, zone?, dead?\n\n" +
         "Returns JSON: { objects, radiusMetres, zone? }.",
       inputSchema: z
@@ -161,20 +163,23 @@ export function registerMizDressingTools(server: McpServer): void {
           heading: z.number().min(0).max(360).default(0),
           zone: z.boolean().default(false),
           dead: z.boolean().default(false),
+          perimeter: z.union([z.literal(false),perimeterSpecSchema]).optional(),
         })
         .strict(),
-      outputSchema: z.object({ objects: z.array(z.string()), radiusMetres: z.number(), zone: z.string().optional() }),
+      outputSchema: z.object({ objects: z.array(z.string()), radiusMetres: z.number(), zone: z.string().optional(),perimeter:z.unknown().optional() }),
       annotations,
     },
     async (a) => {
       try {
         const s = requireSession(a.sessionId);
         const pos = resolvePosition(s, a);
-        const r = addTargetArea(s.mission, {
+        const copy = structuredClone(s.mission);
+        const r = addTargetArea(copy, {
           side: a.side, country: a.country, countryId: a.countryId, name: a.name, ...pos, heading: a.heading,
-          template: a.template, dead: a.dead,
+          template: a.template, dead: a.dead,perimeter:a.perimeter,
         });
-        if (a.zone) addTriggerZone(s.mission, { name: a.name, ...pos, radius: r.radiusMetres });
+        if (a.zone) addTriggerZone(copy, { name: a.name, ...pos, radius: r.radiusMetres });
+        Object.assign(s.mission,copy);
         touched(s);
         return buildResult(
           `Added ${a.template} '${a.name}': ${r.objects.length} objects within ${r.radiusMetres} m` +
@@ -184,6 +189,27 @@ export function registerMizDressingTools(server: McpServer): void {
       } catch (err) {
         return errorResult(err);
       }
+    }
+  );
+
+  server.registerTool(
+    'dcs_miz_add_perimeter',
+    {
+      title:'Add a static scenery perimeter',
+      description:'Create a rotated rectangular boundary from Fortifications static objects around a caller-specified area. Entrances have edge/offset/width and returned inside/outside approach points. Width is across the local right axis; depth is along heading (front). Default Twall_x1 segment span 3 m/depth 0.4 m are explicit scene-layout assumptions, not measured model geometry. Other wall/HESCO/sandbag assets need caller-supplied dimensions and modelHeadingOffsetDegrees as appropriate. No objects scale, no physical roads are created, and live terrain/obstacle/AI-path checks remain necessary. Max 1000 objects. The whole edit rolls back on failure.',
+      inputSchema:z.object({sessionId:sessionIdField,...countryFields,name:z.string().min(1).max(48),...positionFields,
+        heading:z.number().min(0).max(360).default(0),widthMetres:z.number().min(20).max(2000),depthMetres:z.number().min(20).max(2000),
+        ...perimeterSpecSchema.omit({paddingMetres:true}).shape,dead:z.boolean().default(false),
+      }).strict(),
+      outputSchema:z.object({perimeter:z.unknown()}),annotations,
+    },
+    async a=>{
+      try {
+        const s=requireSession(a.sessionId),pos=resolvePosition(s,a);
+        const {sessionId:_session,x:_x,y:_y,lat:_lat,lon:_lon,...args}=a;
+        const perimeter=addRectanglePerimeter(s.mission,{...args,...pos});
+        touched(s);return buildResult(`Added ${perimeter.objects.length} boundary statics with ${perimeter.entrances.length} entrance(s).`,{perimeter});
+      }catch(err){return errorResult(err);}
     }
   );
 

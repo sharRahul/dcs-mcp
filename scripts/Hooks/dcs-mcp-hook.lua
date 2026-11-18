@@ -161,7 +161,309 @@ end
 ----------------------------------------------------------------------
 -- Command handlers. Structured ones return an envelope STRING.
 ----------------------------------------------------------------------
+-- Self-contained mission-side aircraft diagnostics. State belongs to the loaded
+-- mission, never the GUI hook, and disappears when DCS replaces the mission state.
+local AIRCRAFT_SRC = [==[
+local A = DCSMCP_AIRCRAFT or { histories={}, monitors={}, writes={}, suspensions={}, serial=0, events={} }
+DCSMCP_AIRCRAFT = A
+local function finite(v) return type(v)=='number' and v==v and v~=math.huge and v~=-math.huge end
+local function name(v) assert(type(v)=='string' and #v>0 and #v<=200,'invalid name'); return v end
+local function count(t) local n=0;for _ in pairs(t) do n=n+1 end;return n end
+local function bounded(t,k,limit) assert(t[k] or count(t)<limit,'aircraft state limit reached; remove unused monitors or reset history'); end
+local function safe(o,m,...) if not o or type(o[m])~='function' then return nil end;local ok,v=pcall(o[m],o,...);if ok then return v end end
+local function zone(z)
+ if z==nil then return end
+ assert(type(z)=='table' and finite(z.x) and finite(z.y) and finite(z.radiusMetres) and z.radiusMetres>0 and z.radiusMetres<=500000,'invalid zone')
+end
+local function vec(v) if type(v)=='table' and finite(v.x) and finite(v.y) and finite(v.z) then return {x=v.x,y=v.y,z=v.z} end end
+local function inside(p,z) return p and z and (p.x-z.x)^2+(p.z-z.y)^2<=z.radiusMetres^2 or false end
+local function flag(k) return k and trigger.misc.getUserFlag(k)==1 or false end
+local function validateFlag(k) if k~=nil then name(k);assert(#k<=64,'flag name too long') end end
+local function authored(n)
+ for _,side in pairs(env.mission.coalition or {}) do
+  for _,country in pairs(side.country or {}) do
+   for _,cat in ipairs({'plane','helicopter'}) do
+    for _,g in pairs(country[cat] and country[cat].group or {}) do if g.name==n then return g end end
+   end
+  end
+ end
+end
+local function group(n)
+ name(n);local g=Group.getByName(n)
+ assert(g and safe(g,'isExist'),'aircraft group unavailable: '..n)
+ local cat=safe(g,'getCategory');assert(cat==0 or cat==1,'group must be an airplane or helicopter')
+ local c=safe(g,'getController');assert(c,'controller unavailable');return g,c
+end
+local function detect(a)
+ local _,c=group(a.group);local methods, labels={},{}
+ assert(type(a.methods or {})=='table' and #(a.methods or {})<=6,'invalid detection methods')
+ local allowed={VISUAL=true,OPTIC=true,RADAR=true,IRST=true,RWR=true,DLINK=true}
+ for _,m in ipairs(a.methods or {}) do
+  assert(allowed[m] and Controller.Detection[m],'unsupported detection method')
+  if not labels[m] then methods[#methods+1]=Controller.Detection[m];labels[m]=true end
+ end
+ local ordered={};for m in pairs(labels) do ordered[#ordered+1]=m end;table.sort(ordered)
+ local key=a.group..':'..table.concat(ordered,',');bounded(A.histories,key,100)
+ local h=A.histories[key] or {};A.histories[key]=h
+ if a.clearHistory then h={};A.histories[key]=h end
+ local age=a.maxAgeSeconds or 300;assert(finite(age) and age>=1 and age<=3600,'invalid history age')
+ local now=timer.getTime();for id,r in pairs(h) do
+  if now-(r.lastSeenAt or r.sampledAt)>age or now<r.sampledAt then h[id]=nil else r.reportedNow=false;r.stale=true end
+ end
+ assert(type(c.getDetectedTargets)=='function','getDetectedTargets unavailable')
+ local list=c:getDetectedTargets(unpack(methods)) or {};local truncated=false
+ for i,d in ipairs(list) do
+  if i>200 then truncated=true;break end
+  local o=d.object;local id=safe(o,'getID')
+  if type(id)=='number' or type(id)=='string' then
+   local detected,visible,lastTime,knownType,knownDistance,lastPos,lastVel=true,d.visible,nil,d.type,d.distance,nil,nil
+   if type(c.isTargetDetected)=='function' then
+    local ok,dd,vv,tt,kt,kd,pp,vp=pcall(c.isTargetDetected,c,o,unpack(methods))
+    if ok then detected,visible,lastTime,knownType,knownDistance,lastPos,lastVel=dd,vv,tt,kt,kd,pp,vp end
+   end
+   if detected==true then
+    local r={id=id,identitySource='diagnostic_object_id',detected=true,reportedNow=true,visible=visible,
+     typeKnown=knownType,distanceKnown=knownDistance,sampledAt=now,stale=visible~=true}
+    if knownType==true then r.typeName=safe(o,'getTypeName') end
+    if visible==true then r.lastSeenAt=now
+    elseif visible==false then
+     r.lastSeenAt=finite(lastTime) and lastTime or nil
+     r.lastPosition=vec(lastPos);r.lastVelocity=vec(lastVel)
+    end
+    -- Never call target getPoint/getVelocity/getCoalition/getName: object handles
+    -- expose world truth beyond what a detection result actually establishes.
+    if h[tostring(id)] or count(h)<1000 then h[tostring(id)]=r else truncated=true end
+   end
+  end
+ end
+ local out={};for _,r in pairs(h) do
+  if now-(r.lastSeenAt or r.sampledAt)<=age then out[#out+1]=r end
+ end
+ table.sort(out,function(x,y) return tostring(x.id)<tostring(y.id) end)
+ return {group=a.group,scope='group_controller_knowledge',time=now,methods=ordered,contacts=out,truncated=truncated,
+  limitation='No target world position enrichment. Empty methods means any detection method; group knowledge is not individual crew perception.'}
+end
+local optionIds={roe=0,reaction=1,radar=3,formation=5}
+local function options(a)
+ local _,c=group(a.group);local g=authored(a.group);local out={}
+ local function scan(t,index,depth)
+  if type(t)~='table' or depth>8 or #out>=200 then return end
+  if t.id=='WrappedAction' then local ac=t.params and t.params.action
+   if ac and ac.id=='Option' then out[#out+1]={waypointIndex=index,optionId=ac.params.name,value=ac.params.value,source='authored_waypoint'} end
+  elseif t.id=='ComboTask' then for _,child in pairs(t.params and t.params.tasks or {}) do scan(child,index,depth+1) end
+  elseif t.id=='ControlledTask' then scan(t.params and t.params.task,index,depth+1) end
+ end
+ for i,w in pairs(g and g.route and g.route.points or {}) do scan(w.task,i,0) end
+ return {group=a.group,mainTask=g and g.task,authoredOptionsAvailable=g~=nil,authoredOptions=out,bridgeWrites=A.writes[a.group] or {},hasTask=safe(c,'hasTask'),
+  currentOptionsAvailable=false,taskQueueAvailable=false,limitation='DCS exposes no documented current option/task-queue getter. Authored options may not have run; other scripts may override bridge writes.'}
+end
+local function setOption(a)
+ local _,c=group(a.group);local id=optionIds[a.option];assert(id~=nil,'unsupported aircraft option')
+ local v=a.value;assert(finite(v) and v==math.floor(v) and v>=0,'invalid option value')
+ if a.option=='formation' then
+  assert(v==131073 or v==196609 or v==262145 or v==327681 or v==393217 or v==458753,'unsupported formation')
+  assert(safe(Group.getByName(a.group),'getCategory')==0,'formation requires fixed-wing group')
+ else assert(v<=(a.option=='reaction' and 5 or a.option=='radar' and 3 or 4),'invalid option value') end
+ bounded(A.writes,a.group,100);c:setOption(id,v)
+ local list=A.writes[a.group] or {};A.writes[a.group]=list
+ list[#list+1]={option=a.option,optionId=id,value=v,time=timer.getTime(),source='bridge_setOption'}
+ if #list>50 then table.remove(list,1) end
+ return {requested=true,observed=false,group=a.group,optionId=id,value=v}
+end
+local function taskData(t,g)
+ assert(type(t)=='table','task required')
+ if t.kind=='orbit' then
+  assert(type(t.point)=='table' and finite(t.point.x) and finite(t.point.y),'invalid orbit point')
+  assert(t.pattern=='Circle' or t.pattern=='Race-Track','invalid orbit pattern')
+  if t.pattern=='Race-Track' then assert(type(t.point2)=='table' and finite(t.point2.x) and finite(t.point2.y) and (t.point2.x~=t.point.x or t.point2.y~=t.point.y),'Race-Track needs distinct point2') end
+  assert(finite(t.altitudeMetres) and t.altitudeMetres>0 and t.altitudeMetres<=20000,'invalid orbit altitude')
+  assert(finite(t.speedMps) and t.speedMps>0 and t.speedMps<=400,'invalid orbit speed')
+  return {id='Orbit',params={point={x=t.point.x,y=t.point.y},point2=t.pattern=='Race-Track' and {x=t.point2.x,y=t.point2.y} or nil,pattern=t.pattern,altitude=t.altitudeMetres,speed=t.speedMps}}
+ elseif t.kind=='awacs' or t.kind=='tanker' then
+  local original=authored(g);assert(original and original.task==(t.kind=='awacs' and 'AWACS' or 'Refueling'),'service task requires matching authored main task')
+  return {id=t.kind=='awacs' and 'AWACS' or 'Tanker',params={}}
+ elseif t.kind=='route' then
+  assert(type(t.points)=='table' and #t.points>=2 and #t.points<=50,'route requires 2..50 points')
+  local points={}
+  for i,p in ipairs(t.points) do
+   assert(type(p)=='table' and finite(p.x) and finite(p.y) and finite(p.altitudeMetres) and p.altitudeMetres>=0 and p.altitudeMetres<=20000 and finite(p.speedMps) and p.speedMps>0 and p.speedMps<=400,'invalid route point')
+   local kind=p.kind or 'turning';assert(kind=='turning' or kind=='landing','invalid route kind')
+   local id=p.airdromeId
+   if kind=='landing' then assert(i==#t.points and finite(id) and id>0 and id==math.floor(id),'landing needs final waypoint and airfield id') end
+   points[i]={x=p.x,y=p.y,alt=p.altitudeMetres,alt_type='BARO',speed=p.speedMps,speed_locked=true,
+    type=kind=='landing' and 'Land' or 'Turning Point',action=kind=='landing' and 'Landing' or 'Turning Point',airdromeId=kind=='landing' and id or nil,
+    task={id='ComboTask',params={tasks={}}}}
+  end
+  return {id='Mission',params={route={points=points}}}
+ end
+ error('unsupported task kind')
+end
+local function task(a)
+ local _,c=group(a.group);local action=a.action
+ if action=='inspect' then return options(a) end
+ if action=='resume' then
+  local s=A.suspensions[a.group];assert(s,'no bridge suspension to resume')
+  trigger.action.setUserFlag(s.flag,true);A.suspensions[a.group]=nil
+  return {requested=true,observed=false,action=action,stopFlag=s.flag,limitation='Releases the bridge orbit; external task changes may already have replaced it.'}
+ elseif action=='suspend' then
+  assert(not A.suspensions[a.group],'already suspended by bridge');assert(a.task and a.task.kind=='orbit','suspend requires an explicit orbit')
+  bounded(A.suspensions,a.group,100);local t=taskData(a.task,a.group)
+  A.serial=A.serial+1;local stop='DCSMCP_AIR_HOLD_'..A.serial
+  trigger.action.setUserFlag(stop,false)
+  c:pushTask({id='ControlledTask',params={task=t,stopCondition={userFlag=stop,userFlagValue=true}}})
+  A.suspensions[a.group]={flag=stop}
+  return {requested=true,observed=false,action=action,stopFlag=stop}
+ elseif action=='set' or action=='push' then
+  assert(not A.suspensions[a.group] or action=='set','resume bridge suspension before pushing another task')
+  local t=taskData(a.task,a.group)
+  if action=='set' then c:setTask(t);A.suspensions[a.group]=nil else c:pushTask(t) end
+ elseif action=='pop' then assert(not A.suspensions[a.group],'use resume to release bridge suspension');c:popTask()
+ elseif action=='reset' then c:resetTask();A.suspensions[a.group]=nil
+ else error('unsupported task action') end
+ return {requested=true,observed=false,action=action,hasTask=safe(c,'hasTask'),limitation='DCS acceptance is not proof of flight execution; set/reset clear native queued tasking.'}
+end
+local function installEvents()
+ if A.handler then return end
+ assert(world and world.addEventHandler,'world event monitoring unavailable')
+ local wanted={S_EVENT_LAND=true,S_EVENT_TAKEOFF=true,S_EVENT_DEAD=true,S_EVENT_CRASH=true,S_EVENT_BIRTH=true}
+ local names={};for n,id in pairs(world.event or {}) do if wanted[n] then names[id]=n end end
+ local h={}
+ function h:onEvent(e)
+  local n=names[e.id];if not n then return end
+  local unit=safe(e.initiator,'getName');if not unit then return end
+  local tracked=false
+  for _,m in pairs(A.monitors) do if m.units[unit] then tracked=true;break end end
+  if not tracked then return end
+  A.eventSequence=(A.eventSequence or 0)+1
+  local id=safe(e.initiator,'getID')
+  if n=='S_EVENT_BIRTH' then for _,m in pairs(A.monitors) do if m.units[unit] then
+   m.unitSince[unit]=A.eventSequence;m.identities[unit]=id;m.arrivals={}
+  end end end
+  A.events[#A.events+1]={name=n,unit=unit,unitId=id,time=e.time or timer.getTime(),sequence=A.eventSequence}
+  if #A.events>500 then table.remove(A.events,1) end
+ end
+ world.addEventHandler(h);A.handler=h
+end
+local function register(a)
+ name(a.name);name(a.group);bounded(A.monitors,a.name,50)
+ assert(a.role=='AWACS' or a.role=='tanker' or a.role=='transport' or a.role=='reconnaissance','unsupported support role')
+ if a.role=='transport' then assert(a.pickup and a.drop,'transport requires pickup/drop areas')
+ else assert(not a.pickup and not a.drop and not a.troops and not a.loadedFlag and not a.unloadedFlag,'cargo fields require transport role') end
+ for _,k in ipairs({'station','recovery','pickup','drop'}) do zone(a[k]) end
+ for _,k in ipairs({'returningFlag','failureFlag','loadedFlag','unloadedFlag'}) do validateFlag(a[k]) end
+ if a.troops then name(a.troops) end
+ local g=authored(a.group);local live=Group.getByName(a.group)
+ assert(g or live,'support group unavailable')
+ if live then group(a.group) end
+ if a.role=='AWACS' or a.role=='tanker' then assert(g and g.task==(a.role=='AWACS' and 'AWACS' or 'Refueling'),'support role does not match authored main task') end
+ local m={config=a,registeredAt=timer.getTime(),registeredSequence=A.eventSequence or 0,units={},identities={},unitSince={},arrivals={}}
+ for _,u in pairs(g and g.units or {}) do m.units[u.name]=true end
+ for _,u in ipairs(live and safe(live,'getUnits') or {}) do
+  local n=safe(u,'getName');if n then m.units[n]=true;m.identities[n]=safe(u,'getID') end
+ end
+ if a.troops then
+  local troops=Group.getByName(a.troops);assert(troops and safe(troops,'getCategory')==2,'troops must be an existing ground group')
+  m.troops={};for _,u in ipairs(safe(troops,'getUnits') or {}) do m.troops[safe(u,'getName') or '']=true end
+  assert(count(m.troops)>0,'troop group is empty')
+ end
+ installEvents();A.monitors[a.name]=m
+ return {registered=true,name=a.name,since=m.registeredAt,eventMonitoring=true,limitation='Only events after registration are evidence; registration does not change flight tasking.'}
+end
+local function inspectMonitor(a)
+ local m=A.monitors[name(a.name)];assert(m,'unknown monitor');local cfg=m.config;local now=timer.getTime()
+ local g=Group.getByName(cfg.group);local units={};local alive,active,air,ground=0,0,0,0
+ local at={station=0,recovery=0,pickup=0,drop=0};local seen={}
+ for _,u in ipairs(g and safe(g,'getUnits') or {}) do
+  local life=safe(u,'getLife');local exists=safe(u,'isExist');local n=safe(u,'getName');local isActive=safe(u,'isActive');local inAir=safe(u,'inAir')
+  local id=safe(u,'getID')
+  if n and id then
+   if m.identities[n] and m.identities[n]~=id then m.arrivals={};m.identityChangedAt=now end
+   m.identities[n]=id
+  end
+  local p=vec(safe(u,'getPoint'));units[#units+1]={name=n,id=id,life=life,active=isActive,inAir=inAir,point=p,fuelFraction=safe(u,'getFuel')}
+  if exists and life and life>0 then
+   alive=alive+1;if n then seen[n]=true end
+   if isActive==true then
+    active=active+1;if inAir==true then air=air+1 elseif inAir==false then ground=ground+1 end
+    for k in pairs(at) do if inside(p,cfg[k]) then at[k]=at[k]+1 end end
+   end
+  end
+ end
+ local landed,dead,lastLand,lastTakeoff={},{},{},{}
+ for _,e in ipairs(A.events) do if m.units[e.unit] and e.unitId~=nil and e.unitId==m.identities[e.unit] and e.sequence>(m.unitSince[e.unit] or m.registeredSequence) then
+  if e.name=='S_EVENT_LAND' then lastLand[e.unit]=e.time
+  elseif e.name=='S_EVENT_TAKEOFF' then lastTakeoff[e.unit]=e.time
+  elseif e.name=='S_EVENT_DEAD' or e.name=='S_EVENT_CRASH' then dead[e.unit]=true end
+ end end
+ for n,t in pairs(lastLand) do if t>=(lastTakeoff[n] or -1) then landed[n]=true end end
+ local allDead=count(m.units)>0;for n in pairs(m.units) do if not dead[n] then allDead=false end end
+ if active>0 then m.everActive=true end
+ local landingConfirmed=active>0 and ground==active and at.recovery==active
+ for n in pairs(seen) do if not landed[n] then landingConfirmed=false end end
+ local state='unknown';local reasons={}
+ if flag(cfg.failureFlag) or (allDead and alive==0) then state='failed';reasons[1]='failure flag or loss events for every registered unit with no live survivors'
+ elseif landingConfirmed then state='landed';reasons[1]='landing event, surviving active units on ground inside recovery area'
+ elseif active>0 and air==active and flag(cfg.returningFlag) then state='returning';reasons[1]='configured mission return flag'
+ elseif active>0 and air==active and at.station==active then state='on_station';reasons[1]='all active survivors airborne inside station area'
+ elseif active>0 then state='active';reasons[1]='live active unit observed'
+ elseif not m.everActive and authored(cfg.group) and authored(cfg.group).lateActivation then state='planned';reasons[1]='authored late activation; activation not observed' end
+ for _,k in ipairs({'pickup','drop'}) do if active>0 and ground==active and at[k]==active and not m.arrivals[k] then m.arrivals[k]=now end end
+ local out={name=a.name,group=cfg.group,role=cfg.role,time=now,state=state,evidence=reasons,units=units,
+  serviceAvailability='unknown',serviceAvailable=nil,eventEvidenceSince=m.registeredAt,
+  eventHistoryGap=A.events[1]~=nil and A.events[1].sequence>m.registeredSequence+1,identityChangedAt=m.identityChangedAt,
+  limitation='Observer world snapshot. Station geometry does not prove usable AWACS/tanker service; landing requires a recorded event and recovery area.'}
+ if cfg.role=='transport' then
+  local delivered,expected=0,count(m.troops or {})
+  local tg=cfg.troops and Group.getByName(cfg.troops)
+  for _,u in ipairs(tg and safe(tg,'getUnits') or {}) do
+   if m.troops and m.troops[safe(u,'getName')] and (safe(u,'getLife') or 0)>0 and safe(u,'isActive')==true and safe(u,'inAir')==false and inside(vec(safe(u,'getPoint')),cfg.drop) then delivered=delivered+1 end
+  end
+  out.pickupArrived=m.arrivals.pickup~=nil;out.dropArrived=m.arrivals.drop~=nil;out.arrivals=m.arrivals
+  out.loading={status=flag(cfg.loadedFlag) and 'scenario_reported' or 'unknown',source=cfg.loadedFlag}
+  out.unloading={status=expected>0 and delivered==expected and 'observed_at_destination' or flag(cfg.unloadedFlag) and 'scenario_reported' or 'unknown',source=cfg.unloadedFlag,expected=expected,observedAliveAtDrop=delivered}
+  out.recoveryConfirmed=landingConfirmed
+  out.cargoManifestAvailable=false
+  out.transportLimitation='No documented passenger manifest getter. Missing troops do not prove loading. Destination presence proves location, not that this aircraft carried them. Flags are scenario assertions, not independent cargo verification.'
+ end
+ return out
+end
+function A.dispatch(a)
+ assert(type(a)=='table','arguments required')
+ if a.operation=='detect' then return detect(a)
+ elseif a.operation=='options' then return options(a)
+ elseif a.operation=='set_option' then return setOption(a)
+ elseif a.operation=='task' then return task(a)
+ elseif a.operation=='monitor_register' then return register(a)
+ elseif a.operation=='monitor_inspect' or a.operation=='transport' then
+  if a.operation=='transport' then local m=A.monitors[name(a.name)];assert(m and m.config.role=='transport','transport monitor required') end
+  return inspectMonitor(a)
+ elseif a.operation=='monitor_remove' then A.monitors[name(a.name)]=nil;return {removed=true,name=a.name}
+ end
+ error('unsupported aircraft operation')
+end
+]==]
+
 local handlers = {}
+
+-- This serializer transports data only; the mission module constructs all tasks.
+local function aircraftLiteral(v,depth)
+ depth=depth or 0;assert(depth<=8,'aircraft arguments too deep')
+ local t=type(v)
+ if t=='nil' then return 'nil' elseif t=='boolean' then return tostring(v)
+ elseif t=='number' then assert(v==v and v~=math.huge and v~=-math.huge,'invalid number');return tostring(v)
+ elseif t=='string' then assert(#v<=200,'aircraft string too long');return string.format('%q',v)
+ elseif t=='table' then
+  local out={};local n=0;for k,value in pairs(v) do
+   n=n+1;assert(n<=200,'too many aircraft arguments');assert(type(k)=='string' or type(k)=='number','invalid key')
+   out[#out+1]='['..aircraftLiteral(k,depth+1)..']='..aircraftLiteral(value,depth+1)
+  end
+  return '{'..table.concat(out,',')..'}'
+ end
+ error('invalid aircraft argument type')
+end
+function handlers.aircraft_ai(args)
+ return runIn('mission',AIRCRAFT_SRC.."\nlocal result=DCSMCP_AIRCRAFT.dispatch("..aircraftLiteral(args)..")\nreturn '{\"ok\":true,\"data\":'..enc(result)..'}'")
+end
 
 function handlers.ping()
   return ok({ pong = true, time = os.clock() })
@@ -195,7 +497,7 @@ function handlers.status()
     missionEnv = inMission and ticking,
     errorCount = #errors,
     loadError = missionState.loadError,
-    capabilities = { runtime = true, flags = true, events = "requires mission telemetry", rawExec = ALLOW_EXEC },
+    capabilities = { runtime = true, aircraftAI = 1, flags = true, events = "requires mission telemetry", rawExec = ALLOW_EXEC },
     version = version.dcs,
   })
 end
@@ -520,7 +822,7 @@ end
 ----------------------------------------------------------------------
 local MISSION_ENV_COMMANDS = {
   mission = true, units = true, aircraft = true, message = true,
-  runtime = true, spawn = true, ll2xz = true, xz2ll = true, land = true, exec = true,
+  runtime = true, aircraft_ai = true, spawn = true, ll2xz = true, xz2ll = true, land = true, exec = true,
 }
 
 local function parseRequest(line)

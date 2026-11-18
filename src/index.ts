@@ -27,6 +27,7 @@ import { registerMizDressingTools } from "./tools/miz-dressing.js";
 import { registerReferenceTools } from "./tools/reference.js";
 import { registerAcceptanceTools } from "./tools/acceptance.js";
 import { registerRuntimeTools } from "./tools/runtime.js";
+import { registerAircraftRuntimeTools } from "./tools/aircraft-runtime.js";
 import { registerBridgeTools } from "./tools/bridge.js";
 import { registerMizExtendedTools } from "./tools/miz-extended.js";
 import { registerMizInspectEditTools } from "./tools/miz-inspect-edit.js";
@@ -38,6 +39,7 @@ import { registerPrompts, registerResources } from "./tools/resources.js";
 import { enableSessionPersistence } from "./miz/sessions.js";
 import { enableAirbasePacks } from "./dcs/airbase-packs.js";
 import { enableLearnedTypes } from "./dcs/mission-learned.js";
+import { enableInstalledSceneryTypes } from "./dcs/scenery-assets.js";
 import { findSavedGamesDirs, installHook } from "./dcs/install.js";
 import { SERVER_INSTRUCTIONS } from "./guide.js";
 import { PACKAGE_VERSION } from "./paths.js";
@@ -64,6 +66,7 @@ function createServer() {
   registerReferenceTools(server);
   registerBridgeTools(server);
   registerRuntimeTools(server);
+  registerAircraftRuntimeTools(server);
   registerAcceptanceTools(server);
   registerDiagnosticTools(server);
   registerResources(server);
@@ -120,6 +123,7 @@ async function main(): Promise<void> {
   // Types learned from the user's own missions: mod airframes, and DCS types
   // newer than the pinned pydcs. Never shadows a bundled type.
   enableLearnedTypes();
+  enableInstalledSceneryTypes();
   const { server } = createServer();
   await server.connect(new GuardedStdioTransport());
   console.error(

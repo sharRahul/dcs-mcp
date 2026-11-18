@@ -72,7 +72,7 @@
   "dcs_miz_list_zones": "1385d4fd5b0692e2a06d2f8898f559e96d97c5d9455df1bc843b3261689a740e",
   "dcs_miz_add_farp": "12a7253101275eb72f0bee4347515cf0c307889f1fc858b9fa37c0c331d32847",
   "dcs_miz_populate_airfield": "5a0aea435ca93b8139fa90a30596b92b02c4c7ac689c6cfd46d4c4679dbdf59b",
-  "dcs_miz_add_target_area": "5d9c9e6ff71236045a9bfb908f6547463473f1c103646c53006eaa3956c3a1df",
+  "dcs_miz_add_target_area": "a6441a563ceba99d9ef173e3bc65609111a64cfe1ca788dbd785cefe4aabeab7",
   "dcs_miz_add_naval_group": "3d1a2aa33704f1c037c34f58f187336e922a9654eb34a60f2993608a01391af0",
   "dcs_list_scene_templates": "b7d73c546c6d1701eca3d4e339ca4941f5f955355d851d1dee6d990fb3462c88",
   "dcs_list_unit_types": "b4ca96dfb2af78f0a5bd9f1be68914f6042c946999bde6b7484fbc7dc77c6101",
@@ -173,5 +173,14 @@
   "dcs_miz_set_dynamic_spawn": "d846e94dda972d7cf2a7413a542a693b107eb4e045bf68391d2d88eaff2360cc",
   "dcs_learn_mission_types": "40fd5c40382f8f0f7a030df2ed1b8fe23c55c01afa700248fc036c739764d5aa",
   "dcs_list_learned_types": "4436d3bce76768d2f8873a5bb17d5a94a44520636a58231f7554871d50e7cdd2",
-  "dcs_remove_learned_types": "2c6713772015dddbb289fae75ba45157773fccf416be9164d9a149f4be7a7ccd"
+  "dcs_remove_learned_types": "2c6713772015dddbb289fae75ba45157773fccf416be9164d9a149f4be7a7ccd",
+  "dcs_aircraft_detect": "cdf38b394895ba54092c989d7e9091c20a42d3bbe432cb1994d832ba60c36753",
+  "dcs_aircraft_inspect_options": "08c5cddade6f21d7eea64222734966e5a20612da7bce3a6e361dbd61a75a8250",
+  "dcs_aircraft_set_option": "32ea0a7cdf9d5af1ba47804dca794296c2061123d9e5bf8d6557abd037ae2ccf",
+  "dcs_aircraft_task": "d8a55d3129dc589587c986955a42d1b6c102d69be4f58faa23dfa1cca1fef81d",
+  "dcs_support_flight_register": "db6763d5043ece38b03b57c41d43e2250f9aa9bd510add16f1d171a50ac7e86c",
+  "dcs_support_flight_inspect": "5c63d3d92c5303674ce1d3e791ed8e866272d01bfac8145f6bca911fd273cb17",
+  "dcs_transport_verify": "5c63d3d92c5303674ce1d3e791ed8e866272d01bfac8145f6bca911fd273cb17",
+  "dcs_support_flight_remove": "5c63d3d92c5303674ce1d3e791ed8e866272d01bfac8145f6bca911fd273cb17",
+  "dcs_miz_add_perimeter": "8184b44f97196041ce7cadfd5b06b9a1c8822e22169c901a41cf39736993b814"
 }

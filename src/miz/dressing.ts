@@ -10,6 +10,7 @@ import { luaArray, type LuaTable } from "./lua.js";
 import { findModUnit } from "../dcs/mods.js";
 import { addAircraftGroup, addGroundGroup, chooseParking, countryId, ensureCountry, maxIds, occupiedParking, type Side } from "./authoring.js";
 import { addStatic } from "./editing.js";
+import { addRectanglePerimeter, perimeterSpecSchema, type PerimeterSpec, type PerimeterResult } from './perimeter.js';
 import type { SceneTemplate } from "./scene-import.js";
 import {
   countryOffers,
@@ -390,12 +391,15 @@ export interface AddTargetAreaArgs {
   /** Also add a trigger zone named `name` covering the area (for triggers/scripts). */
   zone?: boolean;
   dead?: boolean;
+  /** Barracks default to a static boundary. Other templates opt in explicitly. */
+  perimeter?: PerimeterSpec | false;
 }
 
 export interface AddTargetAreaResult {
   objects: string[];
   /** Radius (metres) that covers every object, from the area centre. */
   radiusMetres: number;
+  perimeter?: PerimeterResult;
 }
 
 /**
@@ -404,6 +408,7 @@ export interface AddTargetAreaResult {
  * stores statics, so each can be targeted, counted or referenced on its own.
  */
 export function addTargetArea(mission: LuaTable, args: AddTargetAreaArgs): AddTargetAreaResult {
+  const copy = structuredClone(mission);
   const t = findTargetTemplate(args.template);
   const types = t.objects.flatMap((o) => Array.from({ length: o.count }, () => o.type));
   const rows = Math.ceil(types.length / t.columns);
@@ -417,7 +422,7 @@ export function addTargetArea(mission: LuaTable, args: AddTargetAreaArgs): AddTa
     radius = Math.max(radius, Math.hypot(forward, right));
     const p = offset(args.x, args.y, args.heading ?? 0, forward, right);
     const name = `${args.name}-${i + 1}`;
-    addStatic(mission, {
+    addStatic(copy, {
       side: args.side,
       country: args.country,
       countryId: args.countryId,
@@ -429,7 +434,18 @@ export function addTargetArea(mission: LuaTable, args: AddTargetAreaArgs): AddTa
     });
     objects.push(name);
   });
-  return { objects, radiusMetres: Math.ceil(radius + t.spacingMetres) };
+  let perimeter: PerimeterResult | undefined;
+  if (args.perimeter !== false && (args.perimeter !== undefined || t.id === 'barracks')) {
+    const spec = perimeterSpecSchema.parse(args.perimeter ?? {});
+    perimeter = addRectanglePerimeter(copy, { ...spec, side:args.side,country:args.country,countryId:args.countryId,
+      x:args.x,y:args.y,heading:args.heading,dead:args.dead,name: `${args.name}-Perimeter`,
+      widthMetres: (t.columns - 1) * t.spacingMetres + 2 * spec.paddingMetres,
+      depthMetres: (rows - 1) * t.spacingMetres + 2 * spec.paddingMetres });
+    objects.push(...perimeter.objects);
+    radius = Math.max(radius + t.spacingMetres, Math.hypot(perimeter.widthMetres/2,perimeter.depthMetres/2)+spec.segmentDepthMetres);
+  } else radius += t.spacingMetres;
+  Object.assign(mission, copy);
+  return { objects, radiusMetres: Math.ceil(radius), ...(perimeter ? { perimeter } : {}) };
 }
 
 // ---------------------------------------------------------------------------

@@ -112,6 +112,8 @@ test(
     // against stubs of the DCS API. A typo or a wrong call there is otherwise
     // invisible until someone flies.
     assert.match(output, /SNIPPET_FAILURES 0/, `a snippet failed to compile or ran into an error:\n${output}`);
+    assert.match(output, /AIRCRAFT_GUI_HELD true/);
+    assert.match(output, /AIRCRAFT_STRUCTURED true/, output);
     for (const cmd of ["land", "airbases", "roads", "los", "clearspot"]) {
       assert.match(output, new RegExp(`STRUCTURED ${cmd} true`), `${cmd} did not answer ok:\n${output}`);
     }
