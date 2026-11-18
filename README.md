@@ -545,6 +545,17 @@ grid, an installed **terrain pack**, or a matching live DCS theatre. No terrain 
 are bundled and no flat-terrain fallback is used. Visibility is geometric, not an
 authoritative sensor model.
 
+**Before finalizing ground placement, check elevation and slope across every
+object's footprint, not only its centre point.** The Iron Veil inspection found
+an EWR and Ural on steep ground despite correct centre elevations. Follow the
+[terrain placement workflow](docs/terrain-placement.md) to assess candidate
+positions and distinguish sampled checks from visual DCS verification.
+
+For airfield scenes, the shared Iron Veil helper reserves separate servicing,
+stores and logistics stands while preserving flight-start parking. See
+[airfield scenery conventions and verification limits](docs/airfield-scenery.md)
+for installed-mod dependencies and the cargo-pallet compatibility fix.
+
 A terrain pack is built from DCS itself: with a mission running on the theatre,
 `dcs_terrain_build_pack` samples `land.getHeight` / `land.getSurfaceType` on a grid
 (up to 512 x 512 nodes per pack; tile larger areas) and stores it under

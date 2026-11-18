@@ -22,12 +22,17 @@ The Iron Veil scenery helper follows these rules:
 
 ## Assets and local dependencies
 
-The revised `iron-veil-01-first-contact-airfields.miz` contains 79 statics across
-four airfields: seven planes, five helicopters and 67 servicing/staging props.
-Those props include 19 ground-crew figures, two bomb carts and ten ladders.
+The current GPT mission build contains 115 statics across four airfields:
+seven planes, five helicopters and 103 servicing/staging props. Each airfield
+also has a dedicated logistics stand containing crates, a pallet, a tug,
+tools and optional crew/fire equipment. The previous build contained 79 statics.
 
 Core/catalogued objects include `Ladder`, `Toolbox01`, `Toolbox02`, `ammo_cargo`,
-`M92_Ammo_Pallet`, `AM32a-60_01`, `Ural-4320 APA-5D`, `B600`, `Cargo01`, `Cargo02`.
+`Cargo03`, `AM32a-60_01`, `Ural-4320 APA-5D`, `B600`, `Cargo01`, `Cargo02`.
+
+Live DCS inspection found that `M92_Ammo_Pallet` requests a missing sling-cargo
+definition for `M92_Cargo03`. Visual pallets therefore use the `Cargo03`
+fortification static, which uses the same model without cargo handling.
 
 Additional objects come from mods installed on this machine:
 
@@ -49,6 +54,10 @@ does not independently establish that a mod loaded correctly in DCS.
 
 ## Placement and verification limits
 
+Follow the [terrain placement workflow](terrain-placement.md) before finalizing
+airfield objects. Parking coordinates do not establish level ground or model
+contact; check the full footprint of aircraft, helicopters and support props.
+
 The scene is built on a clone and committed only after complete placement.
 Aircraft use category/size-compatible free open stands. Props are checked against
 the reserved stand's nominal dimensions and aircraft bounding footprints.
@@ -62,6 +71,21 @@ Terrain, buildings, taxi lanes, exact ladder fit and mod rendering must still be
 inspected in DCS. Do not call the layout taxi-clear or live-verified from the
 offline tests alone.
 
-Verification: the generated mission reopened with all 79 objects and zero
-validation errors. The full regression run passed 300 tests, with eight skipped;
-TypeScript check/build and focused read-only review also passed.
+Live DCS inspection on 18 November 2026 found all 79 previous-build statics alive
+at their authored positions. Terrain checks found no water at the sampled ground
+objects. The initial mission message executed. The full flight-dependent trigger
+sequence was not flown. Keyboard camera controls did not respond during the
+daylight inspection; these results do not establish a complete rendered review.
+
+The revised 115-object build passes the scenery regression test and TypeScript
+check/build, and generates with zero validation errors (five catalogue warnings).
+The additional objects and corrected pallet have not yet had a rendered pass.
+
+The GPT mission's original EWR and Ural command-truck footprints crossed steep
+terrain: 30 m samples spanned approximately 10.5 m and 5.5 m in height. Their live
+origins matched the central terrain elevation, so forcing altitude was not the
+appropriate correction. Nearby replacement locations were selected with DCS's
+clear-spot query (25 m clearance, slope limit 2 degrees): EWR x=-290248.263,
+y=838491.087; command truck x=-289698.263, y=839841.087. Reported sampled slopes
+were 0.99 and 0.47 degrees. These are scenery suitability checks, not validated
+operational deployment positions; model contact still needs visual inspection.

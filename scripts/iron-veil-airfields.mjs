@@ -83,13 +83,22 @@ export function populateIronVeilAirfields(mission, populateAirfield = defaultPop
     if(plan.stores==='ordnance') {
       put(plan.side==='blue'?'VPC-NATO-GBU-31 CART':'VP-BOGIE OFAB 120',stores,0,-4,3,'BOMB_CART',true);
       put('ammo_cargo',stores,3,3,1.25,'AMMO_BOXES');
-      put('M92_Ammo_Pallet',stores,-3,3,1.5,'AMMO_PALLET');
+      put('Cargo03',stores,-3,3,1.5,'AMMO_PALLET');
     } else {
       put('Cargo01',stores,3,3,1.5,'CARGO_CRATES_1');
       put('Cargo02',stores,-3,3,1.5,'CARGO_CRATES_2');
       put('B600',stores,0,-4,2,'CARGO_TUG');
     }
     put(crew[1],stores,-6,-4,.5,'STAGING_TECH',true);
+    const logistics=reserve('logistics');
+    put('Cargo01',logistics,4,4,1.5,'LOGISTICS_CRATES_1');
+    put('Cargo02',logistics,0,4,1.5,'LOGISTICS_CRATES_2');
+    put('Cargo03',logistics,-4,4,1.5,'LOGISTICS_PALLET');
+    put('B600',logistics,4,-4,2,'LOGISTICS_TUG');
+    put('Toolbox01',logistics,0,-4,.75,'LOGISTICS_TOOLS');
+    put(crew[0],logistics,-4,-4,.5,'LOGISTICS_CREW_1',true);
+    put(crew[1],logistics,-6,-4,.5,'LOGISTICS_CREW_2',true);
+    put('VP-FIRE_EX',logistics,-6,0,.5,'LOGISTICS_EXTINGUISHER',true);
     manifest.push({airfield:plan.airfield,placed,zones,skipped:[...new Set(skipped)],
       notes:['Stand headings are a row-normal heuristic; taxi lanes/obstacles are not surveyed.','Bomb carts and personnel require the listed local scenery mods.']});
   }

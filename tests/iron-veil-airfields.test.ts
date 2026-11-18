@@ -28,8 +28,10 @@ test('Iron Veil includes visible parked planes, helicopters and equipment while 
   });
   assert.ok(count > 28, 'servicing and staging props are missing');
   const types = new Set<string>(); eachGroup(back, g => { for (const u of luaArray(g.units)) types.add(String(u.type)); });
-  for (const type of ['Ladder', 'Toolbox01', 'ammo_cargo', 'M92_Ammo_Pallet', 'Ural-4320 APA-5D']) assert.ok(types.has(type), type);
+  for (const type of ['Ladder', 'Toolbox01', 'ammo_cargo', 'Cargo03', 'Ural-4320 APA-5D']) assert.ok(types.has(type), type);
+  assert.ok(!types.has('M92_Ammo_Pallet'),'visual pallets must not request the unavailable sling-cargo definition');
   for (const scene of manifest) {
+    assert.ok(scene.zones.some(z => z.role === 'logistics'));
     assert.ok(scene.zones.some(z => z.role === 'servicing'));
     assert.ok(scene.zones.some(z => z.role === 'ordnance' || z.role === 'cargo'));
     assert.ok(scene.placed.length > scene.zones.length, 'each prop consumed its own parking stand');
