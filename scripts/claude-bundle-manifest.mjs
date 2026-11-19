@@ -3,7 +3,10 @@
  * the version and metadata have one source of truth.
  *
  * Field names and the `${__dirname}` / `${user_config.*}` substitutions follow the
- * MCPB spec (modelcontextprotocol/mcpb, MANIFEST.md, manifest_version 0.3).
+ * MCPB spec (modelcontextprotocol/mcpb, MANIFEST.md) at manifest_version 0.4, whose
+ * schema sets `additionalProperties: false` — an unknown key is rejected outright.
+ * `npx @anthropic-ai/mcpb validate` accepts this manifest (it accepted the earlier
+ * 0.3 form too, so the bump is for the current schema, not a fix).
  * Deliberately absent:
  *   - `compatibility.claude_desktop`: a version constraint we cannot check would
  *     only risk blocking an install, so no range is claimed.
@@ -13,11 +16,14 @@
  * Every user_config value is optional: the server treats an empty environment
  * variable as unset, so an unanswered field keeps its built-in default.
  */
-export const MANIFEST_VERSION = '0.3';
+export const MANIFEST_VERSION = '0.4';
+export const MANIFEST_SCHEMA =
+  'https://raw.githubusercontent.com/anthropics/mcpb/main/schemas/mcpb-manifest-v0.4.schema.json';
 export const SERVER_ENTRY_POINT = 'server/dist/index.js';
 
 export function buildManifest(pkg) {
   return {
+    $schema: MANIFEST_SCHEMA,
     manifest_version: MANIFEST_VERSION,
     name: 'dcs-mcp',
     display_name: 'DCS World',

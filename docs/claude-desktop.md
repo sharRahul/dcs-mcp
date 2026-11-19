@@ -46,8 +46,9 @@ npx -y dcs-mcp-server install-claude-desktop --published
 
 Default config file: `%APPDATA%\Claude\claude_desktop_config.json` on Windows,
 `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS,
-`$XDG_CONFIG_HOME/Claude/…` (else `~/.config/Claude/…`) elsewhere. With no mode flag it
-uses `--local` when this install has a usable `dist/index.js`, otherwise `--published`.
+`$XDG_CONFIG_HOME/Claude/…` (else `~/.config/Claude/…`) elsewhere. With no mode flag it uses
+`--local` and says so when `dist/index.js` is missing — it never switches to `--published` on
+your behalf, because that entry cannot start until the package is released.
 
 What it refuses to do, because each of these breaks the app silently:
 
@@ -70,6 +71,7 @@ ENOENT and the app reports only that the server did not start.
 ```powershell
 npm ci
 npm run bundle:build     # writes dcs-mcp-<version>.mcpb in the repository root
+npm run bundle:validate  # Anthropic's mcpb CLI checks manifest.json
 npm run bundle:verify
 ```
 
@@ -79,9 +81,15 @@ production dependencies from `package-lock.json` with install scripts disabled, 
 Install it by double-clicking the `.mcpb`, or through Claude Desktop's extension settings,
 then start a new chat.
 
-The manifest follows the MCPB spec (`manifest_version` `0.3`, server type `node`,
-`entry_point` `server/dist/index.js`, `command` `node` with `${__dirname}`), and is generated
-from `package.json` by `scripts/claude-bundle-manifest.mjs` so the version cannot drift.
+Declaration files and sourcemaps are pruned on the way in (1579 of them), matching what the
+official `mcpb pack` leaves out: 3264 entries, 5.1 MB.
+
+The manifest follows the MCPB spec (`manifest_version` `0.4` plus the matching `$schema`,
+server type `node`, `entry_point` `server/dist/index.js`, `command` `node` with
+`${__dirname}`), and is generated from `package.json` by
+`scripts/claude-bundle-manifest.mjs` so the version cannot drift. `npm run bundle:validate`
+checks it with Anthropic's own CLI (`mcpb validate`, a dev dependency), which matters because
+the 0.4 schema rejects unknown keys outright.
 Claude Desktop asks for five settings, all optional, each mapped to the environment variable
 the server already reads:
 

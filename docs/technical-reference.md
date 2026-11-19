@@ -34,7 +34,7 @@ npm test                       # optional
 
 ## Client configuration
 
-**Claude Desktop extension:** run `npm run bundle:build` and `npm run bundle:verify`, then double-click the `dcs-mcp-<version>.mcpb` it writes. See [Claude Desktop setup](claude-desktop.md) for the manifest, its five optional settings and verification limits.
+**Claude Desktop extension:** run `npm run bundle:build`, `npm run bundle:validate` and `npm run bundle:verify`, then double-click the `dcs-mcp-<version>.mcpb` it writes. See [Claude Desktop setup](claude-desktop.md) for the manifest, its five optional settings and verification limits.
 
 **ChatGPT Desktop local plugin:** run `npm run plugin:build` and `npm run plugin:verify`, then install **DCS-MCP** from the repository's **DCS-MCP Local** marketplace in a supported desktop client. See [plugin setup](../plugins/dcs-chatgpt/README.md) for installation, prerequisites and verification limits.
 
@@ -51,7 +51,7 @@ Point your MCP client at the server (stdio):
 From a clone, use `"command": "node", "args": ["/absolute/path/to/dcs-mcp/dist/index.js"]` instead.
 
 - **Claude Code**: `claude mcp add dcs -- npx -y dcs-mcp-server`. The repo's own [`.mcp.json`](../.mcp.json) runs `node dist/index.js` with a *relative* path, which only works when the client starts the server from the repository root — Claude Code does, for project-scoped servers. Build first.
-- **Claude Desktop**: `dcs-mcp-server install-claude-desktop [--published|--local]` merges the entry into `claude_desktop_config.json` (backup kept, other keys and servers untouched, `cmd /c` wrapper on Windows), or `npm run bundle:build` + `npm run bundle:verify` produces a one-click `dcs-mcp-<version>.mcpb` extension. Both are documented in [Claude Desktop setup](claude-desktop.md); the block above still works by hand.
+- **Claude Desktop**: `dcs-mcp-server install-claude-desktop [--published|--local]` merges the entry into `claude_desktop_config.json` (backup kept, other keys and servers untouched, `cmd /c` wrapper on Windows), or `npm run bundle:build` + `bundle:validate` + `bundle:verify` produces a one-click `dcs-mcp-<version>.mcpb` extension. Both are documented in [Claude Desktop setup](claude-desktop.md); the block above still works by hand.
 - **Codex**: `codex mcp add dcs -- node /absolute/path/to/dcs-mcp/dist/index.js` for this feature checkout; build first. For the published package use `codex mcp add dcs -- npx -y dcs-mcp-server`.
 - **OpenCode**: add it under `mcp` in `opencode.json`.
 

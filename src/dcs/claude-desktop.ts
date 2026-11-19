@@ -34,7 +34,7 @@ export type ConfigureStatus =
 export interface ConfigureOptions {
   /** Explicit config file; otherwise the platform default. */
   configPath?: string;
-  /** Default: `local` when this install has a usable entry script, else `published`. */
+  /** Default `local`; `published` is never chosen for you (see resolveMode). */
   mode?: EntryMode;
   /** Key under `mcpServers`. */
   serverName?: string;
@@ -105,10 +105,14 @@ function cleanEnv(env: Record<string, string | undefined> | undefined): Record<s
   return Object.keys(out).length ? out : undefined;
 }
 
+/**
+ * `local` unless `published` was asked for explicitly. There is deliberately no
+ * fallback: the npm package has no release yet, so quietly writing the `npx`
+ * entry because `dist/` was missing would leave the app with a server it cannot
+ * start and no explanation. An unusable local script is reported instead.
+ */
 function resolveMode(options: ConfigureOptions): EntryMode {
-  if (options.mode) return options.mode;
-  const script = options.entryScript ?? defaultEntryScript();
-  return existsSync(script) && !isEphemeralPath(script) ? "local" : "published";
+  return options.mode ?? "local";
 }
 
 /** The `mcpServers` entry for a mode. Windows gets `cmd /c` so `npx.cmd` resolves. */

@@ -26,6 +26,7 @@
     "plugin:build": "node scripts/build-chatgpt-plugin.mjs",
     "plugin:verify": "node scripts/verify-chatgpt-plugin.mjs",
     "bundle:build": "node scripts/build-claude-bundle.mjs",
+    "bundle:validate": "mcpb validate plugins/dcs-claude-desktop/manifest.json",
     "bundle:verify": "node scripts/verify-claude-bundle.mjs",
     "build": "tsc",
     "check": "tsc --noEmit",
@@ -75,6 +76,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@anthropic-ai/mcpb": "^2.1.2",
     "@types/adm-zip": "^0.5.7",
     "@types/luaparse": "^0.2.12",
     "@types/node": "^22.10.0",

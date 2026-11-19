@@ -50,7 +50,7 @@ It adds a `dcs` entry to `claude_desktop_config.json` and leaves everything else
 **One click (extension file).** Build a `.mcpb` extension from a clone and double-click it; Claude Desktop installs it, asks for your DCS folders and needs no Node.js of its own:
 
 ```powershell
-npm ci; npm run bundle:build; npm run bundle:verify
+npm ci; npm run bundle:build; npm run bundle:validate; npm run bundle:verify
 ```
 
 That writes `dcs-mcp-<version>.mcpb` in the repository root. See [Claude Desktop setup](docs/claude-desktop.md) for the details and what the build does not prove.

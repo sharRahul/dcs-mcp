@@ -1059,20 +1059,38 @@ user-facing page.
   `npx` elsewhere. The README's hand-edit block was updated to match.
 - **`--local` refuses an npx cache path** (`_npx`, `.npm-cache`, `_cacache`): pinning the app
   to a directory npx may clear produces a server that works today and is gone later.
-- **MCPB facts** (spec `modelcontextprotocol/mcpb`, MANIFEST.md, current `manifest_version`
-  `0.3`): required top-level fields are `manifest_version`, `name`, `version`, `description`,
-  `author` (with `author.name`), `server`; `server.mcp_config` expands `${__dirname}` and
-  `${user_config.<key>}`; `user_config` types are string/number/boolean/directory/file. Claude
-  Desktop ships its own Node, so `"command": "node"` needs nothing installed. The manifest is
-  GENERATED from package.json (`scripts/claude-bundle-manifest.mjs`) so the version cannot
-  drift; `tests/claude-desktop.test.ts` checks it against that field list.
+- **MCPB facts** (spec `modelcontextprotocol/mcpb` MANIFEST.md, plus Anthropic's own
+  `mcp-server-dev:build-mcpb` skill, which is where to start — it was missed the first time
+  and the three corrections below all came out of it): `manifest_version` **`0.4`** with the
+  matching `$schema`; the 0.4 schema sets `additionalProperties: false`, so an unknown key is
+  rejected. Required top-level fields are `manifest_version`, `name`, `version`,
+  `description`, `author` (with `author.name`), `server`; `server.mcp_config` expands
+  `${__dirname}`, `${HOME}` and `${user_config.<key>}` in `args` and `env` ONLY; `user_config`
+  types are string/number/boolean/directory/file. Claude Desktop ships its own Node, so
+  `"command": "node"` needs nothing installed. The manifest is GENERATED from package.json
+  (`scripts/claude-bundle-manifest.mjs`) so the version cannot drift;
+  `tests/claude-desktop.test.ts` checks it against that field list.
   No `compatibility.claude_desktop` range and no `platforms` list are claimed — a constraint we
   cannot check could only block an install. No `icon`: this repo ships no PNG.
+- **Validate with Anthropic's own CLI, not by reading the schema.**
+  `@anthropic-ai/mcpb` is a dev dependency and `npm run bundle:validate` runs
+  `mcpb validate`. It passes, and it also passed the earlier hand-written `0.3` manifest, so
+  the bump is to the current schema rather than a fix for something broken.
+- **`mcpb pack` drops files our zip kept.** Packing the same staging directory with the
+  official CLI gave 2609 files / 5.0 MB against our 4842 / 6.7 MB, and every CLI entry was
+  already in ours — the difference is `.d.ts`, `.d.ts.map` and `.js.map`, which the npm
+  package publishes and an extension has no use for. `PRUNE` in `build-claude-bundle.mjs`
+  removes them from the staging tree (1579 files), so staging equals what ships: 3264 entries,
+  5.1 MB. adm-zip still does the zipping, which keeps the build offline.
+- **The installer never picks `published` for you.** `resolveMode` returns `local` unless
+  `--published` was passed. The old "local when dist exists, else published" fallback wrote
+  the `npx` entry whenever `dist/` was missing — an entry that cannot start at all while the
+  package is unreleased, with nothing said about it.
 - **Every `user_config` field is optional and must stay that way.** An unanswered field expands
   to an empty string, and the server's env reads (`?.trim() || default`, `if (explicit)`) treat
   that as unset. `bundle:verify` launches the unpacked bundle with all five empty for exactly
   this reason. A `required: true` field would make the extension unstartable until answered.
-- The bundle is ~6.7 MB and 4842 entries (dist + data + production node_modules), and the
+- The bundle is ~5.1 MB and 3264 entries (dist + data + production node_modules), and the
   server registers **198 tools** through it.
 
 **The npm package does not exist yet.** `registry.npmjs.org/dcs-mcp-server` answered 404 on

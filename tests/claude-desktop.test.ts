@@ -9,7 +9,12 @@ import {
   isEphemeralPath,
   serverEntry,
 } from '../src/dcs/claude-desktop.js';
-import { buildManifest, MANIFEST_VERSION, SERVER_ENTRY_POINT } from '../scripts/claude-bundle-manifest.mjs';
+import {
+  buildManifest,
+  MANIFEST_SCHEMA,
+  MANIFEST_VERSION,
+  SERVER_ENTRY_POINT,
+} from '../scripts/claude-bundle-manifest.mjs';
 
 /**
  * Registering with Claude Desktop means editing a file the app also keeps its own
@@ -206,6 +211,25 @@ test('local mode refuses a missing script and an npx cache path', async () => {
   assert.equal(existsSync(configPath), false);
 });
 
+test('default installer uses local paths and never falls back to an unavailable npm package', async () => {
+  const dir = temp();
+  const configPath = path.join(dir, 'claude_desktop_config.json');
+  await assert.rejects(
+    configureClaudeDesktop({ configPath, entryScript: path.join(dir, 'missing.js') }),
+    /npm run build/
+  );
+  assert.equal(existsSync(configPath), false);
+  const cached = path.join(dir, '_npx', 'abc');
+  mkdirSync(cached, { recursive: true });
+  await assert.rejects(configureClaudeDesktop({ configPath, entryScript: fakeEntry(cached) }), /cache/);
+  assert.equal(existsSync(configPath), false);
+  const entryScript = fakeEntry(dir);
+  const result = await configureClaudeDesktop({ configPath, entryScript });
+  assert.equal(result.mode, 'local');
+  assert.equal(result.entry.command, process.execPath);
+  assert.deepEqual(result.entry.args, [entryScript]);
+});
+
 test('the MCPB manifest carries every required field and only optional user config', () => {
   const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
   const manifest = buildManifest(pkg) as Record<string, any>;
@@ -213,6 +237,9 @@ test('the MCPB manifest carries every required field and only optional user conf
     assert.ok(manifest[field] !== undefined, `missing ${field}`);
   }
   assert.equal(manifest.manifest_version, MANIFEST_VERSION);
+  // The 0.4 schema sets additionalProperties: false, so $schema must name that same version.
+  assert.equal(manifest.$schema, MANIFEST_SCHEMA);
+  assert.match(manifest.$schema, new RegExp(`-v${MANIFEST_VERSION}\\.schema\\.json$`));
   assert.equal(manifest.version, pkg.version, 'the bundle version must track package.json');
   assert.ok(manifest.author.name);
   assert.equal(manifest.server.type, 'node');
