@@ -1,0 +1,12 @@
+{
+  "name": "dcs-mcp-local",
+  "interface": { "displayName": "DCS-MCP Local" },
+  "plugins": [
+    {
+      "name": "dcs-chatgpt",
+      "source": { "source": "local", "path": "./plugins/dcs-chatgpt" },
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+      "category": "Productivity"
+    }
+  ]
+}

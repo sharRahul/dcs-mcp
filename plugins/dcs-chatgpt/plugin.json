@@ -1,0 +1,27 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "dcs-chatgpt",
+  "version": "0.6.3",
+  "description": "Create, edit and inspect DCS World missions locally, with optional live simulator control.",
+  "author": {
+    "name": "DCS-MCP contributors"
+  },
+  "repository": "https://github.com/sharRahul/dcs-mcp",
+  "license": "Apache-2.0",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "DCS-MCP",
+        "shortDescription": "Build and inspect local DCS World missions",
+        "category": "Productivity",
+        "capabilities": [
+          "Read",
+          "Write"
+        ],
+        "defaultPrompt": [
+          "Create and validate a DCS mission on Caucasus, then save it to a new .miz file."
+        ]
+      }
+    }
+  }
+}

@@ -1,4 +1,6 @@
 node_modules/
+/plugins/dcs-chatgpt/server/
+/plugins/dcs-chatgpt/skills/
 dist/
 *.log
 *.miz

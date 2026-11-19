@@ -19,6 +19,8 @@
     "skills"
   ],
   "scripts": {
+    "plugin:build": "node scripts/build-chatgpt-plugin.mjs",
+    "plugin:verify": "node scripts/verify-chatgpt-plugin.mjs",
     "build": "tsc",
     "check": "tsc --noEmit",
     "acceptance:generate": "node scripts/generate-acceptance.mjs",

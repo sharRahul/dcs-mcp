@@ -30,6 +30,8 @@ npm test                       # optional
 
 ## Client configuration
 
+**ChatGPT Desktop local plugin:** run `npm run plugin:build` and `npm run plugin:verify`, then install **DCS-MCP** from the repository's **DCS-MCP Local** marketplace in a supported desktop client. See [plugin setup](plugins/dcs-chatgpt/README.md) for installation, prerequisites and verification limits.
+
 Point your MCP client at the server (stdio):
 
 ```json

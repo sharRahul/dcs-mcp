@@ -774,6 +774,7 @@ ${n}`).join(""), {
         triggerIndex: z.number(),
         triggerCount: z.number(),
         compiled: z.boolean(),
+        embedded: z.array(z.object({ fileName: z.string(), key: z.string(), bytes: z.number(), reused: z.boolean() })),
       }),
       annotations: authoringAnnotations,
     },
