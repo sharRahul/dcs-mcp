@@ -151,7 +151,13 @@ export function meTemplateId(name: string): string {
 export function meSiteTemplates(root?: string): SiteTemplate[] {
   return meTemplates(root).map((t) => {
     const first = t.units[0];
-    const launchers = t.units.filter((u) => /ln$|launcher|Volhov|5P85|ZU-23|Flak/i.test(u.type)).length;
+    const launchers = t.units.filter((u) => /ln$|launcher|Volhov|5P85/i.test(u.type)).length;
+    // Classify the editor's explicit template label, not every AirDefence unit as SAM.
+    const label = t.name.toLowerCase();
+    const siteCategory: NonNullable<SiteTemplate['siteCategory']> = /searchlight/.test(label) ? 'searchlight' :
+      /radar site/.test(label) ? 'radar' : /mortar/.test(label) ? 'artillery' :
+      /bofors|flak|qf 3|aaa|\baa\b/.test(label) ? 'gun' :
+      /sam|patriot/.test(label) ? 'sam' : 'other';
     return {
       id: meTemplateId(t.name),
       description:
@@ -168,7 +174,11 @@ export function meSiteTemplates(root?: string): SiteTemplate[] {
         (u) => ((u.headingDegrees - first.headingDegrees) % 360 + 360) % 360
       ),
       spacingMetres: 50, // unused while offsets cover every unit
-      skynetRole: "sam" as const,
+      siteCategory,
+      skynetRole: siteCategory === 'sam' ? 'sam' : 'none',
+      geometry: { kind: 'editor-authored', individualHeadings: true },
+      execution: { status: 'unverified', skynetCompatibility: 'unknown' },
+      historicalCompleteness: 'unknown',
       source: {
         file: t.file,
         sha256: t.sha256,

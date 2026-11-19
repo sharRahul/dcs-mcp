@@ -158,6 +158,49 @@ local function runIn(state, body)
   return out
 end
 
+-- Hook-owned observer: scripts loaded by a_do_script may have private globals.
+-- Installed on a sim frame, never the GUI tick. No raw input is executed.
+local observerReady, observerAttempts, observerEpoch = false, 0, 0
+local function installEventObserver()
+  local result = runIn("mission", string.format([[
+    local epoch = %d
+    if not world or not world.addEventHandler then return '{"available":false}' end
+    if DCSMCP_BRIDGE_EVENTS and DCSMCP_BRIDGE_EVENTS.epoch ~= epoch then
+      if world.removeEventHandler then pcall(world.removeEventHandler, DCSMCP_BRIDGE_EVENTS) end
+      DCSMCP_BRIDGE_EVENTS = nil
+    end
+    if not DCSMCP_BRIDGE_EVENTS then
+      local ring = { events = {}, eventSequence = 0, source = "hook_observer", epoch = epoch }
+      DCSMCP_BRIDGE_EVENTS = ring
+      local names = {}
+      for name, id in pairs(world.event or {}) do names[id] = name end
+      local interesting = { S_EVENT_SHOT=true, S_EVENT_HIT=true, S_EVENT_KILL=true,
+        S_EVENT_DEAD=true, S_EVENT_CRASH=true, S_EVENT_EJECTION=true,
+        S_EVENT_TAKEOFF=true, S_EVENT_LAND=true, S_EVENT_PILOT_DEAD=true,
+        S_EVENT_BIRTH=true, S_EVENT_ENGINE_STARTUP=true, S_EVENT_MISSION_END=true,
+        S_EVENT_PLAYER_ENTER_UNIT=true, S_EVENT_SHOOTING_START=true, S_EVENT_BASE_CAPTURED=true }
+      local function describe(obj)
+        if obj == nil then return "none" end
+        local ok, name = pcall(function() return obj:getName() end)
+        return ok and name or "unknown"
+      end
+      function ring:onEvent(event)
+        pcall(function()
+          local kind = names[event.id]
+          if not interesting[kind] then return end
+          self.eventSequence = self.eventSequence + 1
+          self.events[#self.events+1] = {sequence=self.eventSequence,time=event.time or timer.getTime(),kind=kind,
+            initiator=describe(event.initiator),target=describe(event.target),weapon=describe(event.weapon),place=describe(event.place)}
+          while #self.events>256 do table.remove(self.events,1) end
+        end)
+      end
+      world.addEventHandler(ring)
+    end
+    return '{"available":true}'
+  ]], observerEpoch))
+  return type(result)=='string' and result:find('"available":true',1,true) ~= nil
+end
+
 ----------------------------------------------------------------------
 -- Command handlers. Structured ones return an envelope STRING.
 ----------------------------------------------------------------------
@@ -497,7 +540,7 @@ function handlers.status()
     missionEnv = inMission and ticking,
     errorCount = #errors,
     loadError = missionState.loadError,
-    capabilities = { runtime = true, aircraftAI = 1, flags = true, events = "requires mission telemetry", rawExec = ALLOW_EXEC },
+    capabilities = { runtime = true, aircraftAI = 1, flags = true, events = "mission-local native observer; telemetry fallback", rawExec = ALLOW_EXEC },
     version = version.dcs,
   })
 end
@@ -568,7 +611,7 @@ function handlers.units(args)
   return runIn("mission", body)
 end
 
--- Read-only bounded snapshot. Optional telemetry provides events; no handler is installed implicitly.
+-- Read-only bounded snapshot. The observer is installed at mission start, not by reads.
 function handlers.runtime(args)
   args = args or {}
   local flags, names = {}, {}
@@ -582,6 +625,34 @@ function handlers.runtime(args)
   end
   local after = tonumber(args.afterSequence) or 0
   if after ~= after or after == math.huge or after < 0 then return fail("runtime: invalid sequence") end
+
+  -- Telemetry is loaded by triggers; on recent DCS builds that is a different
+  -- state from the world API. Never reroute world queries to the trigger state.
+  local telemetry = '{"events":{},"eventMonitoring":{"available":false}}'
+  for _, candidate in ipairs({ "mission", "server" }) do
+    local probed, present = pcall(net.dostring_in, candidate,
+      "local t=DCSMCP_BRIDGE_EVENTS or DCSMCP; return type(t) == 'table' and type(t.events) == 'table' and 'yes' or 'no'")
+    if probed and present == "yes" then
+      local source = JSON_ENC_SRC .. string.format([[
+
+        local t = DCSMCP_BRIDGE_EVENTS or DCSMCP
+        local out = { events = {}, acceptance = DCSMCP_ACCEPTANCE,
+          eventMonitoring = { available = true, source = t.source or "mission_telemetry", sourceState = %q,
+            latestSequence = t.eventSequence or 0,
+            oldestSequence = t.events[1] and t.events[1].sequence or 0,
+            historyGap = t.events[1] ~= nil and %d < t.events[1].sequence - 1 } }
+        for _, event in ipairs(t.events) do
+          if event.sequence > %d then
+            if #out.events >= 200 then out.eventMonitoring.truncated = true; break end
+            out.events[#out.events + 1] = event
+          end
+        end
+        return enc(out)
+      ]], candidate, math.floor(after), math.floor(after))
+      local read, value = pcall(net.dostring_in, candidate, source)
+      if read and type(value) == 'string' and value:sub(1,1) == '{' then telemetry = value; break end
+    end
+  end
   local body = string.format([[
     local requestedFlags, requestedGroups = {%s}, {%s}
     local out = { time = timer.getTime(), theatre = env.mission.theatre, flags = {}, groups = {}, events = {},
@@ -613,13 +684,9 @@ function handlers.runtime(args)
       end
       out.groups[#out.groups + 1] = entry
     end
-    if out.eventMonitoring.available then
-      out.eventMonitoring.latestSequence = DCSMCP.eventSequence or 0
-      out.eventMonitoring.oldestSequence = DCSMCP.events[1] and DCSMCP.events[1].sequence or 0
-      for _, event in ipairs(DCSMCP.events) do if event.sequence > %d and #out.events < 200 then out.events[#out.events + 1] = event end end
-    end
-    return '{"ok":true,"data":' .. enc(out) .. '}'
-  ]], table.concat(flags, ","), table.concat(names, ","), math.floor(after))
+    local telemetry = %q
+    return '{"ok":true,"data":' .. enc(out):sub(1,-2) .. ',' .. telemetry:sub(2) .. '}'
+  ]], table.concat(flags, ","), table.concat(names, ","), telemetry)
   return runIn("mission", body)
 end
 
@@ -1385,11 +1452,18 @@ function callbacks.onSimulationStart()
   missionState.phase = "running"
   probedSim, probedGui = false, false
   resetScriptingState()
+  observerReady, observerAttempts = false, 0
+  observerEpoch = observerEpoch + 1
   startServer() -- no-op when the load-time start already succeeded
 end
 
 function callbacks.onSimulationFrame()
   lastSimFrame = os.clock()
+  if not observerReady and observerAttempts < 5 then
+    observerAttempts = observerAttempts + 1
+    local okObserver, ready = pcall(installEventObserver)
+    observerReady = okObserver and ready
+  end
   if not probedSim and missionState.phase == "running" then
     probedSim = true
     logProbe("sim")

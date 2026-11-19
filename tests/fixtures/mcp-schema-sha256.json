@@ -182,5 +182,17 @@
   "dcs_support_flight_inspect": "5c63d3d92c5303674ce1d3e791ed8e866272d01bfac8145f6bca911fd273cb17",
   "dcs_transport_verify": "5c63d3d92c5303674ce1d3e791ed8e866272d01bfac8145f6bca911fd273cb17",
   "dcs_support_flight_remove": "5c63d3d92c5303674ce1d3e791ed8e866272d01bfac8145f6bca911fd273cb17",
-  "dcs_miz_add_perimeter": "8184b44f97196041ce7cadfd5b06b9a1c8822e22169c901a41cf39736993b814"
+  "dcs_miz_add_perimeter": "8184b44f97196041ce7cadfd5b06b9a1c8822e22169c901a41cf39736993b814",
+  "dcs_carrier_compatibility": "01d27bdd08faeb9dbff5b6fc2fd66b4d954bae97c2b62cb3abaa6fa5be83f56b",
+  "dcs_aircraft_coverage": "47eb000a53255dfe587733f2875222d13fb794b4f6994f3dfff4d287b84cf2ff",
+  "dcs_service_date_check": "eeadc1ada53306319727cb083650d88fb1b1d6500a81a0420feead60fe9a29af",
+  "dcs_miz_historical_report": "aab2f258699337328371a3aaacae1d7eb58bff0a942dab23ef7940ba13d2335d",
+  "dcs_miz_add_carrier_recovery": "43c3dc387d2086c018db97326b89126d1e3552bd345fd9d04964f24d37ddd48d",
+  "dcs_authoring_coverage_audit": "2695d6fbae92c50686387c9671e9594f3b3c4b22e8e50cbcc5e4566e38d749c6",
+  "dcs_production_create": "f1122d42e825e7473ae66cb5d452af64665dd442f8424b1ccc1a4bc2d5c2190e",
+  "dcs_production_generate": "0229b3d4ff393e573fdb1aeb6204467e84b491051b28e5b24fe6bc53f4f61c08",
+  "dcs_production_revise": "f254264036d89900dae835c2970a417e8a66d76af590d78567599750317e3451",
+  "dcs_production_validate": "57304069bc5ac049ce4be4d3d98a0e9c232faa1f9cf277d4cfb1335139120bef",
+  "dcs_production_capture": "7af2285887f9a07528b9c7895089159e4091a632ee1164006695181c99532d10",
+  "dcs_production_status": "7e768228b14e778706a78777eccf9c47e059a9ae6baace5533f6673f97f91b54"
 }

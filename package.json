@@ -15,7 +15,8 @@
     "examples",
     "docs/testing/live-acceptance",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "skills"
   ],
   "scripts": {
     "build": "tsc",

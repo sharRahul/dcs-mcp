@@ -59,7 +59,7 @@ export function findInstallDirs(env: NodeJS.ProcessEnv = process.env): { path: s
   return out;
 }
 
-/** `H:/DCS World/.../bin/DCS.exe` from dcs.log's command line -> the install root. */
+/** `<DCS_INSTALL>/bin/DCS.exe` from dcs.log's command line -> the install root. */
 export function installRootFromLog(env: NodeJS.ProcessEnv = process.env): string | undefined {
   const file = env.DCS_LOG_PATH ?? defaultLogPath();
   const text = readText(file, 64 * 1024 * 1024);

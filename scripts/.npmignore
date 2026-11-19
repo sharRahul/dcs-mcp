@@ -1,0 +1,6 @@
+
+# Local mission drafts must not ship in the npm package
+build-iron-veil-gpt.mjs
+iron-veil-gpt.lua
+verify-iron-veil-gpt.lua
+build-iron-veil-01.mjs

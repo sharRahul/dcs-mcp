@@ -218,10 +218,10 @@ export function registerReferenceTools(server: McpServer): void {
   server.registerTool(
     "dcs_list_site_templates",
     {
-      title: "List SAM site templates",
+      title: "List site templates and layout evidence",
       description:
-        "Air-defence site templates for dcs_miz_add_ground_group's `site` argument: the unit mix that makes " +
-        "a site actually engage (radars + launchers in ONE group). Each states its provenance: 'engaged' " +
+        "Site templates for dcs_miz_add_ground_group, including SAMs, radar, guns, searchlights and other editor groups. Classification is separate from Skynet compatibility. Geometry metadata distinguishes generic columns, editor-authored and imported layouts; execution and historical completeness are separate. " +
+        "Each states its provenance: 'engaged' " +
         "(fought in a live sortie), 'me-saved' (copied from a Mission-Editor mission), 'loaded' (flown and " +
         "registered with Skynet, never engaged), 'catalogue' (types exist in DCS; this exact layout not " +
         "yet flown), or 'imported' (copied with its exact layout from a mission you supplied via dcs_import_site_template).\n\nReturns JSON: { templates: [{ id, description, provenance, composition, spacingMetres, skynetRole }] }.",
@@ -235,7 +235,7 @@ export function registerReferenceTools(server: McpServer): void {
         () =>
           allSiteTemplates().map(
             (t) =>
-              `- **${t.id}** [${t.provenance}] ${t.description}\n  ` +
+              `- **${t.id}** [${t.siteCategory}; geometry=${t.geometry?.kind}; execution=${t.execution?.status}] ${t.description}\n  ` +
               t.composition.map((c) => `${c.count}× \`${c.type}\``).join(", ")
           ).join("\n"),
         { templates: allSiteTemplates() as unknown as Record<string, unknown>[] }

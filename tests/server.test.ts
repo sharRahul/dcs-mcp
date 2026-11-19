@@ -40,7 +40,7 @@ test("server exposes tools, resources and prompts, and authors a mission end to 
     const guide = await client.readResource({ uri: "dcs://guide/conventions" });
     assert.match(String((guide.contents[0] as { text: string }).text), /x is NORTH/);
     const prompts = (await client.listPrompts()).prompts.map((p) => p.name);
-    assert.deepEqual(prompts.sort(), ["build_mission", "diagnose_mission", "fly_mission"]);
+    assert.deepEqual(prompts.sort(), ["build_mission", "diagnose_mission", "fly_mission", "produce_mission"]);
 
     const call = async (name: string, args: Record<string, unknown>): Promise<Structured> => {
       const r = await client.callTool({ name, arguments: args });

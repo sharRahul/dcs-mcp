@@ -9,6 +9,8 @@
 
 export const SERVER_INSTRUCTIONS = `DCS World mission authoring (offline .miz) and live control of a running sim.
 
+Mission production: for a complete playable mission or a revision with flight evidence, read dcs://skills/mission-production (built-in skill) and dcs://skills/mission-production/contracts. The produce_mission prompt and dcs_production_create/generate/revise/validate/capture/status tools preserve immutable revisions and correlate evidence to exact saved bytes. New revisions never inherit old flight passes. The dcs_authoring_coverage_audit tool reports remaining evidence gaps; caller-supplied numeric coverage profiles are read-only evidence, not authoring defaults.
+
 Workflow: dcs_bridge_status first to decide live vs offline. Offline: dcs_miz_new or dcs_miz_open -> dcs_miz_* edits -> dcs_miz_validate -> dcs_miz_save_as (always a NEW file). Live: check bridge phase is "running" before any mission-environment tool or dcs_load_mission; afterwards read dcs_get_log_errors, the only channel that reports a mission that failed to load.
 
 High-level authoring: dcs_scenario_validate/generate accept a client-supplied structured specification; optional seed is deterministic. dcs_campaign_generate produces mission sessions plus a transition manifest, not a .cmp. dcs_miz_direct_mission compiles condition/dependency/world-event driven radio scripts and shot plans; missing audio means subtitles/placeholders, never playable radio. Built-in dialogue is fictional, not authenticated procedure. See dcs_miz_trigger_capabilities for the exact supported compiler surface. dcs_miz_mission_report recomputes current state after edits.
@@ -182,8 +184,11 @@ export const CONVENTIONS_GUIDE = `# DCS-MCP conventions
 - \`dcs_miz_create_ground_plan\` offers configurable layouts/routes/CA flags; road connectivity and actual drivability need DCS.
 - \`dcs_miz_configure_iads\` loads MIST/Skynet in order; use unique SAM group/EWR unit prefixes for one coalition.
   Configured networks register for the existing telemetry sampler, alongside legacy redIADS/blueIADS.
-- Warehouse quantity editing requires existing wsType metadata. New stock identifiers/supplier links are refused; unknown fields survive.
-- Carrier deck compatibility/recovery, historical service dates and authoritative sensor models remain unsupported.
+- Warehouse quantity editing requires existing wsType metadata. New stock uses imported donors. Supplier links may reference existing same-coalition warehouses/airfields; duplicates and self-links are refused; unknown fields survive.
+- dcs_carrier_compatibility reports sourced DCS aircraft/deck pairs; unlisted pairs are unknown. dcs_miz_add_carrier_recovery appends a native ship-linked landing waypoint; unknown pairs need allowUnknown=true. Deck-slot geometry and success remain unproven until observed.
+- dcs_aircraft_coverage combines fuel, dimensions, tasks, pylons, radios and installed loadouts with explicit unknowns. dcs_service_date_check and dcs_miz_historical_report check a small sourced earliest-year dataset; they do not validate retirement, other countries or the simulated avionics/store fit.
+- dcs_runtime_inspect receives native events from a bounded hook observer installed at mission start, independent of telemetry globals. Event source, cursor, retention gap and truncation are explicit. These are observer data, not aircraft sensor knowledge.
+- Authoritative sensor models remain unsupported.
 - All new authoring/analysis is offline-tested only. Do not promote a SAM template's provenance from reasoning or unit tests.
 
 ## Structured design, assets and cinematic direction

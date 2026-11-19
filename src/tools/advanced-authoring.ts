@@ -1,3 +1,5 @@
+import { addCarrierRecovery, carrierCompatibility, aircraftCoverage, coverageAudit, historicalReport, serviceDateCheck } from '../miz/coverage.js';
+import { aircraftCoverageProfileSchema } from '../data/coverage-profile.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { requireSession, refresh } from '../miz/sessions.js';
@@ -70,6 +72,30 @@ export function registerAdvancedAuthoringTools(server: McpServer) {
     try { const s = requireSession(a.sessionId); const taskIndex = appendWaypointTask(s.mission, a.group, a.waypointIndex, a.task); s.dirty = true; refresh(s); return result({ group: a.group, waypointIndex: a.waypointIndex, taskIndex }); }
     catch (e) { return errorResult(e); }
   });
+  server.registerTool('dcs_carrier_compatibility', {
+    description: 'Evidence-backed DCS aircraft/deck pairings and nominal parking capacity. Unlisted pairs are unknown; no slot geometry or recovery success inferred.',
+    inputSchema:z.object({aircraft:z.string().min(1),ship:z.string().min(1)}).strict(),annotations:{readOnlyHint:true},
+  },async a=>{try{return result(carrierCompatibility(a.aircraft,a.ship));}catch(e){return errorResult(e);}});
+  server.registerTool('dcs_aircraft_coverage', {
+    description:'Combine known aircraft fuel, dimensions, tasks, pylons, radios, installed loadouts and sourced historical bounds. Optional exact-type profile with source URL/scope fills missing numeric fields in this report only; caller evidence is not independently verified. No authoring defaults or source files change.',
+    inputSchema:z.object({type:z.string().min(1),profile:aircraftCoverageProfileSchema.optional()}).strict(),annotations:{readOnlyHint:true},
+  },async a=>{try{return result(aircraftCoverage(a.type,a.profile));}catch(e){return errorResult(e);}});
+  server.registerTool('dcs_authoring_coverage_audit', {
+    description:'Audit bundled aircraft evidence presence for fuel, complete dimensions, tasks, pylons, radio presets, country-scoped service-date records and deck geometry. Optional exact type IDs includes unknown/mod types. Presence is not completeness or runtime validation; no installed payload scan.',
+    inputSchema:z.object({types:z.array(z.string().min(1)).min(1).max(1000).optional()}).strict(),annotations:{readOnlyHint:true},
+  },async a=>{try{return result(coverageAudit(a.types));}catch(e){return errorResult(e);}});
+  server.registerTool('dcs_service_date_check', {
+    description:'Check a type against sourced earliest operational year, optionally for a country. Small explicit dataset; unknown types/countries/retirement/configuration dates are not validated.',
+    inputSchema:z.object({type:z.string().min(1),year:z.number().int().min(1900).max(2200),country:z.string().min(1).optional()}).strict(),annotations:{readOnlyHint:true},
+  },async a=>{try{return result(serviceDateCheck(a.type,a.year,a.country));}catch(e){return errorResult(e);}});
+  server.registerTool('dcs_miz_historical_report', {
+    description:'Report aircraft and surface units against sourced service dates for mission year/country; unknown records remain unknown. Does not change the mission.',
+    inputSchema:z.object({sessionId}).strict(),annotations:{readOnlyHint:true},
+  },async a=>{try{return result(historicalReport(requireSession(a.sessionId).mission));}catch(e){return errorResult(e);}});
+  server.registerTool('dcs_miz_add_carrier_recovery', {
+    description:'Append a native Land/Landing waypoint linked by linkUnit and helipadId to an existing friendly ship. Preserves earlier route/tasks and rejects a route already containing landing. Unknown pairings need explicit allowUnknown; DCS resolves moving-deck approach. No guarantee of deck clearance, arrestment or AI success.',
+    inputSchema:z.object({sessionId,group:z.string().min(1),ship:z.string().min(1),allowUnknown:z.boolean().default(false)}).strict(),annotations:mutation,
+  },async a=>{try{const s=requireSession(a.sessionId);const data=addCarrierRecovery(s.mission,a.group,a.ship,a.allowUnknown);s.dirty=true;refresh(s);return result(data);}catch(e){return errorResult(e);}});
   server.registerTool('dcs_miz_add_airfield_landing', {
     description: 'Append a Land/Landing waypoint linked to a known theatre airfield. Does not model carrier recovery or aircraft runway requirements. Offline only.',
     inputSchema: z.object({ sessionId, group: z.string().min(1), airfield: z.union([z.string().min(1), z.number().int().positive()]) }).strict(), annotations: mutation,
@@ -109,10 +135,10 @@ export function registerAdvancedAuthoringTools(server: McpServer) {
     inputSchema: z.object({ sessionId }).strict(), annotations: { readOnlyHint: true },
   }, async a => { try { return result({ warehouses: listWarehouses(readWarehouses(requireSession(a.sessionId))) }); } catch (e) { return errorResult(e); } });
   server.registerTool('dcs_miz_edit_warehouse', {
-    description: 'Edit warehouse fuel InitFuel, unlimited flags, resupply settings, dynamic settings and existing stock quantities. Aircraft and weapons require existing wsType-bearing entries; no identifiers are fabricated. Supplier lists may only retain/remove existing links. create=true makes a pydcs-default entry for a known airfield/ship/FARP. Edits retain opaque fields and persist across restart/save. Atomic; offline only.',
+    description: 'Edit warehouse fuel InitFuel, unlimited flags, resupply settings, dynamic settings and existing stock quantities. Aircraft and weapons require existing wsType-bearing entries; no identifiers are fabricated. Supplier lists can create/retain/remove links to existing same-coalition endpoints; self-links and duplicates are refused. create=true makes a pydcs-default entry for a known airfield/ship/FARP. Edits retain opaque fields and persist across restart/save. Atomic; offline only.',
     inputSchema: z.object({ sessionId, kind: z.enum(['airports', 'warehouses']), id: z.number().int().positive(), create: z.boolean().default(false), patch: warehousePatchSchema }).strict(), annotations: mutation,
   }, async a => {
-    try { const s = requireSession(a.sessionId); s.warehouses = editWarehouse(s, a.kind, a.id, a.patch, a.create); s.dirty = true; refresh(s); return result({ kind: a.kind, id: a.id, verification: 'offline only', warnings: ['Stock editing requires existing wsType metadata; new aircraft/weapon entries and new supplier links are unsupported'] }); }
+    try { const s = requireSession(a.sessionId); s.warehouses = editWarehouse(s, a.kind, a.id, a.patch, a.create); s.dirty = true; refresh(s); return result({ kind: a.kind, id: a.id, verification: 'offline only', warnings: ['Stock editing requires existing wsType metadata; New stock requires a donor; supplier links use existing same-coalition endpoints'] }); }
     catch (e) { return errorResult(e); }
   });
 }

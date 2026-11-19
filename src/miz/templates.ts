@@ -13,7 +13,7 @@
  *                  flown mission where Skynet registered it.
  *   - "loaded":    in a flown mission and registered with Skynet, but never engaged.
  *   - "catalogue": every type id exists in the DCS unit catalogue and the mix is
- *                  the system's standard battery, but this exact group has not
+ *                  a software composition, but this exact group has not
  *                  yet been flown or opened in the Mission Editor by this project.
  *                  Such a template may still cite in `source` the mission its mix and
  *                  per-unit offsets were copied from (e.g. a third-party ME-saved test
@@ -23,8 +23,9 @@
  *                  user supplied via dcs_import_site_template; this project has not flown
  *                  it, and cannot prove the file was saved by the Mission Editor.
  *
- * Layout is the same column-along-heading the rest of the authoring API uses;
- * it is what the engaged SA-2 used and Skynet does not care about geometry.
+ * Layout is reported separately from execution. Many built-ins use the generic
+ * column; editor/imported layouts carry exact offsets and individual headings.
+ * Neither successful engagement nor an editor layout establishes historical fidelity.
  */
 import type { UnitComposition } from "./authoring.js";
 import { loadImportedTemplates } from "./site-import.js";
@@ -39,7 +40,11 @@ export interface SiteTemplate {
   composition: UnitComposition[];
   spacingMetres: number;
   /** Skynet classifies sites by group-name prefix; this is the conventional one. */
-  skynetRole: "sam" | "ewr";
+  skynetRole: "sam" | "ewr" | "none" | "unknown";
+  siteCategory?: "sam" | "radar" | "gun" | "searchlight" | "artillery" | "other" | "unknown";
+  geometry?: { kind: "generic-column" | "editor-authored" | "mission-copied" | "imported"; individualHeadings: boolean; source?: SiteTemplate["source"] };
+  execution?: { status: "engaged" | "loaded" | "unverified"; skynetCompatibility: "observed" | "unknown" };
+  historicalCompleteness?: "unknown";
   /** Exact per-unit offsets from the lead (metres along / right of its heading), when the layout was copied from a mission. */
   offsets?: { forward: number; right: number }[];
   /**
@@ -260,7 +265,7 @@ export function allSiteTemplates(): SiteTemplate[] {
   const taken = new Set(SITE_TEMPLATES.map((t) => t.id.toLowerCase()));
   const editor = meSiteTemplates().filter((t) => !taken.has(t.id.toLowerCase()));
   for (const t of editor) taken.add(t.id.toLowerCase());
-  return [...SITE_TEMPLATES, ...editor, ...loadImportedTemplates().filter((t) => !taken.has(t.id.toLowerCase()))];
+  return [...SITE_TEMPLATES, ...editor, ...loadImportedTemplates().filter((t) => !taken.has(t.id.toLowerCase()))].map(templateMetadata);
 }
 
 export function findSiteTemplate(id: string): SiteTemplate {
@@ -271,4 +276,13 @@ export function findSiteTemplate(id: string): SiteTemplate {
     throw new Error(`Unknown site template '${id}'. Available: ${all.map((t) => t.id).join(", ")}.`);
   }
   return hit;
+}
+
+/** Report layout evidence independently of execution. Existing IDs/layouts never change. */
+export function templateMetadata(t: SiteTemplate): SiteTemplate {
+  const observed = ['engaged','loaded'].includes(t.provenance) || ['SA-6'].includes(t.id);
+  return { ...t, siteCategory: t.siteCategory ?? (t.skynetRole === 'sam' ? 'sam' : t.skynetRole === 'ewr' ? 'radar' : 'unknown'),
+    geometry: t.geometry ? { ...t.geometry, source: t.source } : { kind: !t.offsets ? 'generic-column' : t.provenance === 'imported' ? 'imported' : 'mission-copied', individualHeadings: !!t.headingOffsetsDegrees, source: t.source },
+    execution: t.execution ?? { status: t.provenance === 'engaged' ? 'engaged' : observed ? 'loaded' : 'unverified', skynetCompatibility: observed ? 'observed' : 'unknown' },
+    historicalCompleteness: 'unknown' };
 }

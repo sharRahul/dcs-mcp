@@ -143,14 +143,19 @@ export function editWarehouse(session: MissionSession, kind: 'airports' | 'wareh
   }
   if (patch.suppliers) {
     const suppliers: LuaTable = {};
+    const seen = new Set<string>();
     for (const [i, supplier] of patch.suppliers.entries()) {
+      const key = `${supplier.kind}:${supplier.id}`;
+      if (seen.has(key)) throw new Error(`Duplicate supplier ${key}`);
+      seen.add(key);
       if (supplier.kind === kind && supplier.id === id) throw new Error('Warehouse cannot supply itself');
       if (!asTable(asTable(copy[supplier.kind])?.[supplier.id])) throw new Error(`Supplier ${supplier.kind}:${supplier.id} does not exist`);
-      // pydcs stores supplier records opaquely; exact DCS key names are in existing mission entries.
-      // Refuse fabricating records: reuse only an existing record matching Id/type.
+      const upstream = asTable(asTable(copy[supplier.kind])?.[supplier.id])!;
+      if (upstream.coalition !== entry.coalition) throw new Error(`Supplier ${key} belongs to a different coalition`);
+      // ED me_mission.lua addSupplier: {Id=supplierId,type=supplierType}.
+      // Keep unknown fields on existing records.
       const existing = luaArray(entry.suppliers).find(s => s.Id === supplier.id && s.type === supplier.kind);
-      if (!existing) throw new Error(`Supplier ${supplier.kind}:${supplier.id} is not an existing supplier record; creating supplier links is unsupported`);
-      suppliers[i + 1] = existing;
+      suppliers[i + 1] = existing ?? { Id: supplier.id, type: supplier.kind };
     }
     entry.suppliers = suppliers;
   }

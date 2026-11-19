@@ -74,3 +74,17 @@ test('edited logistics survive session snapshots and restoration', () => {
   assert.equal(asTable(asTable(asTable(readWarehouses(restored).airports)?.[12])?.jet_fuel)!.InitFuel, 7);
   closeSession(s.id); enableSessionPersistence('off');
 });
+
+test('new supplier links use editor keys and survive save/reopen without losing opaque fields', async()=>{
+ const s=sessionWithWarehouse(); const dir=mkdtempSync(join(tmpdir(),'dcs-supply-'));
+ s.warehouses=editWarehouse(s,'airports',14,{},true);
+ s.warehouses=editWarehouse(s,'airports',14,{coalition:'BLUE',suppliers:[{kind:'airports',id:12},{kind:'airports',id:13}]});
+ const links=asTable(asTable(asTable(s.warehouses.airports)?.[14])?.suppliers)!;
+ assert.deepEqual(links,{1:{Id:12,type:'airports'},2:{Id:13,type:'airports'}});
+ const before=structuredClone(s.warehouses);
+ assert.throws(()=>editWarehouse(s,'airports',14,{suppliers:[{kind:'airports',id:12},{kind:'airports',id:12}]}),/duplicate/i);
+ assert.deepEqual(s.warehouses,before);
+ await saveSessionAs(s,join(dir,'supplier.miz'));const reopened=await openSession(join(dir,'supplier.miz'));
+ assert.deepEqual(asTable(asTable(asTable(readWarehouses(reopened).airports)?.[14])?.suppliers),links);
+ closeSession(s.id);closeSession(reopened.id);
+});

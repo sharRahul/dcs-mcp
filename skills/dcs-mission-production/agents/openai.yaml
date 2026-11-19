@@ -1,0 +1,4 @@
+interface:
+  display_name: "DCS mission production"
+  short_description: "Build and revise DCS missions with flight evidence"
+  default_prompt: "Use $dcs-mission-production to create or revise my DCS mission and track its validation and flight evidence."

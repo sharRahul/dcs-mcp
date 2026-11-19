@@ -172,7 +172,7 @@ export function generateScenario(input: unknown) {
           if (force.payload) for (let i = 1; i <= force.count; i++) setPayload(s.mission, `${force.name}-${i}`, force.payload);
         } else {
           const template = force.site ? findSiteTemplate(force.site) : undefined;
-          addGroundGroup(s.mission, force.category, { ...args, composition: template?.composition ?? force.composition, spacingMetres: force.spacingMetres ?? template?.spacingMetres });
+          addGroundGroup(s.mission, force.category, { ...args, composition: template?.composition ?? force.composition, spacingMetres: force.spacingMetres ?? template?.spacingMetres, offsets: template?.offsets, headingOffsetsDegrees: template?.headingOffsetsDegrees });
           if (template) warnings.push(`${force.name}: site ${template.id} provenance ${template.provenance}; no provenance promoted by generation`);
         }
         const group = findGroup(s.mission, force.name)!.group; group.lateActivation = force.lateActivation;

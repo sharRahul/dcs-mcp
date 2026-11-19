@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {registerProductionTools} from './tools/production.js';
 /**
  * DCS World MCP server.
  *
@@ -68,6 +69,7 @@ function createServer() {
   registerRuntimeTools(server);
   registerAircraftRuntimeTools(server);
   registerAcceptanceTools(server);
+  registerProductionTools(server);
   registerDiagnosticTools(server);
   registerResources(server);
   registerPrompts(server);

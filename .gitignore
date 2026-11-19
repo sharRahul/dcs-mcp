@@ -7,8 +7,28 @@ dist/
 .DS_Store
 /docs/evidence/
 __pycache__/
-.gitignore
 .acceptance*/
 .vscode/
 .scratch/
 docs/superpowers/
+.superpowers/
+superpowers/
+.claude/
+
+# Local verification runs and npm pack output
+/.verification*/
+/*.tgz
+
+# Local environment variants (keep public templates)
+.env.*
+!.env.example
+!.env.sample
+
+# Local mission drafts and their one-off harnesses
+/scripts/build-iron-veil-gpt.mjs
+/scripts/iron-veil-gpt.lua
+/scripts/verify-iron-veil-gpt.lua
+
+# Download source documents locally; do not redistribute the manual
+/docs/DCS_User_Manual_EN_2020.pdf
+/scripts/build-iron-veil-01.mjs

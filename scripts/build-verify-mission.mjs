@@ -386,5 +386,5 @@ if (skipped.length) {
   console.log(`\nnot in this mission (${skipped.length}):`);
   for (const sk of skipped) console.log(`  - ${sk}`);
 }
-console.log(`\nlaunch: "H:\\DCS World\\Eagle Dynamics\\DCS World\\bin\\DCS.exe" --force_disable_VR --no-launcher "${saved.outPath}"`);
+console.log(`\nlaunch: "${process.env.DCS_EXE ?? "<DCS_INSTALL>/bin/DCS.exe"}" --force_disable_VR --no-launcher "${saved.outPath}"`);
 if (errors.length) process.exitCode = 1;

@@ -1,3 +1,5 @@
+import {readFile} from 'node:fs/promises';
+import {packagePath} from '../paths.js';
 /**
  * MCP resources (reference material a client can read into context) and
  * prompts (ready-made workflows). Clients that never read CLAUDE.md get the
@@ -17,6 +19,11 @@ const json = (uri: string, data: unknown) => ({
 const CATEGORIES: UnitCategory[] = ["plane", "helicopter", "vehicle", "ship", "static"];
 
 export function registerResources(server: McpServer): void {
+  for (const [name, uri, relative] of [
+    ['mission-production-skill','dcs://skills/mission-production','SKILL.md'],
+    ['mission-production-contracts','dcs://skills/mission-production/contracts','references/workflow.md'],
+  ] as const) server.registerResource(name,uri,{title:name==='mission-production-skill'?'DCS mission production skill':'Mission production tool contracts',description:'Built-in workflow for planning, generation, validation, revision and flight evidence.',mimeType:'text/markdown'},async address=>({contents:[{uri:address.href,mimeType:'text/markdown',text:await readFile(packagePath('skills','dcs-mission-production',relative),'utf8')}]}));
+
   server.registerResource(
     "conventions",
     "dcs://guide/conventions",
@@ -109,6 +116,11 @@ export function registerResources(server: McpServer): void {
 }
 
 export function registerPrompts(server: McpServer): void {
+  server.registerPrompt('produce_mission',{
+    title:'Produce and verify a mission',description:'Plan, generate, validate, revise and collect revision-specific flight evidence using the built-in mission-production skill.',
+    argsSchema:{projectDir:z.string().describe('New or existing production project directory'),objective:z.string().describe('Mission intent or revision request'),theatre:z.string().optional().describe('Theatre for a new project')},
+  },({projectDir,objective,theatre})=>({messages:[{role:'user',content:{type:'text',text:'Use the built-in skill at dcs://skills/mission-production and its contracts at dcs://skills/mission-production/contracts. Project: '+projectDir+'. '+(theatre?'Theatre: '+theatre+'. ':'')+'Request: '+objective+'\nStart by checking whether the project exists, then resume its status or create its plan. Track immutable mission revisions, saved-byte validation and flight evidence for the current revision. Preserve existing simulator work and the current authorization boundaries.'}}]}));
+
   server.registerPrompt(
     "build_mission",
     {
@@ -128,7 +140,7 @@ export function registerPrompts(server: McpServer): void {
             type: "text",
             text:
               `Build a DCS mission on ${theatre}: ${objective}. Save it to ${outPath}.\n\n` +
-              `Read dcs://guide/conventions first. Then: dcs_miz_new (theatre ${theatre}) → find exact type ids with ` +
+              `For a complete mission production project, read dcs://skills/mission-production and use produce_mission; preserve the requested output location. Read dcs://guide/conventions first. Then: dcs_miz_new (theatre ${theatre}) → find exact type ids with ` +
               `dcs_list_unit_types and country names with dcs_list_countries → place things with lat/lon or x/y ` +
               `(x = north) → use dcs_list_site_templates for air defences and dcs_list_airfields for airfield starts → ` +
               `add zones and triggers (dcs_miz_add_trigger_zone, dcs_miz_add_trigger) → frameworks with ` +

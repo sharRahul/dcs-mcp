@@ -2,6 +2,172 @@
 
 Single verification record. Historical results retain their original scope; current live DCS acceptance remains pending.
 
+
+
+## Coverage audit and mission-production workflow — 2026-11-18/19
+
+The remaining coverage was audited rather than treating unknown data as implemented.
+The catalogue has 170 aircraft: 170 fuel, dimension and task records; 147 pylon
+records; 88 radio-preset records; three country-scoped historical lower-bound
+records; no carrier deck-slot geometry. New exact-type numeric report profiles
+require source URL/scope and retain field provenance. They fill missing report
+fields only, never replace bundled values or alter authoring defaults. Added the
+USAF-sourced A-10C/USA 2007 lower bound, explicitly excluding A-10C_2 fit dates.
+No universal deck, retirement, other-operator or physical supplier-delivery claim
+is made. See authoring-coverage.md and dcs_authoring_coverage_audit.
+
+### Coherent production pipeline
+
+- New production projects persist immutable plans, sequential immutable .miz
+  revisions, notes, SHA-256 identities, saved-byte validation and flight evidence.
+- Six MCP tools cover create, generate, revise/import, validate, capture and
+  status. Concurrency/stale writers, altered plans and changed archive bytes
+  are rejected. New revisions start without inherited flight evidence.
+- Capture correlates two live mission-name checks, the unique latest revision
+  log marker and saved archive hash. It records native snapshots and a bounded
+  log tail, paginates retained events and evaluates only declared checks.
+  This correlation is not simulator byte attestation or full playability proof.
+- scenario_outcome resolves the current generated victory/failure flag without
+  guessing allocator IDs; ambiguous/imported logic remains unknown. Manual
+  qualitative checks remain unknown automatically. Status exposes next actions.
+- The bundled dcs-mission-production skill ships with npm and is served at
+  dcs://skills/mission-production plus its contracts resource. produce_mission
+  is the built-in prompt; server instructions route complete mission work to it.
+- Fixed a separate generation defect found while joining the workflow: selected
+  site-template offsets and per-unit headings were dropped by generateScenario.
+  It now preserves them instead of silently using a column. A Rapier-layout
+  regression failed before the fix and passes after it.
+
+### Verification
+
+Typecheck and build pass. Full Windows/DCS-Lua suite: **332 tests, 330 passed,
+zero failures, two skips** (native fixture corpus and PYDCS_SRC regeneration
+inputs not supplied). Real stdio tests cover project restart, revision edits,
+wrong live identity, missing evidence, plan/archive integrity, concurrent writers,
+paginated events and logical outcome flags. Public catalogue: 196 tools.
+
+Skill quick_validate passes. An independent agent used the skill through real
+stdio calls, generated a 2003 F-16 CAP draft, made opposition/fuel revisions,
+reconnected and correctly reported revision 3 as flight_pending with no inherited
+evidence. Its outcome-flag guidance gap was addressed with scenario_outcome; a
+fresh-project stdio test resolved flag 1003 while retaining flight_pending.
+An extracted npm tarball successfully served both skill resources and the
+production prompt; all 196 tools were discovered. No global skill installation
+is required to use the bundled MCP prompt/resources.
+
+Independent code review found a regeneration path that checked revision count
+without validating the existing head. A failing regression reproduced changed
+acceptance criteria being accepted; head validation now rejects it. Focused
+re-review found no remaining actionable defects.
+
+### Live production round trip
+
+DCS 2.9.31.29434 MT, Caucasus; agent clicked FLY, no user flight/test input.
+The prior autonomous mission was imported as revision 1. The initial test process
+lost its targetable window before flight and was excluded from evidence; it was
+stopped and restarted.
+
+Revision 1 (ed145ba5-cd60-4e15-b273-c70d063976c5) captured at t=24.753:
+all three declared checks observed — EventTarget-1 native DEAD event, EditorSAM
+spawn, and no detected mission-script problems after the revision marker.
+SHA-256: ba97058f27ef7725370e37cd848cfc6478d2b281a384fc3b06f2acc0c95165f1.
+
+The observer fuel was then changed and checkpointed as revision 2. Its status
+returned flight_pending with zero evidence records. A capture while DCS was
+still running revision 1 was rejected with live mission identity mismatch.
+Revision 1's archive and evidence were preserved.
+
+Revision 2 (4d5ef65d-1c0b-4d5f-a933-404eae2fd683) was launched separately and
+captured at t=20.221. Its own three declared checks were observed, yielding
+declared_checks_observed without reusing revision 1's flight evidence.
+SHA-256: 7c79d365a6621fb7509eeba8817bf888cf2b9394dd0099c15d833b02f763d314.
+
+Local evidence: .verification-production-20261118/summary.json, live-project/,
+flight-1.json, flight-2.json, stale-evidence-rejection.txt, preserved dcs-*.log,
+tests.log, coverage-audit.json, skill-eval/ and package-smoke.json.
+These named checks establish the production/evidence lifecycle, not a complete
+combat sortie, universal aircraft tactics or usable radio service. **DCS was
+terminated after the tests and no DCS window remained.**
+
+## Runtime events, site evidence and authoring coverage — 2026-11-18
+
+Implemented against checkout b5ddde1 plus this working tree. DCS was launched and
+controlled by the agent; the user did not have to fly or execute manual checks.
+DCS 2.9.31.29434 MT, Caucasus, F-16 observer and autonomous F/A-18C recovery.
+
+### Changes and automated checks
+
+- Runtime: a native hook-owned event observer is installed on the sim thread,
+  independently of private trigger-script globals. Its 256-event ring returns
+  at most 200 per query and reports source, sourceState, oldest/latest sequence,
+  historyGap and truncation. Observer registration is outside read requests.
+  Each simulation epoch detaches the old observer and resets its history.
+  Legacy visible mission telemetry remains a fallback. Raw exec stays disabled.
+- Lua regression reproduces separate trigger/world globals, native events with
+  no telemetry globals, event cursors, partial socket writes, 260-event retention,
+  response truncation and detach/reset across simulation epochs.
+- Site catalogue: editor guns, radar sites, searchlights, mortars and other groups
+  no longer all claim SAM role. geometry and execution metadata are separate;
+  source hashes and individual-heading availability are reported. Existing IDs
+  and generic built-in layouts are preserved. Historical completeness is unknown.
+- New typed tools: dcs_carrier_compatibility, dcs_miz_add_carrier_recovery,
+  dcs_aircraft_coverage, dcs_service_date_check, dcs_miz_historical_report.
+  Supplier links can be created between existing same-coalition endpoints,
+  using ED's {Id,type} format and preserving opaque existing fields.
+- Typecheck and build passed. Full suite with installed DCS Lua: **320 tests,
+  318 passed, zero failures, two skips**. Skips: no committed native ME fixture
+  corpus and no PYDCS_SRC wheel directory for data regeneration. Real stdio MCP
+  tests cover new tools, historical unknowns, supplier edits and save/reopen.
+  Public schema fixture now has 189 tools. Independent review found one stale
+  supplier description; corrected and rechecked, with no remaining findings.
+
+### Live results
+
+The first run proved that merely probing mission/server globals does not expose
+telemetry-loaded DCSMCP on this build. That approach was insufficient and was
+replaced by the native observer fallback before claiming the issue fixed.
+The first test mission also had incorrectly named JavaScript trigger fields;
+those were corrected before the successful event-generation test.
+
+The second run of runtime-authoring-r2.miz captured 25 native events, including
+EventTarget-1 S_EVENT_DEAD at **t=15.801**. Runtime reported available=true,
+source=hook_observer, sourceState=server. Querying afterSequence=25 returned
+no duplicate event. EditorSAM's 15 units and EditorGun's four guns spawned.
+This proves spawn/layout execution for these instances, not historical fidelity
+or that every editor template works with Skynet.
+
+The AI Hornet followed the newly authored Land/Landing waypoint linked to
+Stennis by linkUnit/helipadId and **landed at t=246.58**. Native event:
+S_EVENT_LAND, initiator=Recovery-1, place=Carrier-1, sequence=26. At t=253.83
+runtime showed inAir=false, life=20, altitude 22.06 m at the carrier deck.
+No user piloting or keyboard flight control was required.
+
+A third run tested the final installed hook including historyGap/reset changes
+through the actual stdio dcs_runtime_inspect tool. It returned the real death
+event, source hook_observer, historyGap=false, and an empty subsequent cursor
+query. The same-path bridge reload request produced no observable mission swap;
+no live same-process reset claim is made. Epoch detach/reset is Lua-regression
+verified. The final installed hook matches the working-tree source SHA-256:
+9cf6326160f0a9f2e883e86251168c4cc61766710cd2454f3650c5c19f3c988b.
+
+Local, uncommitted evidence is in .verification-20261118/: summary.json,
+capture-*.json, recovery-*.json, mcp-live-*.json, preserved dcs-*.log and tests.log.
+Successful mission SHA-256:
+a9014df6af262f5ee073abb3d4303a416ee1cc14d69f4fa71c892a22324b9671.
+The original installed hook was backed up before each replacement. **DCS was
+terminated after testing; no DCS window remained.**
+
+### Scope limits
+
+Compatibility records are documented DCS pairings, not universal deck-slot or
+mod support. Only the tested FA-18C/Stennis recovery is newly live-verified.
+Historical bounds currently cover F-16C Block 50 and F/A-18C for USA only;
+retirement, other operators and exact avionics/store fits remain unknown.
+Broader aircraft reporting combines existing sourced datasets and installed
+loadouts without inventing missing specs. Supplier links serialize, survive
+save/reopen and load in DCS; successful physical resupply was not established.
+See authoring-coverage.md for exact tool contracts and primary sources.
+
 ## Windows acceptance run — 2026-11-16
 
 Tested checkout `c2bc179d4e9aaddbd8fd9c9fc6e5341f668c24a7` using
@@ -12,7 +178,7 @@ Local evidence is in `.acceptance-session-20261116/` (not committed).
   a TypeScript constructor error and schema fixture mismatch. After successful
   `npm.cmd ci` using the lockfile (SDK 1.32.2, Zod 4.6.7), `npm.cmd run build`
   passed and `npm.cmd test` passed **244/244, zero failures, zero skips** with
-  `DCS_LUA=H:/DCS World/Eagle Dynamics/DCS World/bin-mt/luae.exe`.
+  `DCS_LUA=<DCS_INSTALL>/bin-mt/luae.exe`.
 - The earlier test run during incomplete dependency installation is invalid as a
   product result; `build-final.log` and `tests-final.log` are authoritative.
 - `final-package/offline-report.json` reports pass for all ten scenarios.
@@ -481,7 +647,7 @@ rotated, edit its tasks, set airbase ownership). Offline only; the payload tests
 
 ## Install-derived data, live sampling and validator calibration — 2026-11-17 (0.6.0)
 
-Offline work on a machine with DCS 2.9.31.29434 installed (`H:/DCS World/...`) and 193
+Offline work on a machine with DCS 2.9.31.29434 installed (`<DCS_INSTALL>`) and 193
 community/editor-saved missions under `Saved Games/DCS/Missions`. `npm run build` and
 `npm test` pass (270 pass, 0 fail, 8 skipped — the skips need DCS_LUA/PYDCS_SRC or a
 running sim). Nothing in this section is simulator-verified.
@@ -614,7 +780,7 @@ DCS 2.9.31, Persian Gulf, started cold straight into a purpose-built mission:
 
 ```
 node scripts/build-verify-mission.mjs [outPath] [--learned-type=<id>]
-"H:\DCS World\...\bin\DCS.exe" --force_disable_VR --no-launcher <the .miz>
+"<DCS_INSTALL>\bin\DCS.exe" --force_disable_VR --no-launcher <the .miz>
 ```
 
 The mission (`scripts/build-verify-mission.mjs`) carries eleven of the things that had

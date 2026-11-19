@@ -510,9 +510,9 @@ no adjacent ERROR line.
   `pdftotext -layout`): editor menu labels per group type, linked to hoggit keys by LITERAL name only. The
   manual's aircraft chapter covers planes and helicopters together, so it never splits them. It can ADD a
   ship/vehicle category (ship AttackGroup) with a warning; a missing editor label is a warning, never a refusal.
-  The PDF itself is now vendored at `docs/DCS_User_Manual_EN_2020.pdf` (40 MB, sha256 matches the
-  `_sha256` pinned in the generated JSON), so the regeneration no longer depends on a download —
-  see `docs/sources.md` for the command.
+  Download the PDF separately to the ignored local path `docs/DCS_User_Manual_EN_2020.pdf`.
+  Its SHA-256 must match `_sha256` in the generated JSON; see `docs/sources.md` for the
+  official source link and regeneration command. The PDF is not distributed in this repository.
 - files.digitalcombatsimulator.com is behind a Cloudflare browser challenge; do not script around it — ask the
   user for the file. `www.digitalcombatsimulator.com/upload/...` is NOT blocked and fetches fine, which is
   how the manual above was retrieved.

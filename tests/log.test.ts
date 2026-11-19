@@ -17,7 +17,7 @@ const SAMPLE = `=== Log opened UTC 2026-07-24 23:28:49
 2026-07-24 23:35:04.926 ERROR   Scripting (Main): unit Su-30MKI not found
 2026-07-24 23:35:04.928 WARNING Scripting (Main): plugin: SKIPPED './DemoMods/aircraft/AJS37': not supported
 2026-07-24 23:35:11.023 ERROR   wInfo (Main): negative drag of payload "{HB_A6E_MK20_MER_5x_RIGHT}" (origin: "./CoreMods/aircraft/A-6E/Entry/Weapons.lua")
-2026-07-24 23:35:11.035 ERROR   EDCORE (Main): Failed to load H:/DCS World/CoreMods/tech/SouthAtlanticAssets/bin/SouthAtlantic.dll: (127) The specified procedure could not be found.
+2026-07-24 23:35:11.035 ERROR   EDCORE (Main): Failed to load C:/DCS World/CoreMods/tech/SouthAtlanticAssets/bin/SouthAtlantic.dll: (127) The specified procedure could not be found.
 2026-07-24 23:35:23.218 INFO    APP (Main): Loaded C:\\Users\\x\\Saved Games\\DCS\\Scripts\\Hooks\\dcs-mcp-hook.lua
 2026-07-24 23:51:52.635 ALERT   LUACOMMON (Main): Error: GUI Error: [string "./MissionEditor/modules/me_mission.lua"]:595: attempt to index field '?' (a nil value)
 GUI debug.traceback: stack traceback:

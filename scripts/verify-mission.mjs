@@ -36,7 +36,7 @@ if (!mizPath) {
 
 const LUA_CANDIDATES = [
   process.env.DCS_LUA,
-  "H:/DCS World/Eagle Dynamics/DCS World/bin-mt/luae.exe",
+  "C:/Program Files/Eagle Dynamics/DCS World/bin/luae.exe",
   "C:/Program Files/Eagle Dynamics/DCS World/bin-mt/luae.exe",
 ].filter(Boolean);
 const lua = LUA_CANDIDATES.find((p) => existsSync(p));

@@ -564,7 +564,7 @@ Later analysis interpolates between those nodes with DCS closed. Packs are bare-
 (no buildings or trees) and only as fine as the spacing you chose.
 
 All additions are **offline tested; not newly DCS-verified**.
-Carrier recovery/deck compatibility, historical service dates, radio frequency bands
+Full deck-slot geometry, comprehensive operator/retirement dates, radio frequency bands
 (pydcs carries none, so preset frequencies are not band-checked) and creation of new
 warehouse stock identifiers remain gaps. Liveries are checked against the folders installed
 on this machine (scanned like pydcs's LiveryScanner); with no DCS found the answer is
@@ -627,7 +627,7 @@ This checkout adds `dcs_runtime_inspect` (bounded groups, unit states, flags and
 telemetry event cursors), `dcs_tool_catalogue` (paginated discovery), and shared
 acceptance tools: `dcs_acceptance_check`, `dcs_acceptance_generate`,
 `dcs_acceptance_job`, `dcs_acceptance_collect`. Generation returns a job id to poll;
-CLI and MCP use the same implementation. The catalogue currently has 184 tools.
+CLI and MCP use the same implementation. The catalogue currently has 196 tools.
 
 Aircraft contact/history queries, option inspection, task lifecycle control and
 support-flight/transport evidence monitoring are described in
@@ -655,3 +655,52 @@ rejected and validation error wording may differ. See the single
 [verification record](docs/verification.md) for schema review and remaining gaps.
 Use the cloned server path to test these unreleased changes; npm still serves the
 published version. No paid AI or voice service is required.
+
+## Runtime events and expanded authoring
+
+The updated hook installs a mission-local native world-event observer on the
+simulation thread. Runtime events no longer depend on trigger-script globals
+being visible through the bridge. Responses identify the source and cursor; the
+ring retains 256 events and returns at most 200 per query. Restart DCS after
+installing the hook. This is observer telemetry, separate from aircraft knowledge.
+
+Site templates now separate category, geometry provenance and execution evidence.
+Editor gun/searchlight/radar/artillery groups are not labelled SAM sites. Existing
+IDs and layouts are preserved; generic columns are explicit and historical
+completeness remains unknown.
+
+Five new tools cover aircraft/deck compatibility, ship-linked recovery waypoints,
+aircraft data coverage and sourced historical checks. Warehouse edits can create
+supplier links to existing same-coalition endpoints using the editor's record
+format. See [coverage contracts and limits](docs/authoring-coverage.md).
+
+## Mission production workflow and built-in skill
+
+Use the **produce_mission** MCP prompt for complete mission work. The bundled
+[dcs-mission-production skill](skills/dcs-mission-production/SKILL.md) is also
+available as dcs://skills/mission-production; its detailed contracts are served
+as dcs://skills/mission-production/contracts. It ships in the npm package.
+
+| Stage | Tool | Result |
+|---|---|---|
+| Plan | dcs_production_create | Durable goal, assumptions and named acceptance checks |
+| Generate | dcs_production_generate | Immutable numbered .miz revision and saved-byte validation |
+| Revise/import | dcs_production_revise | New revision from an editing session, preserving prior files |
+| Validate | dcs_production_validate | SHA-256-bound offline check of the saved archive |
+| Flight evidence | dcs_production_capture | Correlated native observations and bounded log evidence |
+| Resume/report | dcs_production_status | Current revision, checks, evidence and next actions |
+
+Production projects survive MCP restarts. Each revision has a unique mission
+filename and log marker. Old flight evidence stays with its old revision: changing
+a loadout, task or victory condition requires new evidence. Supplied pass booleans
+are not accepted. Changed archive bytes or acceptance plans are rejected.
+
+Automatic capture evaluates only the declared checks. Qualitative/manual checks
+remain unknown; declared_checks_observed is not a blanket guarantee of playability
+or native AI/radio fidelity. A logical scenario_outcome check resolves generated
+victory/failure flags without guessing their allocated numbers.
+
+The new dcs_authoring_coverage_audit reports missing evidence across the catalogue.
+Numeric aircraft profiles can supply exact-type missing fields with source/scope
+and field provenance, for inspection only; they do not override bundled values
+or change authoring defaults. Historical records remain narrowly scoped.

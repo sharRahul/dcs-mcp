@@ -1,13 +1,8 @@
-# First-party source documents kept in this repo
+# Source documents for generated data
 
-Generated data under `data/` is only as trustworthy as the document it came from, and several of
-those documents are hard to fetch again later. The ones vendored here are the ones a generator
-reads directly, so `npm run`-ing a regeneration does not depend on a download that may have moved.
-
-Every file here is Eagle Dynamics' own published material, kept unmodified and byte-for-byte
-identical to what the generator was run against. The sha256 below is the one pinned in the
-generated JSON's `_sha256`, so a mismatch means the document changed and the data needs
-regenerating — not that the data is wrong.
+The DCS User Manual is downloaded separately from Eagle Dynamics and is not distributed
+in this repository. Keep a local copy at the ignored path below when regenerating data.
+The pinned SHA-256 identifies the exact source used by the generator.
 
 ## `DCS_User_Manual_EN_2020.pdf`
 
@@ -24,7 +19,8 @@ group type, from the Advanced Actions chapters' tables of contents. Labels only,
 `data/hoggit.json` by LITERAL name match — no prose is copied into the repo, and the manual's
 aircraft chapter covers planes and helicopters together, so it never splits them.
 
-Regenerate with:
+Download the PDF from the source link above to `docs/DCS_User_Manual_EN_2020.pdf`,
+verify its SHA-256 against the pinned value, then regenerate with:
 
 ```
 pdftotext -layout docs/DCS_User_Manual_EN_2020.pdf manual.txt
@@ -39,5 +35,4 @@ Two caveats that have not changed:
   evidence of how DCS stores or runs the action; that still comes from editor-saved missions
   (`tests/fixtures/trig-oracle.json`) or from Hoggit's scripting-API pages (`data/hoggit.json`).
 - `files.digitalcombatsimulator.com` sits behind a Cloudflare browser challenge, so some ED
-  downloads cannot be scripted at all. This one is served from `www.` and fetches normally —
-  which is why it is here rather than described as unavailable.
+  downloads cannot be scripted at all. Use the official source link to obtain a local copy.
