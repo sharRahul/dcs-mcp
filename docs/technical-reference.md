@@ -17,13 +17,15 @@ It never executes mission Lua (missions are parsed as data), never overwrites a 
 
 ## Install
 
-Node 20 or newer. The server runs straight from npm:
+Node 20 or newer.
+
+**The npm package has not been released yet**, so every `npx -y dcs-mcp-server` form on this page — and the `--published` installer mode — fails until the first publish; see [releasing](releasing.md). Once released:
 
 ```bash
 npx -y dcs-mcp-server --version
 ```
 
-Or from a clone:
+From a clone, which is the route that works today:
 
 ```bash
 npm ci && npm run build   # outputs dist/index.js

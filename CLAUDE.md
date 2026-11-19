@@ -1075,6 +1075,20 @@ user-facing page.
 - The bundle is ~6.7 MB and 4842 entries (dist + data + production node_modules), and the
   server registers **198 tools** through it.
 
+**The npm package does not exist yet.** `registry.npmjs.org/dcs-mcp-server` answered 404 on
+2026-11-19 (name free, no versions), so every `npx -y dcs-mcp-server` line in the docs — and
+`install-claude-desktop --published`, which writes exactly that command into the app's config
+— cannot work until someone runs the first publish. README, `docs/technical-reference.md` and
+`docs/claude-desktop.md` now say so and lead with the clone route; `docs/releasing.md` holds
+the preflight evidence, the two commands (they need npm credentials, so they are the
+maintainer's to run) and the list of notices to delete afterwards. Do not describe the npx
+route as working until `npm view dcs-mcp-server version` answers.
+
+Preflight that IS done for 0.6.4: `npm pack` (542 files, 1.3 MB), the tarball installed into a
+scratch project, its own `bin` resolving, `--version` and `install-claude-desktop --dry-run`
+run from it. `prepublishOnly` deletes `dist/` before rebuilding, which breaks a `--local`
+Claude Desktop entry for the length of the publish.
+
 To verify in Claude Desktop next: the app accepting the `.mcpb`, rendering the five settings
 prompts and listing the tools; whether ~200 tools in one client is usable, which nothing here
 measures; a mission authored end to end from an app chat; `install-claude-desktop` against a

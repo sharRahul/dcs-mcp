@@ -4,6 +4,11 @@ Two ways to give the Claude Desktop app the DCS tools. Both run the same stdio s
 locally: nothing about a mission leaves the machine, and DCS can stay closed while you
 author or inspect one.
 
+> The npm package has not been released yet, so the `npx -y dcs-mcp-server` forms below
+> fail until it is: `--published` writes an entry the app cannot start. Until then use
+> `--local` from a clone, or the extension, which carries the server inside it. See
+> [releasing](releasing.md).
+
 | | One command | One click |
 |---|---|---|
 | What you run | `dcs-mcp-server install-claude-desktop` | a built `dcs-mcp-<version>.mcpb` |
@@ -13,6 +18,14 @@ author or inspect one.
 | Updates | `npx -y dcs-mcp-server@latest …` again | build and install a new `.mcpb` |
 
 ## One command: merge an entry into claude_desktop_config.json
+
+From a clone (works today):
+
+```powershell
+npm ci; npm run build; node dist/index.js install-claude-desktop --local
+```
+
+From the published package (once released):
 
 ```powershell
 npx -y dcs-mcp-server install-claude-desktop --published

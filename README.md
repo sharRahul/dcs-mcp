@@ -25,11 +25,21 @@ Local ChatGPT Desktop plugin setup is also available. Support depends on your de
 
 ## Set it up once
 
+> **Not on npm yet.** The `dcs-mcp-server` package has not had its first release, so every `npx -y dcs-mcp-server` command below fails until it does. Use a clone in the meantime: `git clone https://github.com/sharRahul/dcs-mcp && cd dcs-mcp && npm ci && npm run build`, then the clone route in each section. Maintainers: see [releasing](docs/releasing.md).
+
 ### Claude Desktop
 
-Pick one of these. Both end with the same DCS tools in your chats.
+Pick one of these. All three end with the same DCS tools in your chats.
 
-**One command (published package).** Run this in a terminal, then quit Claude Desktop completely and start it again:
+**One command (clone).** From the clone, run this, then quit Claude Desktop completely and start it again:
+
+```powershell
+node dist/index.js install-claude-desktop --local
+```
+
+It writes the absolute paths of your Node and this clone into the config, so nothing is downloaded and it keeps working offline. Rebuild (`npm run build`) after you pull.
+
+**One command (published package, once released).** Run this in a terminal, then restart Claude Desktop:
 
 ```powershell
 npx -y dcs-mcp-server install-claude-desktop --published
@@ -58,19 +68,25 @@ That writes `dcs-mcp-<version>.mcpb` in the repository root. See [Claude Desktop
 }
 ```
 
-On macOS and Linux use `"command": "npx"` with `"args": ["-y", "dcs-mcp-server"]`. Restart Claude Desktop afterwards.
+On macOS and Linux use `"command": "npx"` with `"args": ["-y", "dcs-mcp-server"]`. From a clone instead, use `"command"` set to your Node and `"args": ["F:\\path\\to\\dcs-mcp\\dist\\index.js"]` — both absolute. Restart Claude Desktop afterwards.
 
 ### Codex
 
-Run this once in a terminal, then start a new chat:
+Run one of these once in a terminal, then start a new chat:
+
+```powershell
+codex mcp add dcs -- node F:\path\to\dcs-mcp\dist\index.js
+```
 
 ```powershell
 codex mcp add dcs -- npx -y dcs-mcp-server
 ```
 
+The first works from a clone today; the second needs the published package.
+
 ### ChatGPT Desktop or a copy downloaded from GitHub
 
-The GitHub version needs a build step before use. Follow the [local plugin setup](plugins/dcs-chatgpt/README.md) for ChatGPT Desktop, or the [connection instructions](docs/technical-reference.md#client-configuration) for other apps. These instructions use the code in this repository; the options above use the published package.
+Follow the [local plugin setup](plugins/dcs-chatgpt/README.md) for ChatGPT Desktop, or the [connection instructions](docs/technical-reference.md#client-configuration) for other apps. Both build from the code in this repository, so neither waits on a release.
 
 ## Create your first mission
 
