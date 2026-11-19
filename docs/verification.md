@@ -2,6 +2,69 @@
 
 Single verification record. Historical results retain their original scope; later native results below supersede earlier offline-only statements for the checks they cover.
 
+## Player starts and theatre launcher survey — 2026-11-19
+
+The nine clean example archives each contain exactly one expected Player slot.
+Their mission tables match generation from the current scenario sources. Native
+DCS 2.9.31.29434 cockpit starts passed for interception, SEAD strike, convoy
+escort, carrier defence, military-base attack, A-10C II CAS and Su-25T CAS.
+Each reached a live cockpit with a ticking simulation, the expected aircraft
+type and no bridge errors; the carrier example started on the Stennis deck.
+These checks establish cockpit entry and spawn, rather than a flown sortie or
+recovery. Apache and Ka-50 III cockpit entry remains untested because those
+modules are unavailable on the verification host; their earlier AI scenario
+checks retain their separate scope.
+
+Isolated native probes also sampled 119 launchers across eleven installed
+theatres. All retained full health after at least 30 simulation seconds and
+had dry terrain at a 5-by-5 grid across the rotated native unit footprint.
+The scenery queries covered 1,044 overlapping candidate areas, not every
+location on each map.
+
+| Theatre | Candidate areas queried | Launchers sampled |
+| --- | ---: | ---: |
+| Germany Cold War | 70 | 16 |
+| Sinai | 78 | 12 |
+| Persian Gulf | 147 | 12 |
+| Caucasus | 459 | 12 |
+| Syria | 151 | 12 |
+| Nevada | 54 | 12 |
+| Kola | 44 | 12 |
+| Mariana Islands | 10 | 10 |
+| Falklands | 4 | 4 |
+| Iraq | 22 | 12 |
+| Afghanistan | 5 | 5 |
+
+Sinai queries discovered 1,334 named SAM mound scenery instances, including
+two crash variants. Kola queries found 34 named SAM revetment instances.
+No matching named models were found in the other surveyed areas; that does
+not establish absence of terrain-built or differently named prepared sites.
+Marianas WWII had no SAM candidates in the available layout inventory.
+Normandy and The Channel were not installed and received no native coverage.
+
+Full launcher-to-inner-pad mesh fit remains **unverified**. Germany's sixteen
+SA-3 samples across the four catalogued candidate sites were essentially flat
+and their native footprint-volume scenery queries returned no objects.
+Equivalent conservative queries were clear for all twelve Kola samples,
+all five Afghanistan samples and eleven of twelve Iraq samples. One Iraq Osa
+candidate returned a silo, which flags a possible overlap rather than proving
+a physical collision. Sinai queries returned nearby SAM mound scenery for
+ten of twelve launcher footprint volumes; the two Patriot volumes were clear.
+Sinai's footprint samples include a Patriot with 1.466 metres of
+terrain height variation and an SA-3 close to a mound origin. Those positions
+must not be advertised as confirmed pad fits.
+
+Scenery descriptors did not expose collision bounds. Terrain visibility rays
+also passed through ordinary building controls, so they cannot certify wall
+clearance. Spatial queries detected building controls away from their origins,
+but remain conservative volume checks rather than tests of hollow revetment
+meshes. Accordingly, catalogue `equipmentFit` values remain `unverified`.
+Sinai also logged missing terrain assets during loading, so the completed
+probe is not evidence of an error-free terrain installation or visual result.
+Private probes, source layouts, generated missions and raw logs remain ignored
+and are excluded from the publishable package. DCS was stopped after testing;
+the original `Export.lua` hash was unchanged and raw execution stayed disabled.
+
 
 
 ## Ground compounds, road movement and Germany sites — 2026-11-19
