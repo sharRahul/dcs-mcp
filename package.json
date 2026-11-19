@@ -1,6 +1,6 @@
 {
   "name": "dcs-mcp-server",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "mcpName": "io.github.sharRahul/dcs-mcp",
   "description": "Model Context Protocol server for DCS World: offline .miz mission authoring and inspection, plus a live-control bridge into a running sim",
   "type": "module",
@@ -15,6 +15,7 @@
     "examples",
     "docs/testing/live-acceptance",
     "docs/technical-reference.md",
+    "docs/claude-desktop.md",
     "docs/mission-audio.md",
     "docs/verification.md",
     "README.md",
@@ -24,6 +25,8 @@
   "scripts": {
     "plugin:build": "node scripts/build-chatgpt-plugin.mjs",
     "plugin:verify": "node scripts/verify-chatgpt-plugin.mjs",
+    "bundle:build": "node scripts/build-claude-bundle.mjs",
+    "bundle:verify": "node scripts/verify-claude-bundle.mjs",
     "build": "tsc",
     "check": "tsc --noEmit",
     "acceptance:generate": "node scripts/generate-acceptance.mjs",
@@ -40,6 +43,7 @@
     "monitor": "node scripts/monitor-flight.mjs",
     "prepublishOnly": "npm run clean && npm run build && npm test",
     "install-hook": "node dist/index.js install-hook",
+    "install-claude-desktop": "node dist/index.js install-claude-desktop",
     "acceptance:collect": "node scripts/collect-acceptance.mjs"
   },
   "keywords": [

@@ -13,6 +13,11 @@ import {registerProductionTools} from './tools/production.js';
  *
  * `dcs-mcp-server install-hook [--saved-games <dir>] [--telemetry] [--force] [--dry-run]`
  * installs the live hook instead of starting the server.
+ *
+ * `dcs-mcp-server install-claude-desktop [--published|--local] [--config <file>]
+ * [--name <key>] [--saved-games <dir>] [--dcs-install <dir>] [--bridge-host <host>]
+ * [--bridge-port <port>] [--ffmpeg <exe>] [--force] [--dry-run]` registers this
+ * server with the Claude Desktop app instead of starting the server.
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { GuardedStdioTransport } from "./security/transport.js";
@@ -43,6 +48,7 @@ import { enableAirbasePacks } from "./dcs/airbase-packs.js";
 import { enableLearnedTypes } from "./dcs/mission-learned.js";
 import { enableInstalledSceneryTypes } from "./dcs/scenery-assets.js";
 import { findSavedGamesDirs, installHook } from "./dcs/install.js";
+import { configureClaudeDesktop, type EntryMode } from "./dcs/claude-desktop.js";
 import { SERVER_INSTRUCTIONS } from "./guide.js";
 import { PACKAGE_VERSION } from "./paths.js";
 
@@ -79,12 +85,18 @@ function createServer() {
   return { server, schemas: catalogue.schemas };
 }
 
+function cliFlag(args: string[], name: string): boolean {
+  return args.includes(name);
+}
+
+function cliValue(args: string[], name: string): string | undefined {
+  const i = args.indexOf(name);
+  return i >= 0 ? args[i + 1] : undefined;
+}
+
 async function installHookCli(args: string[]): Promise<number> {
-  const flag = (name: string) => args.includes(name);
-  const value = (name: string) => {
-    const i = args.indexOf(name);
-    return i >= 0 ? args[i + 1] : undefined;
-  };
+  const flag = (name: string) => cliFlag(args, name);
+  const value = (name: string) => cliValue(args, name);
   let savedGames = value("--saved-games");
   if (!savedGames) {
     const candidates = findSavedGamesDirs();
@@ -111,10 +123,51 @@ async function installHookCli(args: string[]): Promise<number> {
   return result.files.some((f) => f.status === "differs") ? 1 : 0;
 }
 
+async function installClaudeDesktopCli(args: string[]): Promise<number> {
+  const flag = (name: string) => cliFlag(args, name);
+  const value = (name: string) => cliValue(args, name);
+  let mode: EntryMode | undefined;
+  if (flag("--published")) mode = "published";
+  if (flag("--local")) {
+    if (mode) {
+      console.error("Pass either --local or --published, not both.");
+      return 2;
+    }
+    mode = "local";
+  }
+  const result = await configureClaudeDesktop({
+    configPath: value("--config"),
+    serverName: value("--name"),
+    mode,
+    overwrite: flag("--force"),
+    dryRun: flag("--dry-run"),
+    env: {
+      DCS_SAVED_GAMES: value("--saved-games"),
+      DCS_INSTALL_DIR: value("--dcs-install"),
+      DCS_BRIDGE_HOST: value("--bridge-host"),
+      DCS_BRIDGE_PORT: value("--bridge-port"),
+      DCS_FFMPEG_PATH: value("--ffmpeg"),
+    },
+  });
+  console.log(`${result.status.padEnd(13)} ${result.serverName} in ${result.configPath}`);
+  console.log(`${"".padEnd(13)} ${result.mode}: ${result.entry.command} ${result.entry.args.join(" ")}`);
+  if (result.entry.env) {
+    for (const [key, val] of Object.entries(result.entry.env)) {
+      console.log(`${"".padEnd(13)} env ${key}=${val}`);
+    }
+  }
+  if (result.backup) console.log(`${"".padEnd(13)} previous config kept at ${result.backup}`);
+  for (const note of result.notes) console.log(`\n${note}`);
+  return result.status === "differs" ? 1 : 0;
+}
+
 async function main(): Promise<void> {
   const [command, ...rest] = process.argv.slice(2);
   if (command === "install-hook") {
     process.exit(await installHookCli(rest));
+  }
+  if (command === "install-claude-desktop") {
+    process.exit(await installClaudeDesktopCli(rest));
   }
   if (command === "--version" || command === "-v") {
     console.log(PACKAGE_VERSION);

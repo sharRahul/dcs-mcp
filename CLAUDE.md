@@ -18,6 +18,9 @@ Driven by any MCP client (Claude, Codex, OpenCode). TypeScript, stdio transport,
   `position.ts` (x/y-or-lat/lon input). `src/guide.ts` is what CLIENTS see (server instructions +
   `dcs://guide/conventions`) — they never see this file, so put client-facing rules there too.
 - `src/dcs/install.ts` — hook installer (`dcs_install_hook`, `dcs-mcp-server install-hook`).
+- `src/dcs/claude-desktop.ts` — `dcs-mcp-server install-claude-desktop` (merges into
+  `claude_desktop_config.json`); `scripts/build-claude-bundle.mjs` + `claude-bundle-manifest.mjs` +
+  `verify-claude-bundle.mjs` build and check the one-click `.mcpb` extension.
 - Version comes from package.json only (`src/paths.ts`); bump it there, in `server.json` and in
   `package-lock.json`. **PATCH bumps only** (0.6.x) until ATC lands in the MCP — the minor digit is
   reserved for that release, however large a change is otherwise.
@@ -1035,3 +1038,44 @@ itself is deliberately not scanned, or a copy inside somebody's extracted `.miz`
 Verified live: `SPLASH DAMAGE 3.4 SCRIPT RUNNING` in dcs.log. The acceptance package embeds it
 too and records `splashDamage: { embedded: false, reason }` in `manifest.json` on a machine
 that does not have it, rather than silently shipping different missions.
+
+---
+
+## Claude Desktop: config merge and the MCPB extension (0.6.4) — offline only
+
+Two routes, both tested without the app: `dcs-mcp-server install-claude-desktop` and
+`npm run bundle:build` / `bundle:verify` (a `.mcpb`). `docs/claude-desktop.md` is the
+user-facing page.
+
+- **That config file is not ours.** `claude_desktop_config.json` also holds the app's own
+  `preferences` tree (sidebar state, folder grants, per-account flags). `configureClaudeDesktop`
+  therefore parses, merges one key under `mcpServers` and writes the whole object back, copying
+  the old file to `<config>.bak-<timestamp>` first. It REFUSES a file it cannot parse, an
+  `mcpServers` that is not an object, and an existing entry of that name that differs (until
+  `--force`). A rewrite would silently cost the user their app settings.
+- **Windows needs `cmd /c`.** Claude Desktop spawns the command with no shell and `npx` on
+  Windows is `npx.cmd`, so `"command": "npx"` fails ENOENT and the app says only that the
+  server did not start. `serverEntry` emits `cmd /c npx -y dcs-mcp-server` on win32 and plain
+  `npx` elsewhere. The README's hand-edit block was updated to match.
+- **`--local` refuses an npx cache path** (`_npx`, `.npm-cache`, `_cacache`): pinning the app
+  to a directory npx may clear produces a server that works today and is gone later.
+- **MCPB facts** (spec `modelcontextprotocol/mcpb`, MANIFEST.md, current `manifest_version`
+  `0.3`): required top-level fields are `manifest_version`, `name`, `version`, `description`,
+  `author` (with `author.name`), `server`; `server.mcp_config` expands `${__dirname}` and
+  `${user_config.<key>}`; `user_config` types are string/number/boolean/directory/file. Claude
+  Desktop ships its own Node, so `"command": "node"` needs nothing installed. The manifest is
+  GENERATED from package.json (`scripts/claude-bundle-manifest.mjs`) so the version cannot
+  drift; `tests/claude-desktop.test.ts` checks it against that field list.
+  No `compatibility.claude_desktop` range and no `platforms` list are claimed — a constraint we
+  cannot check could only block an install. No `icon`: this repo ships no PNG.
+- **Every `user_config` field is optional and must stay that way.** An unanswered field expands
+  to an empty string, and the server's env reads (`?.trim() || default`, `if (explicit)`) treat
+  that as unset. `bundle:verify` launches the unpacked bundle with all five empty for exactly
+  this reason. A `required: true` field would make the extension unstartable until answered.
+- The bundle is ~6.7 MB and 4842 entries (dist + data + production node_modules), and the
+  server registers **198 tools** through it.
+
+To verify in Claude Desktop next: the app accepting the `.mcpb`, rendering the five settings
+prompts and listing the tools; whether ~200 tools in one client is usable, which nothing here
+measures; a mission authored end to end from an app chat; `install-claude-desktop` against a
+real `%APPDATA%\Claude` config followed by a restart.

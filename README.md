@@ -27,20 +27,38 @@ Local ChatGPT Desktop plugin setup is also available. Support depends on your de
 
 ### Claude Desktop
 
-Open Claude Desktop's MCP configuration file, `claude_desktop_config.json`, and add the following entry. If it already contains other tools, keep those entries too.
+Pick one of these. Both end with the same DCS tools in your chats.
+
+**One command (published package).** Run this in a terminal, then quit Claude Desktop completely and start it again:
+
+```powershell
+npx -y dcs-mcp-server install-claude-desktop --published
+```
+
+It adds a `dcs` entry to `claude_desktop_config.json` and leaves everything else in that file alone, keeping a timestamped backup of the previous version. Add `--saved-games "C:\Users\<you>\Saved Games\DCS"` if DCS uses a profile folder other than `Saved Games\DCS` or `DCS.openbeta`. Use `--dry-run` to see what it would write, and `--force` to replace a `dcs` entry you already have. The first start downloads the published package, so it needs internet access.
+
+**One click (extension file).** Build a `.mcpb` extension from a clone and double-click it; Claude Desktop installs it, asks for your DCS folders and needs no Node.js of its own:
+
+```powershell
+npm ci; npm run bundle:build; npm run bundle:verify
+```
+
+That writes `dcs-mcp-<version>.mcpb` in the repository root. See [Claude Desktop setup](docs/claude-desktop.md) for the details and what the build does not prove.
+
+**By hand.** Open `claude_desktop_config.json` yourself and add the entry below, keeping any other tools already in the file. On Windows the `cmd /c` wrapper matters: Claude Desktop starts the command without a shell, so a bare `npx` is not found.
 
 ```json
 {
   "mcpServers": {
     "dcs": {
-      "command": "npx",
-      "args": ["-y", "dcs-mcp-server"]
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "dcs-mcp-server"]
     }
   }
 }
 ```
 
-Restart Claude Desktop. The first connection downloads the published DCS-MCP package, so it needs internet access.
+On macOS and Linux use `"command": "npx"` with `"args": ["-y", "dcs-mcp-server"]`. Restart Claude Desktop afterwards.
 
 ### Codex
 
