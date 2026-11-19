@@ -1,0 +1,515 @@
+{
+  "version": 1,
+  "name": "Copper Corridor",
+  "kind": "sead",
+  "theatre": "Caucasus",
+  "seed": 71,
+  "coalitions": {
+    "blue": [
+      "USA"
+    ],
+    "red": [
+      "Russia"
+    ]
+  },
+  "player": {
+    "group": "Viper",
+    "slot": "Player"
+  },
+  "objective": "Destroy Corridor SAM-1, the SA-6 tracking radar, to release the allied strike package, then destroy all Logistics vehicles before 50 minutes. Remaining SA-6 launchers and scrambled fighters are optional targets. Loss of Viper-1 fails the mission.",
+  "difficulty": "normal",
+  "threatLevel": "high",
+  "durationSeconds": 3000,
+  "endOnOutcome": false,
+  "configuration": {
+    "date": {
+      "year": 2025,
+      "month": 6,
+      "day": 15
+    },
+    "startTime": 28800,
+    "weather": {
+      "temperatureCelsius": 18,
+      "qnhMmHg": 760,
+      "visibilityMetres": 80000,
+      "wind": {
+        "atGround": {
+          "speed": 2,
+          "dir": 270
+        },
+        "at2000": {
+          "speed": 5,
+          "dir": 280
+        },
+        "at8000": {
+          "speed": 8,
+          "dir": 290
+        }
+      }
+    },
+    "coalitionBriefing": {
+      "blue": "Viper two-ship: hot Kutaisi departure, two AGM-88C, two AIM-120C, two AIM-9X, HTS and wing tanks each. Control 251 AM; boom tanker Texaco 253 AM. Destroy the radar first; the Hornet strike pair activates 20 seconds later with two GBU-38 each. Expect a MiG-29 scramble 45 seconds after strike release. A destroyed tracking radar is the gate; this is not an IADS suppression model."
+    }
+  },
+  "forces": [
+    {
+      "name": "Viper",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "F-16C_50",
+      "count": 2,
+      "position": {
+        "x": -285000,
+        "y": 680000
+      },
+      "role": "SEAD",
+      "frequencyMHz": 251,
+      "targetGroup": "Corridor SAM",
+      "payload": {
+        "fuel": 3249,
+        "pylons": [
+          {
+            "pylon": 1,
+            "CLSID": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}"
+          },
+          {
+            "pylon": 2,
+            "CLSID": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}"
+          },
+          {
+            "pylon": 3,
+            "CLSID": "{B06DD79A-F21E-4EB9-BD9D-AB3844618C93}"
+          },
+          {
+            "pylon": 4,
+            "CLSID": "{F376DBEE-4CAE-41BA-ADD9-B2910AC95DEC}"
+          },
+          {
+            "pylon": 6,
+            "CLSID": "{F376DBEE-4CAE-41BA-ADD9-B2910AC95DEC}"
+          },
+          {
+            "pylon": 7,
+            "CLSID": "{B06DD79A-F21E-4EB9-BD9D-AB3844618C93}"
+          },
+          {
+            "pylon": 8,
+            "CLSID": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}"
+          },
+          {
+            "pylon": 9,
+            "CLSID": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}"
+          },
+          {
+            "pylon": 10,
+            "CLSID": "{AN_ASQ_213}"
+          }
+        ]
+      },
+      "start": {
+        "kind": "parking_hot",
+        "airfield": "Kutaisi"
+      },
+      "route": [
+        {
+          "x": -270000,
+          "y": 710000,
+          "altitudeMetres": 6500,
+          "speedMps": 220
+        },
+        {
+          "x": -255000,
+          "y": 735000,
+          "altitudeMetres": 6500,
+          "speedMps": 220
+        }
+      ]
+    },
+    {
+      "name": "Corridor SAM",
+      "side": "red",
+      "country": "Russia",
+      "category": "vehicle",
+      "type": "Kub 1S91 str",
+      "count": 1,
+      "position": {
+        "x": -250000,
+        "y": 735000
+      },
+      "site": "SA-6",
+      "heading": 210
+    },
+    {
+      "name": "Logistics",
+      "side": "red",
+      "country": "Russia",
+      "category": "vehicle",
+      "type": "Ural-375",
+      "count": 4,
+      "position": {
+        "x": -240000,
+        "y": 748000
+      },
+      "spacingMetres": 60,
+      "heading": 90
+    },
+    {
+      "name": "Hammer",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "FA-18C_hornet",
+      "count": 2,
+      "position": {
+        "x": -300000,
+        "y": 705000
+      },
+      "role": "strike",
+      "frequencyMHz": 251,
+      "targetGroup": "Logistics",
+      "lateActivation": true,
+      "payload": {
+        "fuel": 4900,
+        "pylons": [
+          {
+            "pylon": 1,
+            "CLSID": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}"
+          },
+          {
+            "pylon": 2,
+            "CLSID": "{GBU-38}"
+          },
+          {
+            "pylon": 4,
+            "CLSID": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}"
+          },
+          {
+            "pylon": 5,
+            "CLSID": "{FPU_8A_FUEL_TANK}"
+          },
+          {
+            "pylon": 6,
+            "CLSID": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}"
+          },
+          {
+            "pylon": 8,
+            "CLSID": "{GBU-38}"
+          },
+          {
+            "pylon": 9,
+            "CLSID": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}"
+          }
+        ]
+      },
+      "route": [
+        {
+          "x": -255000,
+          "y": 730000,
+          "altitudeMetres": 6000,
+          "speedMps": 220
+        },
+        {
+          "x": -240000,
+          "y": 748000,
+          "altitudeMetres": 6000,
+          "speedMps": 220
+        }
+      ]
+    },
+    {
+      "name": "Scramble",
+      "side": "red",
+      "country": "Russia",
+      "category": "plane",
+      "type": "MiG-29S",
+      "count": 2,
+      "position": {
+        "x": -190000,
+        "y": 770000
+      },
+      "role": "CAP",
+      "frequencyMHz": 124,
+      "lateActivation": true,
+      "payload": {
+        "fuel": 3400,
+        "pylons": [
+          {
+            "pylon": 1,
+            "CLSID": "{FBC29BFE-3D24-4C64-B81D-941239D12249}"
+          },
+          {
+            "pylon": 3,
+            "CLSID": "{E8069896-8435-4B90-95C0-01A03AE6E400}"
+          },
+          {
+            "pylon": 5,
+            "CLSID": "{E8069896-8435-4B90-95C0-01A03AE6E400}"
+          },
+          {
+            "pylon": 7,
+            "CLSID": "{FBC29BFE-3D24-4C64-B81D-941239D12249}"
+          }
+        ]
+      },
+      "route": [
+        {
+          "x": -240000,
+          "y": 750000,
+          "altitudeMetres": 6500,
+          "speedMps": 250
+        }
+      ]
+    },
+    {
+      "name": "Overlord",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "E-3A",
+      "count": 1,
+      "position": {
+        "x": -340000,
+        "y": 640000
+      },
+      "role": "AWACS",
+      "frequencyMHz": 251,
+      "orbit": {
+        "point": {
+          "x": -340000,
+          "y": 640000
+        },
+        "point2": {
+          "x": -310000,
+          "y": 640000
+        },
+        "pattern": "Race-Track",
+        "altitudeMetres": 8500,
+        "speedMps": 180
+      }
+    },
+    {
+      "name": "Texaco",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "KC-135",
+      "count": 1,
+      "position": {
+        "x": -350000,
+        "y": 610000
+      },
+      "role": "tanker",
+      "frequencyMHz": 253,
+      "orbit": {
+        "point": {
+          "x": -350000,
+          "y": 610000
+        },
+        "point2": {
+          "x": -325000,
+          "y": 610000
+        },
+        "pattern": "Race-Track",
+        "altitudeMetres": 6500,
+        "speedMps": 180
+      }
+    }
+  ],
+  "requiredSupport": [
+    "Overlord",
+    "Texaco"
+  ],
+  "zones": [
+    {
+      "name": "SAM Threat",
+      "x": -250000,
+      "y": 735000,
+      "radius": 25000
+    },
+    {
+      "name": "Logistics Target",
+      "x": -240000,
+      "y": 748000,
+      "radius": 2000
+    }
+  ],
+  "events": [
+    {
+      "type": "start",
+      "comment": "Target annotations",
+      "conditions": [],
+      "actions": [
+        {
+          "kind": "mark_to_all",
+          "id": 101,
+          "text": "Corridor SAM: radar is Corridor SAM-1",
+          "zone": "SAM Threat",
+          "readonly": true
+        },
+        {
+          "kind": "mark_to_all",
+          "id": 102,
+          "text": "Logistics: destroy every vehicle",
+          "zone": "Logistics Target",
+          "readonly": true
+        }
+      ]
+    }
+  ],
+  "victory": [
+    {
+      "kind": "unit_dead",
+      "unit": "Corridor SAM-1"
+    },
+    {
+      "kind": "group_dead",
+      "group": "Logistics"
+    }
+  ],
+  "failure": [
+    {
+      "kind": "unit_dead",
+      "unit": "Viper-1"
+    }
+  ],
+  "director": {
+    "name": "CopperCorridor",
+    "channels": [
+      {
+        "id": "control",
+        "speaker": "Mission control",
+        "callsign": "Overlord",
+        "frequencyMHz": 251,
+        "style": "nato"
+      }
+    ],
+    "events": [
+      {
+        "id": "brief",
+        "phase": "briefing",
+        "channel": "control",
+        "when": {
+          "atSeconds": 1
+        },
+        "text": "Copper Corridor: kill the tracking radar before releasing Hammer. Target annotations are visible to all coalitions.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "depart",
+        "phase": "atc_departure",
+        "channel": "control",
+        "when": {
+          "worldEvent": {
+            "kind": "takeoff",
+            "unit": "Viper-1"
+          }
+        },
+        "text": "Departure recorded. Hold the strike outside the corridor until the radar is destroyed.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "radar_down",
+        "phase": "engagement",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "unit_dead",
+              "unit": "Corridor SAM-1"
+            }
+          ]
+        },
+        "text": "Tracking radar destroyed. Other local air defences and launchers may remain.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "strike_release",
+        "phase": "reinforcements",
+        "channel": "control",
+        "when": {
+          "afterEvent": "radar_down",
+          "delaySeconds": 20
+        },
+        "text": "Hammer is released against Logistics.",
+        "seconds": 25,
+        "effects": [
+          {
+            "kind": "activate_group",
+            "group": "Hammer"
+          },
+          {
+            "kind": "set_flag",
+            "flag": 30,
+            "value": 1
+          }
+        ]
+      },
+      {
+        "id": "scramble",
+        "phase": "escalation",
+        "channel": "control",
+        "when": {
+          "afterEvent": "strike_release",
+          "delaySeconds": 45
+        },
+        "text": "Hostile scramble activated. The strike is still responsible for Logistics.",
+        "seconds": 25,
+        "effects": [
+          {
+            "kind": "activate_group",
+            "group": "Scramble"
+          }
+        ]
+      },
+      {
+        "id": "target_down",
+        "phase": "branch",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "group_dead",
+              "group": "Logistics"
+            }
+          ]
+        },
+        "text": "Logistics vehicles destroyed. Check that the tracking radar objective is also complete.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "objective",
+        "phase": "victory",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "unit_dead",
+              "unit": "Corridor SAM-1"
+            },
+            {
+              "kind": "group_dead",
+              "group": "Logistics"
+            }
+          ]
+        },
+        "text": "Both target conditions observed. Scenario outcome arbitration determines the final result.",
+        "seconds": 25,
+        "effects": []
+      }
+    ]
+  },
+  "assumptions": [
+    "Fictional modern training scenario; country assignments are game settings, not historical service-date claims.",
+    "DCS metres: x north, y east; altitude is MSL unless a condition explicitly says AGL. Positions, routes, terrain clearance and mission balance require DCS checks.",
+    "Explicit stores are checked against bundled pydcs station compatibility; AI weapon employment and mission completion are not flight-verified.",
+    "Director cues are fictional subtitles. No audio, real radar detection, JTAC service or authenticated procedure is configured.",
+    "No external scripts or assets are required. The mission remains open after an outcome so the player can return; automatic recovery is not authored.",
+    "The built-in SA-6 uses catalogue geometry; neither placement nor engagement behavior is asserted to be Mission-Editor-verified.",
+    "Coordinates and marks are illustrative; air defence sensor ranges, terrain masking and AI release timing require a live review."
+  ]
+}

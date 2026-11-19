@@ -1,0 +1,633 @@
+{
+  "version": 1,
+  "name": "River Road",
+  "kind": "convoy_escort",
+  "theatre": "Caucasus",
+  "seed": 93,
+  "coalitions": {
+    "blue": [
+      "USA"
+    ],
+    "red": [
+      "Russia"
+    ]
+  },
+  "player": {
+    "group": "Guardian",
+    "slot": "Player"
+  },
+  "objective": "Escort the complete Convoy into Destination and destroy both ambush groups within 50 minutes. Loss of Guardian-1 or Convoy-2 (the designated cargo truck) fails the mission. Clear the area before moving on; reaching the destination alone is insufficient.",
+  "difficulty": "normal",
+  "threatLevel": "medium",
+  "durationSeconds": 3000,
+  "endOnOutcome": false,
+  "configuration": {
+    "date": {
+      "year": 2025,
+      "month": 6,
+      "day": 15
+    },
+    "startTime": 28800,
+    "weather": {
+      "temperatureCelsius": 18,
+      "qnhMmHg": 760,
+      "visibilityMetres": 80000,
+      "wind": {
+        "atGround": {
+          "speed": 2,
+          "dir": 270
+        },
+        "at2000": {
+          "speed": 5,
+          "dir": 280
+        },
+        "at8000": {
+          "speed": 8,
+          "dir": 290
+        }
+      }
+    },
+    "coalitionBriefing": {
+      "blue": "Guardian: single Hornet, hot Kutaisi departure, two GBU-38, two AIM-120C and two AIM-9X. Control 251 AM. Convoy moves along a route sampled from the native Caucasus road graph at 8 m/s. A BMP ambush activates at Checkpoint; a T-72 reinforcement follows 90 seconds later. Protect Convoy-2. Target selection near friendlies and route/terrain clearance remain pilot and mission-author responsibilities."
+    }
+  },
+  "forces": [
+    {
+      "name": "Guardian",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "FA-18C_hornet",
+      "count": 1,
+      "position": {
+        "x": -285000,
+        "y": 680000
+      },
+      "role": "CAS",
+      "frequencyMHz": 251,
+      "payload": {
+        "fuel": 4900,
+        "pylons": [
+          {
+            "pylon": 1,
+            "CLSID": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}"
+          },
+          {
+            "pylon": 2,
+            "CLSID": "{GBU-38}"
+          },
+          {
+            "pylon": 4,
+            "CLSID": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}"
+          },
+          {
+            "pylon": 5,
+            "CLSID": "{FPU_8A_FUEL_TANK}"
+          },
+          {
+            "pylon": 6,
+            "CLSID": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}"
+          },
+          {
+            "pylon": 8,
+            "CLSID": "{GBU-38}"
+          },
+          {
+            "pylon": 9,
+            "CLSID": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}"
+          }
+        ]
+      },
+      "start": {
+        "kind": "parking_hot",
+        "airfield": "Kutaisi"
+      },
+      "route": [
+        {
+          "x": -283000,
+          "y": 687000,
+          "altitudeMetres": 4500,
+          "speedMps": 180
+        },
+        {
+          "x": -279000,
+          "y": 694000,
+          "altitudeMetres": 4500,
+          "speedMps": 180
+        }
+      ]
+    },
+    {
+      "name": "Convoy",
+      "side": "blue",
+      "country": "USA",
+      "category": "vehicle",
+      "type": "M-1 Abrams",
+      "count": 1,
+      "position": {
+        "x": -286000,
+        "y": 684000
+      },
+      "composition": [
+        {
+          "type": "M-1 Abrams",
+          "count": 1
+        },
+        {
+          "type": "M 818",
+          "count": 3
+        }
+      ],
+      "spacingMetres": 35,
+      "route": [
+        {
+          "x": -283228.349,
+          "y": 686185.789,
+          "speedMps": 8
+        },
+        {
+          "x": -283108.799,
+          "y": 686149.324,
+          "speedMps": 8
+        },
+        {
+          "x": -282684.567,
+          "y": 685999.447,
+          "speedMps": 8
+        },
+        {
+          "x": -282619.987,
+          "y": 685972.457,
+          "speedMps": 8
+        },
+        {
+          "x": -282533.355,
+          "y": 685933.473,
+          "speedMps": 8
+        },
+        {
+          "x": -282528.918,
+          "y": 685934.961,
+          "speedMps": 8
+        },
+        {
+          "x": -282526.137,
+          "y": 685939.118,
+          "speedMps": 8
+        },
+        {
+          "x": -282521.538,
+          "y": 685948.013,
+          "speedMps": 8
+        },
+        {
+          "x": -282450.741,
+          "y": 686102.561,
+          "speedMps": 8
+        },
+        {
+          "x": -282095.228,
+          "y": 686923.83,
+          "speedMps": 8
+        },
+        {
+          "x": -282027.789,
+          "y": 687052.181,
+          "speedMps": 8
+        },
+        {
+          "x": -281890.488,
+          "y": 687284.642,
+          "speedMps": 8
+        },
+        {
+          "x": -281598.367,
+          "y": 687756.433,
+          "speedMps": 8
+        },
+        {
+          "x": -281583.573,
+          "y": 687776.582,
+          "speedMps": 8
+        },
+        {
+          "x": -281564.547,
+          "y": 687799.773,
+          "speedMps": 8
+        },
+        {
+          "x": -281437.043,
+          "y": 687953.771,
+          "speedMps": 8
+        },
+        {
+          "x": -281142.403,
+          "y": 688338.959,
+          "speedMps": 8
+        },
+        {
+          "x": -280627.587,
+          "y": 689070.989,
+          "speedMps": 8
+        },
+        {
+          "x": -280619.99,
+          "y": 689083.919,
+          "speedMps": 8
+        },
+        {
+          "x": -280615.514,
+          "y": 689092.86,
+          "speedMps": 8
+        },
+        {
+          "x": -280611.713,
+          "y": 689102.106,
+          "speedMps": 8
+        },
+        {
+          "x": -280608.626,
+          "y": 689111.616,
+          "speedMps": 8
+        },
+        {
+          "x": -280600.079,
+          "y": 689140.37,
+          "speedMps": 8
+        },
+        {
+          "x": -280598.283,
+          "y": 689145.035,
+          "speedMps": 8
+        },
+        {
+          "x": -280596.241,
+          "y": 689149.599,
+          "speedMps": 8
+        },
+        {
+          "x": -280591.563,
+          "y": 689158.434,
+          "speedMps": 8
+        },
+        {
+          "x": -280586.33,
+          "y": 689166.954,
+          "speedMps": 8
+        },
+        {
+          "x": -280577.848,
+          "y": 689179.324,
+          "speedMps": 8
+        },
+        {
+          "x": -280553.529,
+          "y": 689211.079,
+          "speedMps": 8
+        },
+        {
+          "x": -279615.413,
+          "y": 690438.573,
+          "speedMps": 8
+        },
+        {
+          "x": -279516.698,
+          "y": 690583.053,
+          "speedMps": 8
+        },
+        {
+          "x": -279419.642,
+          "y": 690740.528,
+          "speedMps": 8
+        },
+        {
+          "x": -279097.964,
+          "y": 691310.858,
+          "speedMps": 8
+        },
+        {
+          "x": -278969.945,
+          "y": 691495.862,
+          "speedMps": 8
+        },
+        {
+          "x": -277768.309,
+          "y": 693154.59,
+          "speedMps": 8
+        }
+      ],
+      "groundPlan": {
+        "role": "convoy",
+        "formation": "column",
+        "spacingMetres": 35,
+        "onRoad": true
+      }
+    },
+    {
+      "name": "Ambush",
+      "side": "red",
+      "country": "Russia",
+      "category": "vehicle",
+      "type": "BMP-2",
+      "count": 2,
+      "position": {
+        "x": -282000,
+        "y": 688500
+      },
+      "lateActivation": true,
+      "spacingMetres": 45
+    },
+    {
+      "name": "Reinforcements",
+      "side": "red",
+      "country": "Russia",
+      "category": "vehicle",
+      "type": "T-72B",
+      "count": 2,
+      "position": {
+        "x": -278000,
+        "y": 691000
+      },
+      "lateActivation": true,
+      "spacingMetres": 60,
+      "route": [
+        {
+          "x": -281000,
+          "y": 689000,
+          "speedMps": 6
+        }
+      ],
+      "groundPlan": {
+        "role": "assault",
+        "formation": "line",
+        "spacingMetres": 60,
+        "onRoad": false
+      },
+      "heading": 213.69006752597977
+    },
+    {
+      "name": "Checkpoint Guard",
+      "side": "blue",
+      "country": "USA",
+      "category": "vehicle",
+      "type": "M-1 Abrams",
+      "count": 1,
+      "position": {
+        "x": -279000,
+        "y": 695500
+      }
+    },
+    {
+      "name": "Overlord",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "E-3A",
+      "count": 1,
+      "position": {
+        "x": -340000,
+        "y": 640000
+      },
+      "role": "AWACS",
+      "frequencyMHz": 251,
+      "orbit": {
+        "point": {
+          "x": -340000,
+          "y": 640000
+        },
+        "point2": {
+          "x": -310000,
+          "y": 640000
+        },
+        "pattern": "Race-Track",
+        "altitudeMetres": 8500,
+        "speedMps": 180
+      }
+    }
+  ],
+  "requiredSupport": [
+    "Overlord"
+  ],
+  "zones": [
+    {
+      "name": "Checkpoint",
+      "x": -283000,
+      "y": 687000,
+      "radius": 1000
+    },
+    {
+      "name": "Destination",
+      "x": -279000,
+      "y": 694000,
+      "radius": 2000
+    },
+    {
+      "name": "Ambush Area",
+      "x": -282000,
+      "y": 688500,
+      "radius": 500
+    }
+  ],
+  "events": [
+    {
+      "type": "once",
+      "comment": "Critical cargo destroyed",
+      "conditions": [
+        {
+          "kind": "unit_dead",
+          "unit": "Convoy-2"
+        }
+      ],
+      "actions": [
+        {
+          "kind": "set_flag",
+          "flag": 50,
+          "value": 1
+        }
+      ]
+    }
+  ],
+  "victory": [
+    {
+      "kind": "all_of_group_in_zone",
+      "group": "Convoy",
+      "zone": "Destination"
+    },
+    {
+      "kind": "group_dead",
+      "group": "Ambush"
+    },
+    {
+      "kind": "group_dead",
+      "group": "Reinforcements"
+    },
+    {
+      "kind": "flag_is_true",
+      "flag": 31
+    }
+  ],
+  "failure": [
+    {
+      "kind": "unit_dead",
+      "unit": "Guardian-1"
+    },
+    {
+      "kind": "or"
+    },
+    {
+      "kind": "flag_is_true",
+      "flag": 50
+    }
+  ],
+  "director": {
+    "name": "RiverRoad",
+    "channels": [
+      {
+        "id": "control",
+        "speaker": "Mission control",
+        "callsign": "Overlord",
+        "frequencyMHz": 251,
+        "style": "nato"
+      }
+    ],
+    "events": [
+      {
+        "id": "brief",
+        "phase": "briefing",
+        "channel": "control",
+        "when": {
+          "atSeconds": 1
+        },
+        "text": "River Road: protect Convoy-2 and clear both enemy groups. No automatic JTAC or laser service is provided.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "depart",
+        "phase": "atc_departure",
+        "channel": "control",
+        "when": {
+          "worldEvent": {
+            "kind": "takeoff",
+            "unit": "Guardian-1"
+          }
+        },
+        "text": "Guardian airborne. Use the F10 map and mission briefing to locate the convoy.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "checkpoint",
+        "phase": "reinforcements",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "part_of_group_in_zone",
+              "group": "Convoy",
+              "zone": "Checkpoint"
+            }
+          ]
+        },
+        "text": "Convoy reached Checkpoint; the ambush is now active. This is a zone cue, not sensor detection.",
+        "seconds": 25,
+        "effects": [
+          {
+            "kind": "activate_group",
+            "group": "Ambush"
+          },
+          {
+            "kind": "set_flag",
+            "flag": 30,
+            "value": 1
+          }
+        ]
+      },
+      {
+        "id": "second_wave",
+        "phase": "escalation",
+        "channel": "control",
+        "when": {
+          "afterEvent": "checkpoint",
+          "delaySeconds": 90
+        },
+        "text": "Armoured reinforcements are moving toward the convoy.",
+        "seconds": 25,
+        "effects": [
+          {
+            "kind": "activate_group",
+            "group": "Reinforcements"
+          },
+          {
+            "kind": "set_flag",
+            "flag": 31,
+            "value": 1
+          }
+        ]
+      },
+      {
+        "id": "ambush_clear",
+        "phase": "engagement",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "flag_is_true",
+              "flag": 30
+            },
+            {
+              "kind": "group_dead",
+              "group": "Ambush"
+            }
+          ]
+        },
+        "text": "First ambush cleared. Continue protecting the convoy; the second group still matters.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "cargo_lost",
+        "phase": "failure",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "flag_is_true",
+              "flag": 50
+            }
+          ]
+        },
+        "text": "The designated cargo truck is lost. Convoy protection failed.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "destination",
+        "phase": "branch",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "all_of_group_in_zone",
+              "group": "Convoy",
+              "zone": "Destination"
+            }
+          ]
+        },
+        "text": "Surviving convoy units are inside Destination. Final success also requires both hostile groups destroyed and the reinforcement wave released.",
+        "seconds": 25,
+        "effects": []
+      }
+    ]
+  },
+  "assumptions": [
+    "Fictional modern training scenario; country assignments are game settings, not historical service-date claims.",
+    "DCS metres: x north, y east; altitude is MSL unless a condition explicitly says AGL. Positions, routes, terrain clearance and mission balance require DCS checks.",
+    "Explicit stores are checked against bundled pydcs station compatibility; AI weapon employment and mission completion are not flight-verified.",
+    "Director cues are fictional subtitles. No audio, real radar detection, JTAC service or authenticated procedure is configured.",
+    "No external scripts or assets are required. The mission remains open after an outcome so the player can return; automatic recovery is not authored.",
+    "Convoy waypoints follow a 35-point path queried from the native DCS 2.9.31.29434 Caucasus road graph. Ground waypoint actions remain generic; this does not configure On Road formation.",
+    "The group-in-zone condition applies to surviving units; Convoy-2 is separately protected. Other vehicle losses do not by themselves fail the mission.",
+    "Moving transport groups use native On Road routing; assault groups use native Rank (line abreast) movement. Road availability, deployment room and AI decisions require native verification; formations are authored rather than automatically selected on enemy contact."
+  ]
+}

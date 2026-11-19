@@ -116,3 +116,17 @@ test("every template type exists in the DCS catalogue", () => {
     assert.equal(findUnitType(t)?.category, "vehicle", t);
   }
 });
+
+for (const template of ['farp-staging', 'vehicle-staging', 'scud-base', 'sam-support', 'military-base']) test(`${template} leaves a central access corridor and supplies a gated boundary`, () => {
+  const m = newMissionTable('Caucasus', 43200);
+  const r = addTargetArea(m, { ...blue, name: 'Site', template, x: 1000, y: 2000, heading: 90 });
+  assert.ok(r.perimeter?.entrances.length);
+  const boundary = new Set(r.perimeter!.objects);
+  for (const name of r.objects.filter(n => !boundary.has(n))) {
+    const u = findUnit(m, name)!;
+    // At heading 90, local right is negative world x. Centreline stays clear.
+    assert.ok(Math.abs(Number(u.x) - 1000) >= 20, name);
+    assert.ok(Math.hypot(Number(u.x) - 1000, Number(u.y) - 2000) <= r.radiusMetres);
+  }
+  assert.equal(validateMission(buildMissionDocument(roundTrip(m), {}, 'site')).errors.length, 0);
+});

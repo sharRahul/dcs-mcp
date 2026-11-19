@@ -147,10 +147,10 @@ export function registerMizDressingTools(server: McpServer): void {
       description:
         "Build a ground-target area from static objects: " +
         TARGET_TEMPLATES.map((t) => `'${t.id}' (${t.description})`).join("; ") +
-        ". Objects are laid out in a grid centred on the position and rotated to the heading; each is its own " +
+        ". Legacy sets use a centred grid; staging/base presets use a designed footprint with a central access lane. Both rotate to the heading; each object is its own " +
         "static named <name>-N. zone=true also adds a trigger zone named <name> covering the area. The grid is a " +
         "convention, not copied from an editor mission — check terrain (dcs_check_terrain) and adjust. " +
-        "Barracks camps include a rectangular static perimeter and front entrance by default. Set perimeter=false to disable; pass a perimeter object to customize type, nominal segment dimensions, padding and entrance gaps. Other templates opt in explicitly. Perimeter sizes are layout assumptions, not measured collision meshes; approach metadata does not create roads.\n\n" +
+        "Barracks and the staging/base presets include a rectangular static perimeter and front entrance by default. Set perimeter=false to disable; pass a perimeter object to customize type, nominal segment dimensions, padding and entrance gaps. Other templates opt in explicitly. Scenery does not create operational launchers, pads, guards or supply services; read each template's notes. Perimeter sizes are layout assumptions, not measured collision meshes; approach metadata does not create roads.\n\n" +
         "Args: sessionId, side, country, name, template, x/y or lat/lon, heading?, zone?, dead?\n\n" +
         "Returns JSON: { objects, radiusMetres, zone? }.",
       inputSchema: z
@@ -166,7 +166,8 @@ export function registerMizDressingTools(server: McpServer): void {
           perimeter: z.union([z.literal(false),perimeterSpecSchema]).optional(),
         })
         .strict(),
-      outputSchema: z.object({ objects: z.array(z.string()), radiusMetres: z.number(), zone: z.string().optional(),perimeter:z.unknown().optional() }),
+      outputSchema: z.object({ objects: z.array(z.string()), radiusMetres: z.number(), zone: z.string().optional(),perimeter:z.unknown().optional(),
+        geometry: z.enum(['designed-footprint', 'generic-grid']), notes: z.array(z.string()) }),
       annotations,
     },
     async (a) => {

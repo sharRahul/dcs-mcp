@@ -67,6 +67,9 @@ test('patched SDK and Zod 4 discover acceptance tools, validate defaults and rec
   for (const name of ['dcs_runtime_inspect', 'dcs_acceptance_check', 'dcs_acceptance_generate', 'dcs_acceptance_job', 'dcs_acceptance_collect', 'dcs_tool_catalogue']) assert.ok(tools.some(t => t.name === name));
   const bad = await client.callTool({ name: 'dcs_tool_catalogue', arguments: { limit: 51 } }); assert.equal(bad.isError, true);
   const good = await client.callTool({ name: 'dcs_tool_catalogue', arguments: { query: 'acceptance', limit: 2 } }); assert.equal(good.isError, undefined); assert.equal((good.structuredContent as any).tools.length, 2); assert.ok((good.structuredContent as any).nextOffset);
+  const sites = await client.callTool({ name: 'dcs_list_terrain_sites', arguments: { theatre: 'GermanyColdWar', query: 'Rostock' } });
+  assert.equal(sites.isError, undefined); assert.equal((sites.structuredContent as any).sites.length, 1);
+  assert.equal((sites.structuredContent as any).sites[0].equipmentFit, 'unverified');
  } finally { await client.close(); }
 });
 

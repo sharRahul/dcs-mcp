@@ -4,15 +4,25 @@ import { countryOffers, findUnitType } from '../data/reference.js';
 import { addGroundGroup, addWaypoint, findGroup, type AddGroupArgs } from './authoring.js';
 import { asTable, luaArray, type LuaTable } from './lua.js';
 const point = z.object({ x: z.number().finite(), y: z.number().finite() }).strict();
+export const groundMovementSchema = z.enum(['road', 'offroad', 'line_abreast', 'wedge', 'diamond', 'echelon_left', 'echelon_right']);
+export const GROUND_MOVEMENT_ACTIONS = { road: 'On Road', offroad: 'Off Road', line_abreast: 'Rank', wedge: 'Vee',
+  diamond: 'Diamond', echelon_left: 'EchelonL', echelon_right: 'EchelonR' } as const;
 export const groundPlanSchema = z.object({
   role: z.enum(['convoy', 'patrol', 'defensive', 'assault']).default('convoy'),
-  formation: z.enum(['column', 'line', 'wedge', 'rectangle']).default('column'),
+  formation: z.enum(['column', 'line', 'wedge', 'rectangle']).optional(),
   spacingMetres: z.number().positive().max(2000).default(20),
-  route: z.array(point).max(100).default([]), speedMps: z.number().positive().max(50).default(5.5555555555556),
-  onRoad: z.boolean().default(false), lateActivation: z.boolean().default(false), playerCanDrive: z.boolean().default(false),
+  route: z.array(point.extend({ movement: groundMovementSchema.optional(), speedMps: z.number().positive().max(50).optional() })).max(100).default([]),
+  speedMps: z.number().positive().max(50).default(5.5555555555556),
+  onRoad: z.boolean().optional(), lateActivation: z.boolean().default(false), playerCanDrive: z.boolean().default(false),
 }).strict();
+export function validateGroundPlan(input: z.input<typeof groundPlanSchema>) {
+  const plan = groundPlanSchema.parse(input);
+  if (['convoy', 'patrol', 'assault'].includes(plan.role) && !plan.route.length) throw new Error(`${plan.role} needs route destinations`);
+  if (plan.role === 'defensive' && plan.route.length) throw new Error('Defensive positions do not take movement routes');
+  return plan;
+}
 export function createGroundPlan(mission: LuaTable, args: AddGroupArgs, input: z.input<typeof groundPlanSchema>) {
-  const plan = groundPlanSchema.parse(input), copy = structuredClone(mission);
+  const plan = validateGroundPlan(input), copy = structuredClone(mission);
   if (findGroup(copy, args.name)) throw new Error(`Group '${args.name}' already exists`);
   const composition = args.composition ?? [{ type: args.type, count: args.count }];
   let count = 0;
@@ -23,13 +33,12 @@ export function createGroundPlan(mission: LuaTable, args: AddGroupArgs, input: z
     count += block.count;
   }
   if (count > 100 || count < 1) throw new Error('Ground plans support 1..100 units');
-  if (['convoy', 'patrol', 'assault'].includes(plan.role) && !plan.route.length) throw new Error(`${plan.role} needs route destinations`);
-  if (plan.role === 'defensive' && plan.route.length) throw new Error('Defensive positions do not take movement routes');
   const s = plan.spacingMetres;
+  const formation = plan.formation ?? (['assault', 'defensive'].includes(plan.role) ? 'line' : 'column');
   const offsets = Array.from({ length: count }, (_, i) => {
-    if (plan.formation === 'column') return { forward: -i * s, right: 0 };
-    if (plan.formation === 'line') return { forward: 0, right: i * s };
-    if (plan.formation === 'wedge') return { forward: -Math.ceil(i / 2) * s, right: i === 0 ? 0 : (i % 2 ? -1 : 1) * Math.ceil(i / 2) * s };
+    if (formation === 'column') return { forward: -i * s, right: 0 };
+    if (formation === 'line') return { forward: 0, right: i * s };
+    if (formation === 'wedge') return { forward: -Math.ceil(i / 2) * s, right: i === 0 ? 0 : (i % 2 ? -1 : 1) * Math.ceil(i / 2) * s };
     const width = Math.ceil(Math.sqrt(count));
     return { forward: -Math.floor(i / width) * s, right: (i % width) * s };
   });
@@ -39,8 +48,13 @@ export function createGroundPlan(mission: LuaTable, args: AddGroupArgs, input: z
   const points = asTable(asTable(group.route)?.points)!;
   const first = asTable(points[1])!;
   first.speed = plan.role === 'defensive' ? 0 : plan.speedMps;
-  first.action = plan.onRoad ? 'On Road' : 'Off Road';
-  for (const p of plan.route) addWaypoint(copy, args.name, { ...p, speedMps: plan.speedMps, action: String(first.action) });
+  const onRoad = plan.onRoad ?? plan.role === 'convoy';
+  first.action = onRoad ? 'On Road' : formation === 'line' ? 'Rank' : formation === 'wedge' ? 'Vee' : 'Off Road';
+  let action = String(first.action);
+  for (const p of plan.route) {
+    if (p.movement) action = GROUND_MOVEMENT_ACTIONS[p.movement];
+    addWaypoint(copy, args.name, { x: p.x, y: p.y, speedMps: p.speedMps ?? plan.speedMps, action });
+  }
   if (plan.role === 'patrol') {
     const lastIndex = luaArray(points).length;
     const last = asTable(points[lastIndex])!;
@@ -48,7 +62,7 @@ export function createGroundPlan(mission: LuaTable, args: AddGroupArgs, input: z
       params: { fromWaypointIndex: lastIndex, nWaypointIndx: 1 } } } } };
   }
   Object.assign(mission, copy);
-  return { group: args.name, units: count, role: plan.role, formation: plan.formation,
+  return { group: args.name, units: count, role: plan.role, formation, onRoad,
     verification: 'offline only; terrain/pathfinding and Combined Arms type support require DCS' };
 }
 

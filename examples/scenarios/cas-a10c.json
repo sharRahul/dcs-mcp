@@ -1,0 +1,555 @@
+{
+  "version": 1,
+  "name": "Valley Shield",
+  "kind": "cas",
+  "theatre": "Caucasus",
+  "seed": 201,
+  "coalitions": {
+    "blue": [
+      "USA"
+    ],
+    "red": [
+      "Russia"
+    ]
+  },
+  "player": {
+    "group": "Support",
+    "slot": "Player"
+  },
+  "objective": "Destroy Primary Targets, Secondary Targets and the released Reserve, then fly Support-1 through Egress Gate within 50 minutes. Protect Protected-1. Loss of the player or that protected asset fails the mission.",
+  "difficulty": "normal",
+  "threatLevel": "medium",
+  "durationSeconds": 3000,
+  "endOnOutcome": false,
+  "configuration": {
+    "date": {
+      "year": 2025,
+      "month": 6,
+      "day": 15
+    },
+    "startTime": 32400,
+    "weather": {
+      "temperatureCelsius": 18,
+      "qnhMmHg": 760,
+      "visibilityMetres": 80000,
+      "wind": {
+        "atGround": {
+          "speed": 2,
+          "dir": 270
+        },
+        "at2000": {
+          "speed": 5,
+          "dir": 280
+        },
+        "at8000": {
+          "speed": 8,
+          "dir": 290
+        }
+      }
+    },
+    "coalitionBriefing": {
+      "blue": "A-10C II two-ship, hot Kutaisi start. Two AGM-65H, two GBU-38, LITENING, two AIM-9L and ALQ-184 per aircraft. Defend the friendly armour position against the approaching tank group, destroy the artillery vehicle park and stop the BMP reserve. Battle Area entry starts the 90-second reserve delay. Artillery fire missions are not configured; those vehicles are ground targets. Control 251 AM. All target and friendly annotations are visible to both coalitions. After all three hostile groups are destroyed, fly through Egress Gate. The initial AI group task points only at Primary Targets; select the other targets manually."
+    }
+  },
+  "forces": [
+    {
+      "name": "Support",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "A-10C_2",
+      "count": 2,
+      "position": {
+        "x": -285000,
+        "y": 680000
+      },
+      "role": "CAS",
+      "frequencyMHz": 251,
+      "targetGroup": "Primary Targets",
+      "payload": {
+        "fuel": 4500,
+        "pylons": [
+          {
+            "pylon": 1,
+            "CLSID": "LAU-105_2*AIM-9L"
+          },
+          {
+            "pylon": 3,
+            "CLSID": "LAU_117_AGM_65H"
+          },
+          {
+            "pylon": 4,
+            "CLSID": "{GBU-38}"
+          },
+          {
+            "pylon": 8,
+            "CLSID": "{GBU-38}"
+          },
+          {
+            "pylon": 9,
+            "CLSID": "LAU_117_AGM_65H"
+          },
+          {
+            "pylon": 10,
+            "CLSID": "{A111396E-D3E8-4b9c-8AC9-2432489304D5}"
+          },
+          {
+            "pylon": 11,
+            "CLSID": "ALQ_184"
+          }
+        ]
+      },
+      "start": {
+        "kind": "parking_hot",
+        "airfield": "Kutaisi"
+      },
+      "route": [
+        {
+          "x": -276000,
+          "y": 706000,
+          "altitudeMetres": 4500,
+          "speedMps": 160
+        },
+        {
+          "x": -270000,
+          "y": 710000,
+          "altitudeMetres": 4500,
+          "speedMps": 160
+        },
+        {
+          "x": -277000,
+          "y": 704000,
+          "altitudeMetres": 4500,
+          "speedMps": 160
+        }
+      ]
+    },
+    {
+      "name": "Primary Targets",
+      "side": "red",
+      "country": "Russia",
+      "category": "vehicle",
+      "type": "T-72B",
+      "count": 3,
+      "position": {
+        "x": -270000,
+        "y": 710000
+      },
+      "spacingMetres": 70,
+      "route": [
+        {
+          "x": -272500,
+          "y": 708500,
+          "speedMps": 5
+        }
+      ],
+      "groundPlan": {
+        "role": "assault",
+        "formation": "line",
+        "spacingMetres": 70,
+        "onRoad": false
+      },
+      "heading": 210.96375653207352
+    },
+    {
+      "name": "Secondary Targets",
+      "side": "red",
+      "country": "Russia",
+      "category": "vehicle",
+      "type": "SAU Gvozdika",
+      "count": 2,
+      "position": {
+        "x": -269200,
+        "y": 711600
+      },
+      "spacingMetres": 90
+    },
+    {
+      "name": "Reserve",
+      "side": "red",
+      "country": "Russia",
+      "category": "vehicle",
+      "type": "BMP-2",
+      "count": 2,
+      "position": {
+        "x": -266000,
+        "y": 712500
+      },
+      "lateActivation": true,
+      "spacingMetres": 60,
+      "route": [
+        {
+          "x": -272000,
+          "y": 709000,
+          "speedMps": 6
+        }
+      ],
+      "groundPlan": {
+        "role": "assault",
+        "formation": "line",
+        "spacingMetres": 60,
+        "onRoad": false
+      },
+      "heading": 210.25643716352926
+    },
+    {
+      "name": "Protected",
+      "side": "blue",
+      "country": "USA",
+      "category": "vehicle",
+      "type": "M-1 Abrams",
+      "count": 2,
+      "position": {
+        "x": -273500,
+        "y": 707500
+      },
+      "spacingMetres": 40
+    },
+    {
+      "name": "Local AAA",
+      "side": "red",
+      "country": "Russia",
+      "category": "vehicle",
+      "type": "ZSU-23-4 Shilka",
+      "count": 1,
+      "position": {
+        "x": -268200,
+        "y": 710600
+      }
+    },
+    {
+      "name": "Overlord",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "E-3A",
+      "count": 1,
+      "position": {
+        "x": -330000,
+        "y": 650000
+      },
+      "role": "AWACS",
+      "frequencyMHz": 251,
+      "orbit": {
+        "point": {
+          "x": -330000,
+          "y": 650000
+        },
+        "point2": {
+          "x": -300000,
+          "y": 650000
+        },
+        "pattern": "Race-Track",
+        "altitudeMetres": 8500,
+        "speedMps": 180
+      }
+    }
+  ],
+  "requiredSupport": [
+    "Overlord"
+  ],
+  "zones": [
+    {
+      "name": "Battle Area",
+      "x": -270000,
+      "y": 710000,
+      "radius": 15000
+    },
+    {
+      "name": "Egress Gate",
+      "x": -277000,
+      "y": 704000,
+      "radius": 5000
+    },
+    {
+      "name": "Primary Target Mark",
+      "x": -270000,
+      "y": 710000,
+      "radius": 500
+    },
+    {
+      "name": "Secondary Target Mark",
+      "x": -269200,
+      "y": 711600,
+      "radius": 500
+    },
+    {
+      "name": "Friendly Mark",
+      "x": -273500,
+      "y": 707500,
+      "radius": 500
+    }
+  ],
+  "events": [
+    {
+      "type": "start",
+      "comment": "CAS target and friendly annotations",
+      "conditions": [],
+      "actions": [
+        {
+          "kind": "mark_to_all",
+          "id": 301,
+          "text": "PRIMARY: T-72B group",
+          "zone": "Primary Target Mark",
+          "readonly": true
+        },
+        {
+          "kind": "mark_to_all",
+          "id": 302,
+          "text": "SECONDARY: SAU Gvozdika group",
+          "zone": "Secondary Target Mark",
+          "readonly": true
+        },
+        {
+          "kind": "mark_to_all",
+          "id": 303,
+          "text": "FRIENDLY: protect Protected-1",
+          "zone": "Friendly Mark",
+          "readonly": true
+        },
+        {
+          "kind": "mark_to_all",
+          "id": 304,
+          "text": "EGRESS: cross after destroying all three target groups",
+          "zone": "Egress Gate",
+          "readonly": true
+        }
+      ]
+    },
+    {
+      "type": "once",
+      "comment": "Protected asset lost",
+      "conditions": [
+        {
+          "kind": "unit_dead",
+          "unit": "Protected-1"
+        }
+      ],
+      "actions": [
+        {
+          "kind": "set_flag",
+          "flag": 50,
+          "value": 1
+        }
+      ]
+    }
+  ],
+  "victory": [
+    {
+      "kind": "flag_is_true",
+      "flag": 30
+    },
+    {
+      "kind": "group_dead",
+      "group": "Primary Targets"
+    },
+    {
+      "kind": "group_dead",
+      "group": "Secondary Targets"
+    },
+    {
+      "kind": "group_dead",
+      "group": "Reserve"
+    },
+    {
+      "kind": "unit_in_zone",
+      "unit": "Support-1",
+      "zone": "Egress Gate"
+    }
+  ],
+  "failure": [
+    {
+      "kind": "unit_dead",
+      "unit": "Support-1"
+    },
+    {
+      "kind": "or"
+    },
+    {
+      "kind": "flag_is_true",
+      "flag": 50
+    }
+  ],
+  "director": {
+    "name": "ValleyShield",
+    "channels": [
+      {
+        "id": "control",
+        "speaker": "Ground operations",
+        "callsign": "Axeman",
+        "frequencyMHz": 251,
+        "style": "nato"
+      }
+    ],
+    "events": [
+      {
+        "id": "brief",
+        "phase": "briefing",
+        "channel": "control",
+        "when": {
+          "atSeconds": 1
+        },
+        "text": "A-10C II two-ship, hot Kutaisi start. Two AGM-65H, two GBU-38, LITENING, two AIM-9L and ALQ-184 per aircraft. Defend the friendly armour position against the approaching tank group, destroy the artillery vehicle park and stop the BMP reserve. Battle Area entry starts the 90-second reserve delay. Artillery fire missions are not configured; those vehicles are ground targets.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "depart",
+        "phase": "atc_departure",
+        "channel": "control",
+        "when": {
+          "worldEvent": {
+            "kind": "takeoff",
+            "unit": "Support-1"
+          }
+        },
+        "text": "Player departure event recorded. Identify friendly units before weapons release.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "reserve_gate",
+        "phase": "branch",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "unit_in_zone",
+              "unit": "Support-1",
+              "zone": "Battle Area"
+            }
+          ]
+        },
+        "text": "Reserve trigger condition observed. Hostile reserves will activate in 90 seconds; this is scenario logic, not a sensor report.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "reserve_release",
+        "phase": "reinforcements",
+        "channel": "control",
+        "when": {
+          "afterEvent": "reserve_gate",
+          "delaySeconds": 90
+        },
+        "text": "Reserve group activated. It is a required target.",
+        "seconds": 25,
+        "effects": [
+          {
+            "kind": "activate_group",
+            "group": "Reserve"
+          },
+          {
+            "kind": "set_flag",
+            "flag": 30,
+            "value": 1
+          }
+        ]
+      },
+      {
+        "id": "primary_down",
+        "phase": "engagement",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "group_dead",
+              "group": "Primary Targets"
+            }
+          ]
+        },
+        "text": "Primary target group destroyed. Secondary targets, reserves and egress remain separate conditions.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "targets_down",
+        "phase": "branch",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "flag_is_true",
+              "flag": 30
+            },
+            {
+              "kind": "group_dead",
+              "group": "Primary Targets"
+            },
+            {
+              "kind": "group_dead",
+              "group": "Secondary Targets"
+            },
+            {
+              "kind": "group_dead",
+              "group": "Reserve"
+            }
+          ]
+        },
+        "text": "All hostile objective groups destroyed. Complete egress.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "protected_lost",
+        "phase": "failure",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "flag_is_true",
+              "flag": 50
+            }
+          ]
+        },
+        "text": "Protected friendly asset destroyed. The mission objective has failed.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "egress",
+        "phase": "victory",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "flag_is_true",
+              "flag": 30
+            },
+            {
+              "kind": "group_dead",
+              "group": "Primary Targets"
+            },
+            {
+              "kind": "group_dead",
+              "group": "Secondary Targets"
+            },
+            {
+              "kind": "group_dead",
+              "group": "Reserve"
+            },
+            {
+              "kind": "unit_in_zone",
+              "unit": "Support-1",
+              "zone": "Egress Gate"
+            }
+          ]
+        },
+        "text": "All required target, movement and egress conditions observed. The outcome arbiter determines final scoring.",
+        "seconds": 25,
+        "effects": []
+      }
+    ]
+  },
+  "assumptions": [
+    "Fictional modern training scenario; country assignments are game settings, not historical service-date claims.",
+    "DCS metres: x north, y east; altitude is MSL unless a condition explicitly says AGL. Positions, routes, terrain clearance and mission balance require DCS checks.",
+    "Explicit stores are checked against bundled pydcs station compatibility; AI weapon employment and mission completion are not flight-verified.",
+    "Director cues are fictional subtitles. No audio, real radar detection, JTAC service or authenticated procedure is configured.",
+    "No external scripts or assets are required. The mission remains open after an outcome so the player can return; automatic recovery is not authored.",
+    "CAS is a task and objective setup, not an automatic FAC/JTAC, nine-line, target designation, laser code, aircraft data-link or authenticated radio service.",
+    "Weapon stations are catalogue-checked; player sensor use, guidance and actual kill effectiveness remain unverified. The wingman is AI and is not guaranteed to prosecute every group.",
+    "Ground routes are generic waypoints. Stationary artillery vehicles are targets; no scripted firing mission or guaranteed ground assault behavior is supplied.",
+    "Moving transport groups use native On Road routing; assault groups use native Rank (line abreast) movement. Road availability, deployment room and AI decisions require native verification; formations are authored rather than automatically selected on enemy contact."
+  ]
+}

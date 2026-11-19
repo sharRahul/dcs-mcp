@@ -82,7 +82,7 @@ test('campaign manifest validates transitions, cycles, ambiguity and atomic stag
 test('example specification is valid and its world-event/director scripts use Lua 5.1 syntax', () => {
   const spec = JSON.parse(readFileSync('examples/scenarios/interception.json', 'utf8'));
   const built = generateScenario(spec);
-  assert.equal(built.report.director!.radioScript.length, 3);
+  assert.equal(built.report.director!.radioScript.length, spec.director.events.length);
   for (const text of built.report.director!.radioScript) assert.match(text.procedureStatus, /fictional/);
   assert.ok(built.report.director!.radioScript.some(e => e.audioStatus.includes('PLACEHOLDER')));
   for (const rule of luaArray(built.session.mission.trigrules)) for (const action of luaArray(rule.actions)) if (action.predicate === 'a_do_script') luaparse.parse(String(action.text), { luaVersion: '5.1' });

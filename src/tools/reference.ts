@@ -18,6 +18,7 @@ import {
 import { searchUnitTypes } from "../miz/editing.js";
 import { latLonToXY, xyToLatLon } from "../miz/projection.js";
 import { allSiteTemplates } from "../miz/templates.js";
+import { listTerrainSites } from '../data/terrain-sites.js';
 import { countryInventory, type InventoryRow } from "../miz/inventory.js";
 import { installedMods, modRepositoryRoots, modRoots } from "../dcs/mods.js";
 import { buildResult, errorResult, render, responseFormatField } from "./format.js";
@@ -35,6 +36,15 @@ const theatreField = z
   .describe("Theatre, e.g. 'Caucasus', 'PersianGulf', 'Syria', 'Nevada', 'MarianaIslands', 'SinaiMap'");
 
 export function registerReferenceTools(server: McpServer): void {
+  server.registerTool('dcs_list_terrain_sites', {
+    title: 'Find reported terrain SAM infrastructure',
+    description: 'Sourced map-infrastructure candidates, currently four reported SA-3 locations in Cold War Germany. Returns lat/lon, uncertainty and source; these are terrain locations, not active batteries or compatible launcher-pad layouts. Pass lat/lon to placement tools, inspect the existing infrastructure and check each unit footprint with live terrain. An empty result means no bundled candidates, not that the map has no sites. Other theatres can use explicit coordinates and imported mission footprints. No scenery or third-party missions are redistributed.',
+    inputSchema: z.object({ theatre: z.string().min(1).optional(), query: z.string().max(100).optional() }).strict(),
+    annotations: readOnly,
+  }, async a => {
+    try { const sites = listTerrainSites(a.theatre, a.query); return buildResult(JSON.stringify({ sites }), { sites }); }
+    catch (e) { return errorResult(e); }
+  });
   server.registerTool(
     "dcs_list_unit_types",
     {

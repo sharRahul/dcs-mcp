@@ -1,0 +1,708 @@
+{
+  "version": 1,
+  "name": "Iron Gate",
+  "kind": "strike",
+  "theatre": "Caucasus",
+  "seed": 155,
+  "coalitions": {
+    "blue": [
+      "USA"
+    ],
+    "red": [
+      "Russia"
+    ]
+  },
+  "player": {
+    "group": "Anvil",
+    "slot": "Player"
+  },
+  "objective": "Attack the fictional Iron Gate military base: destroy every vehicle in Base Command, Base Logistics and Base Armour, then fly Anvil-1 through Egress Gate before the 60-minute limit. Protect Ranger-1. Loss of Anvil-1 or Ranger-1 fails the mission. Air-defence units and scrambled fighters are optional targets.",
+  "difficulty": "normal",
+  "threatLevel": "high",
+  "durationSeconds": 3600,
+  "endOnOutcome": false,
+  "configuration": {
+    "date": {
+      "year": 2025,
+      "month": 6,
+      "day": 15
+    },
+    "startTime": 28800,
+    "weather": {
+      "temperatureCelsius": 18,
+      "qnhMmHg": 760,
+      "visibilityMetres": 80000,
+      "wind": {
+        "atGround": {
+          "speed": 2,
+          "dir": 270
+        },
+        "at2000": {
+          "speed": 5,
+          "dir": 280
+        },
+        "at8000": {
+          "speed": 8,
+          "dir": 290
+        }
+      }
+    },
+    "coalitionBriefing": {
+      "blue": "Anvil: two Hornets, hot Kutaisi departure, four GBU-38, two AIM-120C and two AIM-9X per aircraft. Control/AWACS 251 AM; Texaco probe-and-drogue tanker 253 AM. Base Command is the assigned initial group task; manually prosecute Logistics and Armour next. Dodge flight (F-16C) provides SEAD against the Osa group. Base-perimeter entry by Anvil-1 starts a 60-second hostile scramble delay. Ranger-1 is a friendly command vehicle southwest of the compound; protect it. After all three target groups are destroyed, pass Egress Gate west of the base. No buildings, laser designation, target coordinates in the aircraft avionics or automatic recovery are configured."
+    }
+  },
+  "forces": [
+    {
+      "name": "Anvil",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "FA-18C_hornet",
+      "count": 2,
+      "position": {
+        "x": -285000,
+        "y": 680000
+      },
+      "role": "strike",
+      "frequencyMHz": 251,
+      "targetGroup": "Base Command",
+      "payload": {
+        "fuel": 4900,
+        "pylons": [
+          {
+            "pylon": 1,
+            "CLSID": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}"
+          },
+          {
+            "pylon": 2,
+            "CLSID": "{GBU-38}"
+          },
+          {
+            "pylon": 3,
+            "CLSID": "{GBU-38}"
+          },
+          {
+            "pylon": 4,
+            "CLSID": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}"
+          },
+          {
+            "pylon": 5,
+            "CLSID": "{FPU_8A_FUEL_TANK}"
+          },
+          {
+            "pylon": 6,
+            "CLSID": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}"
+          },
+          {
+            "pylon": 7,
+            "CLSID": "{GBU-38}"
+          },
+          {
+            "pylon": 8,
+            "CLSID": "{GBU-38}"
+          },
+          {
+            "pylon": 9,
+            "CLSID": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}"
+          }
+        ]
+      },
+      "start": {
+        "kind": "parking_hot",
+        "airfield": "Kutaisi"
+      },
+      "route": [
+        {
+          "x": -270000,
+          "y": 710000,
+          "altitudeMetres": 6000,
+          "speedMps": 220
+        },
+        {
+          "x": -280000,
+          "y": 705000,
+          "altitudeMetres": 6000,
+          "speedMps": 220
+        },
+        {
+          "x": -293000,
+          "y": 690000,
+          "altitudeMetres": 5000,
+          "speedMps": 220
+        }
+      ]
+    },
+    {
+      "name": "Base Command",
+      "side": "red",
+      "country": "Russia",
+      "category": "vehicle",
+      "type": "SKP-11",
+      "count": 1,
+      "position": {
+        "x": -280000,
+        "y": 705000
+      },
+      "heading": 210
+    },
+    {
+      "name": "Base Logistics",
+      "side": "red",
+      "country": "Russia",
+      "category": "vehicle",
+      "type": "Ural-375",
+      "count": 3,
+      "position": {
+        "x": -279400,
+        "y": 705800
+      },
+      "spacingMetres": 60,
+      "heading": 90
+    },
+    {
+      "name": "Base Armour",
+      "side": "red",
+      "country": "Russia",
+      "category": "vehicle",
+      "type": "T-72B",
+      "count": 3,
+      "position": {
+        "x": -280600,
+        "y": 706400
+      },
+      "spacingMetres": 70,
+      "heading": 270
+    },
+    {
+      "name": "Base SAM",
+      "side": "red",
+      "country": "Russia",
+      "category": "vehicle",
+      "type": "Osa 9A33 ln",
+      "count": 1,
+      "position": {
+        "x": -278800,
+        "y": 704200
+      },
+      "heading": 180
+    },
+    {
+      "name": "Base AAA",
+      "side": "red",
+      "country": "Russia",
+      "category": "vehicle",
+      "type": "ZSU-23-4 Shilka",
+      "count": 2,
+      "position": {
+        "x": -281200,
+        "y": 705600
+      },
+      "spacingMetres": 120
+    },
+    {
+      "name": "Ranger",
+      "side": "blue",
+      "country": "USA",
+      "category": "vehicle",
+      "type": "SKP-11",
+      "count": 1,
+      "position": {
+        "x": -286000,
+        "y": 698000
+      }
+    },
+    {
+      "name": "Dodge",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "F-16C_50",
+      "count": 2,
+      "position": {
+        "x": -300000,
+        "y": 690000
+      },
+      "role": "SEAD",
+      "frequencyMHz": 251,
+      "targetGroup": "Base SAM",
+      "payload": {
+        "fuel": 3249,
+        "pylons": [
+          {
+            "pylon": 1,
+            "CLSID": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}"
+          },
+          {
+            "pylon": 2,
+            "CLSID": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}"
+          },
+          {
+            "pylon": 3,
+            "CLSID": "{B06DD79A-F21E-4EB9-BD9D-AB3844618C93}"
+          },
+          {
+            "pylon": 4,
+            "CLSID": "{F376DBEE-4CAE-41BA-ADD9-B2910AC95DEC}"
+          },
+          {
+            "pylon": 6,
+            "CLSID": "{F376DBEE-4CAE-41BA-ADD9-B2910AC95DEC}"
+          },
+          {
+            "pylon": 7,
+            "CLSID": "{B06DD79A-F21E-4EB9-BD9D-AB3844618C93}"
+          },
+          {
+            "pylon": 8,
+            "CLSID": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}"
+          },
+          {
+            "pylon": 9,
+            "CLSID": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}"
+          },
+          {
+            "pylon": 10,
+            "CLSID": "{AN_ASQ_213}"
+          }
+        ]
+      },
+      "route": [
+        {
+          "x": -290000,
+          "y": 698000,
+          "altitudeMetres": 6500,
+          "speedMps": 220
+        },
+        {
+          "x": -280000,
+          "y": 702000,
+          "altitudeMetres": 6500,
+          "speedMps": 220
+        }
+      ]
+    },
+    {
+      "name": "Base Scramble",
+      "side": "red",
+      "country": "Russia",
+      "category": "plane",
+      "type": "MiG-29S",
+      "count": 2,
+      "position": {
+        "x": -200000,
+        "y": 775000
+      },
+      "role": "CAP",
+      "frequencyMHz": 124,
+      "lateActivation": true,
+      "payload": {
+        "fuel": 3400,
+        "pylons": [
+          {
+            "pylon": 1,
+            "CLSID": "{FBC29BFE-3D24-4C64-B81D-941239D12249}"
+          },
+          {
+            "pylon": 3,
+            "CLSID": "{E8069896-8435-4B90-95C0-01A03AE6E400}"
+          },
+          {
+            "pylon": 5,
+            "CLSID": "{E8069896-8435-4B90-95C0-01A03AE6E400}"
+          },
+          {
+            "pylon": 7,
+            "CLSID": "{FBC29BFE-3D24-4C64-B81D-941239D12249}"
+          }
+        ]
+      },
+      "route": [
+        {
+          "x": -250000,
+          "y": 755000,
+          "altitudeMetres": 6500,
+          "speedMps": 250
+        }
+      ]
+    },
+    {
+      "name": "Overlord",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "E-3A",
+      "count": 1,
+      "position": {
+        "x": -340000,
+        "y": 640000
+      },
+      "role": "AWACS",
+      "frequencyMHz": 251,
+      "orbit": {
+        "point": {
+          "x": -340000,
+          "y": 640000
+        },
+        "point2": {
+          "x": -310000,
+          "y": 640000
+        },
+        "pattern": "Race-Track",
+        "altitudeMetres": 8500,
+        "speedMps": 180
+      }
+    },
+    {
+      "name": "Texaco",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "KC135MPRS",
+      "count": 1,
+      "position": {
+        "x": -350000,
+        "y": 610000
+      },
+      "role": "tanker",
+      "frequencyMHz": 253,
+      "orbit": {
+        "point": {
+          "x": -350000,
+          "y": 610000
+        },
+        "point2": {
+          "x": -325000,
+          "y": 610000
+        },
+        "pattern": "Race-Track",
+        "altitudeMetres": 6500,
+        "speedMps": 180
+      }
+    }
+  ],
+  "requiredSupport": [
+    "Overlord",
+    "Texaco"
+  ],
+  "zones": [
+    {
+      "name": "Base Perimeter",
+      "x": -280000,
+      "y": 705000,
+      "radius": 12000
+    },
+    {
+      "name": "Command Target",
+      "x": -280000,
+      "y": 705000,
+      "radius": 200
+    },
+    {
+      "name": "Logistics Target",
+      "x": -279400,
+      "y": 705800,
+      "radius": 250
+    },
+    {
+      "name": "Armour Target",
+      "x": -280600,
+      "y": 706400,
+      "radius": 300
+    },
+    {
+      "name": "Friendly Ranger",
+      "x": -286000,
+      "y": 698000,
+      "radius": 600
+    },
+    {
+      "name": "Egress Gate",
+      "x": -293000,
+      "y": 690000,
+      "radius": 6000
+    }
+  ],
+  "events": [
+    {
+      "type": "start",
+      "comment": "Base target and friendly annotations",
+      "conditions": [],
+      "actions": [
+        {
+          "kind": "mark_to_all",
+          "id": 201,
+          "text": "TGT 1: Base Command (one SKP-11 vehicle)",
+          "zone": "Command Target",
+          "readonly": true
+        },
+        {
+          "kind": "mark_to_all",
+          "id": 202,
+          "text": "TGT 2: Base Logistics (three Ural trucks)",
+          "zone": "Logistics Target",
+          "readonly": true
+        },
+        {
+          "kind": "mark_to_all",
+          "id": 203,
+          "text": "TGT 3: Base Armour (three T-72B tanks)",
+          "zone": "Armour Target",
+          "readonly": true
+        },
+        {
+          "kind": "mark_to_all",
+          "id": 204,
+          "text": "FRIENDLY: protect Ranger-1",
+          "zone": "Friendly Ranger",
+          "readonly": true
+        },
+        {
+          "kind": "mark_to_all",
+          "id": 205,
+          "text": "EGRESS: pass here after all target groups are destroyed",
+          "zone": "Egress Gate",
+          "readonly": true
+        }
+      ]
+    },
+    {
+      "type": "once",
+      "comment": "Friendly command vehicle lost",
+      "conditions": [
+        {
+          "kind": "unit_dead",
+          "unit": "Ranger-1"
+        }
+      ],
+      "actions": [
+        {
+          "kind": "set_flag",
+          "flag": 50,
+          "value": 1
+        }
+      ]
+    }
+  ],
+  "victory": [
+    {
+      "kind": "group_dead",
+      "group": "Base Command"
+    },
+    {
+      "kind": "group_dead",
+      "group": "Base Logistics"
+    },
+    {
+      "kind": "group_dead",
+      "group": "Base Armour"
+    },
+    {
+      "kind": "unit_in_zone",
+      "unit": "Anvil-1",
+      "zone": "Egress Gate"
+    }
+  ],
+  "failure": [
+    {
+      "kind": "unit_dead",
+      "unit": "Anvil-1"
+    },
+    {
+      "kind": "or"
+    },
+    {
+      "kind": "flag_is_true",
+      "flag": 50
+    }
+  ],
+  "director": {
+    "name": "IronGate",
+    "channels": [
+      {
+        "id": "control",
+        "speaker": "Mission control",
+        "callsign": "Overlord",
+        "frequencyMHz": 251,
+        "style": "nato"
+      }
+    ],
+    "events": [
+      {
+        "id": "brief",
+        "phase": "briefing",
+        "channel": "control",
+        "when": {
+          "atSeconds": 1
+        },
+        "text": "Iron Gate: three vehicle target groups, then Egress Gate. Ranger-1 is friendly. Public F10 annotations expose these positions to both coalitions.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "depart",
+        "phase": "atc_departure",
+        "channel": "control",
+        "when": {
+          "worldEvent": {
+            "kind": "takeoff",
+            "unit": "Anvil-1"
+          }
+        },
+        "text": "Anvil airborne. Dodge is already providing SEAD against Base SAM. The Shilkas remain a separate threat.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "perimeter",
+        "phase": "detection",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "unit_in_zone",
+              "unit": "Anvil-1",
+              "zone": "Base Perimeter"
+            }
+          ]
+        },
+        "text": "Anvil entered the base perimeter. This zone cue starts the hostile scramble timer; it is not radar detection.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "scramble",
+        "phase": "reinforcements",
+        "channel": "control",
+        "when": {
+          "afterEvent": "perimeter",
+          "delaySeconds": 60
+        },
+        "text": "Base Scramble is now active. The fighter group is optional; complete the ground targets and egress.",
+        "seconds": 25,
+        "effects": [
+          {
+            "kind": "activate_group",
+            "group": "Base Scramble"
+          },
+          {
+            "kind": "set_flag",
+            "flag": 30,
+            "value": 1
+          }
+        ]
+      },
+      {
+        "id": "command_down",
+        "phase": "engagement",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "group_dead",
+              "group": "Base Command"
+            }
+          ]
+        },
+        "text": "Command vehicle destroyed. Logistics and Armour remain separate required objectives.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "logistics_down",
+        "phase": "engagement",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "group_dead",
+              "group": "Base Logistics"
+            }
+          ]
+        },
+        "text": "All Logistics vehicles destroyed. Check the remaining target groups before egress.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "targets_down",
+        "phase": "branch",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "group_dead",
+              "group": "Base Command"
+            },
+            {
+              "kind": "group_dead",
+              "group": "Base Logistics"
+            },
+            {
+              "kind": "group_dead",
+              "group": "Base Armour"
+            }
+          ]
+        },
+        "text": "All three required ground target groups are destroyed. Fly Anvil-1 through Egress Gate to complete the mission.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "ranger_lost",
+        "phase": "failure",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "flag_is_true",
+              "flag": 50
+            }
+          ]
+        },
+        "text": "Ranger-1 destroyed. The friendly-protection objective has failed.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "egress",
+        "phase": "victory",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "group_dead",
+              "group": "Base Command"
+            },
+            {
+              "kind": "group_dead",
+              "group": "Base Logistics"
+            },
+            {
+              "kind": "group_dead",
+              "group": "Base Armour"
+            },
+            {
+              "kind": "unit_in_zone",
+              "unit": "Anvil-1",
+              "zone": "Egress Gate"
+            }
+          ]
+        },
+        "text": "Required targets destroyed and egress condition observed. Final outcome arbitration still applies.",
+        "seconds": 25,
+        "effects": []
+      }
+    ]
+  },
+  "assumptions": [
+    "Fictional modern training scenario; country assignments are game settings, not historical service-date claims.",
+    "DCS metres: x north, y east; altitude is MSL unless a condition explicitly says AGL. Positions, routes, terrain clearance and mission balance require DCS checks.",
+    "Explicit stores are checked against bundled pydcs station compatibility; AI weapon employment and mission completion are not flight-verified.",
+    "Director cues are fictional subtitles. No audio, real radar detection, JTAC service or authenticated procedure is configured.",
+    "No external scripts or assets are required. The mission remains open after an outcome so the player can return; automatic recovery is not authored.",
+    "Iron Gate is a fictional vehicle-based military compound, not a reconstruction of an actual installation. Command, logistics and armour are independently scored vehicle groups; there are no authored buildings, bunkers or static-object targets.",
+    "The Anvil AI group task points at Base Command only; the player must select and attack the other target groups. No automatic retasking, laser service or guaranteed AI target destruction is supplied.",
+    "Ranger-1 is a friendly command vehicle, not a FAC/JTAC. Target identification and weapon effects near friendly units require live testing.",
+    "Native DCS 2.9.31.29434 probes place all eleven compound/protected ground units on land with sampled slopes under five degrees and at least fifteen metres of modelled-scenery clearance."
+  ]
+}

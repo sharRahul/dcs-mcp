@@ -186,6 +186,7 @@ const THEATRE_ALIASES: Record<string, string> = {
   channel: "TheChannel",
   germany: "GermanyCW",
   coldwargermany: "GermanyCW",
+  germanycoldwar: "GermanyCW",
   southatlantic: "Falklands",
 };
 

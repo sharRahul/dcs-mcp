@@ -5,6 +5,7 @@ import { actionSchema, conditionSchema, triggerSchema } from '../miz/trigger-sch
 import { addAircraftGroup, addGroundGroup, addTrigger, addTriggerZone, addWaypoint, findGroup, findUnit, setPayload, type AircraftStart, type ConditionSpec, type ActionSpec } from '../miz/authoring.js';
 import { configureFlight, createFlight, flyingReference, orbitSchema, ROLES, appendWaypointTask } from '../miz/flight.js';
 import { findSiteTemplate } from '../miz/templates.js';
+import { createGroundPlan, validateGroundPlan, groundPlanSchema, groundMovementSchema } from '../miz/operations.js';
 import { addFarp } from '../miz/dressing.js';
 import { newSession, closeSession, refresh, type MissionSession } from '../miz/sessions.js';
 import { claimStartAirfields } from '../miz/logistics.js';
@@ -27,7 +28,8 @@ const forceSchema = z.object({ name, side: sideSchema, country: z.string().min(1
   composition: z.array(z.object({ type: z.string().min(1), count: z.number().int().min(1).max(50) }).strict()).min(1).max(50).optional(),
   site: z.string().min(1).optional(), spacingMetres: z.number().positive().max(2000).optional(), position: xySchema, heading: z.number().min(0).max(359).default(0),
   role: z.enum([...ROLES, 'naval_strike']).optional(), targetGroup: name.optional(), start: aircraftStartSchema.optional(), orbit: orbitSchema.optional(),
-  route: z.array(z.object({ ...xySchema.shape, altitudeMetres: z.number().min(0).max(20000).optional(), speedMps: z.number().min(0).max(1000).optional() }).strict()).max(100).default([]),
+  route: z.array(z.object({ ...xySchema.shape, altitudeMetres: z.number().min(0).max(20000).optional(), speedMps: z.number().min(0).max(1000).optional(), movement: groundMovementSchema.optional() }).strict()).max(100).default([]),
+  groundPlan: groundPlanSchema.omit({ route: true, lateActivation: true }).optional(),
   skill: z.enum(['Average', 'Good', 'High', 'Excellent', 'Random']).optional(), lateActivation: z.boolean().default(false), frequencyMHz: z.number().positive().max(400).optional(),
   payload: z.object({ fuel: z.number().finite().nonnegative().optional(), pylons: z.array(z.object({ pylon: z.number().int().positive(), CLSID: z.string().min(1) }).strict()).max(40).optional() }).strict().optional(),
   jitterMetres: z.number().min(0).max(10000).default(0),
@@ -102,6 +104,10 @@ export function validateScenario(input: unknown) {
     if (names.has(f.name)) throw new Error(`Duplicate force '${f.name}'`); names.add(f.name);
     if (assigned.get(findCountry(f.country)?.id ?? -1) !== f.side) throw new Error(`Force '${f.name}' country/coalition is undeclared or inconsistent`);
     if (f.site && (f.category !== 'vehicle' || f.composition)) throw new Error('SAM/EWR site templates require a vehicle force and cannot be combined with composition');
+    if (f.groundPlan && (f.category !== 'vehicle' || f.site)) throw new Error('groundPlan requires a vehicle force without a site template');
+    if (f.route.some(p => p.movement) && !f.groundPlan) throw new Error('Route movement requires a vehicle groundPlan');
+    if (f.groundPlan && f.route.some(p => p.altitudeMetres !== undefined)) throw new Error('Ground plans do not take aircraft altitudes');
+    if (f.groundPlan) validateGroundPlan({ ...f.groundPlan, route: f.route.map(({ x, y, speedMps, movement }) => ({ x, y, speedMps, movement })), lateActivation: f.lateActivation });
     const composition = f.site ? findSiteTemplate(f.site).composition : f.composition;
     if (composition) {
       if (!['vehicle', 'ship'].includes(f.category) || f.type !== composition[0].type) throw new Error('Mixed surface force must name the first composition type as its lead type');
@@ -170,13 +176,15 @@ export function generateScenario(input: unknown) {
               config: { skills, frequencyMHz: force.frequencyMHz } }); warnings.push(...result.warnings);
           }
           if (force.payload) for (let i = 1; i <= force.count; i++) setPayload(s.mission, `${force.name}-${i}`, force.payload);
+        } else if (force.groundPlan) {
+          createGroundPlan(s.mission, { ...args, composition: force.composition }, { ...force.groundPlan, route: force.route.map(({ x, y, speedMps, movement }) => ({ x, y, speedMps, movement })), lateActivation: force.lateActivation });
         } else {
           const template = force.site ? findSiteTemplate(force.site) : undefined;
           addGroundGroup(s.mission, force.category, { ...args, composition: template?.composition ?? force.composition, spacingMetres: force.spacingMetres ?? template?.spacingMetres, offsets: template?.offsets, headingOffsetsDegrees: template?.headingOffsetsDegrees });
           if (template) warnings.push(`${force.name}: site ${template.id} provenance ${template.provenance}; no provenance promoted by generation`);
         }
         const group = findGroup(s.mission, force.name)!.group; group.lateActivation = force.lateActivation;
-        for (const point of force.route) addWaypoint(s.mission, force.name, point);
+        if (!force.groundPlan) for (const point of force.route) addWaypoint(s.mission, force.name, point);
         pending.splice(pending.indexOf(force), 1); progress = true;
       }
       if (!progress) throw new Error(`Unresolved/cyclic force targets or start dependencies: ${pending.map(f => f.name).join(', ')}`);

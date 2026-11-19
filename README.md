@@ -63,7 +63,7 @@ The server sends MCP `instructions` with the conventions that matter most (axes,
 
 **Author (offline):** `dcs_miz_new`, `dcs_miz_add_aircraft_group`, `dcs_miz_add_ground_group`, `dcs_miz_add_static`, `dcs_miz_add_waypoint`, `dcs_miz_set_payload`, `dcs_miz_set_group_task`, `dcs_miz_add_trigger_zone`, `dcs_miz_add_trigger`, `dcs_miz_load_scripts`, `dcs_miz_list_resources`, `dcs_miz_set_weather`, `dcs_miz_set_briefing`, `dcs_miz_set_mission_options`, `dcs_miz_diff`, `dcs_miz_save_as`
 
-**Scene building (offline):** `dcs_miz_add_farp`, `dcs_miz_populate_airfield`, `dcs_miz_add_target_area`, `dcs_miz_add_naval_group`, `dcs_list_scene_templates`
+**Scene building (offline):** `dcs_miz_add_farp`, `dcs_miz_populate_airfield`, `dcs_miz_add_target_area`, `dcs_miz_add_perimeter`, `dcs_miz_add_naval_group`, `dcs_list_scene_templates`, `dcs_list_terrain_sites`
 
 **Edit (offline):** `dcs_miz_remove_group`, `dcs_miz_remove_unit`, `dcs_miz_remove_zone`, `dcs_miz_remove_trigger`, `dcs_miz_remove_waypoint`, `dcs_miz_rename_group`, `dcs_miz_rename_unit`, `dcs_miz_move_group`, `dcs_miz_move_unit`, `dcs_miz_update_group`, `dcs_miz_update_waypoint`, `dcs_miz_update_zone`, `dcs_miz_update_trigger`
 
@@ -255,10 +255,10 @@ Point types and actions are the ones the Mission Editor writes (`TakeOffParking`
 
 - **FARPs.** `dcs_miz_add_farp` adds a 4-pad FARP, a single helipad or an invisible FARP. Each is a heliport static with its ATC frequency, modulation and callsign, the fields pydcs writes. Helicopters start from one with `start: { kind: "farp_cold" | "farp_hot", farp: "<name>" }`; the flight links to the pad's unit id, as a carrier start does. `support: true` adds the usual dressing (ammo dump, fuel depot, command bunker, tent, windsock) plus a support-vehicle group of the same side. In DCS, rearm and refuel at a FARP come from nearby friendly support *vehicles*, not from the statics.
 - **Filling an airfield.** `dcs_miz_populate_airfield` parks static aircraft, vehicles or equipment on free parking slots, taken from DCS's own airfield data. Aircraft only go on slots they fit (a KC-135 never lands on a fighter spot), and `slots: "shelters"` keeps them in hardened shelters. `dead: true` parks wrecks for a post-strike airfield. Slots used by flights are skipped, and later flights skip the statics, so nothing spawns into a parked aircraft. The data has no slot orientation, so without `heading` each object faces the airfield reference point. That is a heuristic.
-- **Ground targets.** `dcs_miz_add_target_area` builds `ammo-depot`, `fuel-depot`, `command-post`, `supply-yard` or `barracks` from statics. It lays them out in a grid rotated to a heading, with each object its own static (`<name>-N`). `zone: true` adds a covering trigger zone.
+- **Ground targets and compounds.** `dcs_miz_add_target_area` builds depots, command posts, supply yards and barracks, plus designed `farp-staging`, `vehicle-staging`, `scud-base`, `sam-support` and `military-base` footprints with gated boundaries. Each object is its own static (`<name>-N`); `zone: true` adds a covering trigger zone. See [ground sites and movement](docs/ground-sites.md) for operational assets, boundaries, road transit, combat formations and existing Germany infrastructure.
 - **Fleets.** `dcs_miz_add_naval_group` adds `csg` (CVN-71 with cruiser and destroyer screen), `lha-group`, `kuznetsov-group`, `red-sag` or `convoy` as one group, with each ship on its station relative to the lead. A ship's unit `<name>-1` is the carrier for deck starts. Add waypoints to get it moving.
 
-Every type in these templates is checked against the DCS catalogue by the tests. The *layouts* (grid spacing, FARP support positions, ship stations) are this project's conventions, not copied from Mission-Editor missions, and none has been flown yet. Check land targets with `dcs_check_terrain`.
+Every type in these templates is checked against the DCS catalogue by the tests. The layouts (grid spacing, compound footprints, FARP support positions and ship stations) are project conventions. Native checks and their limits are recorded in [verification.md](docs/verification.md); changing a placement still requires terrain and execution checks.
 
 ## Countries: what DCS allows, what is real, and mods
 
@@ -606,7 +606,7 @@ All additions remain offline tested, not DCS-verified. CSAR is zone/flag based; 
 manifests are not .cmp files, and carrier recovery remains unsupported.
 
 - [Mission design and tool contracts](docs/mission_design.md)
-- [Example specification](examples/scenarios/interception.json)
+- [Scenario examples](examples/scenarios/README.md): interception, SEAD strike, convoy escort, carrier defence and military-base ground attack, A-10C II/Su-25T CAS and Apache/Ka-50 helicopter missions, with explicit loadouts and staged objectives
 - [Phase 4–6 verification](docs/verification.md)
 
 ```bash
@@ -627,7 +627,7 @@ This checkout adds `dcs_runtime_inspect` (bounded groups, unit states, flags and
 telemetry event cursors), `dcs_tool_catalogue` (paginated discovery), and shared
 acceptance tools: `dcs_acceptance_check`, `dcs_acceptance_generate`,
 `dcs_acceptance_job`, `dcs_acceptance_collect`. Generation returns a job id to poll;
-CLI and MCP use the same implementation. The catalogue currently has 196 tools.
+CLI and MCP use the same implementation. The catalogue currently has 197 tools.
 
 Aircraft contact/history queries, option inspection, task lifecycle control and
 support-flight/transport evidence monitoring are described in

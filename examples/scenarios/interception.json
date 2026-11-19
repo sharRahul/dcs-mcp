@@ -4,44 +4,455 @@
   "kind": "interception",
   "theatre": "Caucasus",
   "seed": 42,
-  "coalitions": {"blue": ["USA"], "red": ["Russia"]},
-  "player": {"group": "Intercept", "slot": "Player"},
-  "objective": "Intercept the opposing bomber group before the mission time limit.",
-  "difficulty": "normal",
-  "threatLevel": "low",
-  "durationSeconds": 1800,
-  "configuration": {
-    "date": {"year": 2025, "month": 6, "day": 15},
-    "startTime": 43200,
-    "weather": {"temperatureCelsius": 20, "qnhMmHg": 760, "visibilityMetres": 80000,
-      "wind": {"atGround": {"speed": 2, "dir": 90}, "at2000": {"speed": 5, "dir": 100}}},
-    "coalitionBriefing": {"blue": "Depart Kutaisi and intercept the bomber group. No weapons are automatically selected."},
-    "bullseyes": {"blue": {"x": -270000, "y": 700000}}
-  },
-  "forces": [
-    {"name": "Intercept", "side": "blue", "country": "USA", "category": "plane", "type": "FA-18C_hornet", "count": 2,
-      "position": {"x": -285000, "y": 680000}, "role": "interception", "targetGroup": "Bombers",
-      "start": {"kind": "parking_hot", "airfield": "Kutaisi"}, "frequencyMHz": 251},
-    {"name": "Bombers", "side": "red", "country": "Russia", "category": "plane", "type": "Tu-95MS", "count": 1,
-      "position": {"x": -180000, "y": 750000}, "role": "strike", "targetGroup": "Defenders",
-      "route": [{"x": -260000, "y": 700000, "altitudeMetres": 7000, "speedMps": 200}]},
-    {"name": "Defenders", "side": "blue", "country": "USA", "category": "vehicle", "type": "M-1 Abrams", "count": 2,
-      "position": {"x": -290000, "y": 680000}},
-    {"name": "Overlord", "side": "blue", "country": "USA", "category": "plane", "type": "E-3A", "count": 1,
-      "position": {"x": -330000, "y": 650000}, "role": "AWACS", "frequencyMHz": 255,
-      "orbit": {"point": {"x": -330000, "y": 650000}, "pattern": "Circle", "altitudeMetres": 8500, "speedMps": 180}}
-  ],
-  "requiredSupport": ["Overlord"],
-  "victory": [{"kind": "group_dead", "group": "Bombers"}],
-  "failure": [{"kind": "unit_dead", "unit": "Intercept-1"}],
-  "director": {
-    "name": "NorthernWatch",
-    "channels": [{"id": "control", "speaker": "Mission control", "callsign": "Overlord", "frequencyMHz": 251, "style": "nato"}],
-    "events": [
-      {"id": "brief", "phase": "briefing", "channel": "control", "when": {"atSeconds": 1}, "template": "check_in", "subject": "Northern Watch", "delivery": "radio"},
-      {"id": "depart", "phase": "atc_departure", "channel": "control", "when": {"worldEvent": {"kind": "takeoff", "unit": "Intercept-1"}}, "template": "depart", "subject": "the intercept", "delivery": "radio"},
-      {"id": "success", "phase": "victory", "channel": "control", "when": {"conditions": [{"kind": "group_dead", "group": "Bombers"}]}, "template": "success", "subject": "the intercept"}
+  "coalitions": {
+    "blue": [
+      "USA"
+    ],
+    "red": [
+      "Russia"
     ]
   },
-  "assumptions": ["Example coordinates are not terrain-cleared.", "Select and validate an air-to-air payload before flying.", "Radio audio must be recorded and embedded separately."]
+  "player": {
+    "group": "Intercept",
+    "slot": "Player"
+  },
+  "objective": "Destroy both Bombers aircraft before the 40-minute limit while protecting Defenders. Failure occurs if Intercept-1 or the entire Defenders group is lost. The optional Bandits escalation is not a victory target. Return to Kutaisi after the intercept.",
+  "difficulty": "normal",
+  "threatLevel": "medium",
+  "durationSeconds": 2400,
+  "endOnOutcome": false,
+  "configuration": {
+    "date": {
+      "year": 2025,
+      "month": 6,
+      "day": 15
+    },
+    "startTime": 28800,
+    "weather": {
+      "temperatureCelsius": 18,
+      "qnhMmHg": 760,
+      "visibilityMetres": 80000,
+      "wind": {
+        "atGround": {
+          "speed": 2,
+          "dir": 270
+        },
+        "at2000": {
+          "speed": 5,
+          "dir": 280
+        },
+        "at8000": {
+          "speed": 8,
+          "dir": 290
+        }
+      }
+    },
+    "coalitionBriefing": {
+      "blue": "Hornet two-ship, hot parking at Kutaisi. Control/AWACS 251 AM; Texaco 253 AM (probe-and-drogue KC-135 MPRS). Loadout: six AIM-120C, two AIM-9X and a centreline tank per aircraft. Two Su-24M strike aircraft with conventional bombs approach from the northeast. Ninety seconds after takeoff a MiG-29 pair joins the fight. Recovery is a player task; no automatic landing waypoint is supplied."
+    }
+  },
+  "forces": [
+    {
+      "name": "Intercept",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "FA-18C_hornet",
+      "count": 2,
+      "position": {
+        "x": -285000,
+        "y": 680000
+      },
+      "role": "interception",
+      "frequencyMHz": 251,
+      "targetGroup": "Bombers",
+      "start": {
+        "kind": "parking_hot",
+        "airfield": "Kutaisi"
+      },
+      "payload": {
+        "fuel": 4900,
+        "pylons": [
+          {
+            "pylon": 1,
+            "CLSID": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}"
+          },
+          {
+            "pylon": 2,
+            "CLSID": "LAU-115_2*LAU-127_AIM-120C"
+          },
+          {
+            "pylon": 4,
+            "CLSID": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}"
+          },
+          {
+            "pylon": 5,
+            "CLSID": "{FPU_8A_FUEL_TANK}"
+          },
+          {
+            "pylon": 6,
+            "CLSID": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}"
+          },
+          {
+            "pylon": 8,
+            "CLSID": "LAU-115_2*LAU-127_AIM-120C"
+          },
+          {
+            "pylon": 9,
+            "CLSID": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}"
+          }
+        ]
+      },
+      "route": [
+        {
+          "x": -260000,
+          "y": 700000,
+          "altitudeMetres": 6000,
+          "speedMps": 220
+        },
+        {
+          "x": -220000,
+          "y": 720000,
+          "altitudeMetres": 6000,
+          "speedMps": 220
+        }
+      ]
+    },
+    {
+      "name": "Bombers",
+      "side": "red",
+      "country": "Russia",
+      "category": "plane",
+      "type": "Su-24M",
+      "count": 2,
+      "position": {
+        "x": -130000,
+        "y": 750000
+      },
+      "role": "strike",
+      "frequencyMHz": 124,
+      "targetGroup": "Defenders",
+      "payload": {
+        "fuel": 9000,
+        "pylons": [
+          {
+            "pylon": 2,
+            "CLSID": "{37DCC01E-9E02-432F-B61D-10C166CA2798}"
+          },
+          {
+            "pylon": 7,
+            "CLSID": "{37DCC01E-9E02-432F-B61D-10C166CA2798}"
+          }
+        ]
+      },
+      "route": [
+        {
+          "x": -220000,
+          "y": 720000,
+          "altitudeMetres": 7500,
+          "speedMps": 200
+        },
+        {
+          "x": -285000,
+          "y": 680000,
+          "altitudeMetres": 7500,
+          "speedMps": 200
+        }
+      ]
+    },
+    {
+      "name": "Defenders",
+      "side": "blue",
+      "country": "USA",
+      "category": "vehicle",
+      "type": "M-1 Abrams",
+      "count": 2,
+      "position": {
+        "x": -289900,
+        "y": 680000
+      },
+      "spacingMetres": 70
+    },
+    {
+      "name": "Bandits",
+      "side": "red",
+      "country": "Russia",
+      "category": "plane",
+      "type": "MiG-29S",
+      "count": 2,
+      "position": {
+        "x": -180000,
+        "y": 730000
+      },
+      "role": "CAP",
+      "frequencyMHz": 124,
+      "lateActivation": true,
+      "payload": {
+        "fuel": 3400,
+        "pylons": [
+          {
+            "pylon": 1,
+            "CLSID": "{FBC29BFE-3D24-4C64-B81D-941239D12249}"
+          },
+          {
+            "pylon": 3,
+            "CLSID": "{E8069896-8435-4B90-95C0-01A03AE6E400}"
+          },
+          {
+            "pylon": 5,
+            "CLSID": "{E8069896-8435-4B90-95C0-01A03AE6E400}"
+          },
+          {
+            "pylon": 7,
+            "CLSID": "{FBC29BFE-3D24-4C64-B81D-941239D12249}"
+          }
+        ]
+      },
+      "route": [
+        {
+          "x": -230000,
+          "y": 710000,
+          "altitudeMetres": 6500,
+          "speedMps": 250
+        }
+      ]
+    },
+    {
+      "name": "Overlord",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "E-3A",
+      "count": 1,
+      "position": {
+        "x": -340000,
+        "y": 640000
+      },
+      "role": "AWACS",
+      "frequencyMHz": 251,
+      "orbit": {
+        "point": {
+          "x": -340000,
+          "y": 640000
+        },
+        "point2": {
+          "x": -310000,
+          "y": 640000
+        },
+        "pattern": "Race-Track",
+        "altitudeMetres": 8500,
+        "speedMps": 180
+      }
+    },
+    {
+      "name": "Texaco",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "KC135MPRS",
+      "count": 1,
+      "position": {
+        "x": -350000,
+        "y": 610000
+      },
+      "role": "tanker",
+      "frequencyMHz": 253,
+      "orbit": {
+        "point": {
+          "x": -350000,
+          "y": 610000
+        },
+        "point2": {
+          "x": -325000,
+          "y": 610000
+        },
+        "pattern": "Race-Track",
+        "altitudeMetres": 6500,
+        "speedMps": 180
+      }
+    }
+  ],
+  "requiredSupport": [
+    "Overlord",
+    "Texaco"
+  ],
+  "zones": [
+    {
+      "name": "Intercept Gate",
+      "x": -220000,
+      "y": 720000,
+      "radius": 20000
+    },
+    {
+      "name": "Kutaisi Recovery",
+      "x": -284887,
+      "y": 683859,
+      "radius": 8000
+    }
+  ],
+  "events": [
+    {
+      "type": "once",
+      "comment": "Protected force lost",
+      "conditions": [
+        {
+          "kind": "group_dead",
+          "group": "Defenders"
+        }
+      ],
+      "actions": [
+        {
+          "kind": "set_flag",
+          "flag": 50,
+          "value": 1
+        }
+      ]
+    }
+  ],
+  "victory": [
+    {
+      "kind": "group_dead",
+      "group": "Bombers"
+    }
+  ],
+  "failure": [
+    {
+      "kind": "unit_dead",
+      "unit": "Intercept-1"
+    },
+    {
+      "kind": "or"
+    },
+    {
+      "kind": "flag_is_true",
+      "flag": 50
+    }
+  ],
+  "director": {
+    "name": "NorthernWatch",
+    "channels": [
+      {
+        "id": "control",
+        "speaker": "Mission control",
+        "callsign": "Overlord",
+        "frequencyMHz": 251,
+        "style": "nato"
+      }
+    ],
+    "events": [
+      {
+        "id": "brief",
+        "phase": "briefing",
+        "channel": "control",
+        "when": {
+          "atSeconds": 1
+        },
+        "template": "check_in",
+        "subject": "Northern Watch",
+        "delivery": "radio"
+      },
+      {
+        "id": "depart",
+        "phase": "atc_departure",
+        "channel": "control",
+        "when": {
+          "worldEvent": {
+            "kind": "takeoff",
+            "unit": "Intercept-1"
+          }
+        },
+        "template": "depart",
+        "subject": "the intercept",
+        "delivery": "radio"
+      },
+      {
+        "id": "contact",
+        "phase": "awacs",
+        "channel": "control",
+        "when": {
+          "afterEvent": "depart",
+          "delaySeconds": 30
+        },
+        "text": "Scenario cue: bomber track northeast of Intercept Gate. This timed update is not a radar detection.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "escalate",
+        "phase": "reinforcements",
+        "channel": "control",
+        "when": {
+          "afterEvent": "depart",
+          "delaySeconds": 90
+        },
+        "text": "A hostile MiG-29 pair has entered the scenario. Protect the bomber intercept; engaging the fighters is optional.",
+        "seconds": 25,
+        "effects": [
+          {
+            "kind": "activate_group",
+            "group": "Bandits"
+          }
+        ]
+      },
+      {
+        "id": "success",
+        "phase": "victory",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "group_dead",
+              "group": "Bombers"
+            }
+          ]
+        },
+        "template": "success",
+        "subject": "the bomber intercept; scenario outcome arbitration still applies"
+      },
+      {
+        "id": "protected_lost",
+        "phase": "failure",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "flag_is_true",
+              "flag": 50
+            }
+          ]
+        },
+        "text": "Defenders have been destroyed. The protected-force objective has failed.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "recovered",
+        "phase": "atc_recovery",
+        "channel": "control",
+        "when": {
+          "worldEvent": {
+            "kind": "land",
+            "unit": "Intercept-1"
+          },
+          "conditions": [
+            {
+              "kind": "group_dead",
+              "group": "Bombers"
+            }
+          ]
+        },
+        "text": "Landing event recorded after bomber destruction. This cue does not verify the landing airfield or score a separate recovery objective.",
+        "seconds": 25,
+        "effects": []
+      }
+    ]
+  },
+  "assumptions": [
+    "Fictional modern training scenario; country assignments are game settings, not historical service-date claims.",
+    "DCS metres: x north, y east; altitude is MSL unless a condition explicitly says AGL. Positions, routes, terrain clearance and mission balance require DCS checks.",
+    "Explicit stores are checked against bundled pydcs station compatibility; AI weapon employment and mission completion are not flight-verified.",
+    "Director cues are fictional subtitles. No audio, real radar detection, JTAC service or authenticated procedure is configured.",
+    "No external scripts or assets are required. The mission remains open after an outcome so the player can return; automatic recovery is not authored.",
+    "Defenders placement was shifted 100 metres north after native DCS terrain sampling found the second vehicle in water; both corrected vehicle positions sampled as dry land on DCS 2.9.31.29434."
+  ]
 }

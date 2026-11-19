@@ -299,14 +299,59 @@ export interface TargetTemplate {
   /** Metres between objects in the grid. */
   spacingMetres: number;
   columns: number;
+  /** Designed compound footprint; absent on legacy grid templates. */
+  layout?: { type: string; forward: number; right: number; headingDegrees?: number }[];
+  perimeterByDefault?: boolean;
+  notes?: string[];
+}
+
+function compound(id: string, description: string, layout: NonNullable<TargetTemplate['layout']>, notes: string[]): TargetTemplate {
+  const counts = new Map<string, number>();
+  for (const o of layout) counts.set(o.type, (counts.get(o.type) ?? 0) + 1);
+  return { id, description, objects: [...counts].map(([type, count]) => ({ type, count })), spacingMetres: 40,
+    columns: 1, layout, perimeterByDefault: true, notes: [
+      'Designed scenery footprint, not a historical installation or measured collision layout. The central approach is reserved for access.', ...notes] };
 }
 
 /**
- * Static-object target sets. The types are from the DCS catalogue; the grid
- * arrangement is this project's convention (provenance: catalogue), not copied
+ * Static-object target sets. The types are from the DCS catalogue; grids and
+ * designed compound footprints are project conventions, not copied
  * from an editor mission.
  */
 export const TARGET_TEMPLATES: TargetTemplate[] = [
+  compound('farp-staging', 'FARP staging compound with an empty central pad area, stores, staff tents, windsock and perimeter.', [
+    { type: 'FARP Ammo Dump Coating', forward: -110, right: -100 },
+    { type: 'FARP Fuel Depot', forward: -110, right: 100 },
+    { type: 'FARP CP Blindage', forward: -150, right: -100 },
+    { type: 'FARP Tent', forward: -150, right: 100 },
+    { type: 'Windsock', forward: 60, right: 120 },
+    { type: 'Container_watchtower', forward: 110, right: -130 },
+  ], ['Add the operational pad at the centre with dcs_miz_add_farp; support=true adds coalition support vehicles. Scenery does not supply fuel or ammunition.']),
+  compound('vehicle-staging', 'Vehicle staging yard: workshop, garages, stores, staff tents and an open central access lane.', [
+    { type: 'Repair workshop', forward: -70, right: -80 }, { type: 'Garage A', forward: 0, right: -80 },
+    { type: 'Garage B', forward: 70, right: -80 }, { type: 'Container_40ft', forward: -70, right: 80 },
+    { type: 'FARP Tent', forward: 0, right: 80 }, { type: 'FARP Tent', forward: 60, right: 80 },
+    { type: 'Container_watchtower', forward: 100, right: -120 },
+  ], ['Park active vehicle groups outside object footprints; the entrance metadata can guide authored approach waypoints.']),
+  compound('scud-base', 'SCUD staging scenery: launch-vehicle service shelters, command, fuel and ammunition support.', [
+    { type: 'Shelter B', forward: -60, right: -100 }, { type: 'Shelter B', forward: 60, right: -100 },
+    { type: 'FARP CP Blindage', forward: -100, right: 100 }, { type: 'Comms tower M', forward: -50, right: 100 },
+    { type: 'FARP Fuel Depot', forward: 10, right: 100 }, { type: 'FARP Ammo Dump Coating', forward: 70, right: 100 },
+    { type: 'Container_watchtower', forward: 120, right: -130 },
+  ], ['Add active Scud_B launchers separately as vehicle groups. Static shelters are targets; they do not create missile firing tasks.']),
+  compound('sam-support', 'SAM support compound with command bunker, communications, generator, stores and guard post.', [
+    { type: 'FARP CP Blindage', forward: -70, right: -70 }, { type: 'Comms tower M', forward: 0, right: -70 },
+    { type: 'HESCO_generator', forward: 70, right: -70 }, { type: 'FARP Tent', forward: -70, right: 70 },
+    { type: 'FARP Ammo Dump Coating', forward: 0, right: 70 }, { type: 'Container_watchtower', forward: 70, right: 70 },
+  ], ['Place the active SAM battery outside this support compound using a site template and terrain checks. Radars and launchers require clear sectors, not a decorative wall around them.']),
+  compound('military-base', 'Military base compound with command, barracks, maintenance, logistics, fuel, ammunition and guard posts.', [
+    { type: '.Command Center', forward: -110, right: -100 }, { type: 'Comms tower M', forward: -40, right: -100 },
+    { type: 'Barracks 2', forward: 30, right: -100 }, { type: 'Barracks 2', forward: 100, right: -100 },
+    { type: 'Repair workshop', forward: -110, right: 100 }, { type: 'Garage A', forward: -30, right: 100 },
+    { type: 'Warehouse', forward: 50, right: 100 }, { type: 'FARP Fuel Depot', forward: 120, right: 100 },
+    { type: 'FARP Ammo Dump Coating', forward: -160, right: 100 },
+    { type: 'Container_watchtower', forward: 160, right: -140 },
+  ], ['Add guards, combat groups, operating pads and supply links explicitly. This preset creates static target objects and a boundary, not an autonomous defended base.']),
   {
     id: "ammo-depot",
     description: "Ammunition depot: bunkered dumps, a depot building, crates, guard post.",
@@ -391,7 +436,7 @@ export interface AddTargetAreaArgs {
   /** Also add a trigger zone named `name` covering the area (for triggers/scripts). */
   zone?: boolean;
   dead?: boolean;
-  /** Barracks default to a static boundary. Other templates opt in explicitly. */
+  /** Barracks and designed compounds default to a static boundary. */
   perimeter?: PerimeterSpec | false;
 }
 
@@ -400,10 +445,12 @@ export interface AddTargetAreaResult {
   /** Radius (metres) that covers every object, from the area centre. */
   radiusMetres: number;
   perimeter?: PerimeterResult;
+  geometry: 'designed-footprint' | 'generic-grid';
+  notes: string[];
 }
 
 /**
- * Lay a template out as a grid centred on x/y and rotated to the heading. Every
+ * Place a grid or designed footprint centred on x/y and rotated to the heading. Every
  * object is its own static group named `<name>-N`, the way the Mission Editor
  * stores statics, so each can be targeted, counted or referenced on its own.
  */
@@ -414,11 +461,10 @@ export function addTargetArea(mission: LuaTable, args: AddTargetAreaArgs): AddTa
   const rows = Math.ceil(types.length / t.columns);
   const objects: string[] = [];
   let radius = 0;
-  types.forEach((type, i) => {
-    const row = Math.floor(i / t.columns);
-    const col = i % t.columns;
-    const forward = ((rows - 1) / 2 - row) * t.spacingMetres;
-    const right = (col - (t.columns - 1) / 2) * t.spacingMetres;
+  const layout = t.layout ?? types.map((type, i) => ({ type,
+    forward: ((rows - 1) / 2 - Math.floor(i / t.columns)) * t.spacingMetres,
+    right: (i % t.columns - (t.columns - 1) / 2) * t.spacingMetres, headingDegrees: 0 }));
+  layout.forEach(({ type, forward, right, headingDegrees }, i) => {
     radius = Math.max(radius, Math.hypot(forward, right));
     const p = offset(args.x, args.y, args.heading ?? 0, forward, right);
     const name = `${args.name}-${i + 1}`;
@@ -429,23 +475,24 @@ export function addTargetArea(mission: LuaTable, args: AddTargetAreaArgs): AddTa
       name,
       type,
       ...p,
-      heading: args.heading,
+      heading: ((args.heading ?? 0) + (headingDegrees ?? 0)) % 360,
       dead: args.dead,
     });
     objects.push(name);
   });
   let perimeter: PerimeterResult | undefined;
-  if (args.perimeter !== false && (args.perimeter !== undefined || t.id === 'barracks')) {
+  if (args.perimeter !== false && (args.perimeter !== undefined || t.id === 'barracks' || t.perimeterByDefault)) {
     const spec = perimeterSpecSchema.parse(args.perimeter ?? {});
     perimeter = addRectanglePerimeter(copy, { ...spec, side:args.side,country:args.country,countryId:args.countryId,
       x:args.x,y:args.y,heading:args.heading,dead:args.dead,name: `${args.name}-Perimeter`,
-      widthMetres: (t.columns - 1) * t.spacingMetres + 2 * spec.paddingMetres,
-      depthMetres: (rows - 1) * t.spacingMetres + 2 * spec.paddingMetres });
+      widthMetres: 2 * Math.max(...layout.map(o => Math.abs(o.right))) + 2 * spec.paddingMetres,
+      depthMetres: 2 * Math.max(...layout.map(o => Math.abs(o.forward))) + 2 * spec.paddingMetres });
     objects.push(...perimeter.objects);
     radius = Math.max(radius + t.spacingMetres, Math.hypot(perimeter.widthMetres/2,perimeter.depthMetres/2)+spec.segmentDepthMetres);
   } else radius += t.spacingMetres;
   Object.assign(mission, copy);
-  return { objects, radiusMetres: Math.ceil(radius), ...(perimeter ? { perimeter } : {}) };
+  return { objects, radiusMetres: Math.ceil(radius), ...(perimeter ? { perimeter } : {}),
+    geometry: t.layout ? 'designed-footprint' : 'generic-grid', notes: t.notes ?? ['Catalogue objects in a generic grid; check terrain and physical clearances.'] };
 }
 
 // ---------------------------------------------------------------------------

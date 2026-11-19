@@ -1,0 +1,511 @@
+{
+  "version": 1,
+  "name": "Blue Water Shield",
+  "kind": "carrier_operations",
+  "theatre": "Caucasus",
+  "seed": 121,
+  "coalitions": {
+    "blue": [
+      "USA"
+    ],
+    "red": [
+      "Russia"
+    ]
+  },
+  "player": {
+    "group": "Shield",
+    "slot": "Player"
+  },
+  "objective": "Defend Carrier against both naval strike waves within 50 minutes. Destroy every aircraft in Raid One and Raid Two after the second wave is released. Loss of Shield-1 or Carrier-1 fails the mission. Recovery is optional and must be flown manually.",
+  "difficulty": "normal",
+  "threatLevel": "medium",
+  "durationSeconds": 3000,
+  "endOnOutcome": false,
+  "configuration": {
+    "date": {
+      "year": 2025,
+      "month": 6,
+      "day": 15
+    },
+    "startTime": 28800,
+    "weather": {
+      "temperatureCelsius": 18,
+      "qnhMmHg": 760,
+      "visibilityMetres": 80000,
+      "wind": {
+        "atGround": {
+          "speed": 2,
+          "dir": 270
+        },
+        "at2000": {
+          "speed": 5,
+          "dir": 280
+        },
+        "at8000": {
+          "speed": 8,
+          "dir": 290
+        }
+      }
+    },
+    "coalitionBriefing": {
+      "blue": "Shield single Hornet: hot start on Stennis, six AIM-120C, two AIM-9X and centreline tank. Control 251 AM; probe-and-drogue Texaco 253 AM. Raid One is active at mission start; Raid Two activates at 300 seconds. This is aircraft interception: destroying launched missiles is not scored. The escort may engage independently. No carrier ATC, ICLS, TACAN, deck-slot plan or moving-deck recovery waypoint is configured."
+    }
+  },
+  "forces": [
+    {
+      "name": "Carrier",
+      "side": "blue",
+      "country": "USA",
+      "category": "ship",
+      "type": "Stennis",
+      "count": 1,
+      "position": {
+        "x": -310000,
+        "y": 460000
+      },
+      "heading": 0,
+      "route": [
+        {
+          "x": -290000,
+          "y": 460000,
+          "speedMps": 8
+        }
+      ]
+    },
+    {
+      "name": "Escort",
+      "side": "blue",
+      "country": "USA",
+      "category": "ship",
+      "type": "TICONDEROG",
+      "count": 1,
+      "position": {
+        "x": -312000,
+        "y": 462000
+      },
+      "heading": 0,
+      "route": [
+        {
+          "x": -292000,
+          "y": 462000,
+          "speedMps": 8
+        }
+      ]
+    },
+    {
+      "name": "Shield",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "FA-18C_hornet",
+      "count": 1,
+      "position": {
+        "x": -310000,
+        "y": 460000
+      },
+      "role": "CAP",
+      "frequencyMHz": 251,
+      "start": {
+        "kind": "ship_hot",
+        "ship": "Carrier-1"
+      },
+      "payload": {
+        "fuel": 4900,
+        "pylons": [
+          {
+            "pylon": 1,
+            "CLSID": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}"
+          },
+          {
+            "pylon": 2,
+            "CLSID": "LAU-115_2*LAU-127_AIM-120C"
+          },
+          {
+            "pylon": 4,
+            "CLSID": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}"
+          },
+          {
+            "pylon": 5,
+            "CLSID": "{FPU_8A_FUEL_TANK}"
+          },
+          {
+            "pylon": 6,
+            "CLSID": "{40EF17B7-F508-45de-8566-6FFECC0C1AB8}"
+          },
+          {
+            "pylon": 8,
+            "CLSID": "LAU-115_2*LAU-127_AIM-120C"
+          },
+          {
+            "pylon": 9,
+            "CLSID": "{5CE2FF2A-645A-4197-B48D-8720AC69394F}"
+          }
+        ]
+      },
+      "route": [
+        {
+          "x": -290000,
+          "y": 490000,
+          "altitudeMetres": 6500,
+          "speedMps": 220
+        },
+        {
+          "x": -260000,
+          "y": 520000,
+          "altitudeMetres": 6500,
+          "speedMps": 220
+        }
+      ]
+    },
+    {
+      "name": "Raid One",
+      "side": "red",
+      "country": "Russia",
+      "category": "plane",
+      "type": "Su-24M",
+      "count": 2,
+      "position": {
+        "x": -220000,
+        "y": 560000
+      },
+      "role": "naval_strike",
+      "frequencyMHz": 124,
+      "targetGroup": "Carrier",
+      "payload": {
+        "fuel": 10000,
+        "pylons": [
+          {
+            "pylon": 2,
+            "CLSID": "{4D13E282-DF46-4B23-864A-A9423DFDE504}"
+          },
+          {
+            "pylon": 7,
+            "CLSID": "{4D13E282-DF46-4B23-864A-A9423DFDE504}"
+          }
+        ]
+      },
+      "route": [
+        {
+          "x": -270000,
+          "y": 510000,
+          "altitudeMetres": 4000,
+          "speedMps": 230
+        }
+      ]
+    },
+    {
+      "name": "Raid Two",
+      "side": "red",
+      "country": "Russia",
+      "category": "plane",
+      "type": "Su-24M",
+      "count": 2,
+      "position": {
+        "x": -350000,
+        "y": 565000
+      },
+      "role": "naval_strike",
+      "frequencyMHz": 125,
+      "targetGroup": "Carrier",
+      "lateActivation": true,
+      "payload": {
+        "fuel": 10000,
+        "pylons": [
+          {
+            "pylon": 2,
+            "CLSID": "{4D13E282-DF46-4B23-864A-A9423DFDE504}"
+          },
+          {
+            "pylon": 7,
+            "CLSID": "{4D13E282-DF46-4B23-864A-A9423DFDE504}"
+          }
+        ]
+      },
+      "route": [
+        {
+          "x": -330000,
+          "y": 510000,
+          "altitudeMetres": 4000,
+          "speedMps": 230
+        }
+      ]
+    },
+    {
+      "name": "Overlord",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "E-2C",
+      "count": 1,
+      "position": {
+        "x": -350000,
+        "y": 420000
+      },
+      "role": "AWACS",
+      "frequencyMHz": 251,
+      "orbit": {
+        "point": {
+          "x": -350000,
+          "y": 420000
+        },
+        "point2": {
+          "x": -320000,
+          "y": 420000
+        },
+        "pattern": "Race-Track",
+        "altitudeMetres": 8500,
+        "speedMps": 180
+      }
+    },
+    {
+      "name": "Texaco",
+      "side": "blue",
+      "country": "USA",
+      "category": "plane",
+      "type": "KC135MPRS",
+      "count": 1,
+      "position": {
+        "x": -370000,
+        "y": 400000
+      },
+      "role": "tanker",
+      "frequencyMHz": 253,
+      "orbit": {
+        "point": {
+          "x": -370000,
+          "y": 400000
+        },
+        "point2": {
+          "x": -345000,
+          "y": 400000
+        },
+        "pattern": "Race-Track",
+        "altitudeMetres": 6500,
+        "speedMps": 180
+      }
+    }
+  ],
+  "requiredSupport": [
+    "Overlord",
+    "Texaco"
+  ],
+  "zones": [
+    {
+      "name": "Initial Carrier Position",
+      "x": -310000,
+      "y": 460000,
+      "radius": 5000
+    }
+  ],
+  "events": [
+    {
+      "type": "once",
+      "comment": "Carrier lost",
+      "conditions": [
+        {
+          "kind": "unit_dead",
+          "unit": "Carrier-1"
+        }
+      ],
+      "actions": [
+        {
+          "kind": "set_flag",
+          "flag": 50,
+          "value": 1
+        }
+      ]
+    }
+  ],
+  "victory": [
+    {
+      "kind": "flag_is_true",
+      "flag": 35
+    },
+    {
+      "kind": "group_dead",
+      "group": "Raid One"
+    },
+    {
+      "kind": "group_dead",
+      "group": "Raid Two"
+    }
+  ],
+  "failure": [
+    {
+      "kind": "unit_dead",
+      "unit": "Shield-1"
+    },
+    {
+      "kind": "or"
+    },
+    {
+      "kind": "flag_is_true",
+      "flag": 50
+    }
+  ],
+  "director": {
+    "name": "BlueWaterShield",
+    "channels": [
+      {
+        "id": "control",
+        "speaker": "Mission control",
+        "callsign": "Overlord",
+        "frequencyMHz": 251,
+        "style": "nato"
+      }
+    ],
+    "events": [
+      {
+        "id": "brief",
+        "phase": "briefing",
+        "channel": "control",
+        "when": {
+          "atSeconds": 1
+        },
+        "text": "Blue Water Shield: launch, defend the carrier and watch for the second axis at five minutes.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "depart",
+        "phase": "atc_departure",
+        "channel": "control",
+        "when": {
+          "worldEvent": {
+            "kind": "takeoff",
+            "unit": "Shield-1"
+          }
+        },
+        "text": "Shield departure event recorded. Establish CAP northeast of the initial carrier position.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "first_raid",
+        "phase": "awacs",
+        "channel": "control",
+        "when": {
+          "atSeconds": 30
+        },
+        "text": "Scenario cue: Raid One approaches from the northeast. This timed briefing is not a radar plot.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "second_raid",
+        "phase": "reinforcements",
+        "channel": "control",
+        "when": {
+          "atSeconds": 300
+        },
+        "text": "Raid Two is now active from the southeast axis. Both raid groups are mandatory targets.",
+        "seconds": 25,
+        "effects": [
+          {
+            "kind": "activate_group",
+            "group": "Raid Two"
+          },
+          {
+            "kind": "set_flag",
+            "flag": 35,
+            "value": 1
+          }
+        ]
+      },
+      {
+        "id": "first_clear",
+        "phase": "engagement",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "group_dead",
+              "group": "Raid One"
+            }
+          ]
+        },
+        "text": "Raid One aircraft destroyed. Released weapons may still be airborne; carrier survival remains mandatory.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "raids_clear",
+        "phase": "branch",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "flag_is_true",
+              "flag": 35
+            },
+            {
+              "kind": "group_dead",
+              "group": "Raid One"
+            },
+            {
+              "kind": "group_dead",
+              "group": "Raid Two"
+            }
+          ]
+        },
+        "text": "Both aircraft waves destroyed. Scenario arbitration determines the result; missiles already in flight are not tracked by this objective.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "carrier_lost",
+        "phase": "failure",
+        "channel": "control",
+        "when": {
+          "conditions": [
+            {
+              "kind": "flag_is_true",
+              "flag": 50
+            }
+          ]
+        },
+        "text": "Carrier lost. The fleet defence objective has failed.",
+        "seconds": 25,
+        "effects": []
+      },
+      {
+        "id": "landed",
+        "phase": "atc_recovery",
+        "channel": "control",
+        "when": {
+          "worldEvent": {
+            "kind": "land",
+            "unit": "Shield-1"
+          },
+          "conditions": [
+            {
+              "kind": "flag_is_true",
+              "flag": 35
+            },
+            {
+              "kind": "group_dead",
+              "group": "Raid One"
+            },
+            {
+              "kind": "group_dead",
+              "group": "Raid Two"
+            }
+          ]
+        },
+        "text": "Landing event recorded after both waves were destroyed. This does not identify the landing place or verify carrier recovery.",
+        "seconds": 25,
+        "effects": []
+      }
+    ]
+  },
+  "assumptions": [
+    "Fictional modern training scenario; country assignments are game settings, not historical service-date claims.",
+    "DCS metres: x north, y east; altitude is MSL unless a condition explicitly says AGL. Positions, routes, terrain clearance and mission balance require DCS checks.",
+    "Explicit stores are checked against bundled pydcs station compatibility; AI weapon employment and mission completion are not flight-verified.",
+    "Director cues are fictional subtitles. No audio, real radar detection, JTAC service or authenticated procedure is configured.",
+    "No external scripts or assets are required. The mission remains open after an outcome so the player can return; automatic recovery is not authored.",
+    "Ship placement and parallel routes are illustrative open-water plans and have not been checked against DCS surface data.",
+    "The stock Stennis is used to avoid an explicit Supercarrier dependency. Ship-linked departure is authored; deck occupancy and module-specific launch behavior require DCS verification.",
+    "Carrier survival is evaluated until the scenario outcome latches. Released anti-ship missiles are not victory targets, so a later hit can occur after victory; extend adjudication if that is undesired."
+  ]
+}

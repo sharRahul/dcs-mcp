@@ -103,10 +103,13 @@ is not a claim of playable voice or a displayed image.
 
 ## Structured scenario generation
 
-See [examples/scenarios/interception.json](../examples/scenarios/interception.json)
-for a complete client-supplied specification. It is a design example, not a
-terrain-cleared or flown mission. It intentionally asks the author to choose a
-validated combat loadout.
+See the [scenario examples](../examples/scenarios/README.md) for interception,
+SEAD-supported strike, convoy escort, carrier defence and military-base ground
+attack, A-10C II/Su-25T CAS and Apache/Ka-50 helicopter specifications. They
+include explicit catalogue-compatible stores, support aircraft, staged activation
+and protected-asset objectives. Their native functional and sampled placement
+checks are recorded in [verification.md](verification.md); they do not establish
+combat balance or unrestricted clearance on other placements/builds.
 
 Use `dcs_scenario_validate` first to compile into a disposable session and return
 errors/report without retaining a mission. `dcs_scenario_generate` performs the
@@ -122,6 +125,9 @@ Specifications include:
   the lead type must match the first composition type. Batteries remain one group
   and retain their existing provenance. Compositions override count, as in the
   low-level API; mixed groups are capped at 100 units, scenarios at 5000.
+  Vehicle forces can instead declare `groundPlan` for road transit or combat
+  formations, with per-point movement/speed settings in their route. See
+  [ground sites and movement](ground-sites.md).
 - Difficulty, declared threat level, duration, date/time/weather/configuration.
 - Zones, supported triggered events, victory/failure conditions, optional director.
 - Optional assets with stable ids, filenames and canonical base64 content; maximum

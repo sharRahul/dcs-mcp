@@ -75,6 +75,10 @@ jobs:
       - name: Compatibility matrix with editor fix-ups (stock Lua 5.1, not DCS)
         run: node --test --import tsx tests/compat.test.ts
       - run: npm run verify:design -- "${{ runner.temp }}/lua51-design-proof"
+      - name: Scenario example phases (stock Lua, mocked DCS APIs)
+        env:
+          DCS_LUA: ${{ env.LUA51 }}
+        run: node --import tsx --test tests/scenario-examples.test.ts
       - name: Mocked hook load and protocol checks
         shell: pwsh
         run: |

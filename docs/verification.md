@@ -1,8 +1,205 @@
 # DCS-MCP verification
 
-Single verification record. Historical results retain their original scope; current live DCS acceptance remains pending.
+Single verification record. Historical results retain their original scope; later native results below supersede earlier offline-only statements for the checks they cover.
 
 
+
+## Ground compounds, road movement and Germany sites — 2026-11-19
+
+Added five designed scenery footprints through the existing target-area tool:
+farp-staging, vehicle-staging, scud-base, sam-support and military-base. They
+include gated boundaries and central approach space. Existing barracks retain
+their perimeter; legacy depot grids retain their geometry. Results distinguish
+designed footprints from grids and explain which operational assets must be
+added separately. No scenery-only preset creates an active launcher or supply
+service. See [ground-sites.md](ground-sites.md).
+
+Ground plans now default convoy transit to native On Road actions and assault
+plans to native Rank (Line Abreast), rather than changing only spawn positions.
+Per-point movement/speed settings support authored transit/deployment changes;
+following points inherit the movement. Scenario vehicle forces accept groundPlan;
+aircraft and site-template forces reject it. The five moving-ground examples
+use explicit transport or assault roles. Automatic enemy-triggered deployment
+is not implemented.
+
+Native Caucasus fixture: **10 checks passed**. All **2,542** compound/FARP/boundary
+statics existed and were on dry terrain; a support FARP and active SCUD vehicle
+spawned. A truck physically traversed the compound entrance. Both opposing
+three-tank groups moved in line-abreast formations, then fired in native combat.
+Three road trucks completed their native graph route; the maximum observed road
+offset during the test interval was below **2.4 metres**. This checks the exercised
+layouts and actions, not universal AI tactics or arbitrary terrain clearance.
+A separate same-group probe subsequently changed from native road transit to a
+moving line-abreast formation (99.16 m lateral spread, 6.46 m longitudinal spread
+at the passing observation). A UH-1H made an actual hot departure from the new
+FARP staging compound, reaching 46.9 m AGL by mission time 44 seconds.
+
+The new dcs_list_terrain_sites reference tool has four community-sourced Germany
+candidates, independently checked in native DCS 2.9.31.29434: Rostock, Parchim,
+Wismar and northern Rügen. All **eight coordinate/surface checks passed**;
+projection differences were at most **0.031 metres**. Native scenery queries
+within 250 metres found respectively 19, 22, 14 and 28 infrastructure objects,
+including military buildings, tents, stores and gates. Records retain their
+community source and separate the native observation from equipmentFit=unverified.
+This is not a catalogue of every prepared site or verified radar/launcher pad fit.
+No third-party mission files or terrain assets are redistributed.
+
+The revised example ground layouts were re-sampled against DCS: **2,292 terrain
+points and 70 ground/FARP scenery probes, no detected faults**. Detailed local
+evidence and disposable fixtures are under ignored .verification-sites-20261119/.
+
+Re-ran all five examples whose ground movement changed: A-10C II, Su-25T,
+Apache, Ka-50 III and River Road. All **39 director phases and 116 assertions**
+passed, including the complete Apache and River Road convoy journeys. Together
+with the four unchanged, source-matched cases from the earlier run, current
+coverage remains **70/70 director phases and 209 native scenario assertions**.
+The final evidence audit matched each source hash and test-archive hash. Native
+logs contained no mission script errors.
+
+Read-only review found and fixed a validation/generation mismatch for ground
+route speeds and defensive routes; both paths now use shared validation. Final
+automated result: **366 passed, zero failed, zero skipped**, with native Lua and
+pinned pydcs sources. TypeScript check/build and package hygiene passed. Only
+source, tests, examples, source metadata and documentation are committed; no
+local manuals, private harnesses, raw logs, generated mission archives or personal machine paths.
+
+After all tests, clean playable archives were generated with exactly one Player
+aircraft each, with no private fixture scripts. No DCS retest followed that
+control setting. DCS was stopped and the original Export.lua restored byte-for-
+byte (verified by SHA-256); no DCS process or window remained.
+
+## Native scenario execution follow-up — 2026-11-19
+
+DCS 2.9.31.29434 MT, Caucasus. Acceptance checks whether the authored scenario
+executes: valid spawns/stores, departure, phase conditions/actions, timed releases,
+movement, protected-asset responses and required egress/arrival. Combat victory
+is a player-dependent outcome, not the acceptance criterion.
+
+Each final JSON generated an isolated, hash-pinned test mission. Its player group
+was converted to AI with the original start, placement and stores. The fixture
+held fire to isolate conditions, issued labelled native AI entry/egress decisions
+and removed labelled world objects to supply target/protected-loss preconditions.
+It never wrote scenario flags: the original triggers had to observe conditions,
+set phases, activate groups and arbitrate outcomes. Takeoffs, zone entries,
+vehicle/ship movement and convoy arrival were physical DCS simulation. Optional
+intercept/carrier landing callbacks were dispatched synthetically; these verify
+the callback conditions, not an actual recovery flight. Uncontrolled combat runs
+also observed native weapon releases, kills, reinforcements and player-loss
+responses, but are not used to require an AI win.
+
+| Example | Director phases observed | Native assertions passed | Distinct execution checks |
+| --- | ---: | ---: | --- |
+| Northern Watch | 7/7 | 18 | Hot departure, 30-second contact cue, MiGs after 90 seconds, defenders-loss response, target-clear and optional landing callback |
+| Copper Corridor | 7/7 | 26 | Radar-unit loss, Hornet release after 20 seconds, MiGs 45 seconds later, logistics condition and player-loss arbitration |
+| Blue Water Shield | 8/8 | 20 | Stock Stennis deck departure, moving carrier/escort, second raid at 300 seconds, carrier-loss response and both raid-clear conditions |
+| Iron Gate | 9/9 | 29 | Perimeter entry, 60-second scramble, command/logistics/armour conditions, Ranger loss, actual egress |
+| Valley Shield | 8/8 | 26 | A-10C II departure, Battle Area entry, 90-second reserve release, tanks/reserve movement, protected-armour response and egress |
+| River Relief | 8/8 | 23 | Su-25T runway departure, 60-second primary-loss reserve delay, reserve movement, protected-armour response and egress |
+| Dust Escort | 8/8 | 23 | Hot Apache FARP departure, 30-second reserve delay, both protected trucks reaching their destination, critical-truck response and egress |
+| Black Shark Counterbattery | 8/8 | 22 | Cold Ka-50 FARP departure, 45-second supply-loss reserve delay, reserve movement, egress and protected-FARP static-loss condition |
+| River Road | 7/7 | 22 | Actual four-vehicle route completion, checkpoint ambush, 90-second reinforcement delay, cargo-loss response and settled outcome arbitration |
+
+All nine examples passed: **70/70 director phases and 209 native assertions**.
+The first convoy observer sampled an unresolved outcome before the documented
+one-second arbiter window elapsed. A corrected observer waited for resolution;
+the unchanged mission passed the full native rerun. No mission script errors were
+found in the final preserved logs.
+
+All authored F10 annotations were checked for native identity, text and position.
+Player stores were counted through native unit ammunition data. Late groups had
+to be initially inactive and active only after their release. The negative cases
+latched failure before later target-clear phases; the Ka-50 case latched success
+before a later pad-loss cue, checking that an already-final outcome stays locked.
+Public specifications retain exactly one Player slot each; AI conversion and
+fixture interventions exist only in ignored test copies.
+
+Native geometry checks found and corrected five problems:
+
+- Northern Watch's second defender was in water: shift the group 100 metres north.
+- River Relief's reserve route crossed water: add a sampled dry detour.
+- River Road's convoy stalled against scenery: use 35 native road-graph points.
+- Dust Escort's trucks/reserve overlapped scenery: shift those spawns 20 metres.
+- Iron Gate's compound was on steep terrain: move its ground forces to a flat,
+  clear site and adjust related routes/zones while retaining a distinct ingress.
+
+The final native terrain audit sampled **2,292** placement/route points with no
+surface or altitude faults. Scenery/gradient probes covered **70** ground/FARP
+spawns with no reported faults; Iron Gate's 11 ground units also had under-five-
+degree sampled slopes and 15-metre scenery clearance. These are sampled checks,
+not continuous collision-clearance guarantees. Combat stores and balance were
+retained; no AI-win loadout changes were kept. Carrier radio aids/recovery routes,
+JTAC services, helicopter player cockpits and qualitative combat balance are
+outside these functional checks.
+
+Local evidence is under ignored .verification-examples-20261119/: hash-pinned
+functional-manifest.json, per-mission *-functional-result-*.json, preserved native
+logs, terrain-final.json and scenery-all.json. Generated test archives, raw logs,
+absolute machine paths and test-only control scripts are excluded from GitHub
+and the package.
+
+Final repository checks: **354 tests passed, zero failed, zero skipped**, using
+installed DCS Lua and pinned pydcs sources; TypeScript check and build passed.
+The package dry-run includes all nine JSONs and the scenario README, with zero
+local verification artifacts. DCS was terminated after the final test; no DCS
+window remained. The temporary time-acceleration export was removed and the
+original Export.lua restored byte-for-byte, verified by SHA-256.
+
+## Fixed-wing CAS and attack helicopters — 2026-11-19
+
+Added Valley Shield (A-10C II armoured defence), River Relief (Su-25T roadblock
+relief), Dust Escort (AH-64D Apache convoy escort from a hot FARP start) and
+Black Shark Counterbattery (Ka-50 III artillery-vehicle attack from a cold FARP
+start). Each has distinct targets, compatible explicit stores, reinforcement
+triggers/delays, a protected friendly asset and mandatory egress. Apache also
+requires surviving convoy arrival; Ka-50 protects the Forward Pad static unit.
+No real-world operation, automatic JTAC/laser service, terrain-following route,
+artillery fire mission or FARP resupply service is asserted.
+
+Tests verify deterministic generation, stored aircraft variants, compatible
+payload stations/fuel, helicopter linkUnit/helipadId references, Lua syntax and
+saved-archive round-trips. Sixteen new mocked Lua cases cover reserve timing,
+partial-target/egress/convoy gates and protected-asset failure in both trigger
+orders. Full suite with DCS Lua and pinned pydcs source: **354 passed, zero
+failed, zero skipped**. TypeScript/whitespace checks passed; npm dry-run includes
+all four new CAS files. This was the initial offline result; native functional follow-up is recorded separately below.
+
+## Military-base ground-attack example — 2026-11-19
+
+Added Iron Gate (examples/scenarios/ground-attack-base.json): a Hornet two-ship
+with explicit GBU-38/air-to-air stores, independent command/logistics/armour
+vehicle target groups, Osa/Shilka defence, allied F-16 SEAD, AWACS/tanker support,
+a zone-triggered delayed scramble, friendly Ranger-1 protection and post-strike
+egress. The base is a fictional vehicle compound; no buildings/static targets,
+real-world installation or automatic target designation are claimed.
+
+The example joins the collection's deterministic generation, payload validation,
+Lua syntax and saved-archive round-trip checks. Four additional mocked Lua cases
+exercise both trigger orders for success/protected-unit failure: incomplete target
+sets and completed targets without egress cannot win, and scramble timing is checked.
+Full suite: **346 passed, zero failed, zero skipped** with DCS Lua and pinned
+pydcs sources available. TypeScript and whitespace checks passed.
+No DCS flight was run at this initial offline stage; see the later native functional follow-up.
+
+## Expanded scenario examples — 2026-11-19
+
+Updated Northern Watch with explicit Hornet/hostile stores, a conventional Su-24M
+strike pair, AWACS/tanker support, protected-force failure, delayed MiG activation
+and a landing-event cue. Added Copper Corridor (radar-gated SEAD/strike release),
+River Road (convoy/zone-triggered ambushes) and Blue Water Shield (ship-linked
+Hornet start and two naval-strike waves). All examples use existing schema fields.
+The scenario README describes objectives, phase flags, generation/revision steps
+and terrain, AI, audio and carrier-recovery limits.
+
+Automated checks generate every JSON twice, compare mission data, validate
+catalogued store stations/fuel, parse generated Lua and save/reopen the archive.
+Sixteen Lua mocked-runtime cases cover success/protected-asset failure in forward
+and reverse trigger order, strike-release delays, reinforcement gates and premature
+victory prevention. CI's stock Lua job now runs the example checks explicitly.
+Full suite with pinned pydcs sources and discovered DCS Lua: **344 passed, zero
+failed, zero skipped**. TypeScript check and build passed; package dry-run includes
+all four JSON files and their README, and excludes local mission drafts.
+These checks do not establish terrain clearance, AI combat behavior or DCS flight
+acceptance for the example missions. See the later native functional follow-up for simulator results.
 
 ## Skipped-test follow-up — 2026-11-19
 
