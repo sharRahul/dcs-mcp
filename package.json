@@ -14,6 +14,9 @@
     "scripts",
     "examples",
     "docs/testing/live-acceptance",
+    "docs/technical-reference.md",
+    "docs/mission-audio.md",
+    "docs/verification.md",
     "README.md",
     "LICENSE",
     "skills"
