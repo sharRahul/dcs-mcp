@@ -7,13 +7,14 @@
  * Lua 5.1) with mocked `c_*`/`a_*` predicates, so the compiled strings are proven
  * to load, evaluate and dispatch — not merely to look right.
  *
- * Skipped unless a DCS Lua interpreter is available. Set DCS_LUA to point at
- * `<DCS>/bin-mt/luae.exe` (or `bin/luae.exe`) to run it.
+ * Discovers DCS from its logged install path or DCS_INSTALL_DIR. Set DCS_LUA
+ * to override with `<DCS>/bin/luae.exe` (or `bin-mt/luae.exe`).
  */
+import { findDcsLua } from './helpers/dcs-lua.js';
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,16 +23,6 @@ import { loadScripts } from "../src/miz/frameworks.js";
 import { serializeLuaAssignment } from "../src/miz/serializer.js";
 import type { LuaTable } from "../src/miz/lua.js";
 
-const DEFAULT_LUA_PATHS = [
-  "C:/Program Files/Eagle Dynamics/DCS World/bin-mt/luae.exe",
-  "C:/Program Files/Eagle Dynamics/DCS World/bin/luae.exe",
-];
-
-function findLua(): string | undefined {
-  const configured = process.env.DCS_LUA;
-  if (configured) return existsSync(configured) ? configured : undefined;
-  return DEFAULT_LUA_PATHS.find((p) => existsSync(p));
-}
 
 const HARNESS = fileURLToPath(new URL("./fixtures/trig-runtime.lua", import.meta.url));
 
@@ -125,7 +116,7 @@ world.dead["g3"] = true
 tick(80)                      -- re-arms and fires again
 `;
 
-const lua = findLua();
+const lua = findDcsLua();
 
 /** Run a mission + scenario through the DCS-Lua harness and return its output. */
 function runUnderDcsLua(

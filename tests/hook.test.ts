@@ -1,8 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { findDcsLua } from './helpers/dcs-lua.js';
 import luaparse from "luaparse";
 
 /**
@@ -32,17 +33,9 @@ for (const file of [HOOK, EXPORT]) {
  * dcs.log and the bridge silently never listens. So load the hook for real under
  * DCS's own interpreter with the DCS globals stubbed, and drive its callbacks.
  *
- * Skipped unless DCS_LUA points at `<DCS>/bin-mt/luae.exe`.
+ * Discovers DCS from its logged install path or DCS_INSTALL_DIR; DCS_LUA overrides it.
  */
-const DEFAULT_LUA_PATHS = [
-  "C:/Program Files/Eagle Dynamics/DCS World/bin-mt/luae.exe",
-  "C:/Program Files/Eagle Dynamics/DCS World/bin/luae.exe",
-];
-const lua = (() => {
-  const configured = process.env.DCS_LUA;
-  if (configured) return existsSync(configured) ? configured : undefined;
-  return DEFAULT_LUA_PATHS.find((p) => existsSync(p));
-})();
+const lua = findDcsLua();
 
 test(
   "the hook loads and serves requests under the Lua 5.1 that DCS actually runs",

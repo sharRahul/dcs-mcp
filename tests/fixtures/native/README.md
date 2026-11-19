@@ -26,4 +26,8 @@ Missions with a warehouse inventory also exercise `dcs_import_warehouse_donor`.
 To run the same suite over a whole folder without committing anything (for example your
 `Saved Games/DCS/Missions`), set `DCS_NATIVE_MIZ_DIR` before `npm test`.
 
-No fixtures are committed yet: no Mission-Editor-saved mission was available to this project.
+`caucasus-empty.miz` was created from New Mission and saved directly by the DCS
+2.9.31.29434 Mission Editor on 2026-11-19. Its original archive bytes are pinned
+in the manifest. It covers the native coalition shell, options, warehouses and
+localization entries; it contains no units, scripts or media. It does not cover
+SAM layouts, aircraft tasks or live flight behavior.

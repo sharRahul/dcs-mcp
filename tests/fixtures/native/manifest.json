@@ -1,4 +1,14 @@
 {
-  "_about": "Mission-Editor-saved .miz files used as native regression fixtures. Add an entry per file; tests/native.test.ts runs the full suite over each. See README.md.",
-  "fixtures": []
+  "_about": "Mission-Editor-saved .miz files used as native regression fixtures. See README.md.",
+  "fixtures": [
+    {
+      "file": "caucasus-empty.miz",
+      "sha256": "7b1a708e3a327a9618aa7c5d2f691a139db95d8b0a01ceb446c56e0c4470cc62",
+      "dcsVersion": "2.9.31.29434",
+      "savedBy": "Mission Editor",
+      "theatre": "Caucasus",
+      "expectedErrors": [],
+      "notes": "Created from New Mission in the DCS Mission Editor on 2026-11-19; empty coalition shell with native options and warehouses. No units, scripts, media or third-party mission content."
+    }
+  ]
 }
