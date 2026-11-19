@@ -21,6 +21,7 @@ import { registerMissionDesignTools } from "./tools/mission-design.js";
 import { registerAdvancedAuthoringTools } from "./tools/advanced-authoring.js";
 import { registerTerrainPlacementTools } from "./tools/terrain-placement.js";
 import { registerTerrainTools } from "./tools/terrain.js";
+import { registerAudioTools } from "./tools/audio.js";
 import { registerMizTools } from "./tools/miz.js";
 import { registerMizAuthoringTools } from "./tools/miz-authoring.js";
 import { registerMizEditingTools } from "./tools/miz-editing.js";
@@ -52,6 +53,7 @@ function createServer() {
   );
   const catalogue = captureCatalogue(server);
   registerMizTools(server);
+  registerAudioTools(server);
   registerAdvancedAuthoringTools(server);
   registerMissionDesignTools(server);
   registerTerrainTools(server);

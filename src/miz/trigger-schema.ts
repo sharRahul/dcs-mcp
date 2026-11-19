@@ -56,6 +56,7 @@ export const actionSchema = z.union([
   z.object({ kind: z.literal('wait_for_user_flag'), flag, flagBack: flag.optional() }).strict(),
   z.object({ kind: z.literal('sound'), resourceKey, delaySeconds: z.number().int().nonnegative().optional() }).strict(),
   z.object({ kind: z.literal('sound_to_coalition'), resourceKey, coalition: sideSchema, delaySeconds: z.number().int().nonnegative().optional() }).strict(),
+  z.object({ kind: z.literal('sound_to_unit'), resourceKey, unit: name, delaySeconds: z.number().int().nonnegative().optional() }).strict(),
   z.object({ kind: z.literal('sound_to_group'), resourceKey, group: name, delaySeconds: z.number().int().nonnegative().optional() }).strict(),
   z.object({ kind: z.literal('stop_sound') }).strict(),
   z.object({ kind: z.literal('radio_transmission'), resourceKey, zone: name, frequencyMHz: z.number().positive().max(400), name,

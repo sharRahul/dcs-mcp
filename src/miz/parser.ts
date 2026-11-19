@@ -161,6 +161,7 @@ const ZONE_REF_PREDICATES = new Set([
 
 /** Predicates whose `unit` field points at a unit in the mission. */
 const UNIT_REF_PREDICATES = new Set([
+  "a_out_sound_u",
   "c_unit_in_zone",
   "c_unit_out_zone",
   "c_unit_dead",

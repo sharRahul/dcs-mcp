@@ -21,6 +21,8 @@ Your DCS install is read as data where it helps: dcs_install_report gives the bu
 
 Live-only terrain helpers (need a mission running): dcs_terrain_roads snaps points to DCS's road or railway graph (or routes along it), dcs_terrain_clear_spot finds flat land clear of scenery objects, dcs_terrain_visibility is DCS's own terrain intersection — geometry, never a sensor model. There is no offline equivalent of any of them.
 
+Mission audio: dcs_audio_convert converts a local MP3/WAV/OGG to PCM16 WAV or Vorbis OGG (FFmpeg on PATH or DCS_FFMPEG_PATH). Pass outputPath as file to dcs_miz_add_trigger actions sound, sound_to_unit (unit name), sound_to_group (group name), sound_to_coalition (coalition), or radio_transmission. Files embed in the saved .miz; no runtime API access is needed. Unit sound is native and ME-oracle-backed; playback in multiplayer still needs a flight check.
+
 Conventions that are easy to get wrong:
 - Map axes: x = NORTH metres, y = EAST metres. Generic placement tools also accept lat/lon and convert offline. Terrain grids, candidates, advanced tasks and orbits use DCS x/y metres.
 - Headings are DEGREES in this API (stored as radians in the file).

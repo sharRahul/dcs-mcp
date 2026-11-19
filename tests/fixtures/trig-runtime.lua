@@ -65,6 +65,7 @@ function a_out_text_delay_c(c, t, s, cv, d) note("text_c:" .. c .. ":" .. t) end
 function a_out_sound(r, d) note("sound:" .. r) end
 function a_out_sound_s(side, r, d) note("sound_s:" .. side .. ":" .. r) end
 function a_out_sound_g(g, r, d) note("sound_g:" .. g .. ":" .. r) end
+function a_out_sound_u(u, r, d) note("sound_u:" .. u .. ":" .. r .. ":" .. tostring(d)) end
 function a_out_sound_stop() note("sound_stop") end
 function a_radio_transmission(r, z, mod, loop, hz, pw, name, d, mic, sq)
   note("radio:" .. name .. ":" .. hz .. ":" .. r)

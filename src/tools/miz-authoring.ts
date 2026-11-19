@@ -65,6 +65,7 @@ const RESOURCE_ACTION_KINDS = new Set([
   "sound",
   "sound_to_coalition",
   "sound_to_group",
+  "sound_to_unit",
   "radio_transmission",
   "do_script_file",
 ]);
@@ -722,6 +723,14 @@ ${n}`).join(""), {
                   .object({
                     kind: z.literal("sound_to_coalition"),
                     coalition: sideField,
+                    file: z.string().min(1),
+                    delaySeconds: z.number().int().min(0).optional(),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    kind: z.literal("sound_to_unit"),
+                    unit: z.string().min(1),
                     file: z.string().min(1),
                     delaySeconds: z.number().int().min(0).optional(),
                   })

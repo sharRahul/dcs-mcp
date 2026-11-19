@@ -349,3 +349,12 @@ tick(1)
     assert.ok(log.every((l) => l.time === "0"), "scripts must load before the first tick");
   }
 );
+
+test('unit sound dispatches the selected numeric ID and delay under DCS Lua', { skip: lua ? false : 'no DCS Lua interpreter found' }, () => {
+  const { mission, dictionary } = buildMission();
+  addTrigger(mission, { type: 'once', conditions: [{ kind: 'time_after', seconds: 2 }], actions: [
+    { kind: 'sound_to_unit', unit: 'Uzi 1-2', resourceKey: 'ResKey_Action_Test', delaySeconds: 3 },
+  ] }, dictionary);
+  const { log } = runUnderDcsLua(mission, dictionary, 'tick(2)\ntick(3)');
+  assert.deepEqual(log.filter(l => l.entry.startsWith('sound_u:')), [{ time: '2', entry: 'sound_u:2:ResKey_Action_Test:3' }]);
+});

@@ -330,6 +330,17 @@
       "lua": "a_out_sound_stop()"
     },
     {
+      "predicate": "a_out_sound_u",
+      "role": "action",
+      "spec": {
+        "start_delay": 0,
+        "file": "ResKey_Action_15",
+        "predicate": "a_out_sound_u",
+        "unit": 1
+      },
+      "lua": "a_out_sound_u(1, getValueResourceByKey(\"ResKey_Action_15\"), 0)"
+    },
+    {
       "predicate": "a_out_text_delay",
       "role": "action",
       "spec": {

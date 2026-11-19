@@ -42,7 +42,7 @@ const SUPPORTED_ACTIONS = new Set([
   "a_explosion", "a_effect_smoke", "a_signal_flare", "a_end_mission",
   "a_add_radio_item", "a_add_radio_item_for_group", "a_remove_radio_item",
   "a_remove_radio_item_for_group",
-  "a_out_sound", "a_out_sound_s", "a_out_sound_g", "a_out_sound_stop", "a_radio_transmission",
+  "a_out_sound", "a_out_sound_s", "a_out_sound_g", "a_out_sound_u", "a_out_sound_stop", "a_radio_transmission",
   "a_do_script", "a_do_script_file",
   // Named `c_*` but stored in a trigrule's `actions` array by DCS.
   "c_start_wait_for_user", "c_stop_wait_for_user",

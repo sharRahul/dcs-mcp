@@ -1041,6 +1041,7 @@ export type ActionSpec =
   // player raises `flag`, which is what a radio menu item does when picked.
   | { kind: "wait_for_user_flag"; flag: number; flagBack?: number }
   | { kind: "sound_to_coalition"; coalition: Side; resourceKey: string; delaySeconds?: number }
+  | { kind: "sound_to_unit"; unit: string; resourceKey: string; delaySeconds?: number }
   | { kind: "sound_to_group"; group: string; resourceKey: string; delaySeconds?: number }
   | { kind: "stop_sound" }
   | {
@@ -1450,6 +1451,8 @@ function actionRule(mission: LuaTable, a: ActionSpec, dictionary?: LuaTable): Lu
         file: a.resourceKey,
         start_delay: a.delaySeconds ?? 0,
       };
+    case "sound_to_unit":
+      return { predicate: "a_out_sound_u", unit: resolveUnitId(mission, a.unit), file: a.resourceKey, start_delay: a.delaySeconds ?? 0 };
     case "sound_to_group":
       return {
         predicate: "a_out_sound_g",
@@ -1814,6 +1817,8 @@ const ACTION_COMPILERS: Record<string, (a: LuaTable) => string> = {
   a_out_sound: (a) => `a_out_sound(${argResource(a, "file")}${optionalDelay(a)})`,
   a_out_sound_s: (a) =>
     `a_out_sound_s(${argString(a, "coalitionlist")}, ${argResource(a, "file")}${optionalDelay(a)})`,
+  a_out_sound_u: (a) =>
+    `a_out_sound_u(${argNumber(a, "unit")}, ${argResource(a, "file")}${optionalDelay(a)})`,
   a_out_sound_g: (a) =>
     `a_out_sound_g(${argNumber(a, "group")}, ${argResource(a, "file")}${optionalDelay(a)})`,
   a_out_sound_stop: () => `a_out_sound_stop()`,

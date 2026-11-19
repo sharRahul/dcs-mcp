@@ -55,6 +55,7 @@ Optional environment variables:
 |---|---|---|
 | `DCS_BRIDGE_HOST` / `DCS_BRIDGE_PORT` | `127.0.0.1` / `8899` | Where the live hook listens |
 | `DCS_SAVED_GAMES` | `Saved Games/DCS` (then `DCS.openbeta`) | DCS profile folder for the log, frameworks, mods and hook installer |
+| `DCS_FFMPEG_PATH` | `ffmpeg` on PATH | Optional FFmpeg executable for local WAV/OGG conversion |
 | `DCS_INSTALL_DIR` | `Program Files/Eagle Dynamics/DCS World*` | DCS install, scanned for unit mods |
 | `DCS_MCP_STATE_DIR` | `<tmp>/dcs-mcp-sessions` | Session snapshots; `off` disables them |
 | `DCS_ALLOW_RAW_LUA` | unset | `1` exposes `dcs_execute_lua` (also needs `ALLOW_EXEC` in the hook) |
@@ -64,6 +65,8 @@ The server sends MCP `instructions` with the conventions that matter most (axes,
 ## Tools
 
 **Author (offline):** `dcs_miz_new`, `dcs_miz_add_aircraft_group`, `dcs_miz_add_ground_group`, `dcs_miz_add_static`, `dcs_miz_add_waypoint`, `dcs_miz_set_payload`, `dcs_miz_set_group_task`, `dcs_miz_add_trigger_zone`, `dcs_miz_add_trigger`, `dcs_miz_load_scripts`, `dcs_miz_list_resources`, `dcs_miz_set_weather`, `dcs_miz_set_briefing`, `dcs_miz_set_mission_options`, `dcs_miz_diff`, `dcs_miz_save_as`
+
+**Mission audio (offline):** `dcs_audio_convert` converts local MP3/WAV/OGG into PCM16 WAV or Vorbis OGG. Use its output with `sound`, `sound_to_unit`, `sound_to_group`, `sound_to_coalition`, or `radio_transmission` trigger actions. Requires FFmpeg. See [mission audio](docs/mission-audio.md) for setup, examples and verification limits.
 
 **Scene building (offline):** `dcs_miz_add_farp`, `dcs_miz_populate_airfield`, `dcs_miz_add_target_area`, `dcs_miz_add_perimeter`, `dcs_miz_add_naval_group`, `dcs_list_scene_templates`, `dcs_list_terrain_sites`
 
@@ -629,7 +632,7 @@ This checkout adds `dcs_runtime_inspect` (bounded groups, unit states, flags and
 telemetry event cursors), `dcs_tool_catalogue` (paginated discovery), and shared
 acceptance tools: `dcs_acceptance_check`, `dcs_acceptance_generate`,
 `dcs_acceptance_job`, `dcs_acceptance_collect`. Generation returns a job id to poll;
-CLI and MCP use the same implementation. The catalogue currently has 197 tools.
+CLI and MCP use the same implementation. The catalogue currently has 198 tools.
 
 Aircraft contact/history queries, option inspection, task lifecycle control and
 support-flight/transport evidence monitoring are described in
