@@ -29,7 +29,7 @@ import type { LuaTable } from "../src/miz/lua.js";
 test('bundled frameworks are a fallback and never replace a local installation', async () => {
   for (const name of ['mist', 'moose', 'skynet', 'splash'] as const) {
     const resolved = await resolveFrameworkPath(name, undefined, []);
-    assert.ok(resolved.includes(join('scripts', 'lua scripts')), resolved);
+    assert.ok(resolved.includes(join('vendor', 'lua')), resolved);
   }
   const dir = mkdtempSync(join(tmpdir(), 'dcs-local-framework-'));
   const local = join(dir, 'mist_4_5_107.lua');

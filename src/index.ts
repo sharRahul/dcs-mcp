@@ -6,7 +6,7 @@ import {registerProductionTools} from './tools/production.js';
  * Capability groups over stdio (Claude, Codex, OpenCode, any MCP client):
  *   1. Offline .miz authoring, editing and inspection (no running DCS required).
  *   2. Offline reference data: unit types, countries, airfields, coordinates.
- *   3. Live control of a running DCS through scripts/Hooks/dcs-mcp-hook.lua.
+ *   3. Live control of a running DCS through runtime/dcs/Hooks/dcs-mcp-hook.lua.
  *   4. Diagnostics from dcs.log, which work with DCS closed.
  *
  * The server never executes Lua from a mission and never writes to a source mission file.

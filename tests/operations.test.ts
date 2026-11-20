@@ -74,7 +74,7 @@ test('IADS setup follows MIST/Skynet loads, compiles Lua 5.1, preserves configur
   assert.match(script, /ipairs\(iads:getSAMSites\(\)\)/); assert.match(script, /setGoLiveRangeInPercent\(70\)/);
   luaparse.parse(script, { luaVersion: '5.1' });
   assert.match(script, /DCSMCP_IADS\[/);
-  luaparse.parse(readFileSync('scripts/dcs-mcp-telemetry.lua', 'utf8'), { luaVersion: '5.1' });
+  luaparse.parse(readFileSync('runtime/dcs/dcs-mcp-telemetry.lua', 'utf8'), { luaVersion: '5.1' });
   luaparse.parse(String(asTable(asTable(back.trig)?.actions)?.[1]), { luaVersion: '5.1' });
   const before = serializeLuaAssignment('mission', s.mission);
   await assert.rejects(() => configureIads(s, config), /already configured/);

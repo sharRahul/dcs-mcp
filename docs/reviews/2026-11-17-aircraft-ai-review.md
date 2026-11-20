@@ -16,14 +16,14 @@ claim that NATO/non-NATO aircraft follow a single common doctrine.
   Reaction accepts numeric values 0–4. Prefer a version-verified named interface
   before adding behavior presets; preserve existing imported numeric options.
 - No `getDetectedTargets` or `isTargetDetected` use was found in production `src`.
-  `scripts/dcs-mcp-telemetry.lua` records shot/hit events. An observer's event feed
+  `runtime/dcs/dcs-mcp-telemetry.lua` records shot/hit events. An observer's event feed
   is not evidence that every aircraft perceived the event.
 - Existing untracked Iron Veil scripts also contain detection/event logic; they
   are separate local work and were not changed or treated as production support.
 - `src/miz/transport.ts` wires helicopter/vehicle embark and disembark tasks.
   It explicitly excludes fixed-wing transports and says actual troop carriage
   has not been flown. Do not infer successful loading from task serialization.
-- `docs/authoring.md` already distinguishes geometric LOS estimates from sensor
+- `docs/reference/authoring.md` already distinguishes geometric LOS estimates from sensor
   detection and documents incomplete runtime verification. Retain that distinction.
 
 ## Public DCS evidence

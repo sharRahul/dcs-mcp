@@ -61,7 +61,7 @@ export async function generateAcceptancePackage(outDir: string, onProgress?: (pr
         } catch (error) {
           splashSkipped ??= error instanceof Error ? error.message : String(error);
         }
-        await loadScripts(s, s.dictionary, [...extraScripts, { filePath: packagePath('scripts', 'dcs-mcp-telemetry.lua') }]);
+        await loadScripts(s, s.dictionary, [...extraScripts, { filePath: packagePath('runtime', 'dcs', 'dcs-mcp-telemetry.lua') }]);
         addTrigger(s.mission, { type: 'start', comment: 'Acceptance identity', conditions: [], actions: [{ kind: 'do_script', text:
           `DCSMCP_ACCEPTANCE = {runId=${quoteLuaString(runId)}, scenarioId=${quoteLuaString(test.id)}}\nenv.info('[DCSMCP] ACCEPTANCE runId=${runId} scenarioId=${test.id}')` }] }, s.dictionary);
         for (const [value, outcome] of [[1, 'victory'], [2, 'failure']] as const) addTrigger(s.mission, { type: 'once', comment: `Acceptance ${outcome}`, conditions: [{ kind: 'flag_equals', flag: built.report.outcome.outcomeFlag, value }], actions: [{ kind: 'do_script', text:

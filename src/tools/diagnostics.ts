@@ -52,7 +52,7 @@ export function registerDiagnosticTools(server: McpServer): void {
       description:
         "One call that answers 'is DCS up, is the bridge reachable, and has anything gone wrong'. " +
         "Never fails just because DCS is closed — it falls back to the log.\n\n" +
-        "The live bridge needs DCS running with scripts/Hooks/dcs-mcp-hook.lua installed. " +
+        "The live bridge needs DCS running with runtime/dcs/Hooks/dcs-mcp-hook.lua installed. " +
         "`phase` tells you what DCS is doing (menu / loading / loaded / running) and `missionEnv` " +
         "whether the mission scripting environment is reachable — the unit/spawn/message tools need " +
         "a mission actually running.\n\n" +
@@ -200,7 +200,7 @@ export function registerDiagnosticTools(server: McpServer): void {
     {
       title: "Install live hook",
       description:
-        "Install the live-control hook (scripts/Hooks/dcs-mcp-hook.lua) into a DCS Saved Games " +
+        "Install the live-control hook (runtime/dcs/Hooks/dcs-mcp-hook.lua) into a DCS Saved Games " +
         "profile, creating Scripts/Hooks if needed. Optionally also copies the in-mission telemetry " +
         "script to Scripts/ so dcs_miz_load_scripts can embed it.\n\n" +
         "With no savedGames it lists the candidate profiles (Saved Games/DCS, DCS.openbeta, DCS.server, " +

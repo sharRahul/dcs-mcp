@@ -429,7 +429,7 @@ test("hook installer installs, leaves an edited copy alone, and backs up on over
   assert.deepEqual(first.files.map((f) => f.status), ["installed", "installed"]);
   assert.equal(first.restartRequired, true);
   const target = join(saved, "Scripts", "Hooks", "dcs-mcp-hook.lua");
-  assert.equal(readFileSync(target, "utf8"), readFileSync("scripts/Hooks/dcs-mcp-hook.lua", "utf8"));
+  assert.equal(readFileSync(target, "utf8"), readFileSync("runtime/dcs/Hooks/dcs-mcp-hook.lua", "utf8"));
 
   assert.equal((await installHook({ savedGames: saved })).files[0].status, "unchanged");
   writeFileSync(target, "-- edited by the user");

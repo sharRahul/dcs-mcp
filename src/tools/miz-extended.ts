@@ -38,7 +38,7 @@ export function registerMizExtendedTools(server: McpServer) {
     inputSchema: z.object({ sessionId, layer: layer.optional() }).strict(), annotations: read,
   }, async a => inspect(a.sessionId, s => { const drawings = listDrawings(s.mission, a.layer); return { count: drawings.length, drawings }; }));
   server.registerTool('dcs_list_map_icons', {
-    description: "Every F10 map icon that can be used by dcs_miz_add_drawing kind=icon: the Mission Editor's own picker list (label -> image file, read from the install by scripts/gen-me-icons.py and bundled as data/me-icons.json) plus pydcs's nine StandardIcon names. The file name is what the mission file's drawing `file` field holds, confirmed against Mission-Editor-saved missions. Unknown names are refused rather than written as a guessed file.",
+    description: "Every F10 map icon that can be used by dcs_miz_add_drawing kind=icon: the Mission Editor's own picker list (label -> image file, read from the install by scripts/data/gen-me-icons.py and bundled as data/me-icons.json) plus pydcs's nine StandardIcon names. The file name is what the mission file's drawing `file` field holds, confirmed against Mission-Editor-saved missions. Unknown names are refused rather than written as a guessed file.",
     inputSchema: z.object({ query: z.string().min(1).optional().describe('Case-insensitive filter on the label.') }).strict(), annotations: read,
   }, async a => {
     const data = (() => { try { return meIcons(); } catch { return undefined; } })();

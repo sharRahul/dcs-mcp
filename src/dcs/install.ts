@@ -115,7 +115,7 @@ export async function installHook(options: InstallOptions): Promise<InstallResul
   const files: InstalledFile[] = [];
   files.push(
     await installOne(
-      packagePath("scripts", "Hooks", "dcs-mcp-hook.lua"),
+      packagePath('runtime', 'dcs', 'Hooks', "dcs-mcp-hook.lua"),
       path.join(options.savedGames, "Scripts", "Hooks", "dcs-mcp-hook.lua"),
       options
     )
@@ -123,7 +123,7 @@ export async function installHook(options: InstallOptions): Promise<InstallResul
   if (options.telemetry) {
     files.push(
       await installOne(
-        packagePath("scripts", "dcs-mcp-telemetry.lua"),
+        packagePath('runtime', 'dcs', 'dcs-mcp-telemetry.lua'),
         path.join(options.savedGames, "Scripts", "dcs-mcp-telemetry.lua"),
         options
       )

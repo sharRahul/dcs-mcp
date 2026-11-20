@@ -37,7 +37,7 @@ test('navaid regeneration refuses absent external charts without changing existi
   const empty = join(dir, 'empty');
   mkdirSync(empty);
   for (const source of [join(dir, 'missing'), empty]) {
-    const result = spawnSync(python, ['-I', 'scripts/gen-airfield-navaids.py', source, 'data/airfield-radio.json', output],
+    const result = spawnSync(python, ['-I', 'scripts/data/gen-airfield-navaids.py', source, 'data/airfield-radio.json', output],
       { encoding: 'utf8', windowsHide: true });
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /external.*PNG|PNG.*external/i);
@@ -47,9 +47,9 @@ test('navaid regeneration refuses absent external charts without changing existi
 test("pydcs-derived datasets regenerate byte-for-byte", { skip: PYDCS ? false : "set PYDCS_SRC to an unpacked pydcs 1.0.0 wheel" }, () => {
   const out = mkdtempSync(join(tmpdir(), "regen-"));
   const run = (args: string[]) => { const r = spawnSync(python, ["-I", ...args], { encoding: "utf8" }); assert.equal(r.status, 0, r.stderr); };
-  run(["scripts/gen-reference-data.py", PYDCS!, out]);
-  run(["scripts/gen-authoring-data.py", PYDCS!, join(out, "authoring.json")]);
-  run(["scripts/gen-airfield-radio.py", PYDCS!, join(out, "airfield-radio.json")]);
+  run(["scripts/data/gen-reference-data.py", PYDCS!, out]);
+  run(["scripts/data/gen-authoring-data.py", PYDCS!, join(out, "authoring.json")]);
+  run(["scripts/data/gen-airfield-radio.py", PYDCS!, join(out, "airfield-radio.json")]);
   for (const f of ["countries.json", "unit-types.json", "theatres.json", "authoring.json", "airfield-radio.json"])
     assert.ok(readFileSync(join(out, f)).equals(readFileSync(join("data", f))), `${f} differs from a fresh regeneration`);
   assert.ok(DATASETS.length >= 10);

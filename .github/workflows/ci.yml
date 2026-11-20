@@ -67,7 +67,7 @@ jobs:
         uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
       - name: Build pinned stock Lua 5.1.5 (not DCS)
         shell: pwsh
-        run: ./scripts/build-lua51.ps1 -OutputDirectory "${{ runner.temp }}/stock-lua51"
+        run: ./scripts/verify/build-lua51.ps1 -OutputDirectory "${{ runner.temp }}/stock-lua51"
       - run: npm ci
       - run: npm run build
       - run: npm run verify:lua51
@@ -82,9 +82,9 @@ jobs:
       - name: Mocked hook load and protocol checks
         shell: pwsh
         run: |
-          & $env:LUA51 tests/fixtures/hook-load.lua scripts/Hooks/dcs-mcp-hook.lua
+          & $env:LUA51 tests/fixtures/hook-load.lua runtime/dcs/Hooks/dcs-mcp-hook.lua
           if ($LASTEXITCODE -ne 0) { throw 'Hook load checks failed' }
-          & $env:LUA51 tests/fixtures/hook-runtime.lua scripts/Hooks/dcs-mcp-hook.lua
+          & $env:LUA51 tests/fixtures/hook-runtime.lua runtime/dcs/Hooks/dcs-mcp-hook.lua
           if ($LASTEXITCODE -ne 0) { throw 'Hook runtime checks failed' }
       - run: npm run acceptance:generate -- "${{ runner.temp }}/lua51-live-acceptance"
       - run: npm run acceptance:lua51 -- "${{ runner.temp }}/lua51-live-acceptance"

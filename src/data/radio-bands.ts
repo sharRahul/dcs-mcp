@@ -1,4 +1,4 @@
-/** Documented radio bands (data/radio-bands.json, scripts/gen-radio-bands.py). Today: A-10C only. */
+/** Documented radio bands (data/radio-bands.json, scripts/data/gen-radio-bands.py). Today: A-10C only. */
 import { readFileSync } from 'node:fs';
 import { packagePath } from '../paths.js';
 

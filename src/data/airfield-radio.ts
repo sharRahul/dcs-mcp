@@ -1,10 +1,10 @@
 /**
  * Airfield ATC radios and runway designators, generated from pydcs by
- * scripts/gen-airfield-radio.py (data/airfield-radio.json). pydcs exports them from DCS.
+ * scripts/data/gen-airfield-radio.py (data/airfield-radio.json). pydcs exports them from DCS.
  * Runway headings are designator x 10, not measured.
  *
  * Navaids, elevation and ICAO come from DimOn's "Aerodrome Data and Frequencies" kneeboards
- * (scripts/gen-airfield-navaids.py, data/airfield-navaids.json) by OCR, kept only for rows whose
+ * (scripts/data/gen-airfield-navaids.py, data/airfield-navaids.json) by OCR, kept only for rows whose
  * OCR'd ATC frequencies equal pydcs's for that airfield and only for values that pass their own
  * format/colour checks. Missing fields mean "not extracted", not "none exists".
  */

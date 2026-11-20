@@ -36,5 +36,5 @@ Allowed statuses: pending, blocked, pass, fail. Example completed entry:
 Run collection separately for success/failure/replay branches, into fresh evidence
 directories. Preserve evidence-report.json, source dcs.log, screenshot hashes and runtime
 snapshots. A live-pass is an operator-attested result with correlated evidence, not an
-automated proof of AI. The single repository verification record is docs/verification.md;
+automated proof of AI. The single repository verification record is docs/development/verification.md;
 attach these records when asking for it to be updated.

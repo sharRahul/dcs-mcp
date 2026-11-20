@@ -14,7 +14,7 @@ import {
   MANIFEST_SCHEMA,
   MANIFEST_VERSION,
   SERVER_ENTRY_POINT,
-} from '../scripts/claude-bundle-manifest.mjs';
+} from '../scripts/build/claude-bundle-manifest.mjs';
 
 /**
  * Registering with Claude Desktop means editing a file the app also keeps its own

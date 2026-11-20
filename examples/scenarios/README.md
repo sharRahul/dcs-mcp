@@ -81,13 +81,13 @@ placement, obstacles, weight and route clearance when changing the design. The A
 arrival condition counts surviving trucks; Protected-1 is separately mandatory.
 Ka-50 instead protects the Forward Pad static unit itself.
 
-See [ground sites and movement](../../docs/ground-sites.md) for compound presets,
+See [ground sites and movement](../../docs/reference/ground-sites.md) for compound presets,
 boundaries, convoy/combat route transitions and prepared Germany site candidates.
 
 ## Verification scope
 
 Native DCS functional checks and their exact scope are recorded in
-[the verification record](../../docs/verification.md). Combat success depends on
+[the verification record](../../docs/development/verification.md). Combat success depends on
 pilot decisions and is not the functional acceptance criterion. Store station
 compatibility does not establish weapon effectiveness, mission balance or every
 AI combat decision. Transport convoys use native On Road actions; advancing combat groups use

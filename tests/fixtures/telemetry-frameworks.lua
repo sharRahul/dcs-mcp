@@ -1,4 +1,4 @@
--- Loads scripts/dcs-mcp-telemetry.lua under DCS's Lua 5.1 with the mission
+-- Loads runtime/dcs/dcs-mcp-telemetry.lua under DCS's Lua 5.1 with the mission
 -- environment stubbed, and prints every log line it writes as
 -- "<LEVEL> <message>", so the framework audit's severities can be asserted.
 -- Usage: luae.exe telemetry-frameworks.lua <telemetry.lua> <case>

@@ -213,7 +213,7 @@ export async function resolveFrameworkPath(
     if (!info?.isFile()) throw new Error(`${FRAMEWORKS[name].label} script not found: ${explicit}`);
     return explicit; // an explicit path is the caller's call; no size guessing
   }
-  const bundled = packagePath('scripts', 'lua scripts');
+  const bundled = packagePath('vendor', 'lua');
   const found = await discoverFramework(name, roots) ?? await discoverFramework(name, [bundled], 0);
   if (!found) {
     throw new Error(

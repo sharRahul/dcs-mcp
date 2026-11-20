@@ -4,7 +4,7 @@ https://github.com/sharRahul/dcs-mcp
 
 DCS-MCP server code is licensed under Apache-2.0; see LICENSE.
 
-The optional Lua frameworks under scripts/lua scripts/ are separate third-party
+The optional Lua frameworks under vendor/lua/ are separate third-party
 source files. Their original authors retain their copyrights and their own
 licenses apply. See that directory's README.md, manifest.json and licenses/.
 These files are embedded only when a mission requests the corresponding

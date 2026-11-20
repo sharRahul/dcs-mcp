@@ -9,7 +9,7 @@ import { serializeLuaAssignment } from '../src/miz/serializer.js';
 
 test('Iron Veil includes visible parked planes, helicopters and equipment while retaining flight slots', async () => {
   // Scenario helper accepts the authoring function so tests use source, builders use dist.
-  const { populateIronVeilAirfields } = await import('../scripts/iron-veil-airfields.mjs');
+  const { populateIronVeilAirfields } = await import('../scripts/dev/iron-veil-airfields.mjs');
   const m = newMissionTable('Caucasus', 43200);
   addAircraftGroup(m, 'plane', { side: 'blue', country: 'USA', name: 'Player', type: 'F-16C_50', count: 2, x: 0, y: 0,
     start: { kind: 'parking_cold', airfield: 'Kutaisi' } });

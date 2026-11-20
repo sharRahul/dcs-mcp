@@ -1,7 +1,7 @@
 /**
  * Live DCS bridge client.
  *
- * Connects over TCP to the DCS hook server (see scripts/Hooks/dcs-mcp-hook.lua),
+ * Connects over TCP to the DCS hook server (see runtime/dcs/Hooks/dcs-mcp-hook.lua),
  * sends one JSON request line, and reads one newline-terminated JSON response.
  *
  * Wire protocol (newline-terminated JSON, one round trip per connection):
@@ -55,7 +55,7 @@ export function bridgeRequest(request: BridgeRequest, opts: BridgeOptions): Prom
       reject(
         new BridgeError(
           `Timed out after ${timeoutMs}ms contacting the DCS hook server at ${opts.host}:${opts.port}. ` +
-            `Is DCS running with scripts/Hooks/dcs-mcp-hook.lua installed and a mission loaded?`, "TIMEOUT", true
+            `Is DCS running with runtime/dcs/Hooks/dcs-mcp-hook.lua installed and a mission loaded?`, "TIMEOUT", true
         )
       );
 
@@ -97,7 +97,7 @@ export function bridgeRequest(request: BridgeRequest, opts: BridgeOptions): Prom
         reject(
           new BridgeError(
             `Cannot reach the DCS hook server at ${opts.host}:${opts.port} (${err.message}). ` +
-              `Install scripts/Hooks/dcs-mcp-hook.lua into Saved Games/DCS/Scripts/Hooks and start DCS.`
+              `Install runtime/dcs/Hooks/dcs-mcp-hook.lua into Saved Games/DCS/Scripts/Hooks and start DCS.`
           )
         )
       )

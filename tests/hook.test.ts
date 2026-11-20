@@ -11,8 +11,8 @@ import luaparse from "luaparse";
  * hook ships into the mission/export states are built as strings, so a syntax
  * error in them is invisible until someone flies. Parse them here instead.
  */
-const HOOK = "scripts/Hooks/dcs-mcp-hook.lua";
-const EXPORT = "scripts/Export.lua";
+const HOOK = "runtime/dcs/Hooks/dcs-mcp-hook.lua";
+const EXPORT = "runtime/dcs/Export.lua";
 
 function parseLua(source: string, label: string): void {
   assert.doesNotThrow(
@@ -171,7 +171,7 @@ test(
   () => {
     const harness = fileURLToPath(new URL("./fixtures/telemetry-frameworks.lua", import.meta.url));
     const run = (c: string) => {
-      const r = spawnSync(lua!, [harness, "scripts/dcs-mcp-telemetry.lua", c], { encoding: "utf8" });
+      const r = spawnSync(lua!, [harness, "runtime/dcs/dcs-mcp-telemetry.lua", c], { encoding: "utf8" });
       assert.equal(r.status, 0, `${r.stdout}${r.stderr}`);
       return r.stdout.replace(/\r\n/g, "\n");
     };

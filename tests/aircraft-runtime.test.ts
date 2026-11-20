@@ -5,7 +5,7 @@ import { spawnSync } from 'node:child_process';
 import { findDcsLua } from './helpers/dcs-lua.js';
 import luaparse from 'luaparse';
 
-const hook = 'scripts/Hooks/dcs-mcp-hook.lua';
+const hook = 'runtime/dcs/Hooks/dcs-mcp-hook.lua';
 test('aircraft runtime is embedded in the installable hook and parses as Lua 5.1', () => {
   const source = readFileSync(hook, 'utf8').match(/local AIRCRAFT_SRC = \[==\[([\s\S]*?)\]==\]/)?.[1];
   assert.ok(source, 'aircraft runtime module is missing');

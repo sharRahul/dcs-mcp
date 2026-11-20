@@ -3,7 +3,7 @@
 /** Maximum characters returned in a single tool response before truncation. */
 export const CHARACTER_LIMIT = 25000;
 
-/** Live-bridge defaults. Matches the bundled scripts/Export.lua listener. */
+/** Live-bridge defaults. Matches the bundled runtime/dcs/Export.lua listener. */
 export const BRIDGE_DEFAULT_HOST = "127.0.0.1";
 export const BRIDGE_DEFAULT_PORT = 8899;
 export const BRIDGE_TIMEOUT_MS = 4000;

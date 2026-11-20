@@ -1,2 +1,2 @@
 # Preserve supplied upstream Lua bytes, including their original line endings.
-"scripts/lua scripts/*.lua" -text -whitespace
+"vendor/lua/*.lua" -text -whitespace
