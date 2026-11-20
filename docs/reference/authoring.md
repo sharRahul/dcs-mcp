@@ -230,4 +230,4 @@ checks without rewriting imported task data or changing trigger compiler rules.
 
 See [verification.md](../development/verification.md) for commands, results, generated evidence,
 and the remaining DCS acceptance work. See [capability_gap_analysis.md](../development/capability_gap_analysis.md)
-for DCS-MCP’s baseline, implemented additions and remaining authoring work.
+for DCS Sortie MCP’s baseline, implemented additions and remaining authoring work.

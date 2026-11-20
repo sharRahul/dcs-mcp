@@ -1,8 +1,10 @@
-DCS-MCP
-Copyright 2026 sharRahul
-https://github.com/sharRahul/dcs-mcp
+DCS Sortie MCP
 
-DCS-MCP server code is licensed under Apache-2.0; see LICENSE.
+An independent open-source project for DCS World. Not affiliated with or endorsed by Eagle Dynamics.
+Copyright 2026 sharRahul
+https://github.com/sharRahul/dcs-sortie-mcp
+
+DCS Sortie MCP server code is licensed under Apache-2.0; see LICENSE.
 
 The manifest schema under vendor/mcpb/ is from Anthropic MCPB and retains its
 MIT licence; see that directory's LICENSE and README.md.
@@ -11,4 +13,4 @@ The optional Lua frameworks under vendor/lua/ are separate third-party
 source files. Their original authors retain their copyrights and their own
 licenses apply. See that directory's README.md, manifest.json and licenses/.
 These files are embedded only when a mission requests the corresponding
-framework; the DCS-MCP server does not execute them.
+framework; the DCS Sortie MCP server does not execute them.

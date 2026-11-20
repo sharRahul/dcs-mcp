@@ -24,7 +24,7 @@ export async function configureIads(session: MissionSession, input: z.input<type
     ewrs.push(...matchedEwrs.map(u => String(u.name)));
   });
   if (!sams.length) throw new Error('No SAM groups match samPrefix');
-  const marker = `DCS-MCP IADS ${spec.name}`;
+  const marker = `DCS Sortie MCP IADS ${spec.name}`;
   if (luaArray(session.mission.trigrules).some(rule => luaArray(rule.actions).some(action => String(action.text ?? '').includes(marker))))
     throw new Error(`IADS '${spec.name}' is already configured`);
   // Work on copies; missing files or load errors leave the session untouched.

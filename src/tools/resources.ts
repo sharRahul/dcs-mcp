@@ -28,7 +28,7 @@ export function registerResources(server: McpServer): void {
     "conventions",
     "dcs://guide/conventions",
     {
-      title: "DCS-MCP conventions",
+      title: "DCS Sortie MCP conventions",
       description: "Coordinates, headings, SAM sites, triggers, editing safety, live-bridge rules.",
       mimeType: "text/markdown",
     },

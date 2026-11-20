@@ -1,8 +1,10 @@
-# DCS-MCP
+# DCS Sortie MCP
+
+An independent open-source project for DCS World. Not affiliated with or endorsed by Eagle Dynamics.
 
 **Create and edit DCS World missions by talking to your AI assistant.**
 
-Describe the aircraft, enemies, route and objectives you want. DCS-MCP lets your assistant build a mission and save a `.miz` file you can open in DCS World.
+Describe the aircraft, enemies, route and objectives you want. DCS Sortie MCP lets your assistant build a mission and save a `.miz` file you can open in DCS World.
 
 ## What can it do?
 
@@ -16,9 +18,9 @@ Describe the aircraft, enemies, route and objectives you want. DCS-MCP lets your
 
 DCS can stay closed while you build a mission. You need the appropriate DCS maps and aircraft to fly it.
 
-## Get DCS-MCP
+## Get DCS Sortie MCP
 
-Open the [latest GitHub release](https://github.com/sharRahul/dcs-mcp/releases/latest) and download the file for your app from **Assets**. Extract ZIP downloads first; open the Claude Desktop `.mcpb` directly.
+Open the [latest GitHub release](https://github.com/sharRahul/dcs-sortie-mcp/releases/latest) and download the file for your app from **Assets**. Extract ZIP downloads first; open the Claude Desktop `.mcpb` directly.
 
 | Your app | What to download | Setup |
 | --- | --- | --- |
@@ -36,8 +38,8 @@ Distribution is **GitHub-only**. No npm account is needed; use the GitHub downlo
 Install [Node.js 20+](https://nodejs.org/) and [Git](https://git-scm.com/downloads), then run each line in a terminal, stopping if any command fails:
 
 ```powershell
-git clone https://github.com/sharRahul/dcs-mcp.git
-cd dcs-mcp
+git clone https://github.com/sharRahul/dcs-sortie-mcp.git
+cd dcs-sortie-mcp
 npm ci
 npm run package:build
 npm run package:verify
@@ -72,8 +74,8 @@ Existing source missions are preserved. Replacing an existing output requires an
 - **Audio conversion fails?** It needs optional FFmpeg. [Audio setup](docs/user/mission-audio.md)
 - **A mission will not open?** Ask your assistant to validate it and check the DCS error log.
 
-[App connection guide](docs/user/clients.md) · [Example scenarios](examples/scenarios/README.md) · [Technical reference](docs/reference/technical-reference.md) · [Tested features and limits](docs/development/verification.md) · [Report a problem](https://github.com/sharRahul/dcs-mcp/issues)
+[App connection guide](docs/user/clients.md) · [Example scenarios](examples/scenarios/README.md) · [Technical reference](docs/reference/technical-reference.md) · [Tested features and limits](docs/development/verification.md) · [Report a problem](https://github.com/sharRahul/dcs-sortie-mcp/issues)
 
 For contributors: [documentation index](docs/README.md), [project scripts](scripts/README.md) and [building and publishing releases](docs/development/releasing.md).
 
-DCS-MCP is licensed under [Apache 2.0](LICENSE) © [github.com/sharRahul](https://github.com/sharRahul). Included community Lua frameworks retain [their own licenses and credits](vendor/lua/README.md).
+DCS Sortie MCP is licensed under [Apache 2.0](LICENSE) © [github.com/sharRahul](https://github.com/sharRahul). Included community Lua frameworks retain [their own licenses and credits](vendor/lua/README.md).

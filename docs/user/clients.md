@@ -1,15 +1,15 @@
 # Connect your AI app
 
-One DCS-MCP server works with different apps over a local MCP connection. You do not need a separate npm package for each app. DCS can stay closed while you create mission files.
+One DCS Sortie MCP server works with different apps over a local MCP connection. You do not need a separate npm package for each app. DCS can stay closed while you create mission files.
 
 ## Install the package
 
-Install Node.js 20+ first. Download **Others** (also used by Codex) from the [latest GitHub release](https://github.com/sharRahul/dcs-mcp/releases/latest). Unzip it to find `dcs-mcp-server-<version>.tgz`. No npm registry account is needed.
+Install Node.js 20+ first. Download **Others** (also used by Codex) from the [latest GitHub release](https://github.com/sharRahul/dcs-sortie-mcp/releases/latest). Unzip it to find `dcs-mcp-server-<version>.tgz`. No npm registry account is needed.
 
 Open a terminal in a permanent folder you want to keep, and run this with the actual tarball path:
 
 ```powershell
-npm install --prefix ./dcs-tools --ignore-scripts "C:\Downloads\dcs-mcp-server-0.6.4.tgz"
+npm install --prefix ./dcs-tools --ignore-scripts "C:\Downloads\dcs-mcp-server-0.1.0.tgz"
 node ./dcs-tools/node_modules/dcs-mcp-server/dist/index.js --version
 ```
 
@@ -76,8 +76,16 @@ Ask your app:
 
 > List the DCS tools. Create a simple Caucasus training mission with an airborne player F-16. Validate it and save a new .miz file. Tell me the full path.
 
-Use an absolute output path outside the installation folder. Open the saved file in DCS to check flight behavior. For live DCS controls, ask the connected assistant to install the hook using `dcs_install_hook`, or run the installed entry script with `install-hook`, then restart DCS. A smaller tool selection may not include the hook installer.
+Supply a mission filename and use the returned full path, which points into the configured mission save folder. Open that file in DCS to check flight behavior. For live DCS controls, ask the connected assistant to install the hook using `dcs_install_hook`, or run the installed entry script with `install-hook`, then restart DCS. A smaller tool selection may not include the hook installer.
 
 ## What has been verified
 
 `npm run package:verify` installs the built tarball outside the checkout, checks its CLI and resources, tests the Claude config installer against a temporary config, installs the hook into a temporary profile, and creates, validates, saves and reopens a mission over MCP with both the full and starter selections. Plugin and MCPB verification run separately. Client configuration was checked against the linked primary documentation; actual app screens, account access and in-flight behavior are separate checks.
+
+## Mission save folder
+
+All MCP mission saves go to `%USERPROFILE%\Saved Games\DCS\Missions\My Mission` by default. The server resolves the current user's profile and creates the folder when saving. `dcs_miz_save_as` keeps the filename from `outPath` and ignores its directory, so always use the returned `outPath` to reopen or load the mission.
+
+To choose a different enforced folder, set `DCS_MISSION_OUTPUT_DIR` to an absolute directory in your MCP server environment and restart the connection. For example: `"DCS_MISSION_OUTPUT_DIR": "C:/Users/your-name/Saved Games/DCS/Missions/My Mission"`. An empty setting uses the default. Claude Desktop bundles expose this as **Mission output folder**.
+
+Production projects and acceptance kits are created as subdirectories beneath this folder to preserve their revision and evidence structure. Mission generation in older production projects outside the configured folder is refused; create a new project in the folder or open and export its mission with `dcs_miz_save_as`. Existing-file and source-file overwrite protections still apply. Standalone developer scripts and low-level archive utilities retain their explicit output paths.

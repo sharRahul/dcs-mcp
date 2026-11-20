@@ -19,7 +19,7 @@ try {
   client = new Client({ name: 'dcs-plugin-smoke', version: '1.0.0' });
   await client.connect(new StdioClientTransport({ command: process.execPath,
     args: config.args.map(expand), cwd: expand(config.cwd),
-    env: { ...process.env, ...config.env, DCS_MCP_STATE_DIR: 'off' }, stderr: 'inherit' }));
+    env: { ...process.env, ...config.env, DCS_MISSION_OUTPUT_DIR: temp, DCS_MCP_STATE_DIR: 'off' }, stderr: 'inherit' }));
   const tools = (await client.listTools()).tools;
   for (const name of ['dcs_miz_new', 'dcs_miz_validate', 'dcs_miz_save_as', 'dcs_list_airfields']) {
     assert.ok(tools.some(t => t.name === name), `Missing ${name}`);

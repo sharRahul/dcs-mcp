@@ -1,5 +1,5 @@
 /**
- * Build the DCS-MCP end-to-end test mission (Persian Gulf, F-16C SEAD).
+ * Build the DCS Sortie MCP end-to-end test mission (Persian Gulf, F-16C SEAD).
  *
  * Drives the same functions the MCP tools call, so what this produces is what a
  * client asking for the same mission over MCP would get.
@@ -44,7 +44,7 @@ const s = newSession("PersianGulf", 8 * 3600); // 08:00 local
 
 setBriefing(
   s.mission,
-  "DCS-MCP E2E: REDLINE SEAD",
+  "DCS Sortie MCP E2E: REDLINE SEAD",
   [
     "SEAD sweep west-to-east along the REDLINE air defence belt, Persian Gulf.",
     "",

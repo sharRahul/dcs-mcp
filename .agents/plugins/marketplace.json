@@ -1,6 +1,6 @@
 {
   "name": "dcs-mcp-local",
-  "interface": { "displayName": "DCS-MCP Local" },
+  "interface": { "displayName": "DCS Sortie MCP Local" },
   "plugins": [
     {
       "name": "dcs-chatgpt",

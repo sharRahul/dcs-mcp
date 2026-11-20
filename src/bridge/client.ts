@@ -81,7 +81,7 @@ export function bridgeRequest(request: BridgeRequest, opts: BridgeOptions): Prom
             buffer.length === 0
               ? `The DCS hook server at ${opts.host}:${opts.port} accepted the connection but closed it ` +
                 `without replying. Check that a mission is running and that dcs-mcp-hook.lua loaded ` +
-                `(look for "DCS-MCP" lines in Saved Games/DCS/Logs/dcs.log).`
+                `(look for "DCS Sortie MCP" lines in Saved Games/DCS/Logs/dcs.log).`
               : `The DCS hook server at ${opts.host}:${opts.port} closed the connection mid-response ` +
                 `(incomplete reply: ${JSON.stringify(buffer.slice(0, 200))}).`
           )

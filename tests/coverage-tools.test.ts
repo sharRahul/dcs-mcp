@@ -9,8 +9,9 @@ import {openSession,closeSession} from '../src/miz/sessions.js';
 import {findGroup} from '../src/miz/authoring.js';
 import {asTable} from '../src/miz/lua.js';
 test('coverage, ship recovery, history and new supplier links work through real MCP', {timeout:60000},async()=>{
+ const outputDir=mkdtempSync(path.join(tmpdir(),'coverage-mcp-'));
  const client=new Client({name:'coverage-test',version:'1'});
- await client.connect(new StdioClientTransport({command:process.execPath,args:['--import','tsx','src/index.ts'],env:{...process.env,DCS_MCP_STATE_DIR:'off'} as Record<string,string>,stderr:'ignore'}));
+ await client.connect(new StdioClientTransport({command:process.execPath,args:['--import','tsx','src/index.ts'],env:{...process.env,DCS_MISSION_OUTPUT_DIR:outputDir,DCS_MCP_STATE_DIR:'off'} as Record<string,string>,stderr:'ignore'}));
  const call=async(name:string,args:Record<string,unknown>)=>{const r=await client.callTool({name,arguments:args});assert.ok(!r.isError,JSON.stringify(r.content));return r.structuredContent as Record<string,any>;};
  try{
  assert.equal((await call('dcs_carrier_compatibility',{aircraft:'FA-18C_hornet',ship:'Stennis'})).status,'supported');
@@ -28,7 +29,7 @@ test('coverage, ship recovery, history and new supplier links work through real 
  await call('dcs_miz_edit_warehouse',{sessionId,kind:'airports',id:13,create:true,patch:{coalition:'BLUE'}});
  await call('dcs_miz_edit_warehouse',{sessionId,kind:'airports',id:12,patch:{suppliers:[{kind:'airports',id:13}]}});
  const report=await call('dcs_miz_historical_report',{sessionId});assert.equal(report.units.length,2);
- const output=path.join(mkdtempSync(path.join(tmpdir(),'coverage-mcp-')),'verified.miz');await call('dcs_miz_save_as',{sessionId,outPath:output});
+ const output=path.join(outputDir,'verified.miz');await call('dcs_miz_save_as',{sessionId,outPath:output});
  const s=await openSession(output);try{assert.equal(asTable(asTable(asTable(findGroup(s.mission,'Hornet')!.group.route)?.points)?.[2])?.helipadId,recovery.shipUnitId);}finally{closeSession(s.id);}
  }finally{await client.close();}
 });

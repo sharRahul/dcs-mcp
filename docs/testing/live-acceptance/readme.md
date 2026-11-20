@@ -1,4 +1,4 @@
-# DCS-MCP live acceptance package
+# DCS Sortie MCP live acceptance package
 
 All scenarios start **LIVE PENDING**. Offline checks prove file structure and Lua syntax,
 not aircraft AI, weapons, carrier behavior, JTAC services or logistics inside DCS.

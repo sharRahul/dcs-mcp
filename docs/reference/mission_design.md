@@ -1,6 +1,6 @@
 # Mission design, scenarios and cinematic direction
 
-DCS-MCP authors standard mission tables and assets locally. No external AI API or
+DCS Sortie MCP authors standard mission tables and assets locally. No external AI API or
 text-to-speech subscription is required. An MCP client can reason about a mission,
 submit its specification, and receive a generated mission session plus an independent
 validation report. All new behavior is **offline tested; not DCS-verified**.

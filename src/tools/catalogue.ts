@@ -18,7 +18,7 @@ export function captureCatalogue(server: McpServer, selected?: Set<string>) {
 }
 export function registerCatalogueTool(server: McpServer, entries: Map<string, CatalogueEntry>) {
   server.registerTool('dcs_tool_catalogue', {
-    title: 'Find DCS-MCP tools', description: 'Search the complete registered tool catalogue by name/description. Paginated summaries and capability annotations help discover composable tools without duplicating wrappers. Standard MCP tools/list remains unchanged.',
+    title: 'Find DCS Sortie MCP tools', description: 'Search the complete registered tool catalogue by name/description. Paginated summaries and capability annotations help discover composable tools without duplicating wrappers. Standard MCP tools/list remains unchanged.',
     inputSchema: z.object({ query: z.string().max(200).default(''), offset: z.number().int().nonnegative().default(0), limit: z.number().int().min(1).max(50).default(20) }).strict(),
     annotations: { readOnlyHint: true, openWorldHint: false },
   }, async ({ query, offset, limit }) => {

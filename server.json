@@ -1,20 +1,20 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
-  "name": "io.github.sharRahul/dcs-mcp",
-  "title": "DCS World",
+  "name": "io.github.sharRahul/dcs-sortie-mcp",
+  "title": "DCS Sortie MCP",
   "description": "Author and edit DCS World .miz missions offline, and control a running DCS through a bundled hook.",
-  "websiteUrl": "https://github.com/sharRahul/dcs-mcp",
+  "websiteUrl": "https://github.com/sharRahul/dcs-sortie-mcp",
   "repository": {
-    "url": "https://github.com/sharRahul/dcs-mcp",
+    "url": "https://github.com/sharRahul/dcs-sortie-mcp",
     "source": "github"
   },
-  "version": "0.6.4",
+  "version": "0.1.0",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "dcs-mcp-server",
-      "version": "0.6.4",
+      "version": "0.1.0",
       "transport": {
         "type": "stdio"
       },
@@ -52,6 +52,12 @@
         {
           "name": "DCS_ALLOW_RAW_LUA",
           "description": "Set to 1 to expose dcs_execute_lua (also requires ALLOW_EXEC in the hook)",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "DCS_MISSION_OUTPUT_DIR",
+          "description": "Enforced mission save folder; default current user Saved Games/DCS/Missions/My Mission",
           "isRequired": false,
           "format": "string"
         }

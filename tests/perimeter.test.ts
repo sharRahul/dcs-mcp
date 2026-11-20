@@ -29,7 +29,7 @@ test('rotated perimeter leaves requested entrance clear and round-trips real sta
 test('MCP camp/perimeter tools preserve entrance configuration through save/reopen',async()=>{
  const dir=mkdtempSync(join(tmpdir(),'dcs-perimeter-'));
  const client=new Client({name:'perimeter-contract',version:'0'});
- const transport=new StdioClientTransport({command:process.execPath,args:['--import','tsx','src/index.ts'],env:{...process.env,DCS_MCP_STATE_DIR:'off'} as Record<string,string>,stderr:'ignore'});
+ const transport=new StdioClientTransport({command:process.execPath,args:['--import','tsx','src/index.ts'],env:{...process.env,DCS_MISSION_OUTPUT_DIR: dir, DCS_MCP_STATE_DIR: 'off'} as Record<string,string>,stderr:'ignore'});
  await client.connect(transport);
  const call=async(name:string,args:Record<string,unknown>)=>{
   const r=await client.callTool({name,arguments:args});assert.ok(!r.isError,JSON.stringify(r.content));return r.structuredContent as any;

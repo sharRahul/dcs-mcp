@@ -1,4 +1,4 @@
-# DCS-MCP — contributor guide for AI sessions
+# DCS Sortie MCP — contributor guide for AI sessions
 
 MCP server for DCS World: offline `.miz` authoring/inspection and a live-control bridge.
 Driven by compatible MCP clients. TypeScript, stdio transport,
@@ -22,7 +22,7 @@ Driven by compatible MCP clients. TypeScript, stdio transport,
   `claude_desktop_config.json`); `scripts/build/build-claude-bundle.mjs` + `claude-bundle-manifest.mjs` +
   `verify-claude-bundle.mjs` build and check the one-click `.mcpb` extension.
 - Version comes from package.json only (`src/paths.ts`); bump it there, in `server.json` and in
-  `package-lock.json`. **PATCH bumps only** (0.6.x) until ATC lands in the MCP — the minor digit is
+  `package-lock.json`. **PATCH bumps only** (0.1.x) until ATC lands in the MCP — the minor digit is
   reserved for that release, however large a change is otherwise.
 - `src/bridge/client.ts` — TCP JSON client for the live hook.
 - `runtime/dcs/Hooks/dcs-mcp-hook.lua` — live control hook. `runtime/dcs/Export.lua` — telemetry only.

@@ -1,8 +1,8 @@
 {
   "name": "dcs-mcp-server",
-  "version": "0.6.4",
+  "version": "0.1.0",
   "private": true,
-  "mcpName": "io.github.sharRahul/dcs-mcp",
+  "mcpName": "io.github.sharRahul/dcs-sortie-mcp",
   "description": "Model Context Protocol server for DCS World: offline .miz mission authoring and inspection, plus a live-control bridge into a running sim",
   "type": "module",
   "main": "dist/index.js",
@@ -72,11 +72,11 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/sharRahul/dcs-mcp.git"
+    "url": "git+https://github.com/sharRahul/dcs-sortie-mcp.git"
   },
-  "homepage": "https://github.com/sharRahul/dcs-mcp",
+  "homepage": "https://github.com/sharRahul/dcs-sortie-mcp",
   "bugs": {
-    "url": "https://github.com/sharRahul/dcs-mcp/issues"
+    "url": "https://github.com/sharRahul/dcs-sortie-mcp/issues"
   },
   "engines": {
     "node": ">=20"

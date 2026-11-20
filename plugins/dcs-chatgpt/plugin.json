@@ -1,17 +1,17 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "dcs-chatgpt",
-  "version": "0.6.4",
+  "version": "0.1.0",
   "description": "Create, edit and inspect DCS World missions locally, with optional live simulator control.",
   "author": {
-    "name": "DCS-MCP contributors"
+    "name": "DCS Sortie MCP contributors"
   },
-  "repository": "https://github.com/sharRahul/dcs-mcp",
+  "repository": "https://github.com/sharRahul/dcs-sortie-mcp",
   "license": "Apache-2.0",
   "extensions": {
     "com.openai": {
       "interface": {
-        "displayName": "DCS-MCP",
+        "displayName": "DCS Sortie MCP",
         "shortDescription": "Build and inspect local DCS World missions",
         "category": "Productivity",
         "capabilities": [

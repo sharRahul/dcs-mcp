@@ -15,7 +15,7 @@ const exec = promisify(execFile);
 test('MCP converts audio and embeds it for unit, group, coalition, all and radio actions', { timeout: 60000 }, async t => {
   const dir = await mkdtemp(join(tmpdir(), 'dcs-audio-mcp-'));
   const transport = new StdioClientTransport({ command: process.execPath, args: ['--import', 'tsx', 'src/index.ts'],
-    env: { ...process.env, DCS_MCP_STATE_DIR: 'off' } as Record<string, string>, stderr: 'ignore' });
+    env: { ...process.env, DCS_MISSION_OUTPUT_DIR: dir, DCS_MCP_STATE_DIR: 'off' } as Record<string, string>, stderr: 'ignore' });
   const client = new Client({ name: 'audio-test', version: '0' });
   await client.connect(transport);
   const call = async (name: string, args: Record<string, unknown>) => {

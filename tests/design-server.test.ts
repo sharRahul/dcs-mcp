@@ -9,8 +9,9 @@ import { openSession, closeSession } from '../src/miz/sessions.js';
 import { luaArray, asTable } from '../src/miz/lua.js';
 import { listAssets } from '../src/miz/assets.js';
 test('phase 4–6 MCP contracts generate, direct, draw, embed, replace, score and save real mission sessions', { timeout: 60000 }, async () => {
-  const transport = new StdioClientTransport({ command: process.execPath, args: ['--import', 'tsx', 'src/index.ts'], env: { ...process.env, DCS_MCP_STATE_DIR: 'off' } as Record<string, string>, stderr: 'ignore' });
-  const client = new Client({ name: 'design-tests', version: '0' }); const dir = mkdtempSync(join(tmpdir(), 'dcs-design-mcp-')); await client.connect(transport);
+  const dir = mkdtempSync(join(tmpdir(), 'dcs-design-mcp-'));
+  const transport = new StdioClientTransport({ command: process.execPath, args: ['--import', 'tsx', 'src/index.ts'], env: { ...process.env, DCS_MISSION_OUTPUT_DIR: dir, DCS_MCP_STATE_DIR: 'off' } as Record<string, string>, stderr: 'ignore' });
+  const client = new Client({ name: 'design-tests', version: '0' }); await client.connect(transport);
   const call = async (name: string, args: Record<string, unknown>) => { const r = await client.callTool({ name, arguments: args }); assert.ok(!r.isError, `${name}: ${JSON.stringify(r.content)}`); return r.structuredContent as Record<string, any>; };
   try {
     const names = (await client.listTools()).tools.map(t => t.name);

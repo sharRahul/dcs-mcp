@@ -15,10 +15,11 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 type Structured = Record<string, any>;
 
 test("server exposes tools, resources and prompts, and authors a mission end to end", { timeout: 60000 }, async () => {
+  const outputDir = mkdtempSync(join(tmpdir(), "dcs-srv-"));
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: ["--import", "tsx", "src/index.ts"],
-    env: { ...process.env, DCS_MCP_STATE_DIR: "off" } as Record<string, string>,
+    env: { ...process.env, DCS_MISSION_OUTPUT_DIR: outputDir, DCS_MCP_STATE_DIR: "off" } as Record<string, string>,
     stderr: "ignore",
   });
   const client = new Client({ name: "test", version: "0" });
@@ -77,7 +78,7 @@ test("server exposes tools, resources and prompts, and authors a mission end to 
     } });
     assert.ok(bad.isError);
 
-    const out = join(mkdtempSync(join(tmpdir(), "dcs-srv-")), "out.miz");
+    const out = join(outputDir, "out.miz");
     const saved = await call("dcs_miz_save_as", { sessionId, outPath: out });
     assert.equal(saved.saved, true, JSON.stringify(saved.validation));
     const reopened = await call("dcs_miz_open", { path: out });

@@ -10,7 +10,7 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 test('inspect/edit tools, airbase ownership and imported site templates work over stdio', { timeout: 60000 }, async () => {
   const templates = mkdtempSync(join(tmpdir(), 'dcs-tpl-')), out = mkdtempSync(join(tmpdir(), 'dcs-ie-'));
   const transport = new StdioClientTransport({ command: process.execPath, args: ['--import', 'tsx', 'src/index.ts'],
-    env: { ...process.env, DCS_MCP_STATE_DIR: 'off', DCS_MCP_TEMPLATE_DIR: templates } as Record<string, string>, stderr: 'ignore' });
+    env: { ...process.env, DCS_MISSION_OUTPUT_DIR: out, DCS_MCP_STATE_DIR: 'off', DCS_MCP_TEMPLATE_DIR: templates } as Record<string, string>, stderr: 'ignore' });
   const client = new Client({ name: 'inspect-edit-test', version: '0' });
   await client.connect(transport);
   const call = async (name: string, args: Record<string, unknown>) => {

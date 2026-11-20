@@ -18,7 +18,7 @@ assert.ok(process.env.npm_execpath, 'Run through npm run package:verify');
 const temp = await mkdtemp(path.join(tmpdir(), 'dcs npm package '));
 function run(command, args, cwd = temp, input) {
   const result = spawnSync(command, args, { cwd, input, encoding: 'utf8', windowsHide: true, timeout: 120000,
-    env: { ...process.env, DCS_MCP_STATE_DIR: path.join(temp, 'sessions') } });
+    env: { ...process.env, DCS_MISSION_OUTPUT_DIR: temp, DCS_MCP_STATE_DIR: path.join(temp, 'sessions') } });
   if (result.error) throw result.error;
   assert.equal(result.status, 0, `${command}: ${result.stderr || result.stdout}`);
   return result.stdout;
@@ -68,7 +68,7 @@ try {
     const client = new Client({ name: 'npm-artifact-check', version: '1' });
     await client.connect(new StdioClientTransport({ command: process.execPath,
       args: [entry, ...(limited ? ['--tools', starter.join(',')] : [])], cwd: temp,
-      env: { ...process.env, DCS_MCP_STATE_DIR: 'off' }, stderr: 'ignore' }));
+      env: { ...process.env, DCS_MISSION_OUTPUT_DIR: temp, DCS_MCP_STATE_DIR: 'off' }, stderr: 'ignore' }));
     try {
       const listed = await client.listTools();
       if (limited) {

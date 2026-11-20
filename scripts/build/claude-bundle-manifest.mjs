@@ -26,16 +26,16 @@ export function buildManifest(pkg) {
     $schema: MANIFEST_SCHEMA,
     manifest_version: MANIFEST_VERSION,
     name: 'dcs-mcp',
-    display_name: 'DCS World',
+    display_name: 'DCS Sortie MCP',
     version: pkg.version,
     description: 'Create, edit and inspect DCS World missions in conversation, with optional live control of a running sim.',
     long_description:
-      'Authors and edits DCS World .miz missions offline: aircraft, ground forces, ships, air defences, routes, '
+      'An independent open-source project for DCS World. Not affiliated with or endorsed by Eagle Dynamics. ' + 'Authors and edits DCS World .miz missions offline: aircraft, ground forces, ships, air defences, routes, '
       + 'payloads, weather, triggers, briefings and mission audio, with validation before you fly. DCS can stay '
       + 'closed. With the bundled hook installed in a DCS profile and a mission running, it also reads live state, '
       + 'samples terrain and swaps in a built mission. It never executes Lua from a mission and never overwrites a '
       + 'source .miz: saving always writes a new file.',
-    author: { name: 'DCS-MCP contributors', url: pkg.homepage },
+    author: { name: 'DCS Sortie MCP contributors', url: pkg.homepage },
     repository: { type: 'git', url: pkg.repository.url },
     homepage: pkg.homepage,
     documentation: `${pkg.homepage}#readme`,
@@ -54,10 +54,17 @@ export function buildManifest(pkg) {
           DCS_BRIDGE_HOST: '${user_config.bridge_host}',
           DCS_BRIDGE_PORT: '${user_config.bridge_port}',
           DCS_FFMPEG_PATH: '${user_config.ffmpeg_path}',
+          DCS_MISSION_OUTPUT_DIR: '${user_config.mission_output_dir}',
         },
       },
     },
     user_config: {
+      mission_output_dir: {
+        type: 'directory',
+        title: 'Mission output folder',
+        description: 'All mission saves use this folder. Leave empty for Saved Games/DCS/Missions/My Mission under your user profile. Production projects and acceptance kits are stored beneath it.',
+        required: false,
+      },
       saved_games: {
         type: 'directory',
         title: 'DCS Saved Games folder',

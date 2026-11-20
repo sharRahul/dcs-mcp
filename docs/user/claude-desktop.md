@@ -4,7 +4,7 @@ Two ways to give the Claude Desktop app the DCS tools. Both run the same stdio s
 locally: nothing about a mission leaves the machine, and DCS can stay closed while you
 author or inspect one.
 
-Download the Claude Desktop `.mcpb` from the [latest GitHub release](https://github.com/sharRahul/dcs-mcp/releases/latest), or build it from a permanent clone. Neither route needs an npm account. Distribution is GitHub-only; see the [release guide](../development/releasing.md).
+Download the Claude Desktop `.mcpb` from the [latest GitHub release](https://github.com/sharRahul/dcs-sortie-mcp/releases/latest), or build it from a permanent clone. Neither route needs an npm account. Distribution is GitHub-only; see the [release guide](../development/releasing.md).
 
 | | One command | One click |
 |---|---|---|
@@ -19,7 +19,7 @@ Download the Claude Desktop `.mcpb` from the [latest GitHub release](https://git
 With Git and Node 20+ installed, run each command in order. Stop if a command fails:
 
 ```powershell
-git clone https://github.com/sharRahul/dcs-mcp.git
+git clone https://github.com/sharRahul/dcs-sortie-mcp.git
 cd dcs-mcp
 npm ci
 npm run build
@@ -85,7 +85,7 @@ server type `node`, `entry_point` `server/dist/index.js`, `command` `node` with
 `scripts/build/claude-bundle-manifest.mjs` so the version cannot drift. `npm run bundle:validate`
 checks it with Anthropic's own CLI (`mcpb validate`, a dev dependency), which matters because
 the 0.4 schema rejects unknown keys outright.
-Claude Desktop asks for five settings, all optional, each mapped to the environment variable
+Claude Desktop asks for six settings, all optional, each mapped to the environment variable
 the server already reads:
 
 | Setting | Variable | Default when left empty |
@@ -95,6 +95,7 @@ the server already reads:
 | Live bridge host | `DCS_BRIDGE_HOST` | `127.0.0.1` |
 | Live bridge port | `DCS_BRIDGE_PORT` | `8899` |
 | FFmpeg executable | `DCS_FFMPEG_PATH` | `ffmpeg` on PATH |
+| Mission output folder | `DCS_MISSION_OUTPUT_DIR` | Current user's `Saved Games/DCS/Missions/My Mission` |
 
 An unanswered field expands to an empty string, which the server treats as unset — that case
 is what `bundle:verify` exercises, by launching the unpacked bundle with every field empty.

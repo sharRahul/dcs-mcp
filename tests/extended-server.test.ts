@@ -17,7 +17,7 @@ test('extended MCP tools mutate one session and survive save/reopen', { timeout:
     async sample(points) { return points.map(p => ({ ...p, height: 100 + p.x * 0.05, surface: 1 })); } },
   { theatre: 'Caucasus', name: 'test', origin: { x: 0, y: 0 }, spacingMetres: 50, rows: 21, columns: 21 }, packs);
   const transport = new StdioClientTransport({ command: process.execPath, args: ['--import', 'tsx', 'src/index.ts'],
-    env: { ...process.env, DCS_MCP_STATE_DIR: 'off', DCS_MCP_TERRAIN_DIR: packs } as Record<string, string>, stderr: 'ignore' });
+    env: { ...process.env, DCS_MISSION_OUTPUT_DIR: out, DCS_MCP_STATE_DIR: 'off', DCS_MCP_TERRAIN_DIR: packs } as Record<string, string>, stderr: 'ignore' });
   const client = new Client({ name: 'extended-contract-test', version: '0' });
   await client.connect(transport);
   const call = async (name: string, args: Record<string, unknown>) => {

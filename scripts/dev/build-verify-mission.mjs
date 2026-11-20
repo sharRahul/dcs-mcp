@@ -61,7 +61,7 @@ const skipped = [];
 
 setBriefing(
   s.mission,
-  "DCS-MCP 0.6.x verification",
+  "DCS Sortie MCP 0.6.x verification",
   [
     "TASK: kill the SA-2's FAN SONG tracking radar at waypoint MIKE. That ONE unit is the",
     "trigger — you do not have to flatten the battery. The site is the Mission Editor's own",

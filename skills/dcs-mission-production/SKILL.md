@@ -5,7 +5,7 @@ description: Use when creating, revising, or preparing a playable DCS mission, o
 
 # DCS mission production
 
-Carry the user's mission intent through a durable project, immutable revisions and revision-specific evidence. Use the connected DCS-MCP server; no external AI service is required.
+Carry the user's mission intent through a durable project, immutable revisions and revision-specific evidence. Use the connected DCS Sortie MCP server; no external AI service is required.
 
 ## Start or resume
 

@@ -1,6 +1,7 @@
 /** Offline `.miz` authoring tools: create, modify, and save missions (copy-on-write). */
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { missionOutputPath } from '../mission-output.js';
 import {
   newSession,
   refresh,
@@ -1059,13 +1060,14 @@ ${n}`).join(""), {
         "Save the open session to a NEW .miz file (copy-on-write; never overwrites the source). Runs " +
         "validation first and refuses to save on validation errors unless force=true, and refuses to " +
         "replace an existing file unless overwrite=true.\n\n" +
-        "Args:\n  - sessionId\n  - outPath (string): destination .miz path\n  - force? (bool): save despite errors\n" +
+        "All saves go to DCS_MISSION_OUTPUT_DIR (default: the current user's Saved Games/DCS/Missions/My Mission); only the filename from outPath is used. The folder is created as needed. Use the returned outPath for subsequent operations.\n\n" +
+        "Args:\n  - sessionId\n  - outPath (string): .miz filename or path; directory is ignored\n  - force? (bool): save despite errors\n" +
         "  - overwrite? (bool): replace outPath if it already exists\n\n" +
         "Returns JSON: { saved, outPath, digest (sha256), validation }.",
       inputSchema: z
         .object({
           sessionId: sessionIdField,
-          outPath: z.string().min(1).describe("Destination path ending in .miz"),
+          outPath: z.string().min(1).describe("Mission filename or path ending in .miz; directory is always the configured mission output folder"),
           force: z.boolean().default(false).describe("Save even if validation reports errors"),
           overwrite: z
             .boolean()
@@ -1092,11 +1094,11 @@ ${n}`).join(""), {
             { saved: false, validation: report }
           );
         }
-        const { digest } = await saveSessionAs(s, outPath, overwrite);
-        return buildResult(`Saved mission to ${outPath}.`, {
+        const saved = await saveSessionAs(s, await missionOutputPath(outPath), overwrite);
+        return buildResult(`Saved mission to ${saved.outPath}.`, {
           saved: true,
-          outPath,
-          digest,
+          outPath: saved.outPath,
+          digest: saved.digest,
           validation: report,
         });
       } catch (err) {

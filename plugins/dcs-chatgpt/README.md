@@ -1,10 +1,10 @@
-# DCS-MCP local desktop plugin
+# DCS Sortie MCP local desktop plugin
 
 This package runs the existing DCS MCP server over stdio. It includes the mission-production skill and supports offline mission authoring, inspection and editing. Live tools require the existing DCS bridge and a running simulator.
 
 ## Build and verify
 
-Start with a permanent GitHub clone. You can download the plugin ZIP from [GitHub Releases](https://github.com/sharRahul/dcs-mcp/releases/latest) and extract it into this folder, or build it using the commands below. No npm registry publication or npm account is required. Follow the [download and build steps](../../README.md#get-dcs-mcp), then from the repository root, with Node 20+ and npm:
+Start with a permanent GitHub clone. You can download the plugin ZIP from [GitHub Releases](https://github.com/sharRahul/dcs-sortie-mcp/releases/latest) and extract it into this folder, or build it using the commands below. No npm registry publication or npm account is required. Follow the [download and build steps](../../README.md#get-dcs-sortie-mcp), then from the repository root, with Node 20+ and npm:
 
 ```powershell
 npm ci
@@ -18,9 +18,9 @@ Verification copies the complete plugin to a temporary directory outside the che
 
 ## Install locally
 
-The repository marketplace is `.agents/plugins/marketplace.json`, named **DCS-MCP Local**. With this repository open in a supported desktop workspace, restart the ChatGPT desktop app, open the Plugins Directory, select that marketplace and install **DCS-MCP**. If needed, register this repository root using `codex plugin marketplace add .`. Start a new chat after installation.
+The repository marketplace is `.agents/plugins/marketplace.json`, named **DCS Sortie MCP Local**. With this repository open in a supported desktop workspace, restart the ChatGPT desktop app, open the Plugins Directory, select that marketplace and install **DCS Sortie MCP**. If needed, register this repository root using `codex plugin marketplace add .`. Start a new chat after installation.
 
-Try: “Use DCS-MCP to create a simple Caucasus mission with an airborne player F-16, validate it and save it to a new absolute path.” Read `dcs://guide/conventions` before authoring. Use the bundled mission-production skill for durable projects and revision evidence.
+Try: “Use DCS Sortie MCP to create a simple Caucasus mission with an airborne player F-16, validate it and save it to a new absolute path.” Read `dcs://guide/conventions` before authoring. Use the bundled mission-production skill for durable projects and revision evidence.
 
 Local plugins are copied into the host's plugin cache. After code or skill changes, rebuild, refresh/reinstall the local plugin, restart the app and test in a new chat. Do not point the installed package back at repository-relative paths.
 

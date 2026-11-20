@@ -1,4 +1,4 @@
-# DCS-MCP technical reference
+# DCS Sortie MCP technical reference
 
 [Back to the getting-started guide](../../README.md). Commands below run from the repository root.
 
@@ -17,10 +17,10 @@ It never executes mission Lua (missions are parsed as data), never overwrites a 
 
 ## Install
 
-Node 20 or newer and Git are needed to build from source. Ready-to-install packages are on [GitHub Releases](https://github.com/sharRahul/dcs-mcp/releases/latest). To build a permanent clone, run each command from the same terminal and stop if one fails:
+Node 20 or newer and Git are needed to build from source. Ready-to-install packages are on [GitHub Releases](https://github.com/sharRahul/dcs-sortie-mcp/releases/latest). To build a permanent clone, run each command from the same terminal and stop if one fails:
 
 ```powershell
-git clone https://github.com/sharRahul/dcs-mcp.git
+git clone https://github.com/sharRahul/dcs-sortie-mcp.git
 cd dcs-mcp
 npm ci
 npm run build
@@ -35,7 +35,7 @@ For installation instructions for Claude Desktop, ChatGPT, Codex and Others, see
 
 **Claude Desktop extension:** run `npm run bundle:build`, `npm run bundle:validate` and `npm run bundle:verify`, then double-click the `dcs-mcp-<version>.mcpb` it writes. See [Claude Desktop setup](../user/claude-desktop.md) for the manifest, its five optional settings and verification limits.
 
-**ChatGPT Desktop local plugin:** run `npm run plugin:build` and `npm run plugin:verify`, then install **DCS-MCP** from the repository's **DCS-MCP Local** marketplace in a supported desktop client. See [plugin setup](../../plugins/dcs-chatgpt/README.md) for installation, prerequisites and verification limits.
+**ChatGPT Desktop local plugin:** run `npm run plugin:build` and `npm run plugin:verify`, then install **DCS Sortie MCP** from the repository's **DCS Sortie MCP Local** marketplace in a supported desktop client. See [plugin setup](../../plugins/dcs-chatgpt/README.md) for installation, prerequisites and verification limits.
 
 Point a client that accepts `mcpServers` configuration at your built server (stdio). Replace both example paths with absolute paths on your machine:
 
@@ -165,7 +165,7 @@ or ask your client to run `dcs_install_hook`. It creates `Scripts/Hooks` if need
 Confirm in `Saved Games/DCS/Logs/dcs.log`:
 
 ```
-INFO  DCS-MCP (Main): hook server listening on 127.0.0.1:8899
+INFO  DCS Sortie MCP (Main): hook server listening on 127.0.0.1:8899
 INFO  APP   (Main): Loaded .../Scripts/Hooks/dcs-mcp-hook.lua
 ```
 

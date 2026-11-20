@@ -7,7 +7,7 @@ account. There is no npm publishing workflow, npm secret or registry release ste
 
 ## Downloads
 
-Use the files on the [latest release](https://github.com/sharRahul/dcs-mcp/releases/latest):
+Use the files on the [latest release](https://github.com/sharRahul/dcs-sortie-mcp/releases/latest):
 
 | Download | Use |
 | --- | --- |
@@ -38,7 +38,7 @@ tools. See [security acceptance](security-acceptance.md) for scope and limits.
 
 1. Commit and push the intended revision to `main`. Wait for both acceptance workflows.
 2. Open **Actions → Prepare GitHub release → Run workflow** on `main`. Enter the
-   exact version, for example `0.6.4`, without `v`.
+   exact version, for example `0.1.0`, without `v`.
 3. Preparation refuses mismatched versions, missing checks, existing tags,
    expired/missing artifacts or a moved `main`. It downloads the tested artifacts,
    adds release wrappers, checksums and an acceptance record, then creates an
@@ -46,7 +46,7 @@ tools. See [security acceptance](security-acceptance.md) for scope and limits.
 4. Inspect the draft notes, commit and downloads. Download every asset, verify
    every checksum, and confirm the tag resolves to the accepted commit.
 5. Publish the inspected draft from GitHub Releases, or use
-   `gh release edit v0.6.4 --draft=false --latest` after inspection.
+   `gh release edit v0.1.0 --draft=false --latest` after inspection.
 
 Only the manually dispatched draft job has repository write permissions. Normal
 CI and package builds remain read-only. Preparation never publishes the draft

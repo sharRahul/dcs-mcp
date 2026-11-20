@@ -13,7 +13,7 @@
  */
 import AdmZip from 'adm-zip';
 import assert from 'node:assert/strict';
-import { readdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,20 +22,18 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { MANIFEST_VERSION } from '../build/claude-bundle-manifest.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
 const explicit = process.argv[2];
 const bundle = explicit
   ? path.resolve(explicit)
-  : path.join(
-      root,
-      (await readdir(root)).filter((f) => f.endsWith('.mcpb')).sort().at(-1)
-        ?? assert.fail('No .mcpb found in the repository root. Run npm run bundle:build first.')
-    );
+  : path.join(root, `dcs-mcp-${pkg.version}.mcpb`);
 
 const temp = await mkdtemp(path.join(tmpdir(), 'dcs mcpb smoke '));
 let client;
 try {
   new AdmZip(bundle).extractAllTo(temp, true);
   const manifest = JSON.parse(await readFile(path.join(temp, 'manifest.json'), 'utf8'));
+  assert.equal(manifest.version, pkg.version, 'Bundle must match the current package version');
 
   // Required top-level fields, MCPB MANIFEST.md.
   for (const field of ['manifest_version', 'name', 'version', 'description', 'author', 'server']) {
@@ -74,7 +72,7 @@ try {
     command: process.execPath, // what "command": "node" resolves to; Claude Desktop ships its own Node
     args: manifest.server.mcp_config.args.map(expand),
     cwd: temp,
-    env: { ...process.env, ...env, DCS_MCP_STATE_DIR: 'off' },
+    env: { ...process.env, ...env, DCS_MISSION_OUTPUT_DIR: temp, DCS_MCP_STATE_DIR: 'off' },
     stderr: 'inherit',
   }));
 

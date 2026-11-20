@@ -1,4 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { missionOutputPath } from '../mission-output.js';
 import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
 import { generateAcceptancePackage, type Progress } from '../acceptance/package.js';
@@ -15,7 +16,7 @@ export function registerAcceptanceTools(server: McpServer) {
     if ([...jobs.values()].some(j => j.status === 'running')) return errorResult(new Error('An acceptance generation job is already running; poll it before starting another'));
     if (jobs.size >= 20) jobs.delete(jobs.keys().next().value!);
     const job: Job = { id: randomUUID(), status: 'running' }; jobs.set(job.id, job);
-    setImmediate(() => { generateAcceptancePackage(outputDir, p => { job.progress = p; }).then(result => { job.result = result; job.status = 'complete'; }, e => { job.error = (e as Error).message; job.status = 'failed'; }); });
+    setImmediate(() => { missionOutputPath(outputDir, false).then(destination => generateAcceptancePackage(destination, p => { job.progress = p; })).then(result => { job.result = result; job.status = 'complete'; }, e => { job.error = (e as Error).message; job.status = 'failed'; }); });
     return buildResult(JSON.stringify(job), { ...job });
   });
   server.registerTool('dcs_acceptance_job', {

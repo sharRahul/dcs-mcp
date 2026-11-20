@@ -10,7 +10,7 @@ import {loadScripts} from '../../dist/miz/frameworks.js';
 import {writeFile} from 'node:fs/promises';
 const output=path.resolve(process.argv[2]??'runtime-authoring-verification.miz');
 const s=newSession('Caucasus',43200);s.mission.date={Year:2003,Month:6,Day:15};
-setBriefing(s.mission,'DCS-MCP autonomous runtime verification','Click FLY. AI Hornet returns to Stennis. At 15 seconds an isolated truck is destroyed to produce real DCS events. Player need not fly.');
+setBriefing(s.mission,'DCS Sortie MCP autonomous runtime verification','Click FLY. AI Hornet returns to Stennis. At 15 seconds an isolated truck is destroyed to produce real DCS events. Player need not fly.');
 addAircraftGroup(s.mission,'plane',{name:'Observer',side:'blue',country:'USA',type:'F-16C_50',count:1,x:0,y:0,start:{kind:'parking_hot',airfield:'Kutaisi'},skill:'Player'});
 addGroundGroup(s.mission,'ship',{name:'Carrier',side:'blue',country:'USA',type:'Stennis',count:1,x:-300000,y:400000,heading:90});
 addWaypoint(s.mission,'Carrier',{x:-300000,y:440000,speedMps:8});

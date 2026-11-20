@@ -4,11 +4,11 @@ Assessment date: 2026-11-16. Baseline: `main`, `796860b`, package/server version
 The checkout initially had an unrelated package-lock.json change, retained.
 Git history reviewed through the initial implementation, including trigger/compiler,
 bridge-thread fixes, inventory and 0.2.0 authoring commits. GitHub open-issue search
-(`repo:sharRahul/dcs-mcp is:issue is:open`) returned no issues on this date.
+(`repo:sharRahul/dcs-sortie-mcp is:issue is:open`) returned no issues on this date.
 
 ## Scope and evidence
 
-This document tracks DCS-MCP's own authoring capabilities, validation coverage and
+This document tracks DCS Sortie MCP's own authoring capabilities, validation coverage and
 remaining implementation work. Evidence comes from the source files and tests
 listed below, the repository history, local checks, and the existing verification
 notes in CLAUDE.md. The public pydcs implementation (https://github.com/pydcs/dcs)
@@ -23,7 +23,7 @@ in this checkout. Airfield coordinates in the catalogue are not elevation data.
 F = fully implemented for the stated scope; P = partial; M = missing;
 T = implemented but insufficient runtime verification. Offline tests do not imply DCS verification.
 
-| DCS-MCP capability | Baseline | Implementation evidence | Tests / verification |
+| DCS Sortie MCP capability | Baseline | Implementation evidence | Tests / verification |
 |---|---|---|---|
 | Read/write .miz; preserve opaque archive entries | F | src/miz/archive.ts, parser.ts, sessions.ts, security/archive-policy.ts | miz.test.ts, authoring.test.ts; offline |
 | Flights: CAP/SEAD/strike/escort/intercept/AWACS/tanker templates | P | authoring.ts addAircraftGroup/setGroupTask writes task string only | authoring.test.ts; no reusable role tasking |
@@ -86,7 +86,7 @@ retained as prior project evidence, not a test performed during this assessment.
 | Existing-mission diagnostics | advanced-validation.ts checks known raw refs, ids, payload and parking; existing trigger/log protections retained | flight.test.ts includes EPLRS/unknown-task preservation; no rewriting of opaque tasks |
 | Reproducible artifact/CI | verify-capabilities.mjs, verify-lua51.mjs, Windows workflow adds typecheck and artifact | verification.md; Linux checks do not establish Windows CI success |
 
-## Remaining DCS-MCP work
+## Remaining DCS Sortie MCP work
 
 Missing or partial work includes full radio presets, installed-livery discovery,
 aircraft/country callsign family data, carrier deck-slot/aircraft compatibility and
@@ -97,7 +97,7 @@ Surface tasks and role templates still need Mission Editor and flight acceptance
 No reliable evidence justifies declaring those gaps closed.
 
 Existing weather and briefing editing remains available. A full weather preset,
-radio preset and kneeboard suite remains future DCS-MCP work. Capability status
+radio preset and kneeboard suite remains future DCS Sortie MCP work. Capability status
 reflects this repository's implementation and evidence only.
 
 ## Mission design and scenario additions (Phases 4–6)

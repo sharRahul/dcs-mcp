@@ -5,7 +5,7 @@
  * glob support only arrived in Node 22.
  */
 import { spawnSync } from "node:child_process";
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -15,7 +15,14 @@ const files = readdirSync(dir)
   .filter((f) => f.endsWith(".test.ts"))
   .sort()
   .map((f) => path.join("tests", f));
+// Optional, checksum-verified local pydcs wheel source. Explicit CI/user configuration wins.
+const localPydcs = path.resolve(dir, "..", ".verification-pydcs", "src");
+const env = { ...process.env };
+if (!env.PYDCS_SRC && existsSync(path.join(localPydcs, "dcs", "mission.py"))) {
+  env.PYDCS_SRC = localPydcs;
+}
 const result = spawnSync(process.execPath, ["--test", "--import", "tsx", ...process.argv.slice(2), ...files], {
   stdio: "inherit",
+  env,
 });
 process.exit(result.status ?? 1);

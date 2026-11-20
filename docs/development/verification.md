@@ -1,4 +1,4 @@
-# DCS-MCP verification
+# DCS Sortie MCP verification
 
 Single verification record. Historical results retain their original scope; later native results below supersede earlier offline-only statements for the checks they cover.
 
@@ -286,8 +286,24 @@ zero failed, zero skipped**; TypeScript check and build passed. DCS was closed
 after the checks. Local detailed output: .verification-production-20261118/skips-fixed-tests.log.
 
 Lua checks still require an installed DCS interpreter or DCS_LUA. Reproducibility
-requires PYDCS_SRC; ordinary runs without this optional source archive retain
-one explicit skip. The dedicated CI provenance job downloads and verifies it.
+requires the optional pydcs source archive. As of 2026-11-20, `npm test` also
+detects a local unpacked wheel at `.verification-pydcs/src` automatically;
+an explicit `PYDCS_SRC` takes precedence. The directory is ignored by Git.
+Runs without either source retain one explicit skip. The dedicated CI
+provenance job downloads and verifies the source separately.
+
+To configure the same local source on a fresh checkout, download only the
+pinned wheel (no installation or dependency downloads):
+
+```powershell
+python -m pip download pydcs==1.0.0 --no-deps --only-binary=:all: --dest .verification-pydcs
+```
+
+Verify `pydcs-1.0.0-py3-none-any.whl` has SHA-256
+`584570bf42bbfabbb1257bc737eb232d21aa7814cba7dfe0ba653a36aa993dd5`
+before extracting it into `.verification-pydcs/src`. Then run
+`npm test -- --test-concurrency=4`. Direct `node --test` invocations still
+need `PYDCS_SRC` set explicitly because they bypass the npm test runner.
 
 ## Coverage audit and mission-production workflow — 2026-11-18/19
 
@@ -540,7 +556,7 @@ so long timelines run in real time.
 ## Mission design verification
 
 
-This record covers DCS-MCP's Phase 4–6 working-tree additions. Package version
+This record covers DCS Sortie MCP's Phase 4–6 working-tree additions. Package version
 remains 0.2.0; nothing was published or deployed. Existing work, including the
 pre-existing package-lock.json and .gitignore edits, was retained.
 
@@ -679,7 +695,7 @@ npx --yes --package=node@22 -c 'node --version && node node_modules/typescript/b
 
 These are Linux checks, not a claim that the edited Windows workflow ran.
 `git diff --check` passed. Repository documentation and tool descriptions retain
-DCS-MCP-native capability descriptions and implementation evidence only.
+DCS Sortie MCP-native capability descriptions and implementation evidence only.
 
 Additional regression smoke checks passed: the earlier `verify:capabilities` command
 still generates and reopens its proof mission after archive/snapshot changes, and
@@ -836,7 +852,7 @@ GitHub CI completed successfully for implementation commit `fab09f4`; see the co
 
 ### CI correction and Windows-only workflow
 
-The first PR workflow run [43868581786](https://github.com/sharRahul/dcs-mcp/actions/runs/43868581786)
+The first PR workflow run [43868581786](https://github.com/sharRahul/dcs-sortie-mcp/actions/runs/43868581786)
 failed the new schema-hash test because diagnostic log-path help text embedded the
 host home directory. The description now names the resolution rule without a
 machine-specific path. Reviewed schema hashes were updated for that description;
@@ -850,7 +866,7 @@ execution remains the manual Windows acceptance stage.
 
 ### Completed GitHub CI
 
-[Windows CI run 43868925800](https://github.com/sharRahul/dcs-mcp/actions/runs/43868925800)
+[Windows CI run 43868925800](https://github.com/sharRahul/dcs-sortie-mcp/actions/runs/43868925800)
 completed **successfully** for `fab09f44bf936694c1c7f34b6f67fdea9b174b83`:
 Node 20, 22 and 24 on Windows all passed. Node 22 also passed package inspection,
 capability/design proof generation and ten-mission acceptance-kit generation.
@@ -858,7 +874,7 @@ The run uploaded `offline-capability-proof` and `live-acceptance-kit-offline-onl
 These are Windows offline test results; the five existing DCS-dependent tests remain
 skipped and none of the ten scenarios is live-passed.
 
-Branch: `feat/mission-acceptance-hardening`. Draft [PR #5](https://github.com/sharRahul/dcs-mcp/pull/5)
+Branch: `feat/mission-acceptance-hardening`. Draft [PR #5](https://github.com/sharRahul/dcs-sortie-mcp/pull/5)
 targets main; it is not merged. Commits include authoring/scenarios `0ac9c15`, patched
 dependencies `4815772`, acceptance/bridge hardening `aa58f9c`, lowercase documentation
 `8e6c65f`, CLI validation `185cda2`, and portable schema/Windows CI `fab09f4`.
@@ -880,7 +896,7 @@ interpreter is set only as `LUA51`, never as `DCS_LUA`; DCS-specific tests remai
 honestly skipped until DCS is installed. Its artifact is
 `windows-lua51-offline-proof`. These Windows Lua checks still do not execute DCS.
 
-[Completed Windows CI run 43869548671](https://github.com/sharRahul/dcs-mcp/actions/runs/43869548671)
+[Completed Windows CI run 43869548671](https://github.com/sharRahul/dcs-sortie-mcp/actions/runs/43869548671)
 passed all four jobs for `3b3b238be9a17efba42bbad7912137836095651e`: Node
 20/22/24 and the dedicated Windows stock Lua 5.1 job. MSVC source compilation,
 hook-load/runtime harnesses, advanced/design mocked runtime checks and ten-mission
@@ -1107,7 +1123,7 @@ caught the only way it can be: by loading the file in DCS.
 
 | what | result |
 |---|---|
-| hook loads on this build | `DCS-MCP: hook server listening on 127.0.0.1:8899`, GUI poll registered, `Loaded ...dcs-mcp-hook.lua`, no adjacent ERROR |
+| hook loads on this build | `DCS Sortie MCP: hook server listening on 127.0.0.1:8899`, GUI poll registered, `Loaded ...dcs-mcp-hook.lua`, no adjacent ERROR |
 | a dcs-mcp-authored mission loads | `loadMission Done: Control passed to the player`; no mission-specific error other than the one above |
 | scripting-state probe | `state=server -> timer=table,coalition=table,env=table,trigger=table`; `state=mission -> a_do_script=function, timer=nil`. The 0.6.0 finding holds on this build. |
 | `land` (`dcs_check_terrain`) | 5 points, heights and surfaces; it caught the test mission's own troop pickup sitting on WATER at (60520, -299020), which was then moved |

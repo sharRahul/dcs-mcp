@@ -11,7 +11,7 @@ import {checkMission} from '../acceptance/checks.js';
 import {addTrigger,findTriggerByComment,replaceTrigger,type TriggerArgs} from '../miz/authoring.js';
 import {closeSession,saveSessionAs,type MissionSession} from '../miz/sessions.js';
 import {asTable,luaArray} from '../miz/lua.js';
-const MARKER='DCS-MCP production revision';
+const MARKER='DCS Sortie MCP production revision';
 const note=(notes:string)=>{if(!notes.trim()||notes.length>10000)throw new Error('Revision notes must contain 1..10000 characters');return notes;};
 function copySession(source:MissionSession):MissionSession{return {...source,id:randomUUID(),mission:structuredClone(source.mission),dictionary:structuredClone(source.dictionary),mapResource:structuredClone(source.mapResource),
  document:structuredClone(source.document),sourceBytes:Buffer.from(source.sourceBytes),files:new Map([...source.files].map(([name,bytes])=>[name,Buffer.from(bytes)])),warehouses:source.warehouses?structuredClone(source.warehouses):undefined,

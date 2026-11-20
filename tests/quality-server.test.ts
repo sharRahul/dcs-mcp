@@ -19,7 +19,7 @@ test('fuel, radio bands, provenance and donors work over stdio', { timeout: 6000
   zip.updateFile('warehouses', Buffer.from(serializeLuaAssignment('warehouses', wh))); src.sourceBytes = zip.toBuffer();
   const donorFile = join(dir, 'donor.miz'); await saveSessionAs(src, donorFile); closeSession(src.id);
   const transport = new StdioClientTransport({ command: process.execPath, args: ['--import', 'tsx', 'src/index.ts'],
-    env: { ...process.env, DCS_MCP_STATE_DIR: 'off', DCS_MCP_DONOR_DIR: donors } as Record<string, string>, stderr: 'ignore' });
+    env: { ...process.env, DCS_MISSION_OUTPUT_DIR: dir, DCS_MCP_STATE_DIR: 'off', DCS_MCP_DONOR_DIR: donors } as Record<string, string>, stderr: 'ignore' });
   const client = new Client({ name: 'quality-test', version: '0' });
   await client.connect(transport);
   const call = async (name: string, args: Record<string, unknown>) => {
