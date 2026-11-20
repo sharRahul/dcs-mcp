@@ -63,11 +63,15 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Configure MSVC
-        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
       - name: Build pinned stock Lua 5.1.5 (not DCS)
         shell: pwsh
-        run: ./scripts/verify/build-lua51.ps1 -OutputDirectory "${{ runner.temp }}/stock-lua51"
+        run: |
+          # Initialise MSVC in this process using Visual Studio's own tooling.
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+          $visualStudio = & $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if ($LASTEXITCODE -ne 0 -or -not $visualStudio) { throw 'Visual Studio C++ build tools not found' }
+          & (Join-Path $visualStudio 'Common7/Tools/Launch-VsDevShell.ps1') -Arch amd64 -HostArch amd64 -SkipAutomaticLocation
+          ./scripts/verify/build-lua51.ps1 -OutputDirectory "${{ runner.temp }}/stock-lua51"
       - run: npm ci
       - run: npm run build
       - run: npm run verify:lua51
