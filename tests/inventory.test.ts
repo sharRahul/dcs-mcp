@@ -21,6 +21,10 @@ test("every country carries DCS's own per-category unit list", () => {
   assert.equal(countryOffers("Russia", "Su-33"), true);
   assert.equal(countryOffers("USA", "S-300PS 5P85C ln"), false);
   assert.equal(countryOffers("USA", ".Command Center"), undefined); // statics: every country
+  // pydcs lists these stock types for NO country; DCS offers and flies them
+  // (a USA F-16C_50 spawned in every 2026-11-20 live run). Unknown, not "no".
+  for (const t of ["F-16C_50", "F-14A", "F-4E", "Ka-50_3", "Mi-24P"]) assert.equal(countryOffers("USA", t), undefined, t);
+  assert.equal(countryOffers("USA", "Su-33"), false); // a listed type still gates
   assert.ok(findCountry("India")!.units.plane.includes("Su-30"));
 });
 

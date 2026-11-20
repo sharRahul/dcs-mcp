@@ -153,7 +153,21 @@ export function countryOffers(countryName: string, type: string): boolean | unde
   if (!c?.units) return undefined;
   const hit = findUnitType(type);
   if (!hit || hit.category === "static") return undefined;
+  // pydcs's country lists omit some stock types entirely (F-16C_50, F-14A, F-4E,
+  // Ka-50_3, Mi-24P, ...), which DCS offers and flies. A type no country lists is
+  // a gap in the source, not an answer: unknown, never "not offered".
+  if (!typesOfferedAnywhere().has(type)) return undefined;
   return (c.units[hit.category as keyof Country["units"]] ?? []).includes(type);
+}
+
+let offeredAnywhereCache: Set<string> | undefined;
+/** Every type id at least one country's pydcs list carries. */
+export function typesOfferedAnywhere(): Set<string> {
+  if (!offeredAnywhereCache) {
+    offeredAnywhereCache = new Set();
+    for (const c of countries()) for (const list of Object.values(c.units ?? {})) for (const t of list) offeredAnywhereCache.add(t);
+  }
+  return offeredAnywhereCache;
 }
 
 export function countries(): Country[] {
