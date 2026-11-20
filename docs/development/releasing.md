@@ -8,7 +8,7 @@ After a successful run, download its three artifacts from [GitHub Actions](https
 
 | Artifact | Contents |
 | --- | --- |
-| `dcs-mcp-server-<version>` | Installable npm `.tgz` |
+| `dcs-others-<version>` | Others package, also used by Codex; contains the installable `dcs-mcp-server-<version>.tgz` |
 | `dcs-claude-desktop-<version>` | Claude Desktop `.mcpb` |
 | `dcs-chatgpt-plugin-<version>` | Complete local ChatGPT plugin folder with dependencies |
 

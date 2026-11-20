@@ -1,7 +1,7 @@
 # DCS-MCP — contributor guide for AI sessions
 
 MCP server for DCS World: offline `.miz` authoring/inspection and a live-control bridge.
-Driven by any MCP client (Claude, Codex, OpenCode). TypeScript, stdio transport,
+Driven by compatible MCP clients. TypeScript, stdio transport,
 `npm run build` / `npm test`.
 
 ## Layout

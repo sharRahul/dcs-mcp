@@ -2,7 +2,7 @@
 
 [Back to the getting-started guide](../../README.md). Commands below run from the repository root.
 
-A [Model Context Protocol](https://modelcontextprotocol.io) server for **Digital Combat Simulator (DCS World)**. Works with any MCP client — Claude, Codex, OpenCode, etc. — over stdio.
+A [Model Context Protocol](https://modelcontextprotocol.io) server for **Digital Combat Simulator (DCS World)**. Works with compatible MCP clients over stdio.
 
 What it does:
 
@@ -31,7 +31,7 @@ node dist/index.js --version
 
 ## Client configuration
 
-For npm tarball installation and current ChatGPT, Claude Desktop, Cursor, OpenCode, Hermes Agent and Raiker instructions, see the [app connection guide](../user/clients.md). Clients with small catalogue limits can pass `--tools name1,name2` to expose only an explicit selection. Omit the flag for the complete catalogue. Unknown names and empty selections fail rather than silently changing the available tools; this selection is not a filesystem sandbox.
+For installation instructions for Claude Desktop, ChatGPT, Codex and Others, see the [app connection guide](../user/clients.md). Clients with small catalogue limits can pass `--tools name1,name2` to expose only an explicit selection. Omit the flag for the complete catalogue. Unknown names and empty selections fail rather than silently changing the available tools; this selection is not a filesystem sandbox.
 
 **Claude Desktop extension:** run `npm run bundle:build`, `npm run bundle:validate` and `npm run bundle:verify`, then double-click the `dcs-mcp-<version>.mcpb` it writes. See [Claude Desktop setup](../user/claude-desktop.md) for the manifest, its five optional settings and verification limits.
 
@@ -52,10 +52,9 @@ Point a client that accepts `mcpServers` configuration at your built server (std
 
 Find Node's absolute path with `(Get-Command node).Source` in PowerShell or `command -v node` on macOS/Linux. Forward slashes work in Windows JSON paths. Merge the `dcs` entry into an existing config rather than replacing other servers, or use the Claude installer below.
 
-- **Claude Code**: `claude mcp add dcs -- node "/absolute/path/to/dcs-mcp/dist/index.js"`. The repo's own [`.mcp.json`](../../.mcp.json) uses a relative path and requires a client working directory at the built repository root.
 - **Claude Desktop**: run `node dist/index.js install-claude-desktop --local` from the built clone. It merges the entry and keeps a backup. The extension alternative is documented in [Claude Desktop setup](../user/claude-desktop.md).
 - **Codex**: `codex mcp add dcs -- node "/absolute/path/to/dcs-mcp/dist/index.js"`; build first and substitute the actual path.
-- **OpenCode**: add it under `mcp` in `opencode.json`.
+- **Others**: use your app's local MCP settings with the command and argument above. The repo's [`.mcp.json`](../../.mcp.json) uses a relative path and requires a client working directory at the built repository root.
 
 Optional environment variables:
 
@@ -112,7 +111,7 @@ Every tool declares an `outputSchema` and returns `structuredContent` alongside 
 - Renames refuse names already in use and list the scripts that still mention the old name (Skynet prefixes, MOOSE lookups, inline `do_script`); Lua is never rewritten.
 - Sessions are snapshotted to disk after every change (`DCS_MCP_STATE_DIR`). After a server or client restart the same `sessionId` keeps working; `dcs_miz_list_sessions` also lists restorable snapshots. Closing a session discards unsaved changes and deletes its snapshot. Snapshots older than 14 days are pruned.
 
-## Using it from Claude / Codex / OpenCode
+## Using it from your AI app
 
 Once configured, just ask your AI client in natural language — it calls the tools for you. All tools are available at once; the model uses `dcs_bridge_status` to decide whether to work live or offline.
 

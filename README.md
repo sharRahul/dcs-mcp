@@ -24,13 +24,10 @@ Open [GitHub Actions → Build installable packages](https://github.com/sharRahu
 | --- | --- | --- |
 | Claude Desktop | `dcs-claude-desktop-…` | Open the `.mcpb` extension inside. [Instructions](docs/user/clients.md#claude-desktop) |
 | ChatGPT Desktop | `dcs-chatgpt-plugin-…` | Install the local plugin through a marketplace. [Instructions](docs/user/clients.md#chatgpt-desktop) |
-| Cursor | `dcs-mcp-server-…` | Install the npm tarball and add a local server. [Instructions](docs/user/clients.md#cursor) |
-| Codex | `dcs-mcp-server-…` | Install the tarball and register the local server. [Instructions](docs/user/clients.md#codex) |
-| OpenCode | `dcs-mcp-server-…` | Install the tarball and add the MCP connection. [Instructions](docs/user/clients.md#opencode) |
-| Hermes Agent | `dcs-mcp-server-…` | Install the tarball and add the MCP connection. [Instructions](docs/user/clients.md#hermes-agent) |
-| Raiker | `dcs-mcp-server-…` | Use the workspace launcher and smaller starter tool selection. [Instructions](docs/user/clients.md#raiker) |
+| Codex | `dcs-others-…` | Install the tarball and register the local server. [Instructions](docs/user/clients.md#codex) |
+| Others | `dcs-others-…` | Install the npm tarball and add a local MCP server. [Instructions](docs/user/clients.md#others) |
 
-The npm tarball is a file named `dcs-mcp-server-<version>.tgz`. You can install it without an npm account. Node.js 20+ is needed for the npm package; the Claude extension uses Claude Desktop's Node runtime. ChatGPT desktop plugin availability depends on your app and account. These downloads do not create a ChatGPT browser connection.
+The **Others** download contains the npm file `dcs-mcp-server-<version>.tgz`, also used by Codex. You can install it without an npm account. Node.js 20+ is needed for the npm package; the Claude extension uses Claude Desktop's Node runtime. ChatGPT desktop plugin availability depends on your app and account. These downloads do not create a ChatGPT browser connection.
 
 The package is **not published on npm yet**. Use the GitHub download rather than `npx dcs-mcp-server`.
 

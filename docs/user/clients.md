@@ -4,7 +4,7 @@ One DCS-MCP server works with different apps over a local MCP connection. You do
 
 ## Install the package
 
-Install Node.js 20+ first. Download the npm artifact from a successful **Build installable packages** run on [GitHub Actions](https://github.com/sharRahul/dcs-mcp/actions/workflows/packages.yml). Unzip the download to find `dcs-mcp-server-<version>.tgz`.
+Install Node.js 20+ first. Download the **Others** artifact (also used by Codex) from a successful **Build installable packages** run on [GitHub Actions](https://github.com/sharRahul/dcs-mcp/actions/workflows/packages.yml). Unzip the download to find `dcs-mcp-server-<version>.tgz`.
 
 Open a terminal in a permanent folder you want to keep, and run this with the actual tarball path:
 
@@ -37,24 +37,6 @@ Use the local desktop plugin, not the npm tarball as a file attachment to a chat
 
 OpenAI documents bundled MCP servers and repository marketplaces for local desktop plugins. Availability depends on your app and account. This package does not create a ChatGPT web endpoint or establish account access. [OpenAI packaging documentation](https://developers.openai.com/plugins/build/plugins).
 
-## Cursor
-
-Add this entry to `.cursor/mcp.json` in your project, or `~/.cursor/mcp.json` for all projects:
-
-```json
-{
-  "mcpServers": {
-    "dcs": {
-      "type": "stdio",
-      "command": "C:/Program Files/nodejs/node.exe",
-      "args": ["F:/DCS/dcs-tools/node_modules/dcs-mcp-server/dist/index.js"]
-    }
-  }
-}
-```
-
-Use the actual Node and server paths on your computer. Reload Cursor's MCP connection, check that `dcs` connects and start a new Agent chat. [Cursor MCP documentation](https://cursor.com/docs/mcp).
-
 ## Codex
 
 Register the installed server, then start a new chat:
@@ -65,66 +47,28 @@ codex mcp add dcs -- node "F:/DCS/dcs-tools/node_modules/dcs-mcp-server/dist/ind
 
 The same command works with a built clone's absolute `dist/index.js` path. [Codex MCP documentation](https://developers.openai.com/codex/mcp/).
 
-## OpenCode
+## Others
 
-Run this in the project that should use DCS, then inspect the connection:
+Use the **Others** download for any app that supports a local MCP server over stdio. Follow the package installation above, then open your app's MCP settings.
 
-```powershell
-opencode mcp add dcs -- node "F:/DCS/dcs-tools/node_modules/dcs-mcp-server/dist/index.js"
-opencode mcp list
-```
-
-Current OpenCode V2 uses `mcp.servers` in `opencode.jsonc`:
+Set the command to the absolute path of Node.js and add the installed server entry as its argument:
 
 ```json
 {
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "servers": {
-      "dcs": {
-        "type": "local",
-        "command": ["node", "F:/DCS/dcs-tools/node_modules/dcs-mcp-server/dist/index.js"]
-      }
+  "mcpServers": {
+    "dcs": {
+      "command": "C:/Program Files/nodejs/node.exe",
+      "args": ["F:/DCS/dcs-tools/node_modules/dcs-mcp-server/dist/index.js"]
     }
   }
 }
 ```
 
-Older V1 versions used names directly under `mcp`; use the CLI supported by your installed version or its matching schema. [OpenCode MCP documentation](https://opencode.ai/docs/mcp-servers/).
+Replace both paths with the actual locations on your computer. Your app may use a different configuration format; use the same command and argument in its local MCP settings. Restart the connection and open a new chat.
 
-## Hermes Agent
+Some apps limit the number of tools or response size. The server's `--tools name1,name2` option can limit discovery to selected tools. Keep session persistence enabled if your app starts a new server process for each request.
 
-Add the local command, keeping `--args` last, and test it:
-
-```powershell
-hermes mcp add dcs --command node --args "F:/DCS/dcs-tools/node_modules/dcs-mcp-server/dist/index.js"
-hermes mcp test dcs
-```
-
-Alternatively merge into the active profile's `~/.hermes/config.yaml`:
-
-```yaml
-mcp_servers:
-  dcs:
-    command: node
-    args:
-      - F:/DCS/dcs-tools/node_modules/dcs-mcp-server/dist/index.js
-```
-
-Start a new session or use `/reload-mcp`. `hermes mcp configure dcs` lets you select which DCS tools are exposed. Paths must belong to the machine running Hermes; a Linux/WSL instance needs its own Node installation and Linux paths. [Hermes CLI reference](https://github.com/NousResearch/hermes-agent/blob/main/website/docs/reference/cli-commands.md), [MCP configuration](https://hermes-agent.nousresearch.com/docs/user-guide/features/mcp).
-
-## Raiker
-
-Raiker's current local connector requires workspace-relative script arguments and limits a response to 200 KB. DCS's full catalogue is about 621 KB, so use the shipped 17-tool starter selection for common mission creation and inspection. This excludes advanced authoring and live-control tools. Do not configure the unrestricted catalogue for this connector.
-
-1. From your **Raiker workspace**, install the tarball with `npm install --prefix ./tools/dcs --ignore-scripts "C:\Downloads\dcs-mcp-server-0.6.4.tgz"`.
-2. In Raiker, open **Connections → Advanced → MCP servers**. Review and enable its required MCP runtime permissions. Create its **Developer example**, name it `dcs`, and choose the local Python example. This creates `.raiker/mcp/servers/dcs.py`.
-3. Review the shipped launcher, then replace that example file with `tools/dcs/node_modules/dcs-mcp-server/examples/clients/raiker-launcher.py`. This is now custom DCS code, not Raiker's reviewed echo example. It forwards Raiker's bounded request batch to Node, negotiates the shared `2025-06-18` protocol revision, and leaves the server's responses unchanged.
-4. Test the `dcs` server. Review the discovered tools and Raiker's **Callable by Raiker** status; respect its permission and tool-review controls. Keep session persistence enabled because this connector starts a fresh process for each operation.
-
-The starter list is in `examples/clients/raiker-tools.json` inside the installed package. Other clients expose all tools unless passed `--tools name1,name2`. This option reduces the catalogue; it is not a filesystem sandbox or a permission grant.
-
-These instructions follow the [Raiker MCP guide](https://github.com/sharRahul/Raiker/blob/main/docs/guide/extensions-and-mcp.md) and [connector implementation](https://github.com/sharRahul/Raiker/blob/main/raiker/runtime/executors/mcp.py). Raiker's host UI and permissions still need an end-to-end app check; package/protocol tests alone do not establish that.
+The server must run on the computer that owns the mission files and optional DCS connection. An app that only supports remote HTTP MCP connections needs a separate transport setup.
 
 ## Check any connection
 
@@ -132,7 +76,7 @@ Ask your app:
 
 > List the DCS tools. Create a simple Caucasus training mission with an airborne player F-16. Validate it and save a new .miz file. Tell me the full path.
 
-Use an absolute output path outside the installation folder. Open the saved file in DCS to check flight behavior. For live DCS controls, ask the connected assistant to install the hook using `dcs_install_hook`, or run the installed entry script with `install-hook`, then restart DCS. The Raiker starter selection does not include the hook installer.
+Use an absolute output path outside the installation folder. Open the saved file in DCS to check flight behavior. For live DCS controls, ask the connected assistant to install the hook using `dcs_install_hook`, or run the installed entry script with `install-hook`, then restart DCS. A smaller tool selection may not include the hook installer.
 
 ## What has been verified
 
