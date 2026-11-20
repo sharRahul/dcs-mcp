@@ -1,4 +1,5 @@
 node_modules/
+/docs/aerodrome data_01-feb-2026/
 /plugins/dcs-chatgpt/server/
 /plugins/dcs-chatgpt/skills/
 /plugins/dcs-claude-desktop/

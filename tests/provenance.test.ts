@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DATASETS, provenanceReport } from "../src/data/provenance.js";
@@ -27,6 +27,23 @@ test("every bundled dataset is registered, sourced and pinned", () => {
 // Byte-for-byte regeneration from a pinned pydcs 1.0.0 tree: set PYDCS_SRC to the unpacked wheel.
 const PYDCS = process.env.PYDCS_SRC;
 const python = process.platform === "win32" ? "python" : "python3";
+const hasPython = spawnSync(python, ['--version'], { windowsHide: true }).status === 0;
+
+test('navaid regeneration refuses absent external charts without changing existing data', { skip: !hasPython }, t => {
+  const dir = mkdtempSync(join(tmpdir(), 'navaid-input-check-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const output = join(dir, 'existing.json');
+  writeFileSync(output, 'keep existing data');
+  const empty = join(dir, 'empty');
+  mkdirSync(empty);
+  for (const source of [join(dir, 'missing'), empty]) {
+    const result = spawnSync(python, ['-I', 'scripts/gen-airfield-navaids.py', source, 'data/airfield-radio.json', output],
+      { encoding: 'utf8', windowsHide: true });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /external.*PNG|PNG.*external/i);
+    assert.equal(readFileSync(output, 'utf8'), 'keep existing data');
+  }
+});
 test("pydcs-derived datasets regenerate byte-for-byte", { skip: PYDCS ? false : "set PYDCS_SRC to an unpacked pydcs 1.0.0 wheel" }, () => {
   const out = mkdtempSync(join(tmpdir(), "regen-"));
   const run = (args: string[]) => { const r = spawnSync(python, ["-I", ...args], { encoding: "utf8" }); assert.equal(r.status, 0, r.stderr); };

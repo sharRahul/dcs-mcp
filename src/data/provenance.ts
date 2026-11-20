@@ -40,7 +40,7 @@ export const DATASETS: Dataset[] = [
     pins: { field: '_sha256', kind: 'sha256' }, regenerate: 'pdftotext -layout <pdf> m.txt && python3 -I scripts/gen-me-manual-actions.py m.txt <pdf sha256> data/hoggit.json data/me-manual-actions.json',
     verification: 'Labels linked by literal name only.' },
   { file: 'airfield-navaids.json', generator: 'scripts/gen-airfield-navaids.py', upstream: "DimOn 'Aerodrome Data and Frequencies' (01 Feb 2026, freeware), OCR", licence: 'Freeware, unlimited distribution',
-    pins: { field: '_images_sha256', kind: 'image-sha256' }, regenerate: 'ocrenv/bin/python -I scripts/gen-airfield-navaids.py "docs/aerodrome data_01-feb-2026" data/airfield-radio.json data/airfield-navaids.json',
+    pins: { field: '_images_sha256', kind: 'image-sha256' }, regenerate: 'ocrenv/bin/python -I scripts/gen-airfield-navaids.py "<external PNG directory>" data/airfield-radio.json data/airfield-navaids.json',
     verification: 'Rows kept only when OCR ATC frequencies equal pydcs; spot-checked against the page images.' },
   { file: 'me-icons.json', generator: 'scripts/gen-me-icons.py', upstream: "The DCS install's own Mission Editor icon list (MissionEditor/data/NewMap/images/draw/icons.lua)", licence: 'ED install file; icon labels and file names only',
     pins: { field: '_sha256', kind: 'sha256' }, regenerate: 'python3 -I scripts/gen-me-icons.py "<DCS install>" data/me-icons.json',
