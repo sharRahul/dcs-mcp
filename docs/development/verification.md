@@ -1277,3 +1277,13 @@ plugin cache and the Claude Desktop `.mcpb` extension), saved to `My Mission`, a
   into the mission was the working route.
 - Found and fixed: `dcs_status` failed its own output schema whenever the bridge was reachable
   (the hook's status reply carries extra fields).
+
+### Assistant-driven build (2026-11-20, same session)
+
+A Claude Code session, acting as the MCP client, built `Desktop-Chat-Test.miz` from a plain
+brief through 11 tool calls with no script (new, aircraft, 2 ground groups, route, late
+activation, zone, MIST+MOOSE, start `do_script`, reactive spawn, validate, save). DCS loaded it
+clean; flown: start marker logged, reserve `S_EVENT_BIRTH` at t=20.8, patrol reached its north
+waypoint and turned back. Not tested: the same brief typed into the Claude Desktop or ChatGPT
+app's own chat. Open question: `COUNTRY_TYPE_NOT_OFFERED` warns that F-16C_50 is not offered to
+USA, yet USA F-16C_50 flights spawned in every run today.
