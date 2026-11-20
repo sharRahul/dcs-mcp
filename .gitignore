@@ -1,5 +1,38 @@
 node_modules/
-/docs/aerodrome data_01-feb-2026/
+/docs/aerodrome data_01-feb-2026/*
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Afghanistan_01.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Afghanistan_02.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Caucasus_01.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Cold_War_Germany_01.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Cold_War_Germany_02.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Cold_War_Germany_03.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Cold_War_Germany_04.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Cold_War_Germany_05.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Cold_War_Germany_06.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Cold_War_Germany_07.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Kola_01.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Kola_02.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Kola_03.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Nevada_01.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Normandy_01.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Normandy_02.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Normandy_03.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Normandy_04.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Persian_Gulf_01.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Persian_Gulf_02.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Sinai_01.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Sinai_02.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Sinai_03.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Sinai_04.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_South_Atlantic_01.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_South_Atlantic_02.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_South_Atlantic_03.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Syria_01.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Syria_02.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Syria_03.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_Syria_04.png
+!/docs/aerodrome data_01-feb-2026/04_AD_Day_The_Channel_01.png
+!/docs/aerodrome data_01-feb-2026/Readme.txt
 /plugins/dcs-chatgpt/server/
 /plugins/dcs-chatgpt/skills/
 /plugins/dcs-claude-desktop/

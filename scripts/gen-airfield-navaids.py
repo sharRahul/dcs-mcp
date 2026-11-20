@@ -4,8 +4,8 @@
 pydcs's own airfield ATC frequencies.
 
     # one-off: python3 -m venv ocrenv && ocrenv/bin/pip install rapidocr-onnxruntime
-    ocrenv/bin/python -I scripts/gen-airfield-navaids.py "<external PNG directory>" data/airfield-radio.json data/airfield-navaids.json
-(obtain the images separately; the output records each source image's sha256).
+    ocrenv/bin/python -I scripts/gen-airfield-navaids.py "docs/aerodrome data_01-feb-2026" data/airfield-radio.json data/airfield-navaids.json
+(the 32 pinned DAY table images are tracked; the output records each source image's sha256).
 
 A row is ACCEPTED only when:
   1. its OCR'd ATC block (VHF high + HF on line 1, UHF + VHF low on line 2) equals the four
@@ -104,7 +104,7 @@ def words(s):
 
 def main():
     if len(sys.argv) != 4:
-        raise SystemExit("Usage: gen-airfield-navaids.py <external PNG directory> <radio.json> <output.json>")
+        raise SystemExit("Usage: gen-airfield-navaids.py docs/aerodrome data_01-feb-2026 <radio.json> <output.json>")
     src, radio_path, out = pathlib.Path(sys.argv[1]), sys.argv[2], sys.argv[3]
     pages = sorted(src.glob("04_AD_Day_*.png")) if src.is_dir() else []
     if not pages:

@@ -913,8 +913,8 @@ ranges). Every extracted value on Caucasus p1, Syria p1 and Persian Gulf p1 was 
 with the page image: no wrong values; coverage is partial (some VOR/NDB/ILS/TACAN cells are not
 extracted). Regenerate with a rapidocr virtualenv:
 `ocrenv/bin/python -I scripts/gen-airfield-navaids.py <png-dir> data/airfield-radio.json data/airfield-navaids.json`.
-The original PNGs are external contributor inputs, not stored in GitHub or required
-at runtime. See [source credits and regeneration instructions](airfield-navaids-source.md).
+The 32 hash-pinned DAY table PNGs are tracked for regeneration, but are not required
+at runtime or included in the npm package. See [source credits and regeneration instructions](airfield-navaids-source.md).
 
 ## Inspect/edit, goals, quad zones, imported templates, payload library — 0.4.0
 

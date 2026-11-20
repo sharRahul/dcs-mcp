@@ -524,7 +524,7 @@ no adjacent ERROR line.
   measured. pydcs has beacon IDS only: no TACAN/ILS/VOR/NDB frequencies, elevation or magvar.
 - `data/airfield-navaids.json` (`scripts/gen-airfield-navaids.py`): OCR (rapidocr, in a private venv) of DimOn's
   "Aerodrome Data and Frequencies" DAY table pages (freeware; dimon.one has expired, so the user supplied a copy).
-  Images are external regeneration inputs, not tracked in Git. See `docs/airfield-navaids-source.md`.
+  Only the 32 hash-pinned DAY table images and author notes are tracked for regeneration. See `docs/airfield-navaids-source.md`.
   A row is kept ONLY if its OCR'd ATC 4-tuple equals pydcs for exactly one airfield and the names agree; each value
   must pass its own check (elevation ft~m, TACAN NNX/Y, VOR magenta 108-117.95, NDB orange 190-1750, ILS green
   108.10-111.95 odd tenth). 400 airfields; recall is partial by design. Spot-checked against the page images for
