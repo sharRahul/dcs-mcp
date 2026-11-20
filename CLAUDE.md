@@ -1093,14 +1093,7 @@ user-facing page.
 - The bundle is ~5.1 MB and 3264 entries (dist + data + production node_modules), and the
   server registers **198 tools** through it.
 
-**The npm package does not exist yet.** `registry.npmjs.org/dcs-mcp-server` answered 404 on
-2026-11-19 (name free, no versions), so every `npx -y dcs-mcp-server` line in the docs — and
-`install-claude-desktop --published`, which writes exactly that command into the app's config
-— cannot work until someone runs the first publish. README, `docs/technical-reference.md` and
-`docs/claude-desktop.md` now say so and lead with the clone route; `docs/releasing.md` holds
-the preflight evidence, the two commands (they need npm credentials, so they are the
-maintainer's to run) and the list of notices to delete afterwards. Do not describe the npx
-route as working until `npm view dcs-mcp-server version` answers.
+**The npm package does not exist yet.** `npm view dcs-mcp-server version` answered E404 on 2026-11-19. That does not guarantee name availability for publication. User-facing install examples must use a permanent clone: `npm ci`, `npm run build`, then `node dist/index.js install-claude-desktop --local`. Use `node dist/index.js install-hook` for the bridge, or the connected `dcs_install_hook` tool. README, the technical reference and the Claude Desktop guide show this route; future registry commands belong in `docs/releasing.md` until publication is verified. The installer defaults to local mode; missing builds and cache paths must fail without writing a registry-based fallback. `--published` stays explicit and cannot work until the package is released. Do not describe it as working until both `npm view dcs-mcp-server version` and `npx -y dcs-mcp-server --version` succeed. Never ask users to log into npm just to install from a clone.
 
 Preflight that IS done for 0.6.4: `npm pack` (542 files, 1.3 MB), the tarball installed into a
 scratch project, its own `bin` resolving, `--version` and `install-claude-desktop --dry-run`

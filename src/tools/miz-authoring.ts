@@ -838,8 +838,8 @@ ${n}`).join(""), {
         "separate start triggers, and Skynet fails to initialise unless MIST loaded first. Requesting " +
         "skynet pulls in mist automatically.\n\n" +
         "Framework files are auto-discovered under 'Saved Games/DCS/Missions/LUA Scripts' and " +
-        "'Saved Games/DCS/Scripts'; pass paths explicitly to override. Splash Damage usually sits in its own " +
-        "folder under Missions, which is NOT one of those roots, so pass its path. Re-loading a framework already " +
+        "'Saved Games/DCS/Scripts', then from bundled fallback copies. Explicit paths override discovery. " +
+        "The bundled Splash Damage variant includes ground-ordnance tracking. Re-loading a framework already " +
         "in the mission reuses it instead of embedding a second copy.\n\n" +
         "Splash Damage is a community script (stevey9062), not authored or verified by this server.\n\n" +
         "Args:\n  - sessionId\n  - frameworks?: ['mist'|'moose'|'skynet'|'splash']\n" +

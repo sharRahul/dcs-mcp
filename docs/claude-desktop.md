@@ -4,36 +4,33 @@ Two ways to give the Claude Desktop app the DCS tools. Both run the same stdio s
 locally: nothing about a mission leaves the machine, and DCS can stay closed while you
 author or inspect one.
 
-> The npm package has not been released yet, so the `npx -y dcs-mcp-server` forms below
-> fail until it is: `--published` writes an entry the app cannot start. Until then use
-> `--local` from a clone, or the extension, which carries the server inside it. See
-> [releasing](releasing.md).
+The npm package is not released. Use a permanent GitHub clone or build an extension from it. Neither route needs an npm account. Future registry installation is described only in the [release guide](releasing.md#after-publication).
 
 | | One command | One click |
 |---|---|---|
-| What you run | `dcs-mcp-server install-claude-desktop` | a built `dcs-mcp-<version>.mcpb` |
-| Where the server comes from | the published npm package, or this checkout | packed inside the extension |
+| What you run | `node dist/index.js install-claude-desktop --local` | a built `dcs-mcp-<version>.mcpb` |
+| Where the server comes from | a permanent built clone | packed inside the extension |
 | Needs Node.js on the machine | yes | no — Claude Desktop ships its own |
-| Needs internet at first start | yes (`--published`) | no |
-| Updates | `npx -y dcs-mcp-server@latest …` again | build and install a new `.mcpb` |
+| Needs internet | for cloning and installing build dependencies; not for starting the server | for building; not for installing the built extension |
+| Updates | pull changes, install dependencies and rebuild the clone | build and install a new `.mcpb` |
 
 ## One command: merge an entry into claude_desktop_config.json
 
-From a clone (works today):
+With Git and Node 20+ installed, run each command in order. Stop if a command fails:
 
 ```powershell
-npm ci; npm run build; node dist/index.js install-claude-desktop --local
+git clone https://github.com/sharRahul/dcs-mcp.git
+cd dcs-mcp
+npm ci
+npm run build
+node dist/index.js install-claude-desktop --local
 ```
 
-From the published package (once released):
-
-```powershell
-npx -y dcs-mcp-server install-claude-desktop --published
-```
+If you already have a clone, start from its root and skip the first two commands. Keep it at the configured location. Quit Claude Desktop completely and restart it, then open a new chat and ask it to list the DCS tools.
 
 | Flag | Effect |
 |---|---|
-| `--published` | `npx -y dcs-mcp-server`, wrapped in `cmd /c` on Windows |
+| `--published` | Future npm mode; requires a published package. See the release guide before using it. |
 | `--local` | this install's own `node` and `dist/index.js`, by absolute path |
 | `--config <file>` | a config file other than the platform default |
 | `--name <key>` | the key under `mcpServers` (default `dcs`) |
@@ -62,9 +59,7 @@ What it refuses to do, because each of these breaks the app silently:
 - **Pin the app to an `npx` cache path.** `--local` is refused when the entry script sits
   under `_npx`, `.npm-cache` or `_cacache`: npx may clear those at any time.
 
-On Windows the entry is `cmd /c npx -y dcs-mcp-server`, not `npx …`. Claude Desktop spawns
-the command without a shell, and `npx` on Windows is `npx.cmd`, so the bare form fails with
-ENOENT and the app reports only that the server did not start.
+Local mode writes the running Node executable and the built entry script by absolute path. It does not depend on `npx`, a global npm installation of this package or Claude Desktop's working directory. To inspect the entry without changing your settings, append `--dry-run`. See the [technical reference](technical-reference.md#client-configuration) for a manual local configuration.
 
 ## One click: an MCPB extension
 
@@ -112,10 +107,10 @@ its own `ALLOW_EXEC` as well.
 Both routes give the live tools, which need the hook in a DCS profile:
 
 ```powershell
-npx -y dcs-mcp-server install-hook
+node dist/index.js install-hook
 ```
 
-Restart DCS, then `dcs_bridge_status` should report a phase. `dcs_load_mission` swaps a
+Run that command from the built clone. If you installed only the extension, ask the connected assistant to run `dcs_install_hook` instead. Restart DCS, then `dcs_bridge_status` should report a phase. `dcs_load_mission` swaps a
 mission into an **already running** session — it does nothing from the cold menu, so fly any
 mission once first. Flying missions and the live bridge are Windows-only; offline authoring
 is not.

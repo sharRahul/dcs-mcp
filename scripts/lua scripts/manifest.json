@@ -1,0 +1,46 @@
+{
+  "provenance": "User-supplied Lua source files, preserved unchanged; identification read from filenames and headers, not independently verified upstream byte equality.",
+  "licenseSourcesChecked": "2026-11-20",
+  "files": [
+    {
+      "framework": "mist",
+      "file": "mist_4_5_126.lua",
+      "identification": "Filename 4.5.126; internal major=4, minor=5, build=125",
+      "source": "https://github.com/mrSkortch/MissionScriptingTools",
+      "license": "GPL-3.0",
+      "licenseFile": "licenses/MIST-LICENSE.md",
+      "bytes": 338096,
+      "sha256": "34800466e977a5a11b04a67b5e72885192f1a6adc18224402ef5ced2e3ff7291"
+    },
+    {
+      "framework": "moose",
+      "file": "Moose.lua",
+      "identification": "2025-12-30T09:26:48+01:00-a3d77a5a7166c5aee4a2b596a22ec30b19a9dde6",
+      "source": "https://github.com/FlightControl-Master/MOOSE_INCLUDE",
+      "license": "GPL-3.0",
+      "licenseFile": "licenses/MOOSE-LICENSE",
+      "bytes": 10959808,
+      "sha256": "b8d661e940e510cfbf0bc21b10abdc4c53fc98161c2aa7387acebecff11f8f59"
+    },
+    {
+      "framework": "skynet",
+      "file": "skynet-iads-compiled.lua",
+      "identification": "3.3.0; build 29.12.2023 2311Z",
+      "source": "https://github.com/walder/Skynet-IADS",
+      "license": "Apache-2.0",
+      "licenseFile": "licenses/Skynet-IADS-LICENSE.md",
+      "bytes": 116802,
+      "sha256": "6b95b407f99ddf3933addcf3cfda2288d53519af652ffb90b779c26ba7608ba7"
+    },
+    {
+      "framework": "splash",
+      "file": "Splash_Damage_3.4.5_Standard_With_Ground_Ordnance.lua",
+      "identification": "3.4.5 Standard With Ground Ordnance",
+      "source": "https://github.com/stephenpostlethwaite/DCSSplashDamageScript",
+      "license": "MIT",
+      "licenseFile": "licenses/Splash-Damage-LICENSE",
+      "bytes": 492575,
+      "sha256": "aa6a4bf8770541ffe1090f542db3ed9d104a03711e4d659c02f0169d36c9a204"
+    }
+  ]
+}

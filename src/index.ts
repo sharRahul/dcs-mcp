@@ -52,12 +52,14 @@ import { configureClaudeDesktop, type EntryMode } from "./dcs/claude-desktop.js"
 import { SERVER_INSTRUCTIONS } from "./guide.js";
 import { PACKAGE_VERSION } from "./paths.js";
 
-function createServer() {
+function createServer(selected?: Set<string>) {
   const server = new McpServer(
     { name: "dcs-mcp-server", version: PACKAGE_VERSION },
-    { instructions: SERVER_INSTRUCTIONS }
+    { instructions: selected
+      ? `This client exposes only these tools: ${[...selected].join(', ')}. Use only this selection; other tool examples in the guide are unavailable in this connection.\n\n${SERVER_INSTRUCTIONS}`
+      : SERVER_INSTRUCTIONS }
   );
-  const catalogue = captureCatalogue(server);
+  const catalogue = captureCatalogue(server, selected);
   registerMizTools(server);
   registerAudioTools(server);
   registerAdvancedAuthoringTools(server);
@@ -82,6 +84,8 @@ function createServer() {
   registerResources(server);
   registerPrompts(server);
   registerCatalogueTool(server, catalogue.entries);
+  const unknown = [...(selected ?? [])].filter(name => !catalogue.known.has(name));
+  if (unknown.length) throw new Error(`Unknown --tools names: ${unknown.join(', ')}`);
   return { server, schemas: catalogue.schemas };
 }
 
@@ -181,7 +185,14 @@ async function main(): Promise<void> {
   // newer than the pinned pydcs. Never shadows a bundled type.
   enableLearnedTypes();
   enableInstalledSceneryTypes();
-  const { server } = createServer();
+  const args = process.argv.slice(2);
+  let selected: Set<string> | undefined;
+  if (args.includes('--tools')) {
+    const value = cliValue(args, '--tools');
+    selected = new Set(value?.split(',').map(name => name.trim()).filter(Boolean));
+    if (!selected.size) throw new Error('Pass --tools followed by comma-separated DCS tool names. Omit --tools to expose all tools.');
+  }
+  const { server } = createServer(selected);
   await server.connect(new GuardedStdioTransport());
   console.error(
     `dcs-mcp-server ${PACKAGE_VERSION} running on stdio` +

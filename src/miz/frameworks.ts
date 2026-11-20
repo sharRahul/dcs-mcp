@@ -24,6 +24,7 @@ import {
   type ActionSpec,
 } from "./authoring.js";
 import { addResource, type ResourceStore } from "./resources.js";
+import { packagePath } from "../paths.js";
 
 /** The single start trigger every script load is appended to. */
 export const SCRIPT_TRIGGER_COMMENT = "Load Scripts";
@@ -201,7 +202,7 @@ export async function discoverFramework(
   return matches[0];
 }
 
-/** Resolve a framework to a file: explicit path wins, otherwise auto-discover. */
+/** Explicit path wins, then local installations, then the packaged fallback. */
 export async function resolveFrameworkPath(
   name: FrameworkName,
   explicit?: string,
@@ -212,10 +213,11 @@ export async function resolveFrameworkPath(
     if (!info?.isFile()) throw new Error(`${FRAMEWORKS[name].label} script not found: ${explicit}`);
     return explicit; // an explicit path is the caller's call; no size guessing
   }
-  const found = await discoverFramework(name, roots);
+  const bundled = packagePath('scripts', 'lua scripts');
+  const found = await discoverFramework(name, roots) ?? await discoverFramework(name, [bundled], 0);
   if (!found) {
     throw new Error(
-      `Could not find a ${FRAMEWORKS[name].label} script. Searched: ${roots.join(", ")}. ` +
+      `Could not find a ${FRAMEWORKS[name].label} script. Searched: ${[...roots, bundled].join(", ")}. ` +
         `Pass an explicit path instead.`
     );
   }

@@ -1,0 +1,19 @@
+[
+  "dcs_status",
+  "dcs_list_unit_types",
+  "dcs_list_airfields",
+  "dcs_miz_new",
+  "dcs_miz_open",
+  "dcs_miz_get_summary",
+  "dcs_miz_list_groups",
+  "dcs_miz_list_triggers",
+  "dcs_miz_add_aircraft_group",
+  "dcs_miz_add_ground_group",
+  "dcs_miz_add_waypoint",
+  "dcs_miz_add_trigger_zone",
+  "dcs_miz_add_trigger",
+  "dcs_miz_set_weather",
+  "dcs_miz_set_briefing",
+  "dcs_miz_validate",
+  "dcs_miz_save_as"
+]

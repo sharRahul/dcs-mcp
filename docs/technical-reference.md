@@ -17,42 +17,44 @@ It never executes mission Lua (missions are parsed as data), never overwrites a 
 
 ## Install
 
-Node 20 or newer.
+Node 20 or newer and Git. The npm package is not released, so use a permanent clone. Run each command from the same terminal and stop if one fails:
 
-**The npm package has not been released yet**, so every `npx -y dcs-mcp-server` form on this page — and the `--published` installer mode — fails until the first publish; see [releasing](releasing.md). Once released:
-
-```bash
-npx -y dcs-mcp-server --version
+```powershell
+git clone https://github.com/sharRahul/dcs-mcp.git
+cd dcs-mcp
+npm ci
+npm run build
+node dist/index.js --version
 ```
 
-From a clone, which is the route that works today:
-
-```bash
-npm ci && npm run build   # outputs dist/index.js
-npm test                       # optional
-```
+`npm ci` downloads dependencies; it does not require publishing this project or an npm login. Keep the clone at the configured path. To update, run `git pull`, `npm ci` and `npm run build`, then restart the client. For future registry installation, see [releasing](releasing.md#after-publication).
 
 ## Client configuration
+
+For npm tarball installation and current ChatGPT, Claude Desktop, Cursor, OpenCode, Hermes Agent and Raiker instructions, see the [app connection guide](clients.md). Clients with small catalogue limits can pass `--tools name1,name2` to expose only an explicit selection. Omit the flag for the complete catalogue. Unknown names and empty selections fail rather than silently changing the available tools; this selection is not a filesystem sandbox.
 
 **Claude Desktop extension:** run `npm run bundle:build`, `npm run bundle:validate` and `npm run bundle:verify`, then double-click the `dcs-mcp-<version>.mcpb` it writes. See [Claude Desktop setup](claude-desktop.md) for the manifest, its five optional settings and verification limits.
 
 **ChatGPT Desktop local plugin:** run `npm run plugin:build` and `npm run plugin:verify`, then install **DCS-MCP** from the repository's **DCS-MCP Local** marketplace in a supported desktop client. See [plugin setup](../plugins/dcs-chatgpt/README.md) for installation, prerequisites and verification limits.
 
-Point your MCP client at the server (stdio):
+Point a client that accepts `mcpServers` configuration at your built server (stdio). Replace both example paths with absolute paths on your machine:
 
 ```json
 {
   "mcpServers": {
-    "dcs": { "command": "npx", "args": ["-y", "dcs-mcp-server"] }
+    "dcs": {
+      "command": "C:/Program Files/nodejs/node.exe",
+      "args": ["F:/path/to/dcs-mcp/dist/index.js"]
+    }
   }
 }
 ```
 
-From a clone, use `"command": "node", "args": ["/absolute/path/to/dcs-mcp/dist/index.js"]` instead.
+Find Node's absolute path with `(Get-Command node).Source` in PowerShell or `command -v node` on macOS/Linux. Forward slashes work in Windows JSON paths. Merge the `dcs` entry into an existing config rather than replacing other servers, or use the Claude installer below.
 
-- **Claude Code**: `claude mcp add dcs -- npx -y dcs-mcp-server`. The repo's own [`.mcp.json`](../.mcp.json) runs `node dist/index.js` with a *relative* path, which only works when the client starts the server from the repository root — Claude Code does, for project-scoped servers. Build first.
-- **Claude Desktop**: `dcs-mcp-server install-claude-desktop [--published|--local]` merges the entry into `claude_desktop_config.json` (backup kept, other keys and servers untouched, `cmd /c` wrapper on Windows), or `npm run bundle:build` + `bundle:validate` + `bundle:verify` produces a one-click `dcs-mcp-<version>.mcpb` extension. Both are documented in [Claude Desktop setup](claude-desktop.md); the block above still works by hand.
-- **Codex**: `codex mcp add dcs -- node /absolute/path/to/dcs-mcp/dist/index.js` for this feature checkout; build first. For the published package use `codex mcp add dcs -- npx -y dcs-mcp-server`.
+- **Claude Code**: `claude mcp add dcs -- node "/absolute/path/to/dcs-mcp/dist/index.js"`. The repo's own [`.mcp.json`](../.mcp.json) uses a relative path and requires a client working directory at the built repository root.
+- **Claude Desktop**: run `node dist/index.js install-claude-desktop --local` from the built clone. It merges the entry and keeps a backup. The extension alternative is documented in [Claude Desktop setup](claude-desktop.md).
+- **Codex**: `codex mcp add dcs -- node "/absolute/path/to/dcs-mcp/dist/index.js"`; build first and substitute the actual path.
 - **OpenCode**: add it under `mcp` in `opencode.json`.
 
 Optional environment variables:
@@ -155,8 +157,8 @@ Once configured, just ask your AI client in natural language — it calls the to
 Install the hook, then **restart DCS** — hooks are read at startup:
 
 ```bash
-npx dcs-mcp-server install-hook                  # finds Saved Games/DCS (or DCS.openbeta)
-npx dcs-mcp-server install-hook --saved-games "C:\Users\me\Saved Games\DCS.openbeta" --telemetry
+node dist/index.js install-hook                  # from the built clone; finds Saved Games/DCS (or DCS.openbeta)
+node dist/index.js install-hook --saved-games "C:\Users\me\Saved Games\DCS.openbeta" --telemetry
 ```
 
 or ask your client to run `dcs_install_hook`. It creates `Scripts/Hooks` if needed, says `unchanged` when the installed copy is current, and leaves a copy that differs (an older release, or your `ALLOW_EXEC` edit) alone unless you pass `--force` / `overwrite=true` — the old file is kept as a `.bak`. `--telemetry` also copies the in-mission telemetry script to `Scripts/`. Manual install still works: copy [`scripts/Hooks/dcs-mcp-hook.lua`](../scripts/Hooks/dcs-mcp-hook.lua) into `Saved Games/DCS/Scripts/Hooks/`.
@@ -474,6 +476,8 @@ be used more than once — a `once` trigger answers the first request and then g
 ## Scripting frameworks (MIST, MOOSE, Skynet-IADS)
 
 `dcs_miz_load_scripts` embeds a framework into the `.miz` and wires it to run at mission start.
+
+The package includes user-supplied MIST, MOOSE, Skynet-IADS and Splash Damage source files as fallbacks. Explicit framework paths win, followed by scripts found in the user's DCS folders; the packaged copies are used only when no local match exists. See [bundled versions, hashes and upstream notices](../scripts/lua%20scripts/README.md). The bundled Splash Damage variant includes ground-ordnance tracking; use an explicit alternative if you want different settings. Nothing is loaded into a mission unless requested.
 
 All loads go into **one** `MISSION START` trigger, in dependency order (MIST → MOOSE → Skynet → your
 setup scripts). That is not a stylistic choice: DCS walks `mission.trig.funcStartup` with `pairs`, so

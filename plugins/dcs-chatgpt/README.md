@@ -4,7 +4,7 @@ This package runs the existing DCS MCP server over stdio. It includes the missio
 
 ## Build and verify
 
-From the repository root, with Node 20+ and npm:
+Start with a permanent GitHub clone; this does not require the unreleased npm package. Follow the [download and build steps](../../README.md#get-dcs-mcp) first, then from the repository root, with Node 20+ and npm:
 
 ```powershell
 npm ci

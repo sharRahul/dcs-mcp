@@ -1,15 +1,30 @@
-# Releasing to npm
+# Build and release packages
 
-`dcs-mcp-server` has **never been published**. `https://registry.npmjs.org/dcs-mcp-server`
-returned 404 on 2026-11-19 and the name appears in no search result, so it is free and the
-first publish claims it. Everything in the docs that starts `npx -y dcs-mcp-server` depends
-on this, including `install-claude-desktop --published`, which otherwise writes a Claude
-Desktop entry the app cannot start.
+## Build on GitHub
 
-Publishing needs your npm credentials, so the two commands at the bottom are yours to run.
-Everything that can be checked without them has been.
+The **Build installable packages** workflow in `.github/workflows/packages.yml` runs on pushes to `main`, version tags and manual **Run workflow** requests. It checks the code and tests, builds the npm tarball, installs and tests that tarball outside the checkout, validates the Claude Desktop extension, and verifies the ChatGPT plugin.
 
-## What is already verified for 0.6.4
+After a successful run, download its three artifacts from [GitHub Actions](https://github.com/sharRahul/dcs-mcp/actions/workflows/packages.yml):
+
+| Artifact | Contents |
+| --- | --- |
+| `dcs-mcp-server-<version>` | Installable npm `.tgz` |
+| `dcs-claude-desktop-<version>` | Claude Desktop `.mcpb` |
+| `dcs-chatgpt-plugin-<version>` | Complete local ChatGPT plugin folder with dependencies |
+
+Artifact downloads are zipped by GitHub; extract the download before using the tarball, extension or plugin. They are retained for 30 days and may require GitHub sign-in. A maintainer can attach the verified files to a GitHub Release for longer-lived distribution. Generated packages do not belong in source control.
+
+No npm account or npm secret is required to build these files or install the tarball. The workflow never runs `npm publish` and has read-only repository permissions. See [GitHub artifact documentation](https://docs.github.com/en/actions/tutorials/store-and-share-data).
+
+## npm registry status
+
+`npm view dcs-mcp-server version --registry=https://registry.npmjs.org` returned E404 on 2026-11-19. A valid local tarball does not make the package available from npm. A registry 404 also does not guarantee that npm will permit a particular account to publish that name.
+
+Users should follow the [GitHub setup](../README.md#get-dcs-mcp), which needs no npm login. Publication is a separate maintainer action requiring npm authentication. The installer defaults to local mode and does not silently switch to registry mode when a build is missing.
+
+## Recorded preflight for 0.6.4
+
+These are earlier local results, not a substitute for running the checks on the exact revision being published. File counts and sizes change as documentation and source change.
 
 | Check | Result |
 |---|---|
@@ -29,7 +44,22 @@ the package, which is exactly what publishing fixes.
 deletes `dist/` first: a Claude Desktop entry installed with `--local` points there and is
 broken for the minute or two the publish takes, then works again.
 
-## Publish
+## Prepare and publish
+
+From a clean checkout of the intended revision, run each command in order and stop on failure:
+
+```powershell
+npm ci
+npm run check
+npm run build
+npm test
+npm pack --dry-run
+npm pack
+```
+
+Inspect the listed contents for local files. Install the resulting versioned tarball into a temporary project with `npm install --ignore-scripts <absolute-path-to-tarball>`, then run its installed bin with `--version` and `install-claude-desktop --local --dry-run --config <temporary-config-path>`. The dry run must point to that permanent installation and leave the temporary config unwritten. Do not register Claude Desktop to a throwaway scratch folder for actual use.
+
+Only the maintainer performs the following authenticated steps, after reviewing the package:
 
 ```powershell
 npm login
@@ -41,10 +71,9 @@ npm publish --access public
 
 With 2FA on your npm account the second command asks for a code, or takes `--otp=<code>`.
 
-**This cannot be undone.** 0.6.4 can be unpublished only within 72 hours, and the version
-number can never be reused afterwards — a mistake costs a version bump, not a repair.
+Publishing makes the package public. Verify the package contents, version and publishing account before running the command. Do not put credentials or authentication codes in repository files.
 
-## Afterwards
+## After publication
 
 1. Check the registry answers:
 
@@ -56,15 +85,19 @@ number can never be reused afterwards — a mistake costs a version bump, not a 
    npx -y dcs-mcp-server --version
    ```
 
-2. Delete the three "not published yet" notices, which are now wrong:
-   - the blockquote under `## Set it up once` in `README.md`
-   - the blockquote near the top of `docs/claude-desktop.md`
-   - the paragraph under `## Install` in `docs/technical-reference.md`
+2. Only after both checks succeed, offer the npm setup route and update the unpublished notices in `README.md`, `docs/claude-desktop.md`, `docs/technical-reference.md`, `plugins/dcs-chatgpt/README.md` and `CLAUDE.md`. Keep the clone route available. Do not change the historical preflight results to imply that publication was verified before it happened.
 
-   `README.md` and `docs/claude-desktop.md` also present a clone route first and the npx
-   route as "once released"; reorder them if you want npx to lead.
+   The future Claude Desktop installer command is:
 
-3. Optional: tag the release. The repository has no tags yet, so this starts the convention:
+   ```powershell
+   npx -y dcs-mcp-server install-claude-desktop --published
+   ```
+
+   It writes `cmd /c npx -y dcs-mcp-server` on Windows and plain `npx` elsewhere. This validates configuration generation only; actually starting it requires the registry package. The installer intentionally keeps local mode as its default.
+
+   The future registry-based Codex command is `codex mcp add dcs -- npx -y dcs-mcp-server`. Hook installation from the registry is `npx -y dcs-mcp-server install-hook`. These commands are unavailable while npm returns E404.
+
+3. Optional: tag the exact verified release commit. Check existing tags before creating a new one:
 
    ```powershell
    git tag -a v0.6.4 -m "0.6.4"; git push origin v0.6.4
@@ -76,6 +109,8 @@ number can never be reused afterwards — a mistake costs a version bump, not a 
    has not been run from this repository, so nothing here states how it behaves.
 
 ## Later releases
+
+GitHub Actions can also publish to npm once a maintainer configures an npm trusted publisher (OIDC) for the repository and a dedicated publishing workflow. That is separate from the build workflow here; package-owner setup is still required. See [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/). No npm token or login is committed to this repository.
 
 Bump the version in `package.json`, `server.json` and `package-lock.json` together — patch
 only while the minor digit is reserved (see `CLAUDE.md`) — then `npm publish` again. Rebuild

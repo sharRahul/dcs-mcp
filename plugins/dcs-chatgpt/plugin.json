@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "dcs-chatgpt",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "Create, edit and inspect DCS World missions locally, with optional live simulator control.",
   "author": {
     "name": "DCS-MCP contributors"

@@ -2,15 +2,19 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { buildResult } from './format.js';
 export interface CatalogueEntry { name: string; description: string; title?: string; inputSchema?: unknown; annotations?: Record<string, unknown> }
-export function captureCatalogue(server: McpServer) {
+export function captureCatalogue(server: McpServer, selected?: Set<string>) {
   const entries = new Map<string, CatalogueEntry>(), schemas = new Map<string, unknown>();
+  const known = new Set<string>();
   const register = server.registerTool.bind(server) as (...args: any[]) => any;
   server.registerTool = ((name: string, config: Omit<CatalogueEntry, 'name'>, callback: unknown) => {
-    if (entries.has(name)) throw new Error(`Duplicate MCP tool '${name}'`);
-    entries.set(name, { ...config, name }); schemas.set(name, config.inputSchema);
-    return register(name, config, callback);
+    if (known.has(name)) throw new Error(`Duplicate MCP tool '${name}'`);
+    known.add(name);
+    const tool = register(name, config, callback);
+    if (selected && !selected.has(name)) tool.disable();
+    else { entries.set(name, { ...config, name }); schemas.set(name, config.inputSchema); }
+    return tool;
   }) as typeof server.registerTool;
-  return { entries, schemas };
+  return { entries, schemas, known };
 }
 export function registerCatalogueTool(server: McpServer, entries: Map<string, CatalogueEntry>) {
   server.registerTool('dcs_tool_catalogue', {

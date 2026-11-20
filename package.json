@@ -16,13 +16,18 @@
     "docs/testing/live-acceptance",
     "docs/technical-reference.md",
     "docs/claude-desktop.md",
+    "docs/releasing.md",
+    "docs/clients.md",
     "docs/mission-audio.md",
     "docs/verification.md",
     "README.md",
     "LICENSE",
+    "NOTICE",
     "skills"
   ],
   "scripts": {
+    "package:build": "npm run clean && npm run build && npm pack --ignore-scripts",
+    "package:verify": "node scripts/verify-npm-package.mjs",
     "plugin:build": "node scripts/build-chatgpt-plugin.mjs",
     "plugin:verify": "node scripts/verify-chatgpt-plugin.mjs",
     "bundle:build": "node scripts/build-claude-bundle.mjs",

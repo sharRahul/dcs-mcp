@@ -1,0 +1,64 @@
+name: Build installable packages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  packages:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - run: npm test
+      - name: Build npm tarball
+        run: npm run package:build
+      - name: Install and test the tarball outside the checkout
+        run: npm run package:verify
+      - name: Build Claude Desktop extension
+        run: npm run bundle:build
+      - run: npm run bundle:validate
+      - run: npm run bundle:verify
+      - name: Build ChatGPT desktop plugin
+        run: npm run plugin:build
+      - run: npm run plugin:verify
+      - name: Read package version
+        id: version
+        shell: pwsh
+        run: |
+          $packageVersion = node -p "require('./package.json').version"
+          "version=$packageVersion" >> $env:GITHUB_OUTPUT
+      - name: Upload npm package
+        uses: actions/upload-artifact@v4
+        with:
+          name: dcs-mcp-server-${{ steps.version.outputs.version }}
+          path: dcs-mcp-server-*.tgz
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload Claude Desktop extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: dcs-claude-desktop-${{ steps.version.outputs.version }}
+          path: dcs-mcp-*.mcpb
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload ChatGPT desktop plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: dcs-chatgpt-plugin-${{ steps.version.outputs.version }}
+          path: plugins/dcs-chatgpt/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30

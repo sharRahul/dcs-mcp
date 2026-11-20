@@ -26,6 +26,17 @@ import { serializeLuaAssignment } from "../src/miz/serializer.js";
 import { parseLuaAssignment, luaArray, asTable } from "../src/miz/lua.js";
 import type { LuaTable } from "../src/miz/lua.js";
 
+test('bundled frameworks are a fallback and never replace a local installation', async () => {
+  for (const name of ['mist', 'moose', 'skynet', 'splash'] as const) {
+    const resolved = await resolveFrameworkPath(name, undefined, []);
+    assert.ok(resolved.includes(join('scripts', 'lua scripts')), resolved);
+  }
+  const dir = mkdtempSync(join(tmpdir(), 'dcs-local-framework-'));
+  const local = join(dir, 'mist_4_5_107.lua');
+  writeFileSync(local, 'x'.repeat(200_000));
+  assert.equal(await resolveFrameworkPath('mist', undefined, [dir]), local);
+});
+
 function storeOf(session: { mission: LuaTable; mapResource: LuaTable; files: Map<string, Buffer> }) {
   return { mission: session.mission, mapResource: session.mapResource, files: session.files };
 }

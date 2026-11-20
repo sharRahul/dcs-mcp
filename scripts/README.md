@@ -9,6 +9,7 @@ Run these commands from the repository root. Mission generators and DCS-specific
 | `build-chatgpt-plugin.mjs` | Builds the local desktop plugin (`npm run plugin:build`). |
 | `verify-chatgpt-plugin.mjs` | Tests the bundled plugin away from the checkout (`npm run plugin:verify`). |
 | `run-tests.mjs` | Runs the test suite on Windows and other platforms (`npm test`). |
+| `verify-npm-package.mjs` | Installs the built npm tarball into a temporary project and tests its CLI, resources and mission workflow (`npm run package:verify`). |
 | `update-schema-fixture.mjs` | Updates the expected tool contracts after a deliberate API change. |
 | `build-e2e-mission.mjs` | Generates the full example mission (`npm run build:e2e-mission`). |
 | `build-verify-mission.mjs` | Generates a mission for checking features in DCS; documented in the verification record. |

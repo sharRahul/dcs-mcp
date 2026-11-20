@@ -153,12 +153,12 @@ export async function configureClaudeDesktop(options: ConfigureOptions = {}): Pr
     // Shape first, existence second: an npx-cache path usually DOES exist right now.
     if (isEphemeralPath(script)) {
       throw new Error(
-        `'${script}' is inside a package cache that may be cleared. Use --published (npx), ` +
-          "or install the package globally and re-run this from there."
+        `'${script}' is inside a package cache that may be cleared. Build a permanent clone ` +
+          "and run its installer with --local. Use --published only after the npm package is released."
       );
     }
     if (!existsSync(script)) {
-      throw new Error(`'${script}' does not exist. Run 'npm run build' first, or use --published.`);
+      throw new Error(`'${script}' does not exist. Run 'npm ci' and 'npm run build' in your permanent clone first; nothing was changed.`);
     }
   }
 
@@ -230,7 +230,7 @@ export async function configureClaudeDesktop(options: ConfigureOptions = {}): Pr
   notes.push("Quit Claude Desktop completely and start it again: the config is read at startup.");
   notes.push(
     "Then ask it to list the DCS tools, or call dcs_status. For live control of a running DCS, " +
-      "install the hook as well: dcs-mcp-server install-hook."
+      "install the hook as well: ask the connected assistant to run dcs_install_hook."
   );
   if (mode === "published") {
     notes.push("The first start downloads the published package, so it needs internet access.");
