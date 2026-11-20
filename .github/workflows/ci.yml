@@ -18,8 +18,8 @@ jobs:
       matrix:
         node: [20, 22, 24]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node }}
           cache: npm
@@ -39,7 +39,7 @@ jobs:
         run: npm run verify:design -- "${{ runner.temp }}/dcs-capability-proof/design"
       - name: Upload offline evidence (not DCS-verified)
         if: matrix.node == 22
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: offline-capability-proof
           path: ${{ runner.temp }}/dcs-capability-proof
@@ -49,7 +49,7 @@ jobs:
         run: npm run acceptance:generate -- "${{ runner.temp }}/live-acceptance"
       - name: Upload live acceptance kit (DCS flight tests pending)
         if: matrix.node == 22
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: live-acceptance-kit-offline-only
           path: ${{ runner.temp }}/live-acceptance
@@ -58,8 +58,8 @@ jobs:
     name: Lua 5.1 offline checks on Windows
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -89,7 +89,7 @@ jobs:
       - run: npm run acceptance:generate -- "${{ runner.temp }}/lua51-live-acceptance"
       - run: npm run acceptance:lua51 -- "${{ runner.temp }}/lua51-live-acceptance"
       - name: Upload Lua 5.1 acceptance evidence (offline only)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: windows-lua51-offline-proof
           path: |
@@ -102,12 +102,12 @@ jobs:
     name: Reference-data reproducibility (pydcs 1.0.0)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - run: npm ci

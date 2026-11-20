@@ -14,8 +14,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -41,21 +41,21 @@ jobs:
           $packageVersion = node -p "require('./package.json').version"
           "version=$packageVersion" >> $env:GITHUB_OUTPUT
       - name: Upload npm package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dcs-mcp-server-${{ steps.version.outputs.version }}
           path: dcs-mcp-server-*.tgz
           if-no-files-found: error
           retention-days: 30
       - name: Upload Claude Desktop extension
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dcs-claude-desktop-${{ steps.version.outputs.version }}
           path: dcs-mcp-*.mcpb
           if-no-files-found: error
           retention-days: 30
       - name: Upload ChatGPT desktop plugin
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dcs-chatgpt-plugin-${{ steps.version.outputs.version }}
           path: plugins/dcs-chatgpt/
