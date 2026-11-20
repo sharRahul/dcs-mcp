@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, access, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, access, rm, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -16,7 +16,8 @@ test('mission folder defaults to the current user profile and requires an absolu
 });
 
 test('MCP saves only in the configured mission folder and preserves existing/source missions', async () => {
-  const base = await mkdtemp(path.join(tmpdir(), 'mission-output-'));
+  // realpath: CI's temp dir is an 8.3 short path (RUNNER~1); the server returns long paths.
+  const base = await realpath(await mkdtemp(path.join(tmpdir(), 'mission-output-')));
   const root = path.join(base, 'profile', 'Missions', 'My Mission');
   const client = new Client({ name: 'mission-output-test', version: '1' });
   await client.connect(new StdioClientTransport({ command: process.execPath, args: ['--import', 'tsx', 'src/index.ts'],
