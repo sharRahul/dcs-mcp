@@ -13,6 +13,7 @@ import { cp, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildManifest } from './claude-bundle-manifest.mjs';
+import { stagePackage } from './stage-package.mjs';
 
 /**
  * Files the published npm package carries that an extension has no use for.
@@ -55,9 +56,7 @@ await rm(bundleDir, { recursive: true, force: true });
 await mkdir(server, { recursive: true });
 
 const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
-for (const entry of [...pkg.files, 'package.json', 'package-lock.json']) {
-  await cp(path.join(root, entry), path.join(server, entry), { recursive: true });
-}
+await stagePackage(root, server, npmCli);
 npm(['ci', '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund'], server);
 const pruned = await prune(server);
 

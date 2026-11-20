@@ -57,22 +57,26 @@ function evalNode(node: any, constants?: Readonly<Record<string, number | string
 
 function evalTable(node: any, constants?: Readonly<Record<string, number | string>>): LuaTable {
   const table: LuaTable = {};
+  // Lua keys are data: assigning __proto__ must not invoke a JavaScript setter.
+  const setOwn = (key: string | number, value: LuaValue) => Object.defineProperty(table, key, {
+    value, writable: true, enumerable: true, configurable: true,
+  });
   let arrayIndex = 1;
   for (const field of node.fields) {
     switch (field.type) {
       case "TableKeyString":
-        table[field.key.name] = evalNode(field.value, constants);
+        setOwn(field.key.name, evalNode(field.value, constants));
         break;
       case "TableKey": {
         const key = evalNode(field.key, constants);
         if (typeof key !== "string" && typeof key !== "number") {
           throw new Error("Unsupported table key type in mission data");
         }
-        table[key as string | number] = evalNode(field.value, constants);
+        setOwn(key, evalNode(field.value, constants));
         break;
       }
       case "TableValue":
-        table[arrayIndex++] = evalNode(field.value, constants);
+        setOwn(arrayIndex++, evalNode(field.value, constants));
         break;
       default:
         throw new Error(`Unsupported table field '${field.type}' in mission data`);

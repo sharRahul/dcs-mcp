@@ -1,2 +1,3 @@
 # Preserve supplied upstream Lua bytes, including their original line endings.
 "vendor/lua/*.lua" -text -whitespace
+vendor/mcpb/manifest-v0.4.schema.json -text -whitespace

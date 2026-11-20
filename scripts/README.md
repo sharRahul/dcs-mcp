@@ -7,6 +7,12 @@
 | `verify/` | Test runner, package checks, DCS checks and Lua test harnesses |
 | `dev/` | Example mission generation, acceptance evidence and maintenance utilities |
 
+Release preparation uses `build/prepare-github-release.mjs` through the manual
+GitHub workflow. It creates a gated draft, never an npm registry publication.
+All package builders share `build/stage-package.mjs` to exclude ignored local files.
+Claude manifests are checked against the pinned upstream schema with
+`verify/validate-claude-manifest.mjs`.
+
 DCS scripts live in [`runtime/dcs/`](../runtime/dcs/README.md), bundled third-party
 frameworks in [`vendor/lua/`](../vendor/lua/README.md), and reproducible chart inputs
 in [`sources/airfield-navaids/`](../sources/airfield-navaids/README.md).

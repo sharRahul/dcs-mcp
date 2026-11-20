@@ -4,7 +4,7 @@ One DCS-MCP server works with different apps over a local MCP connection. You do
 
 ## Install the package
 
-Install Node.js 20+ first. Download the **Others** artifact (also used by Codex) from a successful **Build installable packages** run on [GitHub Actions](https://github.com/sharRahul/dcs-mcp/actions/workflows/packages.yml). Unzip the download to find `dcs-mcp-server-<version>.tgz`.
+Install Node.js 20+ first. Download **Others** (also used by Codex) from the [latest GitHub release](https://github.com/sharRahul/dcs-mcp/releases/latest). Unzip it to find `dcs-mcp-server-<version>.tgz`. No npm registry account is needed.
 
 Open a terminal in a permanent folder you want to keep, and run this with the actual tarball path:
 
@@ -21,7 +21,7 @@ In the examples below, replace `F:/DCS/dcs-tools/node_modules/dcs-mcp-server/dis
 
 ## Claude Desktop
 
-For the simplest install, download the Claude Desktop artifact from the same Actions run, unzip it and open its `.mcpb` file in Claude Desktop. Review its settings, install it, restart the app and ask for the DCS tools. This bundle contains its server and dependencies.
+For the simplest install, download the Claude Desktop `.mcpb` from the same release and open it in Claude Desktop. Review its settings, install it, restart the app and ask for the DCS tools. This bundle contains its server and dependencies.
 
 For an installed npm tarball, run:
 
@@ -33,7 +33,7 @@ The installer records absolute paths, keeps a backup and preserves other app set
 
 ## ChatGPT Desktop
 
-Use the local desktop plugin, not the npm tarball as a file attachment to a chat. Download the ChatGPT plugin artifact and unzip it into `plugins/dcs-chatgpt/` in your repository clone, replacing its generated bundle. The repository marketplace then points to the complete plugin; follow [local plugin installation](../../plugins/dcs-chatgpt/README.md#install-locally).
+Use the local desktop plugin, not the npm tarball as a file attachment to a chat. Download the ChatGPT plugin ZIP from the same release and unzip it into `plugins/dcs-chatgpt/` in your repository clone, replacing its generated bundle. The repository marketplace then points to the complete plugin; follow [local plugin installation](../../plugins/dcs-chatgpt/README.md#install-locally).
 
 OpenAI documents bundled MCP servers and repository marketplaces for local desktop plugins. Availability depends on your app and account. This package does not create a ChatGPT web endpoint or establish account access. [OpenAI packaging documentation](https://developers.openai.com/plugins/build/plugins).
 

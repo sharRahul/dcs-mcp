@@ -1,6 +1,7 @@
 {
   "name": "dcs-mcp-server",
   "version": "0.6.4",
+  "private": true,
   "mcpName": "io.github.sharRahul/dcs-mcp",
   "description": "Model Context Protocol server for DCS World: offline .miz mission authoring and inspection, plus a live-control bridge into a running sim",
   "type": "module",
@@ -31,12 +32,13 @@
     "skills"
   ],
   "scripts": {
-    "package:build": "npm run clean && npm run build && npm pack --ignore-scripts",
+    "release:prepare": "node scripts/build/prepare-github-release.mjs",
+    "package:build": "npm run clean && npm run build && node scripts/build/build-npm-package.mjs",
     "package:verify": "node scripts/verify/verify-npm-package.mjs",
     "plugin:build": "node scripts/build/build-chatgpt-plugin.mjs",
     "plugin:verify": "node scripts/verify/verify-chatgpt-plugin.mjs",
     "bundle:build": "node scripts/build/build-claude-bundle.mjs",
-    "bundle:validate": "mcpb validate plugins/dcs-claude-desktop/manifest.json",
+    "bundle:validate": "node scripts/verify/validate-claude-manifest.mjs",
     "bundle:verify": "node scripts/verify/verify-claude-bundle.mjs",
     "build": "tsc",
     "check": "tsc --noEmit",
@@ -86,10 +88,11 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@anthropic-ai/mcpb": "^2.1.2",
     "@types/adm-zip": "^0.5.7",
     "@types/luaparse": "^0.2.12",
     "@types/node": "^22.10.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }

@@ -24,6 +24,8 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
+      - name: Dependency security acceptance
+        run: npm audit --audit-level=low
       - run: npm run check
       - run: npm run build
       # Tests that need DCS's own Lua (luae.exe) skip themselves unless DCS_LUA is set.

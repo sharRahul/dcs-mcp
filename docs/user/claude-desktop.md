@@ -4,7 +4,7 @@ Two ways to give the Claude Desktop app the DCS tools. Both run the same stdio s
 locally: nothing about a mission leaves the machine, and DCS can stay closed while you
 author or inspect one.
 
-The npm package is not released. Use a permanent GitHub clone or build an extension from it. Neither route needs an npm account. Future registry installation is described only in the [release guide](../development/releasing.md#after-publication).
+Download the Claude Desktop `.mcpb` from the [latest GitHub release](https://github.com/sharRahul/dcs-mcp/releases/latest), or build it from a permanent clone. Neither route needs an npm account. Distribution is GitHub-only; see the [release guide](../development/releasing.md).
 
 | | One command | One click |
 |---|---|---|

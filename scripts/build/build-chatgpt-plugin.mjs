@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { stagePackage } from './stage-package.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const plugin = path.join(root, 'plugins', 'dcs-chatgpt');
@@ -21,11 +22,9 @@ await rm(server, { recursive: true, force: true });
 await rm(path.join(plugin, 'skills'), { recursive: true, force: true });
 await mkdir(server, { recursive: true });
 const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
-for (const entry of [...pkg.files, 'package.json', 'package-lock.json']) {
-  await cp(path.join(root, entry), path.join(server, entry), { recursive: true });
-}
+await stagePackage(root, server, npmCli);
 npm(['ci', '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund'], server);
-await cp(path.join(root, 'skills'), path.join(plugin, 'skills'), { recursive: true });
+await cp(path.join(server, 'skills'), path.join(plugin, 'skills'), { recursive: true });
 const manifestPath = path.join(plugin, 'plugin.json');
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
 manifest.version = pkg.version;

@@ -11,3 +11,4 @@ Start with the [main README](../README.md) to install DCS MCP and create a missi
 | [Reviews](reviews/) | Recorded aircraft and SAM template reviews |
 
 Contributors can find build and maintenance commands in [project scripts](../scripts/README.md).
+See [security acceptance](development/security-acceptance.md) for the release boundary and evidence.

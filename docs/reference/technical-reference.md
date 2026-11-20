@@ -17,7 +17,7 @@ It never executes mission Lua (missions are parsed as data), never overwrites a 
 
 ## Install
 
-Node 20 or newer and Git. The npm package is not released, so use a permanent clone. Run each command from the same terminal and stop if one fails:
+Node 20 or newer and Git are needed to build from source. Ready-to-install packages are on [GitHub Releases](https://github.com/sharRahul/dcs-mcp/releases/latest). To build a permanent clone, run each command from the same terminal and stop if one fails:
 
 ```powershell
 git clone https://github.com/sharRahul/dcs-mcp.git
@@ -27,7 +27,7 @@ npm run build
 node dist/index.js --version
 ```
 
-`npm ci` downloads dependencies; it does not require publishing this project or an npm login. Keep the clone at the configured path. To update, run `git pull`, `npm ci` and `npm run build`, then restart the client. For future registry installation, see [releasing](../development/releasing.md#after-publication).
+`npm ci` downloads dependencies; it does not require publishing this project or an npm login. Keep the clone at the configured path. To update, run `git pull`, `npm ci` and `npm run build`, then restart the client. See [releasing](../development/releasing.md) for the GitHub-only process.
 
 ## Client configuration
 
