@@ -30,9 +30,9 @@ try {
   run(process.execPath, [process.env.npm_execpath, 'install', '--prefix', installDir, '--ignore-scripts', '--no-audit', '--no-fund', tarball]);
   const installed = path.join(installDir, 'node_modules', pkg.name);
   const manifest = JSON.parse(await readFile(path.join(installed, 'package.json'), 'utf8'));
-  const entry = path.join(installed, manifest.bin['dcs-mcp-server']);
+  const entry = path.join(installed, manifest.bin['dcs-sortie-mcp']);
   assert.equal(run(process.execPath, [entry, '--version']).trim(), pkg.version);
-  await access(path.join(installDir, 'node_modules', '.bin', process.platform === 'win32' ? 'dcs-mcp-server.cmd' : 'dcs-mcp-server'));
+  await access(path.join(installDir, 'node_modules', '.bin', process.platform === 'win32' ? 'dcs-sortie-mcp.cmd' : 'dcs-sortie-mcp'));
   for (const file of ['docs/user/clients.md', 'docs/development/releasing.md', 'data/unit-types.json', 'runtime/dcs/Hooks/dcs-mcp-hook.lua', 'skills/dcs-mission-production/SKILL.md']) await access(path.join(installed, file));
   await assert.rejects(access(path.join(installed, 'sources')), { code: 'ENOENT' });
   assert.deepEqual((await readdir(path.join(installed, 'scripts'))).sort(), ['README.md', 'build', 'data', 'dev', 'verify'].sort());

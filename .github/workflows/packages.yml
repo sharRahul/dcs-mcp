@@ -46,7 +46,7 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: dcs-others-${{ steps.version.outputs.version }}
-          path: dcs-mcp-server-*.tgz
+          path: dcs-sortie-mcp-*.tgz
           if-no-files-found: error
           retention-days: 30
       - name: Upload Claude Desktop extension

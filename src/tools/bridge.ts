@@ -18,7 +18,7 @@ function defaultPort(): number {
   const parsed = Number(raw);
   if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) {
     console.error(
-      `dcs-mcp-server: ignoring invalid DCS_BRIDGE_PORT='${raw}' (expected 1-65535); ` +
+      `dcs-sortie-mcp: ignoring invalid DCS_BRIDGE_PORT='${raw}' (expected 1-65535); ` +
         `using ${BRIDGE_DEFAULT_PORT}`
     );
     return BRIDGE_DEFAULT_PORT;

@@ -13,7 +13,7 @@ Use the files on the [latest release](https://github.com/sharRahul/dcs-sortie-mc
 | --- | --- |
 | `dcs-claude-desktop-<version>.mcpb` | Open in Claude Desktop |
 | `dcs-chatgpt-plugin-<version>.zip` | Extract into `plugins/dcs-chatgpt` in a clone and install through its local marketplace |
-| `dcs-others-<version>.zip` | Codex and Others; contains `dcs-mcp-server-<version>.tgz` |
+| `dcs-others-<version>.zip` | Codex and Others; contains `dcs-sortie-mcp-<version>.tgz` |
 | `SHA256SUMS.txt` | SHA-256 hashes for the payloads and acceptance record |
 | `release-acceptance.json` | Exact source commit, accepted workflows and audit results |
 

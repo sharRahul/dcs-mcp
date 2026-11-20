@@ -29,9 +29,9 @@ Open the [latest GitHub release](https://github.com/sharRahul/dcs-sortie-mcp/rel
 | Codex | `dcs-others-…` | Install the tarball and register the local server. [Instructions](docs/user/clients.md#codex) |
 | Others | `dcs-others-…` | Install the npm tarball and add a local MCP server. [Instructions](docs/user/clients.md#others) |
 
-The **Others** download contains the npm file `dcs-mcp-server-<version>.tgz`, also used by Codex. You can install it without an npm account. Node.js 20+ is needed for the npm package; the Claude extension uses Claude Desktop's Node runtime. ChatGPT desktop plugin availability depends on your app and account. These downloads do not create a ChatGPT browser connection.
+The **Others** download contains the npm file `dcs-sortie-mcp-<version>.tgz`, also used by Codex. You can install it without an npm account. Node.js 20+ is needed for the npm package; the Claude extension uses Claude Desktop's Node runtime. ChatGPT desktop plugin availability depends on your app and account. These downloads do not create a ChatGPT browser connection.
 
-Distribution is **GitHub-only**. No npm account is needed; use the GitHub download rather than `npx dcs-mcp-server`.
+Distribution is **GitHub-only**. No npm account is needed; use the GitHub download rather than `npx dcs-sortie-mcp`.
 
 ### Prefer to build it yourself?
 

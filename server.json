@@ -13,7 +13,7 @@
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
-      "identifier": "dcs-mcp-server",
+      "identifier": "dcs-sortie-mcp",
       "version": "0.1.0",
       "transport": {
         "type": "stdio"

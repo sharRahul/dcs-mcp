@@ -57,9 +57,9 @@ test('config path follows each platform', () => {
 
 test('published mode goes through cmd on Windows, where the app spawns without a shell', () => {
   const win = serverEntry({ mode: 'published', platform: 'win32' });
-  assert.deepEqual(win, { command: 'cmd', args: ['/c', 'npx', '-y', 'dcs-mcp-server'] });
+  assert.deepEqual(win, { command: 'cmd', args: ['/c', 'npx', '-y', 'dcs-sortie-mcp'] });
   const mac = serverEntry({ mode: 'published', platform: 'darwin' });
-  assert.deepEqual(mac, { command: 'npx', args: ['-y', 'dcs-mcp-server'] });
+  assert.deepEqual(mac, { command: 'npx', args: ['-y', 'dcs-sortie-mcp'] });
 });
 
 test('local mode names this Node and this script, and drops empty env values', () => {
@@ -76,7 +76,7 @@ test('local mode names this Node and this script, and drops empty env values', (
 });
 
 test('npx cache paths are rejected as entry scripts', () => {
-  assert.equal(isEphemeralPath('/home/p/.npm/_npx/abc/node_modules/dcs-mcp-server/dist/index.js'), true);
+  assert.equal(isEphemeralPath('/home/p/.npm/_npx/abc/node_modules/dcs-sortie-mcp/dist/index.js'), true);
   assert.equal(isEphemeralPath('C:\\Users\\p\\AppData\\Local\\npm-cache\\_npx\\a\\x.js'), true);
   assert.equal(isEphemeralPath('F:\\GitHub\\dcs-mcp\\dist\\index.js'), false);
 });
@@ -92,7 +92,7 @@ test('a new config file is created with the entry', async () => {
   assert.equal(result.status, 'added');
   assert.equal(result.backup, undefined);
   const written = JSON.parse(readFileSync(configPath, 'utf8'));
-  assert.deepEqual(written, { mcpServers: { dcs: { command: 'npx', args: ['-y', 'dcs-mcp-server'] } } });
+  assert.deepEqual(written, { mcpServers: { dcs: { command: 'npx', args: ['-y', 'dcs-sortie-mcp'] } } });
   assert.ok(result.notes.some((n) => /start it again/i.test(n)));
 });
 
@@ -113,7 +113,7 @@ test('everything else in the file survives: other servers and the app preference
   assert.deepEqual(written.mcpServers.blender, { command: 'blender-mcp.exe' });
   assert.equal(written.coworkUserFilesPath, 'C:\\Users\\p\\Documents\\Claude');
   assert.deepEqual(written.preferences, { sidebarMode: 'epitaxy', nested: { keep: [1, 2] } });
-  assert.deepEqual(written.mcpServers.dcs.args, ['/c', 'npx', '-y', 'dcs-mcp-server']);
+  assert.deepEqual(written.mcpServers.dcs.args, ['/c', 'npx', '-y', 'dcs-sortie-mcp']);
   assert.ok(existsSync(result.backup!), 'the previous config is kept');
 });
 
@@ -138,7 +138,7 @@ test('an existing dcs entry pointing elsewhere is left alone until forced', asyn
   assert.ok(forced.backup && readdirSync(dir).some((f) => f.includes('.bak-')));
   assert.deepEqual(JSON.parse(readFileSync(configPath, 'utf8')).mcpServers.dcs, {
     command: 'npx',
-    args: ['-y', 'dcs-mcp-server'],
+    args: ['-y', 'dcs-sortie-mcp'],
   });
 
   const again = await configureClaudeDesktop({ configPath, mode: 'published', platform: 'darwin' });

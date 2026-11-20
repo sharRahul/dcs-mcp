@@ -4,20 +4,20 @@ One DCS Sortie MCP server works with different apps over a local MCP connection.
 
 ## Install the package
 
-Install Node.js 20+ first. Download **Others** (also used by Codex) from the [latest GitHub release](https://github.com/sharRahul/dcs-sortie-mcp/releases/latest). Unzip it to find `dcs-mcp-server-<version>.tgz`. No npm registry account is needed.
+Install Node.js 20+ first. Download **Others** (also used by Codex) from the [latest GitHub release](https://github.com/sharRahul/dcs-sortie-mcp/releases/latest). Unzip it to find `dcs-sortie-mcp-<version>.tgz`. No npm registry account is needed.
 
 Open a terminal in a permanent folder you want to keep, and run this with the actual tarball path:
 
 ```powershell
-npm install --prefix ./dcs-tools --ignore-scripts "C:\Downloads\dcs-mcp-server-0.1.0.tgz"
-node ./dcs-tools/node_modules/dcs-mcp-server/dist/index.js --version
+npm install --prefix ./dcs-tools --ignore-scripts "C:\Downloads\dcs-sortie-mcp-0.1.0.tgz"
+node ./dcs-tools/node_modules/dcs-sortie-mcp/dist/index.js --version
 ```
 
 No npm login is needed. npm may download the package's dependencies. Keep `dcs-tools` after setup: your app starts the server from there. To update, install a newer tarball into the same folder and restart the app.
 
 The package and desktop bundles include optional MIST, MOOSE, Skynet-IADS and Splash Damage Lua sources. They are used only when requested, as a fallback to local DCS script installations. [Included versions and upstream notices](../../vendor/lua/README.md).
 
-In the examples below, replace `F:/DCS/dcs-tools/node_modules/dcs-mcp-server/dist/index.js` with your installed file's **absolute path**. A built GitHub clone's `dist/index.js` works too. Use `(Get-Command node).Source` in PowerShell to find Node's absolute path. Configuration examples must be merged with existing settings, not pasted over them.
+In the examples below, replace `F:/DCS/dcs-tools/node_modules/dcs-sortie-mcp/dist/index.js` with your installed file's **absolute path**. A built GitHub clone's `dist/index.js` works too. Use `(Get-Command node).Source` in PowerShell to find Node's absolute path. Configuration examples must be merged with existing settings, not pasted over them.
 
 ## Claude Desktop
 
@@ -26,7 +26,7 @@ For the simplest install, download the Claude Desktop `.mcpb` from the same rele
 For an installed npm tarball, run:
 
 ```powershell
-node "F:/DCS/dcs-tools/node_modules/dcs-mcp-server/dist/index.js" install-claude-desktop --local
+node "F:/DCS/dcs-tools/node_modules/dcs-sortie-mcp/dist/index.js" install-claude-desktop --local
 ```
 
 The installer records absolute paths, keeps a backup and preserves other app settings. Quit and restart Claude Desktop. See [the full setup guide](claude-desktop.md) for custom folders and extension verification limits.
@@ -42,7 +42,7 @@ OpenAI documents bundled MCP servers and repository marketplaces for local deskt
 Register the installed server, then start a new chat:
 
 ```powershell
-codex mcp add dcs -- node "F:/DCS/dcs-tools/node_modules/dcs-mcp-server/dist/index.js"
+codex mcp add dcs -- node "F:/DCS/dcs-tools/node_modules/dcs-sortie-mcp/dist/index.js"
 ```
 
 The same command works with a built clone's absolute `dist/index.js` path. [Codex MCP documentation](https://developers.openai.com/codex/mcp/).
@@ -58,7 +58,7 @@ Set the command to the absolute path of Node.js and add the installed server ent
   "mcpServers": {
     "dcs": {
       "command": "C:/Program Files/nodejs/node.exe",
-      "args": ["F:/DCS/dcs-tools/node_modules/dcs-mcp-server/dist/index.js"]
+      "args": ["F:/DCS/dcs-tools/node_modules/dcs-sortie-mcp/dist/index.js"]
     }
   }
 }

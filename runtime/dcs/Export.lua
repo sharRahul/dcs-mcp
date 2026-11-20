@@ -1,5 +1,5 @@
 --[[
-  dcs-mcp-server TELEMETRY-ONLY bridge (lightweight, no de-sanitizing required).
+  dcs-sortie-mcp TELEMETRY-ONLY bridge (lightweight, no de-sanitizing required).
 
   Install into:  Saved Games/DCS/Scripts/Export.lua   (chains any existing hooks)
 

@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import sys
 
-package = Path.cwd() / "tools/dcs/node_modules/dcs-mcp-server"
+package = Path.cwd() / "tools/dcs/node_modules/dcs-sortie-mcp"
 entry = package / "dist/index.js"
 node = shutil.which("node")
 if not node or not entry.is_file():

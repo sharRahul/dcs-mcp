@@ -1,5 +1,5 @@
 --[[
-  dcs-mcp-server LIVE CONTROL hook.
+  dcs-sortie-mcp LIVE CONTROL hook.
 
   Install into:  Saved Games/DCS/Scripts/Hooks/dcs-mcp-hook.lua
 

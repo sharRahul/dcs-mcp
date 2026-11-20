@@ -76,7 +76,7 @@ export function registerDiagnosticTools(server: McpServer): void {
           missionEnv: z.boolean().optional(),
           errorCount: z.number().optional(),
           error: z.string().optional(),
-        }),
+        }).passthrough(), // the hook's status reply carries more fields (simTicking, …)
         log: z.object({
           exists: z.boolean(),
           path: z.string(),

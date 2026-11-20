@@ -17,8 +17,8 @@ Driven by compatible MCP clients. TypeScript, stdio transport,
   `reference.ts`, `bridge.ts`, `diagnostics.ts`) plus `resources.ts` (resources + prompts) and
   `position.ts` (x/y-or-lat/lon input). `src/guide.ts` is what CLIENTS see (server instructions +
   `dcs://guide/conventions`) — they never see this file, so put client-facing rules there too.
-- `src/dcs/install.ts` — hook installer (`dcs_install_hook`, `dcs-mcp-server install-hook`).
-- `src/dcs/claude-desktop.ts` — `dcs-mcp-server install-claude-desktop` (merges into
+- `src/dcs/install.ts` — hook installer (`dcs_install_hook`, `dcs-sortie-mcp install-hook`).
+- `src/dcs/claude-desktop.ts` — `dcs-sortie-mcp install-claude-desktop` (merges into
   `claude_desktop_config.json`); `scripts/build/build-claude-bundle.mjs` + `claude-bundle-manifest.mjs` +
   `verify-claude-bundle.mjs` build and check the one-click `.mcpb` extension.
 - Version comes from package.json only (`src/paths.ts`); bump it there, in `server.json` and in
@@ -1044,7 +1044,7 @@ that does not have it, rather than silently shipping different missions.
 
 ## Claude Desktop: config merge and the MCPB extension (0.6.4) — offline only
 
-Two routes, both tested without the app: `dcs-mcp-server install-claude-desktop` and
+Two routes, both tested without the app: `dcs-sortie-mcp install-claude-desktop` and
 `npm run bundle:build` / `bundle:verify` (a `.mcpb`). `docs/user/claude-desktop.md` is the
 user-facing page.
 
@@ -1056,7 +1056,7 @@ user-facing page.
   `--force`). A rewrite would silently cost the user their app settings.
 - **Windows needs `cmd /c`.** Claude Desktop spawns the command with no shell and `npx` on
   Windows is `npx.cmd`, so `"command": "npx"` fails ENOENT and the app says only that the
-  server did not start. `serverEntry` emits `cmd /c npx -y dcs-mcp-server` on win32 and plain
+  server did not start. `serverEntry` emits `cmd /c npx -y dcs-sortie-mcp` on win32 and plain
   `npx` elsewhere. The README's hand-edit block was updated to match.
 - **`--local` refuses an npx cache path** (`_npx`, `.npm-cache`, `_cacache`): pinning the app
   to a directory npx may clear produces a server that works today and is gone later.
@@ -1094,7 +1094,7 @@ user-facing page.
 - The bundle is ~5.1 MB and 3264 entries (dist + data + production node_modules), and the
   server registers **198 tools** through it.
 
-**Distribution is GitHub-only.** Publish accepted packages through the controlled GitHub draft-release process in `docs/development/releasing.md`. `package.json` is private to prevent accidental npm registry publication. Users install a release tarball or a permanent clone without an npm account. Never switch to a registry-based fallback or present `npx dcs-mcp-server` / `--published` as supported. CI and package acceptance must pass on the exact release commit, and all downloaded assets must pass the release checksum review before publishing the draft.
+**Distribution is GitHub-only.** Publish accepted packages through the controlled GitHub draft-release process in `docs/development/releasing.md`. `package.json` is private to prevent accidental npm registry publication. Users install a release tarball or a permanent clone without an npm account. Never switch to a registry-based fallback or present `npx dcs-sortie-mcp` / `--published` as supported. CI and package acceptance must pass on the exact release commit, and all downloaded assets must pass the release checksum review before publishing the draft.
 
 Preflight that IS done for 0.6.4: `npm pack` (542 files, 1.3 MB), the tarball installed into a
 scratch project, its own `bin` resolving, `--version` and `install-claude-desktop --dry-run`

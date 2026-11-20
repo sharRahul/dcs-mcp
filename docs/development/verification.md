@@ -1257,3 +1257,23 @@ the `group_dead` reactive wave, its 20 s flag delay, and the `a_ai_task` push on
 eight smoke presets rendering, the train moving on its rails, and the troop lift loading
 and unloading. `dcs-mcp-verify-0-6c.miz` (sha256 53dfc518…) carries the fixes and is what
 the next sortie should fly, pressing the attack until every launcher of the SA-2 is dead.
+
+## Installed-client live run (0.1.0, 2026-11-20, Caucasus, DCS multithreaded)
+
+The same mission was built through the server AS INSTALLED in each client (Codex/ChatGPT
+plugin cache and the Claude Desktop `.mcpb` extension), saved to `My Mission`, and flown.
+
+- Both: every placement spawned (F-16C player, Abrams patrol, late-activated M-113 reserve,
+  `.Command Center`, FARP + support, Stennis, trigger zone); MIST 4.5.125, MOOSE, Skynet 3.3.0
+  and Splash Damage 3.4 loaded from one start trigger; start-trigger `do_script` marker logged.
+- Claude-built mission, flown: flags 9020-9023 all set; reserve `S_EVENT_BIRTH` at t=20.8 from
+  the reactive spawn; patrol drove its route. On a second flight the user saw and heard both
+  ElevenLabs voice lines (`a_out_sound_u` at 10 s, `a_out_sound_g` at 35 s) and all three
+  messages. The first flight missed the group message when DCS logged
+  `AUDCLNT_E_DEVICE_INVALIDATED` at about t=35 — an audio-device fault, not the mission.
+- A unit listed by `coalition.getGroups` is NOT proof of activation: inactive late-activation
+  groups are listed too. Use `S_EVENT_BIRTH` (dcs_runtime_inspect) instead.
+- `net.load_mission` did nothing on a session started with `DCS.exe <miz>`; relaunching DCS
+  into the mission was the working route.
+- Found and fixed: `dcs_status` failed its own output schema whenever the bridge was reachable
+  (the hook's status reply carries extra fields).

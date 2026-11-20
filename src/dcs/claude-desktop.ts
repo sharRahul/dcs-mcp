@@ -123,8 +123,8 @@ export function serverEntry(options: ConfigureOptions = {}): ServerEntry {
   if (mode === "published") {
     const published: ServerEntry =
       platform === "win32"
-        ? { command: "cmd", args: ["/c", "npx", "-y", "dcs-mcp-server"] }
-        : { command: "npx", args: ["-y", "dcs-mcp-server"] };
+        ? { command: "cmd", args: ["/c", "npx", "-y", "dcs-sortie-mcp"] }
+        : { command: "npx", args: ["-y", "dcs-sortie-mcp"] };
     return env ? { ...published, env } : published;
   }
   const local: ServerEntry = {

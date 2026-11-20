@@ -1,7 +1,7 @@
 # Aircraft runtime inspection and control
 
 These tools require the updated `runtime/dcs/Hooks/dcs-mcp-hook.lua`. Install with
-`dcs-mcp-server install-hook --saved-games <DCS-profile> --force` and restart DCS.
+`dcs-sortie-mcp install-hook --saved-games <DCS-profile> --force` and restart DCS.
 The installer backs up a differing hook. Restart the MCP server to discover the
 new tools. `dcs_bridge_status` reports `response.capabilities.aircraftAI: 1` on
 the updated hook. A running, unpaused mission is needed for mission queries.

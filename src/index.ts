@@ -11,10 +11,10 @@ import {registerProductionTools} from './tools/production.js';
  *
  * The server never executes Lua from a mission and never writes to a source mission file.
  *
- * `dcs-mcp-server install-hook [--saved-games <dir>] [--telemetry] [--force] [--dry-run]`
+ * `dcs-sortie-mcp install-hook [--saved-games <dir>] [--telemetry] [--force] [--dry-run]`
  * installs the live hook instead of starting the server.
  *
- * `dcs-mcp-server install-claude-desktop [--published|--local] [--config <file>]
+ * `dcs-sortie-mcp install-claude-desktop [--published|--local] [--config <file>]
  * [--name <key>] [--saved-games <dir>] [--dcs-install <dir>] [--bridge-host <host>]
  * [--bridge-port <port>] [--ffmpeg <exe>] [--force] [--dry-run]` registers this
  * server with the Claude Desktop app instead of starting the server.
@@ -54,7 +54,7 @@ import { PACKAGE_VERSION } from "./paths.js";
 
 function createServer(selected?: Set<string>) {
   const server = new McpServer(
-    { name: "dcs-mcp-server", version: PACKAGE_VERSION },
+    { name: "dcs-sortie-mcp", version: PACKAGE_VERSION },
     { instructions: selected
       ? `This client exposes only these tools: ${[...selected].join(', ')}. Use only this selection; other tool examples in the guide are unavailable in this connection.\n\n${SERVER_INSTRUCTIONS}`
       : SERVER_INSTRUCTIONS }
@@ -195,7 +195,7 @@ async function main(): Promise<void> {
   const { server } = createServer(selected);
   await server.connect(new GuardedStdioTransport());
   console.error(
-    `dcs-mcp-server ${PACKAGE_VERSION} running on stdio` +
+    `dcs-sortie-mcp ${PACKAGE_VERSION} running on stdio` +
       (stateDir ? ` (session snapshots: ${stateDir})` : " (session snapshots disabled)")
   );
 }
