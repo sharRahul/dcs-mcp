@@ -1124,21 +1124,37 @@ with tests. The rules they leave behind:
 - Stock payload Lua under the install is ED's file: read it at call time, never vendor it into this repo
   (same rule as the ME template library).
 
-## Player defaults and departure comms (2026-11-21) — offline only
+## Player defaults, scripted ATC, flyable types (2026-11-21) — offline only
 
 - Player/Client flights default to 2 aircraft (`dcs_miz_add_aircraft_group` with no `count`, scenario player
   force with no `count`). With skill `Player`, only unit 1 is `Player`; wingmen become `High` — DCS allows one
   Player unit, so a Player 2-ship used to be refused by configure_flight.
-- `src/miz/departure-comms.ts` / `dcs_miz_add_departure_comms`: briefing (t=1), then F10 items gated by flags
-  (startup -> taxi -> takeoff), airborne handoff on `c_unit_altitude_higher_AGL`, AWACS check-in. Only existing
-  oracle-backed predicates. F10 calls, not detection: no predicate exists for engine start and pydcs has no
-  taxiway/threshold coordinates. Runway defaults to pydcs's first designator (wind is NOT read); ATC MHz from
-  `airfield-radio.json`. Dialogue is fictional; DCS's own ATC is untouched. Audio only when the caller passes
-  resource keys — never ship ED's ATC speech files. To verify in DCS: the F10 sequence, sounds, AGL handoff.
+- **No new tools for features that belong to an existing one.** The user asked for depth in the existing tools,
+  not more of them (~200 already). ATC is the `atc` argument of `dcs_miz_create_flight` / `dcs_miz_configure_flight`;
+  CoreMods data is part of `dcs_install_report` and `dcs_list_unit_types`.
+- `src/miz/atc.ts` `addFlightAtc`: the WHOLE sortie in place of DCS ATC. A `start` trigger sets
+  `a_set_ATC_silent_mode` at every airfield it speaks for (departure = route point 1 `airdromeId`, arrival = last
+  `Landing` waypoint or `arrival.airfield`). Briefing t=1; F10 items gated by flags (startup -> taxi -> takeoff);
+  airborne handoff on `c_unit_altitude_higher_AGL`; AWACS check-in; arrival prompted by two zones round the field
+  (`inboundKm`/`finalKm`), gated on an `outbound` flag set by `c_unit_out_zone` so a round trip does not fire at
+  takeoff; then inbound -> landing clearance -> clear of runway/taxi to parking. Triggers are commented
+  `ATC <group>: ...`; a second script for the same group is refused. Atomic (trig/trigrules/zones/dictionary restored).
+  `dcs_scenario_generate` applies it to the player by default when the flight touches an airfield
+  (`player.atc: false` opts out). Only oracle-backed predicates. F10 calls, not detection: no predicate for engine
+  start, no taxiway/threshold coordinates. Runway defaults to pydcs's first designator (wind NOT read). Dialogue is
+  fictional. Audio only from caller resource keys — never ship ED's ATC speech files. Unverified: whether silent mode
+  also mutes the field for AI traffic; the F10 sequence, sounds, AGL handoff and zone prompts in flight.
+- Flyable vs AI-only (`mods.ts` `flyableTypes`/`playerFlyable`): a type is player-flyable only when a DEPLOYED
+  Mods/aircraft folder (install or Saved Games) calls `make_flyable` or `MAC_flyable` (FC3) with it — literal or a
+  `local X = '...'` passed by name. CoreMods/aircraft defines AI models for modules the user may not own (this install:
+  F-15E, AH-64D, Ka-50, ... are CoreMods-only, so AI-only; AV8BNA's Mods folder holds only Sounds). Validator
+  `PLAYER_TYPE_NOT_FLYABLE` (warning) for a Player/Client unit of such a type; `dcs_list_unit_types` adds
+  `playerFlyable`. No install found = no verdict, never a guess.
 
 ## CoreMods aircraft definitions (2026-11-21) — offline, read as text
 
-- `src/dcs/coremods.ts` / `dcs_coremods_aircraft`: `CoreMods/aircraft/*` and `CoreMods/WWII Units` unit Lua scanned
+- `src/dcs/coremods.ts`, surfaced through `dcs_install_report` (`coreMods`, `playerFlyable`; `type` for one
+  definition with CLSIDs): `CoreMods/aircraft/*` and `CoreMods/WWII Units` unit Lua scanned
   as TEXT. A definition = the `Name = '...'` at the same indentation as its `M_max`/`M_fuel_max` (skips nested
   carrier/datalink `Name`s). Only numeric literals are taken; expressions are null. Tasks map through pydcs
   `mainTasks`; unmapped ids are reported. 46 definitions on this install.

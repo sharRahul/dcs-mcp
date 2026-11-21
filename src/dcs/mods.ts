@@ -48,6 +48,13 @@ export interface ModUnit {
   category: ModCategory;
   /** File the declaration was found in, relative to the mod folder. */
   file: string;
+  /**
+   * True when the type is registered with a cockpit (`make_flyable` / `MAC_flyable`).
+   * That call is what puts a type in the Player/Client list: CoreMods defines many
+   * aircraft (F-15E, AH-64D, ...) that only AI can fly until the module itself is
+   * installed under Mods/aircraft.
+   */
+  flyable?: true;
 }
 
 export interface InstalledMod {
@@ -183,12 +190,19 @@ export function scanModFolder(folder: string, kind: string, deployed = true, rep
     const add = (type: string, category: ModCategory) => {
       if (!type || type.length > 80) return;
       const existing = units.get(type);
-      if (!existing || existing.category === "unknown") units.set(type, { type, category, file: rel });
+      if (!existing || existing.category === "unknown") units.set(type, { ...existing, type, category, file: rel });
     };
     if (/add_personnel\s*\(|add_structure\s*\(|CWAY\s*=/.test(src)) {
       for (const asset of parseSceneryDeclarations(src, file)) add(asset.type, 'static');
     }
-    for (const m of src.matchAll(/make_flyable\s*\(\s*["']([^"']+)["']/g)) add(m[1], "unknown");
+    // make_flyable('F-16C_50', ...), MAC_flyable('Su-27', ...) (FC3), or a local holding the id:
+    //   local flyable_ID = 'MiG-29 Fulcrum' ... make_flyable(flyable_ID, ...)
+    for (const m of src.matchAll(/\b(?:make|MAC)_flyable\s*\(\s*(?:["']([^"']+)["']|([A-Za-z_]\w*))/g)) {
+      const type = m[1] ?? src.match(new RegExp(`\\blocal\\s+${m[2]}\\s*=\\s*["']([^"']+)["']`))?.[1];
+      if (!type) continue;
+      add(type, "unknown");
+      units.get(type)!.flyable = true;
+    }
     // add_aircraft({ Name = "X", ... }) or a table assigned earlier and passed in.
     if (/add_aircraft\s*\(/.test(src)) {
       const name = src.match(/\bName\s*=\s*["']([^"']+)["']/);
@@ -318,6 +332,25 @@ export function findModUnit(
     fallback ??= hit;
   }
   return fallback;
+}
+
+/**
+ * Can a human fly this type on this machine? Only a DEPLOYED mod's `make_flyable` /
+ * `MAC_flyable` makes a type player-flyable (stock modules live under the install's
+ * Mods/aircraft, third-party ones under Saved Games). `unknown` when no deployed
+ * Mods/aircraft folder declares any flyable type at all, i.e. no install was found.
+ */
+export function playerFlyable(type: string, mods = installedMods()): "yes" | "no" | "unknown" {
+  const flyable = flyableTypes(mods);
+  if (!flyable.size) return "unknown";
+  return flyable.has(type) ? "yes" : "no";
+}
+
+/** Every type a deployed mod registers with a cockpit. */
+export function flyableTypes(mods = installedMods()): Set<string> {
+  const out = new Set<string>();
+  for (const m of mods) if (m.deployed) for (const u of m.units) if (u.flyable) out.add(u.type);
+  return out;
 }
 
 /** For tests: drop the scan cache. */

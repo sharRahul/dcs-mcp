@@ -3,7 +3,7 @@ import { validateAuthoring } from "./advanced-validation.js";
 import type { LuaTable } from "./lua.js";
 import type { MissionDocument, ValidationIssue, ValidationReport } from "../types.js";
 import { countryOffers, findUnitType } from "../data/reference.js";
-import { findModUnit } from "../dcs/mods.js";
+import { findModUnit, playerFlyable } from "../dcs/mods.js";
 import { EFFECT_STATICS } from "./editing.js";
 
 /** Run read-only validation over a parsed mission. Never modifies the document. */
@@ -307,6 +307,25 @@ export function validateMission(doc: MissionDocument, mission?: LuaTable): Valid
         `${players.length} units have skill 'Player' (${players.map((u) => u.name).slice(0, 6).join(", ")}). ` +
         `A mission has one Player aircraft; make the others 'Client' slots.`,
     });
+  }
+
+  // A Player/Client slot needs the module itself. CoreMods defines many aircraft (F-15E,
+  // AH-64D, ...) for AI; only a deployed make_flyable/MAC_flyable gives them a cockpit.
+  const flyableChecked = new Map<string, string>();
+  for (const g of doc.groups) {
+    if (g.category !== "plane" && g.category !== "helicopter") continue;
+    for (const u of g.units) {
+      if (u.skill !== "Player" && u.skill !== "Client") continue;
+      const verdict = flyableChecked.get(u.type) ?? playerFlyable(u.type);
+      flyableChecked.set(u.type, verdict);
+      if (verdict === "no") warnings.push({
+        severity: "warning",
+        code: "PLAYER_TYPE_NOT_FLYABLE",
+        message: `'${u.name}' (${u.type}) is a ${u.skill} slot, but no Mods/aircraft module on this machine makes ${u.type} flyable ` +
+          `(make_flyable/MAC_flyable). DCS can spawn it for AI only; the slot will not be offered here.`,
+        location: `unit:${u.name}`,
+      });
+    }
   }
 
   // A country belongs to exactly one coalition.

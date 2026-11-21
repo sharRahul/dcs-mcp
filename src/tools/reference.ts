@@ -20,7 +20,7 @@ import { latLonToXY, xyToLatLon } from "../miz/projection.js";
 import { allSiteTemplates } from "../miz/templates.js";
 import { listTerrainSites } from '../data/terrain-sites.js';
 import { countryInventory, type InventoryRow } from "../miz/inventory.js";
-import { installedMods, modRepositoryRoots, modRoots } from "../dcs/mods.js";
+import { flyableTypes, installedMods, modRepositoryRoots, modRoots } from "../dcs/mods.js";
 import { buildResult, errorResult, render, responseFormatField } from "./format.js";
 
 const readOnly = {
@@ -54,10 +54,12 @@ export function registerReferenceTools(server: McpServer): void {
         "ids, the strings dcs_miz_add_* need. country= narrows to what the Mission Editor offers that country " +
         "(DCS's own, permissive list; for what it really operates use dcs_country_inventory). " +
         "Every word of the query must match the type id, display name or family (e.g. 'sa-11', " +
-        "'hornet', 'abrams', 'farp', 'cargo'). Aircraft entries include their supported tasks. Types added " +
+        "'hornet', 'abrams', 'farp', 'cargo'). Aircraft entries include their supported tasks and, when a DCS install is found, playerFlyable: true only for " +
+        "types a deployed Mods/aircraft module registers with a cockpit (make_flyable/MAC_flyable); false = AI only here " +
+        "(CoreMods defines many aircraft, e.g. F-15E, whose module is not installed). Types added " +
         "by newer DCS versions or mods may be missing; those still work, but the validator warns.\n\n" +
         "Args: category? ('plane'|'helicopter'|'vehicle'|'ship'|'static'), query?, country?, includeMods? (default true), limit? (default 50)\n\n" +
-        "Returns JSON: { count, types: [{ category, type, name?, group?, tasks?, source ('dcs' | 'mod:<id>') }] }.",
+        "Returns JSON: { count, types: [{ category, type, name?, group?, tasks?, playerFlyable?, source ('dcs' | 'mod:<id>') }] }.",
       inputSchema: z
         .object({
           category: z.enum(["plane", "helicopter", "vehicle", "ship", "static"]).optional(),
@@ -75,6 +77,9 @@ export function registerReferenceTools(server: McpServer): void {
       let types;
       try {
         types = searchUnitTypes(a.category, a.query, a.limit, { country: a.country, includeMods: a.includeMods });
+        // Mods/aircraft decides what a human can fly here; CoreMods also holds AI-only definitions.
+        const flyable = flyableTypes();
+        if (flyable.size) types = types.map((t) => (t.category === "plane" || t.category === "helicopter") ? { ...t, playerFlyable: flyable.has(t.type) } : t);
       } catch (err) {
         return errorResult(err);
       }
@@ -89,7 +94,8 @@ export function registerReferenceTools(server: McpServer): void {
                   (t) =>
                     `- \`${t.type}\` (${t.category}${t.group ? `/${t.group}` : ""}${t.source !== "dcs" ? `, ${t.source}` : ""})` +
                     `${t.name && t.name !== t.type ? ` — ${t.name}` : ""}` +
-                    `${t.tasks?.length ? ` — tasks: ${t.tasks.join(", ")}` : ""}`
+                    `${t.tasks?.length ? ` — tasks: ${t.tasks.join(", ")}` : ""}` +
+                    `${(t as { playerFlyable?: boolean }).playerFlyable === false ? " — AI only here" : ""}`
                 ),
               ].join("\n")
             : "No matching unit types.",

@@ -27,6 +27,14 @@ function a_set_flag_value(f,v) set(f,v) end
 function a_activate_group(g) active[g] = true end
 function a_out_text_delay_s() end
 function a_mark_to_all() end
+-- Scripted ATC (src/miz/atc.ts): the player never flies here, so its calls are inert.
+function a_set_ATC_silent_mode() end
+function a_out_text_delay_g() end
+function a_out_sound_g() end
+function a_add_radio_item_for_group() end
+function a_remove_radio_item_for_group() end
+function c_unit_altitude_higher_AGL() return false end
+function c_unit_out_zone() return false end
 function a_do_script(text) assert(loadstring(text))() end
 for _,section in ipairs({'conditions','actions','func','funcStartup'}) do
   for i,text in pairs(mission.trig[section] or {}) do mission.trig[section][i]=assert(loadstring(text)) end

@@ -4,6 +4,7 @@ import { configurationSchema, configureMission, sideSchema, xySchema } from '../
 import { actionSchema, conditionSchema, triggerSchema } from '../miz/trigger-schema.js';
 import { addAircraftGroup, addGroundGroup, addTrigger, addTriggerZone, addWaypoint, findGroup, findUnit, setPayload, type AircraftStart, type ConditionSpec, type ActionSpec } from '../miz/authoring.js';
 import { configureFlight, createFlight, flyingReference, orbitSchema, ROLES, appendWaypointTask } from '../miz/flight.js';
+import { addFlightAtc, atcSchema } from '../miz/atc.js';
 import { findSiteTemplate } from '../miz/templates.js';
 import { createGroundPlan, validateGroundPlan, groundPlanSchema, groundMovementSchema } from '../miz/operations.js';
 import { addFarp } from '../miz/dressing.js';
@@ -39,7 +40,8 @@ export const scenarioSchema = z.object({ version: z.literal(1).default(1), name,
   kind: z.enum(['interception', 'defensive_counter_air', 'offensive_counter_air', 'sead', 'dead', 'cas', 'strike', 'csar', 'convoy_escort', 'naval_strike', 'carrier_operations']),
   theatre: z.string().min(1), seed: z.number().int().min(0).max(4294967295).default(0),
   coalitions: z.object({ blue: z.array(z.string().min(1)).min(1).max(50), red: z.array(z.string().min(1)).min(1).max(50), neutrals: z.array(z.string().min(1)).max(50).default([]) }).strict(),
-  player: z.object({ group: name, slot: z.enum(['Player', 'Client']).default('Player') }).strict(),
+  /** atc: scripted ATC for the player flight (see dcs_miz_configure_flight). Default: on whenever the flight starts or lands at an airfield; false = leave DCS ATC. */
+  player: z.object({ group: name, slot: z.enum(['Player', 'Client']).default('Player'), atc: z.union([atcSchema, z.literal(false)]).optional() }).strict(),
   objective: z.string().min(1).max(10000), threatLevel: z.enum(['none', 'low', 'medium', 'high']).default('medium'), difficulty: z.enum(['easy', 'normal', 'hard']).default('normal'),
   durationSeconds: z.number().int().min(60).max(86400).default(1800), configuration: configurationSchema.optional(),
   forces: z.array(forceSchema).min(1).max(200), requiredSupport: z.array(name).max(20).default([]),
@@ -194,6 +196,20 @@ export function generateScenario(input: unknown) {
     }
     // A flight cannot spawn at an airfield its side does not own (DCS 2.9.31, verified).
     warnings.push(...claimStartAirfields(s));
+    // The player's radio is scripted end to end in place of DCS ATC, unless the spec opts out.
+    if (spec.player.atc !== false) {
+      const pg = findGroup(s.mission, spec.player.group)!.group;
+      const points = luaArray(asTable(asTable(pg.route)?.points));
+      const atAirfield = points.some(p => Number(p.airdromeId) > 0);
+      if (spec.player.atc || atAirfield) {
+        const awacs = spec.forces.find(f => f.side === findGroup(s.mission, spec.player.group)!.side && f.role === 'AWACS' && !f.lateActivation);
+        const atc = addFlightAtc(s.mission, spec.player.group, spec.player.atc || {
+          briefing: spec.objective,
+          ...(awacs ? { awacs: { group: awacs.name, tasking: `Proceed as briefed: ${spec.objective}`.slice(0, 1000) } } : {}),
+        }, s.dictionary);
+        warnings.push(...atc.notes.map(n => `ATC: ${n}`));
+      }
+    }
     for (const zone of spec.zones) addTriggerZone(s.mission, zone);
     const assetKeys: Record<string, string> = {}; let assetBytes = 0;
     for (const asset of spec.assets) {
