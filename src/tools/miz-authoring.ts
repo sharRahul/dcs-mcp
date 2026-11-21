@@ -166,7 +166,7 @@ export function registerMizAuthoringTools(server: McpServer): void {
         "or lat/lon (converted offline). Exact type ids come from dcs_list_unit_types; units get full " +
         "fuel and the type's countermeasures by default (change with dcs_miz_set_payload).\n\n" +
         "Args:\n  - sessionId, side, country (exact DCS name, see dcs_list_countries), name, type (e.g. 'FA-18C_hornet')\n" +
-        "  - category ('plane'|'helicopter'), count, x/y or lat/lon, altitudeMetres?, heading? (degrees), " +
+        "  - category ('plane'|'helicopter'), count? (default 2 = lead + one wingman for a Player/Client flight, else 1), x/y or lat/lon, altitudeMetres?, heading? (degrees), " +
         "skill? ('Client' = multiplayer slot, 'Player' = the single-player aircraft), task?\n" +
         "  - start?: where the flight begins. { kind: 'air' } (default, at x/y and altitude); " +
         "{ kind: 'runway', airfield }; { kind: 'parking_cold'|'parking_hot', airfield, parking?: [slot names] } " +
@@ -183,7 +183,7 @@ export function registerMizAuthoringTools(server: McpServer): void {
           name: z.string().min(1).max(64).describe("Group name (must be unique)"),
           type: z.string().min(1).describe("DCS aircraft type id, e.g. 'FA-18C_hornet'"),
           category: z.enum(["plane", "helicopter"]).default("plane"),
-          count: z.number().int().min(1).max(16).default(1).describe("Number of units"),
+          count: z.number().int().min(1).max(16).optional().describe("Number of units. Default: 2 (lead + one AI wingman) for a Player/Client flight, 1 otherwise"),
           ...positionFields,
           altitudeMetres: z.number().min(0).max(20000).default(6096).describe("Spawn altitude"),
           heading: z.number().min(0).max(359).default(0),
@@ -216,13 +216,14 @@ export function registerMizAuthoringTools(server: McpServer): void {
         // Ground and ship starts take their position from the airfield/ship.
         const pos =
           a.start && a.start.kind !== "air" ? { x: a.x ?? 0, y: a.y ?? 0 } : resolvePosition(s, a);
+        const count = a.count ?? (a.skill === "Player" || a.skill === "Client" ? 2 : 1);
         addAircraftGroup(s.mission, a.category, {
           side: a.side,
           country: a.country,
           countryId: a.countryId,
           name: a.name,
           type: a.type,
-          count: a.count,
+          count,
           x: pos.x,
           y: pos.y,
           altitudeMetres: a.altitudeMetres,
@@ -234,7 +235,7 @@ export function registerMizAuthoringTools(server: McpServer): void {
         const airfieldNotes = claimStartAirfields(s);
         s.dirty = true;
         refresh(s);
-        return buildResult(`Added ${a.category} group '${a.name}' (${a.count} unit(s)).` + airfieldNotes.map((n) => `
+        return buildResult(`Added ${a.category} group '${a.name}' (${count} unit(s)).` + airfieldNotes.map((n) => `
 ${n}`).join(""), {
           added: a.name,
           groupCount: s.document.summary.groupCount,

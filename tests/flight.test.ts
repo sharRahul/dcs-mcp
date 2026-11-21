@@ -56,6 +56,12 @@ for (const role of ROLES) test(`role ${role} authors executable task data and ro
   assert.deepEqual(back, rt(back));
 });
 
+test('a Player flight gets the player as lead and an AI wingman', () => {
+  const m = fresh();
+  createFlight(m, { ...base, role: 'CAP' as Role, skill: 'Player' });
+  const units = luaArray(asTable(findGroup(m, base.name)!.group.units));
+  assert.deepEqual(units.map(u => u.skill), ['Player', 'High']);
+});
 test('role failures are atomic for bad role, target, country, and ground start', () => {
   const m = fresh(), before = serializeLuaAssignment('mission', m);
   for (const args of [
@@ -64,7 +70,6 @@ test('role failures are atomic for bad role, target, country, and ground start',
     { ...base, role: 'CAP' as Role, country: 'Narnia' },
     { ...base, role: 'CAP' as Role, start: { kind: 'parking_cold' as const, airfield: 'Not a field' } },
     { ...base, role: 'BARCAP' as Role, orbit: { ...orbit, point2: undefined } },
-    { ...base, role: 'CAP' as Role, skill: 'Player' },
   ]) {
     assert.throws(() => createFlight(m, args));
     assert.equal(serializeLuaAssignment('mission', m), before);

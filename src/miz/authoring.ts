@@ -654,6 +654,11 @@ export function addAircraftGroup(mission: LuaTable, category: AirCategory, args:
     y: Number(firstUnit?.["y"] ?? args.y),
   };
   applyEditorAircraftDefaults(group, String(country["name"] ?? args.country ?? ""));
+  // DCS allows ONE "Player" unit per mission: in a player flight only the lead is the
+  // player, the wingmen are AI. ("Client" slots are per unit and stay as asked.)
+  if (args.skill === "Player") {
+    luaArray(units).forEach((u, i) => { if (i > 0) u["skill"] = "High"; });
+  }
   groups[nextIndex(groups)] = group;
   return group;
 }

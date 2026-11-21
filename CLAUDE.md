@@ -1123,3 +1123,15 @@ with tests. The rules they leave behind:
   helper that calls `add_surface_unit`. Recognise the shape, never execute it.
 - Stock payload Lua under the install is ED's file: read it at call time, never vendor it into this repo
   (same rule as the ME template library).
+
+## Player defaults and departure comms (2026-11-21) — offline only
+
+- Player/Client flights default to 2 aircraft (`dcs_miz_add_aircraft_group` with no `count`, scenario player
+  force with no `count`). With skill `Player`, only unit 1 is `Player`; wingmen become `High` — DCS allows one
+  Player unit, so a Player 2-ship used to be refused by configure_flight.
+- `src/miz/departure-comms.ts` / `dcs_miz_add_departure_comms`: briefing (t=1), then F10 items gated by flags
+  (startup -> taxi -> takeoff), airborne handoff on `c_unit_altitude_higher_AGL`, AWACS check-in. Only existing
+  oracle-backed predicates. F10 calls, not detection: no predicate exists for engine start and pydcs has no
+  taxiway/threshold coordinates. Runway defaults to pydcs's first designator (wind is NOT read); ATC MHz from
+  `airfield-radio.json`. Dialogue is fictional; DCS's own ATC is untouched. Audio only when the caller passes
+  resource keys — never ship ED's ATC speech files. To verify in DCS: the F10 sequence, sounds, AGL handoff.

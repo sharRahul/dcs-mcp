@@ -31,6 +31,7 @@ import {
 } from "../miz/scene-import.js";
 import { addSceneTemplate } from "../miz/dressing.js";
 import { addTriggerZone } from "../miz/authoring.js";
+import { addDepartureComms, departureCommsSchema } from "../miz/departure-comms.js";
 import { addReactiveSpawn, reactiveSpawnSchema, setDynamicSpawnTemplate } from "../miz/reactive.js";
 import { errorResult } from "./format.js";
 import { mutate, read, result, sessionId, writes } from "./miz-extended.js";
@@ -346,6 +347,17 @@ export function registerCampaignSceneTools(server: McpServer) {
       annotations: writes,
     },
     async (a) => mutate(a.sessionId, (s) => ({ ...addReactiveSpawn(s.mission, a.spawn, s.dictionary) }))
+  );
+
+  server.registerTool(
+    "dcs_miz_add_departure_comms",
+    {
+      description:
+        "Script the player's departure from an airfield: mission briefing message (and sound) at start, then an F10-menu driven exchange - request startup, request taxi, ready for departure - each with the pilot's call and the controller's reply (runway, ATC UHF/VHF from pydcs), an automatic airborne call and handoff to AWACS once the lead is above departureAGLMetres, and an AWACS check-in whose reply gives the next action (awacs.tasking). Optional holdShortZone prompts the tower call automatically. Every line goes to the player group; pass audio.<step> resource keys (dcs_audio_convert + embed) to play a sound with each line, otherwise lines are text only. Uses only oracle-backed predicates. Dialogue is fictional brevity-style, not authenticated procedure; DCS's own ATC is not replaced. The group must start at an airfield. Offline only; not flown.",
+      inputSchema: z.object({ sessionId, comms: departureCommsSchema }).strict(),
+      annotations: writes,
+    },
+    async (a) => mutate(a.sessionId, (s) => ({ ...addDepartureComms(s.mission, a.comms, s.dictionary) }))
   );
 
   server.registerTool(

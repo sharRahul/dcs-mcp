@@ -24,7 +24,8 @@ export const aircraftStartSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.enum(['farp_cold', 'farp_hot']), farp: z.string().min(1) }).strict(),
 ]);
 const forceSchema = z.object({ name, side: sideSchema, country: z.string().min(1), category: z.enum(['plane', 'helicopter', 'vehicle', 'ship', 'farp']), type: z.string().min(1),
-  count: z.number().int().min(1).max(50).default(1),
+  /** Default: 2 (lead + one AI wingman) for the player's flight, 1 for everything else. */
+  count: z.number().int().min(1).max(50).optional(),
   composition: z.array(z.object({ type: z.string().min(1), count: z.number().int().min(1).max(50) }).strict()).min(1).max(50).optional(),
   site: z.string().min(1).optional(), spacingMetres: z.number().positive().max(2000).optional(), position: xySchema, heading: z.number().min(0).max(359).default(0),
   role: z.enum([...ROLES, 'naval_strike']).optional(), targetGroup: name.optional(), start: aircraftStartSchema.optional(), orbit: orbitSchema.optional(),
@@ -89,7 +90,9 @@ end`;
     rule: 'First outcome candidates adjudicated one second later; failure wins within that window. Later outcomes do not overwrite a resolved result.' };
 }
 export function validateScenario(input: unknown) {
-  const spec = scenarioSchema.parse(input), theatre = resolveTheatreName(spec.theatre);
+  const parsed = scenarioSchema.parse(input);
+  const spec = { ...parsed, forces: parsed.forces.map(f => ({ ...f, count: f.count ?? (f.name === parsed.player.group && !f.composition ? 2 : 1) })) };
+  const theatre = resolveTheatreName(spec.theatre);
   if (!theatre) throw new Error('Unknown scenario theatre');
   spec.theatre = theatre;
   if (spec.configuration?.theatre && resolveTheatreName(spec.configuration.theatre) !== theatre) throw new Error('Scenario/configuration theatres conflict');
