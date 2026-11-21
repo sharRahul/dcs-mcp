@@ -539,12 +539,15 @@ ${n}`).join(""), {
         "flag_is_false{flag}, flag_equals{flag,value}, flag_more{flag,value}, unit_in_zone{unit,zone}, " +
         "unit_out_zone{unit,zone}, unit_dead{unit}, group_dead{group}, group_life_less{group,percent}, " +
         "part_of_group_in_zone{group,zone}, part_of_coalition_in_zone{coalition,zone,unitType?}, " +
-        "random_less{percent}.\n\n" +
+        "random_less{percent}. Put {kind:'or'} between conditions to OR the groups on either side " +
+        "(A, B, or, C means (A and B) or C), as the editor's OR rule does.\n\n" +
         "Actions: message{text,seconds?,clearview?,delaySeconds?}, " +
         "message_to_coalition{coalition,text,...}, set_flag{flag,value?}, clear_flag{flag}, " +
         "activate_group{group}, deactivate_group{group}, group_on{group}, group_off{group}, " +
         "explode{zone,power?,altitudeMetres?}, smoke{zone,preset?,density?}, " +
-        "signal_flare{zone,color?,altitudeMetres?,bearing?}, end_mission{winner,delaySeconds?}.\n\n" +
+        "signal_flare{zone,color?,altitudeMetres?,bearing?}, end_mission{winner,delaySeconds?}, " +
+        "add_radio_item{text,flag,value?} (F10 item for everyone), add_radio_item_for_coalition{coalition,text,flag,value?} " +
+        "(only that side sees it), sound / sound_to_coalition / sound_to_group / sound_to_unit{file,...}, do_script{text}.\n\n" +
         "Args:\n  - sessionId\n  - type ('once'|'continuous'|'change'|'start')\n  - comment?\n" +
         "  - conditions: [ ... ] (empty means 'always')\n  - actions: [ ... ]\n\n" +
         "Returns JSON: { triggerIndex, triggerCount, compiled }.",
@@ -603,6 +606,8 @@ ${n}`).join(""), {
                   })
                   .strict(),
                 z.object({ kind: z.literal("random_less"), percent: z.number().int().min(0).max(100) }).strict(),
+                // Not a predicate: splits the ANDed list into OR groups, as the editor's OR rule does.
+                z.object({ kind: z.literal("or") }).strict(),
               ])
             )
             .describe("Trigger conditions, ANDed together. An empty list means 'always'."),
@@ -684,6 +689,15 @@ ${n}`).join(""), {
                     kind: z.literal("add_radio_item"),
                     text: z.string().min(1).describe("Menu label"),
                     flag: z.number().int().describe("Flag set when the player picks the item"),
+                    value: z.number().int().optional().describe("Value written to the flag (default 1)"),
+                  })
+                  .strict(),
+                z
+                  .object({
+                    kind: z.literal("add_radio_item_for_coalition"),
+                    coalition: sideField,
+                    text: z.string().min(1).describe("Menu label, shown only to that coalition"),
+                    flag: z.number().int().describe("Flag set when a player picks the item"),
                     value: z.number().int().optional().describe("Value written to the flag (default 1)"),
                   })
                   .strict(),

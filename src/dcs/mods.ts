@@ -37,6 +37,8 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { findSavedGamesDirs } from "./install.js";
+// Circular with install-info.ts (which imports scanModFolder); both are only called at run time.
+import { findInstallDirs } from "./install-info.js";
 import { parseSceneryDeclarations } from "./scenery-assets.js";
 
 export type ModCategory = "plane" | "helicopter" | "vehicle" | "ship" | "static" | "unknown";
@@ -72,7 +74,11 @@ const MAX_FILES_PER_MOD = 400;
 export function modRoots(env: NodeJS.ProcessEnv = process.env): string[] {
   const roots: string[] = [];
   for (const sg of findSavedGamesDirs(env)) roots.push(path.join(sg.path, "Mods"));
-  const install = env.DCS_INSTALL_DIR ? [env.DCS_INSTALL_DIR] : defaultInstallDirs(env);
+  // findInstallDirs reads the root DCS logs at startup: with Program Files alone, an install
+  // on another drive contributed nothing, and stock CoreMods/tech types (AS32-31A, from the
+  // Supercarrier) were reported as "will not spawn here".
+  const install = env.DCS_INSTALL_DIR ? [env.DCS_INSTALL_DIR]
+    : [...new Set([...findInstallDirs(env).map((d) => d.path), ...defaultInstallDirs(env)])];
   for (const dir of install) roots.push(path.join(dir, "Mods"), path.join(dir, "CoreMods"));
   return roots.filter((r) => existsSync(r));
 }
@@ -199,6 +205,19 @@ export function scanModFolder(folder: string, kind: string, deployed = true, rep
     if (registersHere || looksLikeGroundUnit) {
       for (const m of src.matchAll(/\bGT\.Name\s*=\s*["']([^"']+)["']/g)) {
         add(m[1], /\bGT\.ship\b|\bShip\b|wsType_Navy|\bNavy\b/.test(src) ? "ship" : "vehicle");
+      }
+    }
+    // ED's own Supercarrier declares deck equipment through a local helper:
+    //   local function support_unit(name, ...) local u = {} ... u.Name = name ... add_surface_unit(u) end
+    //   support_unit("AS32-31A", ...)
+    // A helper whose body sets <t>.Name from its FIRST parameter and registers <t> declares
+    // every string literal it is called with. Read as text, never executed.
+    if (registersHere) {
+      for (const fn of src.matchAll(/local\s+function\s+(\w+)\s*\(\s*(\w+)[^)]*\)([\s\S]*?)\n\s*end\b/g)) {
+        const [, helper, param, body] = fn;
+        const named = body.match(new RegExp(`\\b(\\w+)\\.Name\\s*=\\s*${param}\\b`));
+        if (!named || !new RegExp(`add_surface_unit\\s*\\(\\s*${named[1]}\\s*\\)`).test(body)) continue;
+        for (const call of src.matchAll(new RegExp(`(?<!function\\s)\\b${helper}\\s*\\(\\s*["']([^"']+)["']`, "g"))) add(call[1], "vehicle");
       }
     }
   }

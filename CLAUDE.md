@@ -1105,3 +1105,21 @@ To verify in Claude Desktop next: the app accepting the `.mcpb`, rendering the f
 prompts and listing the tools; whether ~200 tools in one client is usable, which nothing here
 measures; a mission authored end to end from an app chat; `install-claude-desktop` against a
 real `%APPDATA%\Claude` config followed by a restart.
+
+## Flying Operation Black Dagger (0.1.0 follow-up, 2026-11-20/21) — see docs/development/verification.md
+
+A full combined-arms mission built only through MCP calls and flown found nine server bugs; all are fixed
+with tests. The rules they leave behind:
+- Install-dependent scans (`payloads.ts`, `mods.ts`) must use `findInstallDirs` (env, then the root DCS
+  logged, then defaults). Program Files alone silently drops every non-default install.
+- A tool handler must not pass `sessionId` into a function that re-parses its args with a strict schema
+  (troop transport rejected every call that way). `tests/troop-transport-server.test.ts` goes through MCP.
+- `createFlight` with a targetGroup adds a target leg (helicopters fly it as `RADIO`); its warnings now
+  say the flight is unarmed, has no landing, or starts a helicopter too low. Keep those warnings honest.
+- `makeTroopTransport` rallies troops at THEIR waypoint, never on the landing point (editor-saved missions:
+  20-423 m apart). Boarding is still not verified live.
+- `addTrigger` refuses a trigger it cannot compile; `compileTrig` still preserves imported ones untouched.
+- Scenery/unit text scans: ED's Supercarrier declares types through a local `support_unit(name, ...)`
+  helper that calls `add_surface_unit`. Recognise the shape, never execute it.
+- Stock payload Lua under the install is ED's file: read it at call time, never vendor it into this repo
+  (same rule as the ME template library).

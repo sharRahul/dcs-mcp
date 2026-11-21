@@ -32,7 +32,8 @@ export function registerMizInspectEditTools(server: McpServer) {
   server.registerTool('dcs_miz_make_troop_transport', {
     description: "Wire a helicopter (or vehicle) group to lift a ground group: Embarking on the transport's pickup waypoint (naming the troop group and distributing it over the transport's units), EmbarkToTransport on the troops' waypoint with the same pickup point and a wait radius, and DisembarkFromTransport on the transport's drop waypoint. The three tasks have to agree on group ids and coordinates or nothing happens at all — no error, the helicopter just lands and leaves. Embarking/EmbarkToTransport are written in the exact field layout Mission-Editor-saved missions use (including durationFlag and onStartMission, which the Hoggit docs omit); DisembarkFromTransport is Hoggit-documented only. Not flown by this project. Make sure the pickup and drop points are landable (dcs_terrain_clear_spot or dcs_check_terrain).",
     inputSchema: z.object({ sessionId, ...troopTransportSchema.shape }).strict(), annotations: writes,
-  }, async a => mutate(a.sessionId, s => makeTroopTransport(s.mission, a)));
+  // makeTroopTransport re-parses its args strictly, so sessionId must not reach it.
+  }, async ({ sessionId: id, ...args }) => mutate(id, s => makeTroopTransport(s.mission, args)));
   server.registerTool('dcs_miz_get_value', {
     description: "Read any value in the session's mission table by path, e.g. coalition.blue.country[1].plane.group[1].name, trig.func[3] or [\"forcedOptions\"]. Returns the scalar, or for a table its keys and size (expand=true returns the whole subtree). Use it to inspect a field no tool models; it reads the parsed mission only, never other archive entries.",
     inputSchema: z.object({ sessionId, path: z.string().min(1).max(512), expand: z.boolean().default(false) }).strict(), annotations: read,

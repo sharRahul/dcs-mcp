@@ -173,3 +173,41 @@ test('validator leaves unknown and EPLRS network ids opaque', () => {
   const checked = validateMission(buildMissionDocument(m, {}, 'test'), m);
   assert.ok(![...checked.errors, ...checked.warnings].some(e => e.code === 'TASK_REFERENCE_MISSING'));
 });
+
+// Flown 2026-11-20: a SEAD flight whose only waypoint was its start point never
+// went near a dark SA-11 and landed. Targeted roles now get a leg to the target.
+test('targeted flights get a waypoint at the target; escort and orbit flights do not', () => {
+  const m = fresh();
+  addGroundGroup(m, 'vehicle', { side: 'red', country: 'Russia', name: 'SAM', type: 'T-72B', count: 1, x: 40000, y: 50000 });
+  const sead = createFlight(m, { ...base, name: 'Viper 1', role: 'SEAD', targetGroup: 'SAM', altitudeMetres: 6500 });
+  assert.equal(sead.attackWaypoint, 2);
+  const points = Object.values(asTable(asTable(rt(m) && findGroup(rt(m), 'Viper 1')!.group.route)?.points) ?? {}) as LuaTable[];
+  assert.equal(points.length, 2);
+  assert.equal(Number(points[1].x), 40000);
+  assert.equal(Number(points[1].y), 50000);
+  assert.equal(Number(points[1].alt), 6500);
+  const escort = createFlight(m, { ...base, name: 'Viper 2', role: 'escort', targetGroup: 'Viper 1' });
+  assert.equal(escort.attackWaypoint, undefined);
+});
+
+test('a helicopter attack leg is flown above ground, a fixed-wing one barometric', () => {
+  const m = fresh();
+  addGroundGroup(m, 'vehicle', { side: 'red', country: 'Russia', name: 'Armour', type: 'T-72B', count: 1, x: 40000, y: 50000 });
+  createFlight(m, { ...base, name: 'Hammer', type: 'AH-64D', category: 'helicopter', role: 'CAS', targetGroup: 'Armour', altitudeMetres: 60 });
+  createFlight(m, { ...base, name: 'Hog', role: 'CAS', targetGroup: 'Armour' });
+  const alt = (g: string) => (Object.values(asTable(asTable(findGroup(rt(m), g)!.group.route)?.points)!) as LuaTable[])[1].alt_type;
+  assert.equal(alt('Hammer'), 'RADIO');
+  assert.equal(alt('Hog'), 'BARO');
+});
+
+test('a combat flight says it is unarmed, has no way home, and a low helicopter air start is flagged', () => {
+  const m = fresh();
+  addGroundGroup(m, 'vehicle', { side: 'red', country: 'Russia', name: 'Armour', type: 'T-72B', count: 1, x: 40000, y: 50000 });
+  const sead = createFlight(m, { ...base, name: 'Viper 1', role: 'SEAD', targetGroup: 'Armour' });
+  assert.ok(sead.warnings.some(w => /No weapons are loaded/.test(w)));
+  assert.ok(sead.warnings.some(w => /NEAREST airfield/.test(w)));
+  const helo = createFlight(m, { ...base, name: 'Hind', type: 'AH-64D', category: 'helicopter', role: 'CAS', targetGroup: 'Armour', altitudeMetres: 80 });
+  assert.ok(helo.warnings.some(w => /above SEA level/.test(w)));
+  const awacs = createFlight(m, { ...base, name: 'Overlord', type: 'E-3A', role: 'AWACS', orbit });
+  assert.ok(!awacs.warnings.some(w => /No weapons/.test(w)));
+});

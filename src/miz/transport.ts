@@ -99,9 +99,16 @@ export function makeTroopTransport(mission: LuaTable, input: z.input<typeof troo
       duration: a.durationSeconds,
     },
   });
+  // The troops rally at THEIR waypoint, not on the landing point. Editor-saved missions put
+  // the two 20-423 m apart; with both on the same spot (as this tool once wrote) the troops
+  // walked onto the LZ and the helicopter hovered over them indefinitely (flown 2026-11-21).
+  // The radius reaches the landing point so they still run to the transport once it is down.
+  const rally = pointOf(troops.group, a.troopsWaypoint);
+  const gap = Math.hypot(rally.x - pickup.x, rally.y - pickup.y);
+  const zoneRadius = Math.max(a.zoneRadiusMetres, Math.ceil(gap + 50));
   const embarkToTransport = appendTaskTable(troops.group, a.troopsWaypoint, {
     id: 'EmbarkToTransport',
-    params: { x: pickup.x, y: pickup.y, zoneRadius: a.zoneRadiusMetres },
+    params: { x: rally.x, y: rally.y, zoneRadius },
   });
   const disembark = appendTaskTable(transport.group, a.dropWaypoint, {
     id: 'Disembarking',
@@ -116,8 +123,9 @@ export function makeTroopTransport(mission: LuaTable, input: z.input<typeof troo
     drop: { waypoint: a.dropWaypoint, ...drop, taskIndex: disembark },
     troopsTask: { waypoint: a.troopsWaypoint, taskIndex: embarkToTransport },
     carriedBy: Object.keys(distribution).map(Number),
-    durationSeconds: a.durationSeconds, zoneRadiusMetres: a.zoneRadiusMetres,
+    durationSeconds: a.durationSeconds, zoneRadiusMetres: zoneRadius, troopsToPickupMetres: Math.round(gap),
     notes: [
+      ...(gap < 50 ? [`The troops stand ${Math.round(gap)} m from the pickup point: they will occupy the landing zone and the transport cannot land. Move the pickup waypoint 100-400 m clear of them.`] : []),
       'Embarking and EmbarkToTransport are written in the exact field layout Mission-Editor-saved missions use (including durationFlag and onStartMission, which the Hoggit docs do not list).',
       'Disembarking is the unload task the editor writes and DCS accepts: 58 occurrences across the editor-saved corpus, including missions DCS ships. Hoggit documents DisembarkFromTransport instead, which DCS refuses with a ComboTask error - seen live on 2026-11-17 and fixed from it.',
       'The troops wait at their own waypoint, so put them (and the pickup point) somewhere the transport can actually land: check the surface with dcs_check_terrain or dcs_terrain_clear_spot.',

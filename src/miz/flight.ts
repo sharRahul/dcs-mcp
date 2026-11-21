@@ -220,10 +220,36 @@ export function createFlight(mission: LuaTable, args: CreateFlightArgs) {
   if (args.targetGroup) appendWaypointTask(copy, args.name, station, args.role === 'escort' ?
     { kind: 'escort', group: args.targetGroup, maxDistanceMetres: args.engagementDistanceMetres ?? 60000 } : { kind: 'attack_group', group: args.targetGroup });
   if (args.orbit) appendWaypointTask(copy, args.name, station, { kind: 'orbit', ...args.orbit });
+  // A targeted flight with nothing but its start point never goes to the target: flown
+  // live (2026-11-20), a SEAD flight against a dark SA-11 found nothing, ran out of
+  // route and landed. Give it a leg to the target's position.
+  let attackWaypoint: number | undefined;
+  if (args.targetGroup && args.role !== 'escort' && !args.orbit) {
+    const target = findGroup(copy, args.targetGroup)!.group;
+    attackWaypoint = addWaypoint(copy, args.name, { x: Number(target.x), y: Number(target.y),
+      altitudeMetres: args.altitudeMetres ?? (args.category === 'helicopter' ? 60 : 6096), name: 'Target area' });
+    // Helicopters fly the attack leg above GROUND ("RADIO", as editor-saved missions write
+    // it): 60 m above sea level is underground near Gali (terrain ~67 m).
+    if (args.category === 'helicopter') {
+      const points = asTable(asTable(findGroup(copy, args.name)!.group.route)?.points)!;
+      asTable(points[attackWaypoint])!.alt_type = 'RADIO';
+    }
+  }
   const warnings = configureFlight(copy, args.name, args.config ?? {});
   if (!hasCountryCoverage) warnings.push(`Country compatibility unavailable: ${args.type} is absent from every country in the bundled snapshot`);
   if (args.role === 'DEAD') warnings.push('DEAD uses SEAD tasking; destruction depends on target, loadout and DCS AI. Weapons are not automatically selected.');
   if (args.role === 'transport') warnings.push('Transport role sets the main task only; cargo and loading/unloading are not configured.');
+  // Each of these was learned the hard way in a flown mission (2026-11-20/21).
+  if (!['AWACS', 'tanker', 'transport', 'reconnaissance'].includes(args.role)) {
+    warnings.push('No weapons are loaded: pick a stock preset with dcs_list_loadouts and apply it with dcs_miz_apply_loadout (or set pylons with dcs_miz_set_payload). An unarmed flight flies its tasks and cannot fire.');
+  }
+  if (attackWaypoint) {
+    warnings.push(`After the target leg (waypoint ${attackWaypoint}) the AI lands at the NEAREST airfield, which may be enemy-held: add dcs_miz_add_airfield_landing to send it home.`);
+  }
+  const start = asTable(args.start as LuaTable | undefined);
+  if (args.category === 'helicopter' && (!start || start.kind === 'air') && (args.altitudeMetres ?? 6096) < 300) {
+    warnings.push(`A helicopter air start of ${args.altitudeMetres} m is above SEA level, not ground: on high terrain it spawns underground and crashes at once. Use 300 m or more, or a ground/FARP start.`);
+  }
   Object.assign(mission, copy);
-  return { group: String(group.name), role: args.role, mainTask, stationWaypoint: station, warnings, verification: 'offline only; not flown in DCS' };
+  return { group: String(group.name), role: args.role, mainTask, stationWaypoint: station, ...(attackWaypoint ? { attackWaypoint } : {}), warnings, verification: 'offline only; not flown in DCS' };
 }

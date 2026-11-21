@@ -162,6 +162,24 @@ export const CONVENTIONS_GUIDE = `# DCS Sortie MCP conventions
 - A ground unit placed on water does not error — it just sits inert. Check placements with
   \`dcs_check_terrain\` (needs a running mission), or take coordinates from an ME-saved mission.
 
+## Flown lessons: what a combat mission needs (live DCS, 2026-11-20/21)
+- \`dcs_miz_create_flight\` loads NO weapons. Pick a stock preset with \`dcs_list_loadouts\` (it reads your
+  install's own payload files, wherever DCS is installed) and apply it with \`dcs_miz_apply_loadout\`.
+- A targeted flight (SEAD/CAS/strike) gets a leg to its target; after it, AI lands at the NEAREST airfield,
+  enemy-held or not. Add \`dcs_miz_add_airfield_landing\` for every flight that should come home.
+- A SAM under Skynet stays dark until something is in range, so a SEAD flight needs that leg to find it.
+- Aircraft altitudes are above SEA level. A helicopter air start below ~300 m can be underground on high terrain
+  and crashes on spawn; helicopter attack legs are written above ground (\`RADIO\`).
+- Troop lifts: keep the transport's pickup point 100-400 m clear of the troops (editor-saved missions do);
+  troops standing on the landing zone stop the helicopter landing. The tool warns when they are too close.
+- An OR between condition groups is \`{kind:'or'}\` inside one trigger; a coalition-only F10 item is
+  \`add_radio_item_for_coalition\`. A trigger that cannot compile is refused, never kept silently dead.
+- Keep message text plain ASCII when you write it through a shell or script: an em dash re-encoded on the
+  way showed in DCS as stray characters.
+- A late-activated group is listed by \`coalition.getGroups\` before it is activated; prove an activation by
+  its \`S_EVENT_BIRTH\` (\`dcs_runtime_inspect\`), not by the unit appearing in a list.
+- \`dcs_load_mission\` does nothing on a session started with \`DCS.exe <file.miz>\`; relaunch into the mission.
+
 ## Advanced authoring and terrain availability
 - Use \`dcs_list_flight_roles\` for role mappings and per-aircraft pylon CLSIDs; templates never invent weapons.
 - BARCAP/TARCAP use CAP, DEAD uses SEAD, group strike uses CAS; transport/reconnaissance do not configure cargo/cameras.

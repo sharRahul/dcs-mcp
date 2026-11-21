@@ -2046,7 +2046,15 @@ export function addTrigger(mission: LuaTable, args: TriggerArgs, dictionary?: Lu
     rules,
     actions,
   };
-  compileTrig(mission);
+  // compileTrig leaves a trigger it cannot compile alone, which is right for imported
+  // triggers but would make a NEW one silently dead (a leading 'or' once did exactly that).
+  if (compileTrig(mission).skipped.includes(index)) {
+    delete trigrules[index];
+    let reason = "it cannot be compiled";
+    try { joinConditions(luaArray(rules).map((c) => c["predicate"] === "or" ? OR_MARKER : "x")); }
+    catch (err) { reason = (err as Error).message; }
+    throw new Error(`Trigger not added: ${reason}`);
+  }
   return index;
 }
 

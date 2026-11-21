@@ -1287,3 +1287,47 @@ clean; flown: start marker logged, reserve `S_EVENT_BIRTH` at t=20.8, patrol rea
 waypoint and turned back. Not tested: the same brief typed into the Claude Desktop or ChatGPT
 app's own chat. Open question: `COUNTRY_TYPE_NOT_OFFERED` warns that F-16C_50 is not offered to
 USA, yet USA F-16C_50 flights spawned in every run today.
+
+## Operation Black Dagger: a full combined-arms mission, built and flown (2026-11-20/21)
+
+Built entirely through MCP tool calls (96-108 per build; `.verification-sortie-release/black-dagger/build.mjs`,
+not tracked): Caucasus, 26 groups, 107 units, 29 triggers, MIST/MOOSE/Skynet IADS, five ElevenLabs voice lines
+(four voices) embedded as OGG, an F10 menu and an event-driven CSAR script. Flown over several sorties with the
+user at the controls.
+
+Verified live:
+- Placement and elevation: 25 sampled ground points all LAND, unit heights equal DCS terrain height to the mm;
+  the telemetry audit reported 74 ground units, 0 on water.
+- Script order MIST -> MOOSE -> Skynet -> IADS (3 SAM sites, 2 EWRs) -> telemetry -> CSAR handler.
+- Every act trigger fired in a single sortie, in order: opening (t=5), Red alert + Viper "Magnum" (591),
+  first contact (600), Red GCI (621), second MiG pair + escalation (917), ground battle (1042), risky helicopter
+  branch (1943). The user heard every voice line and saw every message. With the SA-11 destroyed, the success
+  branch fired (T04 at 193/452, helicopter launch 15 s later) and CSAR marked a Blue ejection over land.
+- Skynet held the SA-11 dark until Blue came in range, then it engaged; Hellfires killed T-80s; Eagle 2 killed
+  the Su-25s; the Hind attack and the armour advance ran as designed.
+- After the transport fix, both UH-1Hs LANDED at the pickup and took off two minutes later. That the troops
+  boarded was NOT confirmed: DCS logs no boarding event and DCS stopped responding before the bridge could
+  show the troop group leave the map. Treat the lift as still unverified.
+
+Server bugs found by flying it, all fixed with tests:
+- `dcs_status` failed its own output schema whenever DCS was reachable (extra hook fields).
+- `dcs_miz_make_troop_transport` rejected EVERY call: its handler passed `sessionId` to a strict schema.
+- The troops' EmbarkToTransport point was the helicopter's landing point; troops walked onto the LZ and the
+  helicopter hovered over them. Editor-saved missions keep the two 20-423 m apart (four missions measured).
+- `dcs_list_loadouts` and the mod/type scan looked only under Program Files, so an install on another drive
+  (known from dcs.log) contributed no stock loadouts and stock CoreMods/tech types; ED's own Supercarrier
+  declares deck equipment (AS32-31A) through a local helper the scanner now recognises.
+- Targeted flights got a single waypoint: a SEAD flight against a dark SA-11 found nothing and landed.
+- Helicopter attack legs were barometric (60 m ASL is underground near Gali); now RADIO, as editor-saved
+  missions write it.
+- `dcs_miz_add_trigger` refused `or` and `add_radio_item_for_coalition` although both compile, and kept a new
+  trigger it could not compile (silently dead). Both fixed.
+- `countryOffers` read pydcs's empty country lists for F-16C_50, F-14A, F-4E, Ka-50_3, Mi-24P, SH-3W, VINSON,
+  SOM and Suidae as "not offered" (warnings, and refusals in create_flight).
+
+Mission-design mistakes (ours, recorded so they are not repeated): no weapons applied; no landing waypoints
+(Viper 1 landed at Red Sukhumi); a pickup point on top of the troops; an escalation branch that could never
+fire; an em dash mangled by a PowerShell rewrite of the builder script.
+
+Not covered: a chat inside the Claude Desktop or ChatGPT app driving the build (this session called the same
+server over MCP), multiplayer, and the troop boarding itself.

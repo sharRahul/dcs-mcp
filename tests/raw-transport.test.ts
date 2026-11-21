@@ -116,10 +116,13 @@ test('troop transport wires Embarking, EmbarkToTransport and Disembarking togeth
   assert.equal(params.x, 5000);
   assert.equal(params.onStartMission, false);
 
-  // The troops wait at the same pickup point.
+  // The troops rally at their own waypoint (editor-saved missions keep it 20-423 m off the
+  // LZ); the radius reaches the pickup point. Same-spot rallies blocked the LZ in flight.
   const embark = taskAt(infantry, 1, 'EmbarkToTransport');
-  assert.ok(embark);
-  assert.deepEqual(asTable(embark!.params), { x: 5000, y: 0, zoneRadius: 200 });
+  assert.ok(embark, 'the troops have no EmbarkToTransport task');
+  assert.deepEqual(asTable(embark!.params), { x: 5050, y: 20, zoneRadius: 200 });
+  assert.equal(out.troopsToPickupMetres, 54);
+  assert.ok(out.notes.some(n => /cannot land/.test(n)) === false);
 
   // The unload task is 'Disembarking', not Hoggit's 'DisembarkFromTransport':
   // DCS refuses that one with a ComboTask error, and no editor-saved mission
@@ -143,4 +146,17 @@ test('troop transport refuses mismatched groups and waypoints', () => {
   assert.throws(() => makeTroopTransport(m, { transport: 'Infantry', troops: 'Infantry' }), /cannot carry itself/);
   assert.throws(() => makeTroopTransport(m, { transport: 'Lift', troops: 'Infantry', pickupWaypoint: 2, dropWaypoint: 2 }), /must differ/);
   assert.throws(() => makeTroopTransport(m, { transport: 'Lift', troops: 'Infantry', pickupWaypoint: 9 }), /Waypoint 9 does not exist/);
+});
+
+test('troops standing on the pickup point are reported, and a far rally widens the radius', () => {
+  const m = newMissionTable('Caucasus', 43200);
+  addAircraftGroup(m, 'helicopter', { side: 'blue', country: 'USA', name: 'Lift', type: 'UH-1H', count: 1, x: 0, y: 0, altitudeMetres: 50 });
+  addWaypoint(m, 'Lift', { x: 5000, y: 0 });
+  addWaypoint(m, 'Lift', { x: 9000, y: 0 });
+  addGroundGroup(m, 'vehicle', { side: 'blue', country: 'USA', name: 'OnLZ', type: 'Soldier M4', count: 2, x: 5000, y: 10 });
+  addGroundGroup(m, 'vehicle', { side: 'blue', country: 'USA', name: 'Far', type: 'Soldier M4', count: 2, x: 5400, y: 0 });
+  const near = makeTroopTransport(m, { transport: 'Lift', troops: 'OnLZ', pickupWaypoint: 2, dropWaypoint: 3 });
+  assert.ok(near.notes.some(n => /cannot land/.test(n)));
+  const far = makeTroopTransport(m, { transport: 'Lift', troops: 'Far', pickupWaypoint: 2, dropWaypoint: 3 });
+  assert.equal(far.zoneRadiusMetres, 450);
 });

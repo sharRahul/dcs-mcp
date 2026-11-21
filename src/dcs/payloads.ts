@@ -18,6 +18,7 @@ import { authoringData } from '../data/authoring.js';
 import { asTable, luaArray, parseLuaDataFile, type LuaTable } from '../miz/lua.js';
 import { findSavedGamesDirs } from './install.js';
 import { defaultInstallDirs } from './mods.js';
+import { findInstallDirs } from './install-info.js';
 
 export interface Loadout { name: string; tasks: string[]; pylons: { pylon: number; CLSID: string; settings?: LuaTable }[]; file: string }
 const MAX_FILE_BYTES = 4 * 1024 * 1024;
@@ -26,7 +27,10 @@ const isDir = (d: string) => { try { return statSync(d).isDirectory(); } catch {
 
 export function payloadDirs(env: NodeJS.ProcessEnv = process.env): string[] {
   const saved = findSavedGamesDirs(env).map(s => s.path);
-  const installs = env.DCS_INSTALL_DIR ? [env.DCS_INSTALL_DIR] : defaultInstallDirs(env);
+  // findInstallDirs also reads the install root DCS logs at startup; Program Files
+  // alone missed every non-default install (and with it every stock loadout).
+  const installs = env.DCS_INSTALL_DIR ? [env.DCS_INSTALL_DIR]
+    : [...new Set([...findInstallDirs(env).map(d => d.path), ...defaultInstallDirs(env)])];
   const dirs: string[] = [];
   for (const sg of saved) dirs.push(path.join(sg, 'MissionEditor', 'UnitPayloads'));
   for (const root of installs) {

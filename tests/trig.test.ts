@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 import luaparse from "luaparse";
 import { compileTrig, addTrigger, addTriggerZone, addAircraftGroup } from "../src/miz/authoring.js";
 import { serializeLuaAssignment } from "../src/miz/serializer.js";
-import { parseLuaAssignment } from "../src/miz/lua.js";
+import { luaArray, parseLuaAssignment } from "../src/miz/lua.js";
 import type { LuaTable } from "../src/miz/lua.js";
 
 interface PredicateCase {
@@ -409,9 +409,15 @@ test("an 'or' separator groups conditions the way the editor's OR group does", (
 });
 
 test("a separator with nothing beside it is refused, not compiled to broken Lua", () => {
+  // A NEW trigger is refused outright: it used to be kept uncompiled, i.e. silently dead.
   const mission: LuaTable = { trigrules: {} } as unknown as LuaTable;
-  addTrigger(mission, { type: "once", comment: "Dangling or", conditions: [{ kind: "or" }], actions: [{ kind: "set_flag", flag: 1 }] });
-  const { compiled, skipped } = compileTrig(mission);
+  assert.throws(() => addTrigger(mission, { type: "once", comment: "Dangling or", conditions: [{ kind: "or" }], actions: [{ kind: "set_flag", flag: 1 }] }),
+    /Trigger not added: an 'or' separator needs a condition on both sides/);
+  assert.deepEqual(luaArray(mission.trigrules as LuaTable), [], "the refused trigger is not left behind");
+  // An IMPORTED rule in that shape is still preserved, never rewritten from a guess.
+  const imported = { trigrules: { 1: { predicate: "triggerOnce", comment: "", rules: { 1: { predicate: "or" } },
+    actions: { 1: { predicate: "a_set_flag", flag: 1 } } } } } as unknown as LuaTable;
+  const { compiled, skipped } = compileTrig(imported);
   assert.deepEqual(compiled, []);
   assert.deepEqual(skipped, [1], "an 'or' with no condition on both sides cannot compile");
 });
