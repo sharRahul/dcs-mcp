@@ -218,7 +218,8 @@ export function validateMission(doc: MissionDocument, mission?: LuaTable): Valid
       // it was learned from a mission is evidence the id is real, not evidence it
       // will spawn HERE - so the mod check still runs, or a learned id would
       // silently hide an undeployed mod.
-      if (known?.source === "bundled") continue;
+      // An install (CoreMods) definition is on THIS machine, so it spawns here too.
+      if (known?.source === "bundled" || known?.source === "install") continue;
       const mod = findModUnit(unit.type);
       if (mod?.deployed) continue;
       if (mod) {

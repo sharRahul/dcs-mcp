@@ -262,6 +262,13 @@ export interface ExtraTypeSource {
   list(): { type: string; category: UnitCategory }[];
 }
 let extraTypes: ExtraTypeSource | undefined;
+/**
+ * First-party definitions read from the DCS install (CoreMods). Checked after the
+ * bundled catalogue and BEFORE mods/learned types, and kept in its own slot so
+ * re-registering learned types never drops it.
+ */
+let installTypes: ExtraTypeSource | undefined;
+export function registerInstallTypeSource(source: ExtraTypeSource | undefined): void { installTypes = source; }
 export function registerTypeSource(source: ExtraTypeSource | undefined, append = false): void {
   const previous = extraTypes;
   extraTypes = append && source && previous ? {
@@ -280,7 +287,7 @@ export function registerTypeSource(source: ExtraTypeSource | undefined, append =
  */
 export function findUnitType(
   type: string
-): { category: UnitCategory; entry: NamedType | FlyingType | StaticType; source: "bundled" | "learned" } | undefined {
+): { category: UnitCategory; entry: NamedType | FlyingType | StaticType; source: "bundled" | "install" | "learned" } | undefined {
   const heliport = HELIPORT_STATICS.find((h) => h.type === type);
   if (heliport) return { category: "static", entry: heliport, source: "bundled" };
   const all = unitTypes();
@@ -289,13 +296,15 @@ export function findUnitType(
     if (entry) return { category, entry: entry as NamedType, source: "bundled" };
   }
   // The bundled catalogue always wins, so a learned entry can never shadow it.
+  const installed = installTypes?.find(type);
+  if (installed) return { ...installed, source: "install" };
   const extra = extraTypes?.find(type);
   return extra ? { ...extra, source: "learned" } : undefined;
 }
 
 /** Type ids an extra source contributes, for listings that say what is placeable. */
 export function extraTypeList(): { type: string; category: UnitCategory }[] {
-  return extraTypes?.list() ?? [];
+  return [...new Map([...(installTypes?.list() ?? []), ...(extraTypes?.list() ?? [])].map(t => [t.type, t])).values()];
 }
 
 /** Suggest near matches for a type id that is not in the catalogue. */

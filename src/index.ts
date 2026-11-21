@@ -46,6 +46,7 @@ import { registerPrompts, registerResources } from "./tools/resources.js";
 import { enableSessionPersistence } from "./miz/sessions.js";
 import { enableAirbasePacks } from "./dcs/airbase-packs.js";
 import { enableLearnedTypes } from "./dcs/mission-learned.js";
+import { enableCoreModTypes } from "./dcs/coremods.js";
 import { enableInstalledSceneryTypes } from "./dcs/scenery-assets.js";
 import { findSavedGamesDirs, installHook } from "./dcs/install.js";
 import { configureClaudeDesktop, type EntryMode } from "./dcs/claude-desktop.js";
@@ -184,6 +185,9 @@ async function main(): Promise<void> {
   // Types learned from the user's own missions: mod airframes, and DCS types
   // newer than the pinned pydcs. Never shadows a bundled type.
   enableLearnedTypes();
+  // First-party aircraft definitions from the install's CoreMods fill types pydcs lacks
+  // with real fuel/dimensions/tasks; ranked after the bundled catalogue, before learned.
+  try { enableCoreModTypes(); } catch (e) { console.error(`CoreMods scan failed: ${(e as Error).message}`); }
   enableInstalledSceneryTypes();
   const args = process.argv.slice(2);
   let selected: Set<string> | undefined;

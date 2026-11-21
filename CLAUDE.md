@@ -1135,3 +1135,15 @@ with tests. The rules they leave behind:
   taxiway/threshold coordinates. Runway defaults to pydcs's first designator (wind is NOT read); ATC MHz from
   `airfield-radio.json`. Dialogue is fictional; DCS's own ATC is untouched. Audio only when the caller passes
   resource keys — never ship ED's ATC speech files. To verify in DCS: the F10 sequence, sounds, AGL handoff.
+
+## CoreMods aircraft definitions (2026-11-21) — offline, read as text
+
+- `src/dcs/coremods.ts` / `dcs_coremods_aircraft`: `CoreMods/aircraft/*` and `CoreMods/WWII Units` unit Lua scanned
+  as TEXT. A definition = the `Name = '...'` at the same indentation as its `M_max`/`M_fuel_max` (skips nested
+  carrier/datalink `Name`s). Only numeric literals are taken; expressions are null. Tasks map through pydcs
+  `mainTasks`; unmapped ids are reported. 46 definitions on this install.
+- `registerInstallTypeSource` (reference.ts) is its own slot: bundled > install > learned/mods; `findUnitType`
+  returns `source: "install"`, which the validator treats as present on this machine. Only types pydcs LACKS are
+  registered (here: CH-47F, JF_17) — so they now get real `payload.fuel`. Never overwrite a bundled entry with it.
+- `compareWithCatalogue` reports drift (e.g. AJS37 chaff/flare 540/36 installed vs pydcs 1080/72). Report it;
+  do not silently swap the bundled numbers.

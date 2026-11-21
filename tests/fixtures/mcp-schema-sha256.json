@@ -197,5 +197,6 @@
   "dcs_production_status": "7e768228b14e778706a78777eccf9c47e059a9ae6baace5533f6673f97f91b54",
   "dcs_list_terrain_sites": "f28031b73081bae85bab1b29803bdb3d32588522b3da8d585d3aabbd64d222c9",
   "dcs_audio_convert": "8ee9d26151e9126245380b8d799eef3a18245e427f8f3c461719ad5b91ec532a",
-  "dcs_miz_add_departure_comms": "3d2ea4d4742381550584966ce834f67f9f0656a684f07764c73af0b654cb8cc7"
+  "dcs_miz_add_departure_comms": "3d2ea4d4742381550584966ce834f67f9f0656a684f07764c73af0b654cb8cc7",
+  "dcs_coremods_aircraft": "4f1b7d4b0cf97b3b5ae9b557a897a0dbcbf099fb683ac8308b6250ae83880a27"
 }

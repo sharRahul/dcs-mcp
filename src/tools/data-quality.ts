@@ -1,3 +1,4 @@
+import { coreModAircraft, compareWithCatalogue, enableCoreModTypes } from '../dcs/coremods.js';
 /** Fuel limits, dataset provenance and warehouse donors. Offline only. */
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -29,6 +30,21 @@ export function registerDataQualityTools(server: McpServer) {
     try {
       const info = installInfo(process.env, true);
       return result({ install: info, coverage: coverageReport() });
+    } catch (e) { return errorResult(e); }
+  });
+  server.registerTool('dcs_coremods_aircraft', {
+    description: "Aircraft definitions from the DCS install's own CoreMods (aircraft and WWII Units), read as Lua TEXT, never executed: type id, display name, plane/helicopter, empty/nominal/max mass and maximum internal fuel in kg, ceiling, range, length/height/wing span or rotor diameter, chaff/flare defaults, main tasks (mapped through pydcs's task table; unmapped ids are listed) and the pylon CLSIDs the definition offers. Only numeric literals are taken; a field written as an expression is null. Current to the installed build. Types pydcs lacks are registered for authoring with these numbers (the bundled catalogue still wins on any id it knows); 'compare' lists where installed values differ from pydcs. Pass type for one definition including CLSIDs.",
+    inputSchema: z.object({ type: z.string().min(1).optional(), refresh: z.boolean().optional() }).strict(), annotations: read,
+  }, async a => {
+    try {
+      const { root, aircraft } = coreModAircraft(process.env, a.refresh === true);
+      if (a.refresh) enableCoreModTypes();
+      if (a.type) {
+        const hit = aircraft.find(x => x.type === a.type);
+        if (!hit) throw new Error(`No CoreMods definition for '${a.type}'${root ? '' : ' (no DCS install found; set DCS_INSTALL_DIR)'}`);
+        return result({ root, aircraft: hit });
+      }
+      return result({ root, count: aircraft.length, aircraft: aircraft.map(({ clsids, ...rest }) => ({ ...rest, clsidCount: clsids.length })), compare: compareWithCatalogue(aircraft) });
     } catch (e) { return errorResult(e); }
   });
   server.registerTool('dcs_theatre_data', {
